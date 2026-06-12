@@ -1223,7 +1223,7 @@ img {
 
 .gender-picker {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -1241,6 +1241,95 @@ img {
   border-color: rgba(37, 99, 235, 0.38);
   background: #eff6ff;
   color: var(--primary);
+}
+
+.avatar-customizer {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--card-bg-strong);
+  padding: 16px;
+}
+
+.avatar-control-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.avatar-control-group {
+  display: grid;
+  gap: 9px;
+}
+
+.avatar-control-group > span {
+  color: var(--nav-text);
+  font-size: 0.83rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.skin-tone-row,
+.avatar-option-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skin-tone {
+  width: 34px;
+  height: 34px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--skin-tone);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.58),
+    0 8px 18px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.skin-tone.active {
+  border-color: var(--primary);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.72),
+    0 0 0 4px rgba(37, 99, 235, 0.12);
+  transform: translateY(-1px);
+}
+
+.avatar-chip {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--soft-card-bg);
+  color: var(--nav-text);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 850;
+  padding: 0 11px;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.avatar-chip:hover,
+.avatar-chip.active {
+  border-color: rgba(37, 99, 235, 0.42);
+  background: var(--surface-soft);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.avatar-option-row.compact .avatar-chip {
+  min-height: 34px;
+  padding: 0 10px;
 }
 
 .portfolio-preview-card,
@@ -1705,6 +1794,7 @@ img {
 :root[data-theme='dark'] .secondary-button,
 :root[data-theme='dark'] .timeline-item,
 :root[data-theme='dark'] .gender-option,
+:root[data-theme='dark'] .avatar-customizer,
 :root[data-theme='dark'] .credential-preview-card {
   background: rgba(15, 23, 42, 0.92);
 }
@@ -1792,7 +1882,8 @@ img {
 :root[data-theme='dark'] .mini-stat-row span,
 :root[data-theme='dark'] .upload-dropzone,
 :root[data-theme='dark'] .preview-meta span,
-:root[data-theme='dark'] .skill-cloud span {
+:root[data-theme='dark'] .skill-cloud span,
+:root[data-theme='dark'] .avatar-chip {
   background: rgba(30, 41, 59, 0.78);
   border-color: var(--line);
   color: var(--ink);
@@ -1955,6 +2046,7 @@ img {
   .portfolio-form-grid,
   .experience-edit-card,
   .credential-edit-card,
+  .avatar-control-grid,
   .passport-stats,
   .mini-stat-row,
   .role-links {

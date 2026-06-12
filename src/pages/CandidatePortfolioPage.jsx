@@ -18,7 +18,6 @@ export const PORTFOLIO_PREVIEW_STORAGE_PREFIX = 'nextplease:portfolio-preview:';
 const avatarStyles = {
   female: {
     label: 'Nữ',
-    skin: '#f4c9a9',
     hair: '#2d1b16',
     outfit: '#2563eb',
     accent: '#f97316',
@@ -27,23 +26,43 @@ const avatarStyles = {
   },
   male: {
     label: 'Nam',
-    skin: '#dca77f',
     hair: '#1f2937',
     outfit: '#0f172a',
     accent: '#2563eb',
     bodyScale: [1, 1.05, 0.78],
     shoulder: 1.45,
   },
-  neutral: {
-    label: 'Linh hoạt',
-    skin: '#e7b893',
-    hair: '#334155',
-    outfit: '#7c3aed',
-    accent: '#14b8a6',
-    bodyScale: [0.96, 1.04, 0.74],
-    shoulder: 1.34,
-  },
 };
+
+const skinToneOptions = [
+  { label: 'Sáng', value: '#f4c9a9' },
+  { label: 'Tự nhiên', value: '#dca77f' },
+  { label: 'Ấm', value: '#b97855' },
+  { label: 'Nâu', value: '#8d5a43' },
+];
+
+const hairStyleOptions = {
+  female: [
+    { label: 'Bob', value: 'bob' },
+    { label: 'Dài layer', value: 'layered' },
+    { label: 'Buộc cao', value: 'ponytail' },
+  ],
+  male: [
+    { label: 'Side part', value: 'sidePart' },
+    { label: 'Textured', value: 'textured' },
+    { label: 'Undercut', value: 'undercut' },
+  ],
+};
+
+const accessoryOptions = [
+  { label: 'Không kính', value: 'none' },
+  { label: 'Mắt kính', value: 'glasses' },
+];
+
+const poseOptions = [
+  { label: 'Tự tin', value: 'confident' },
+  { label: 'Chào cơ hội', value: 'wave' },
+];
 
 const defaultExperiences = [
   {
@@ -53,6 +72,14 @@ const defaultExperiences = [
     detail: '',
   },
 ];
+
+const defaultAvatar = {
+  gender: 'female',
+  skinTone: skinToneOptions[0].value,
+  hairStyle: hairStyleOptions.female[0].value,
+  accessory: 'none',
+  pose: 'confident',
+};
 
 const defaultCredentials = [
   {
@@ -75,14 +102,61 @@ function addMesh(parent, geometry, material, position, scale = [1, 1, 1], rotati
   return mesh;
 }
 
-export function PortfolioAvatar3D({ gender }) {
+function addHairStyle(avatarGroup, hairMaterial, gender, hairStyle) {
+  addMesh(avatarGroup, new THREE.SphereGeometry(0.6, 48, 24), hairMaterial, [0, 2.58, -0.05], [1.04, 0.58, 0.98]);
+
+  if (gender === 'female' && hairStyle === 'layered') {
+    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.18, 1.15, 14, 28), hairMaterial, [-0.48, 2.04, -0.05], [1, 1, 0.72], [0.02, 0, 0.06]);
+    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.18, 1.15, 14, 28), hairMaterial, [0.48, 2.04, -0.05], [1, 1, 0.72], [0.02, 0, -0.06]);
+    addMesh(avatarGroup, new THREE.SphereGeometry(0.18, 24, 16), hairMaterial, [0.34, 2.48, 0.34], [1.35, 0.52, 0.55], [0, 0, -0.25]);
+    return;
+  }
+
+  if (gender === 'female' && hairStyle === 'ponytail') {
+    addMesh(avatarGroup, new THREE.SphereGeometry(0.28, 32, 20), hairMaterial, [0, 2.37, -0.56], [0.82, 1.15, 0.72]);
+    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.13, 0.86, 12, 24), hairMaterial, [0, 1.92, -0.62], [1, 1, 0.72], [0.08, 0, 0]);
+    addMesh(avatarGroup, new THREE.SphereGeometry(0.16, 24, 16), hairMaterial, [-0.32, 2.56, 0.34], [1.3, 0.48, 0.55], [0, 0, 0.25]);
+    return;
+  }
+
+  if (gender === 'male' && hairStyle === 'textured') {
+    [-0.34, -0.12, 0.1, 0.32].forEach((x, index) => {
+      addMesh(avatarGroup, new THREE.ConeGeometry(0.13, 0.28, 18), hairMaterial, [x, 2.9, 0.12], [1, 1, 0.8], [0.24, 0, (index - 1.5) * 0.16]);
+    });
+    return;
+  }
+
+  if (gender === 'male' && hairStyle === 'undercut') {
+    addMesh(avatarGroup, new THREE.BoxGeometry(0.78, 0.18, 0.58), hairMaterial, [0.04, 2.74, 0.03], [1, 1, 1], [0, 0, -0.08]);
+    addMesh(avatarGroup, new THREE.SphereGeometry(0.5, 32, 18), hairMaterial, [0, 2.58, -0.12], [1, 0.34, 0.92]);
+    return;
+  }
+
+  addMesh(avatarGroup, new THREE.SphereGeometry(0.2, 28, 18), hairMaterial, [-0.28, 2.63, 0.35], [1.45, 0.44, 0.58], [0, 0, 0.22]);
+  addMesh(avatarGroup, new THREE.SphereGeometry(0.2, 28, 18), hairMaterial, [0.22, 2.66, 0.34], [1.6, 0.42, 0.58], [0, 0, -0.18]);
+}
+
+function addGlasses(avatarGroup, frameMaterial) {
+  addMesh(avatarGroup, new THREE.TorusGeometry(0.16, 0.012, 8, 36), frameMaterial, [-0.2, 2.39, 0.51], [1.04, 0.72, 1], [0, 0, 0]);
+  addMesh(avatarGroup, new THREE.TorusGeometry(0.16, 0.012, 8, 36), frameMaterial, [0.2, 2.39, 0.51], [1.04, 0.72, 1], [0, 0, 0]);
+  addMesh(avatarGroup, new THREE.BoxGeometry(0.12, 0.025, 0.018), frameMaterial, [0, 2.39, 0.51]);
+  addMesh(avatarGroup, new THREE.BoxGeometry(0.19, 0.018, 0.018), frameMaterial, [-0.42, 2.4, 0.49], [1, 1, 1], [0, 0.25, 0.02]);
+  addMesh(avatarGroup, new THREE.BoxGeometry(0.19, 0.018, 0.018), frameMaterial, [0.42, 2.4, 0.49], [1, 1, 1], [0, -0.25, -0.02]);
+}
+
+export function PortfolioAvatar3D({ avatar = defaultAvatar, gender }) {
   const mountRef = useRef(null);
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return undefined;
 
-    const style = avatarStyles[gender];
+    const avatarConfig = {
+      ...defaultAvatar,
+      ...(gender ? { gender } : {}),
+      ...avatar,
+    };
+    const style = avatarStyles[avatarConfig.gender] || avatarStyles.female;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, mount.clientWidth / mount.clientHeight, 0.1, 100);
     camera.position.set(0, 1.65, 6.4);
@@ -94,11 +168,11 @@ export function PortfolioAvatar3D({ gender }) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
 
-    const avatar = new THREE.Group();
-    avatar.position.y = -0.55;
-    scene.add(avatar);
+    const avatarGroup = new THREE.Group();
+    avatarGroup.position.y = -0.55;
+    scene.add(avatarGroup);
 
-    const skin = new THREE.MeshStandardMaterial({ color: style.skin, roughness: 0.54 });
+    const skin = new THREE.MeshStandardMaterial({ color: avatarConfig.skinTone, roughness: 0.5 });
     const hair = new THREE.MeshStandardMaterial({ color: style.hair, roughness: 0.75 });
     const outfit = new THREE.MeshStandardMaterial({ color: style.outfit, roughness: 0.48, metalness: 0.04 });
     const accent = new THREE.MeshStandardMaterial({
@@ -108,19 +182,47 @@ export function PortfolioAvatar3D({ gender }) {
     });
     const white = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.5 });
     const dark = new THREE.MeshStandardMaterial({ color: '#0f172a', roughness: 0.66 });
+    const lip = new THREE.MeshStandardMaterial({ color: '#9f4d4f', roughness: 0.6 });
+    const cheek = new THREE.MeshStandardMaterial({ color: '#e98a7a', roughness: 0.7, transparent: true, opacity: 0.55 });
+    const lens = new THREE.MeshStandardMaterial({ color: '#dbeafe', roughness: 0.18, metalness: 0.04, transparent: true, opacity: 0.28 });
 
-    addMesh(avatar, new THREE.SphereGeometry(0.54, 48, 48), skin, [0, 2.35, 0]);
-    addMesh(avatar, new THREE.SphereGeometry(0.57, 48, 24), hair, [0, 2.55, -0.03], [1.03, 0.55, 0.95]);
-    addMesh(avatar, new THREE.SphereGeometry(0.08, 18, 18), dark, [-0.19, 2.38, 0.48]);
-    addMesh(avatar, new THREE.SphereGeometry(0.08, 18, 18), dark, [0.19, 2.38, 0.48]);
-    addMesh(avatar, new THREE.BoxGeometry(0.32, 0.055, 0.055), dark, [0, 2.19, 0.52]);
-    addMesh(avatar, new THREE.CapsuleGeometry(0.54, 1.1, 16, 32), outfit, [0, 1.32, 0], style.bodyScale);
-    addMesh(avatar, new THREE.CapsuleGeometry(0.13, style.shoulder, 12, 24), outfit, [-0.76, 1.42, 0], [1, 1, 1], [0, 0, -0.42]);
-    addMesh(avatar, new THREE.CapsuleGeometry(0.13, style.shoulder, 12, 24), outfit, [0.76, 1.42, 0], [1, 1, 1], [0, 0, 0.42]);
-    addMesh(avatar, new THREE.CapsuleGeometry(0.16, 0.92, 12, 24), dark, [-0.28, 0.2, 0], [1, 1, 1], [0.08, 0, 0.08]);
-    addMesh(avatar, new THREE.CapsuleGeometry(0.16, 0.92, 12, 24), dark, [0.28, 0.2, 0], [1, 1, 1], [0.08, 0, -0.08]);
-    addMesh(avatar, new THREE.TorusGeometry(0.72, 0.018, 12, 96), accent, [0, 1.9, 0.04], [1, 1, 1], [Math.PI / 2, 0, 0]);
-    addMesh(avatar, new THREE.BoxGeometry(0.95, 0.12, 0.18), white, [0, 0.9, 0.5]);
+    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.18, 0.3, 12, 24), skin, [0, 1.9, 0]);
+    addMesh(avatarGroup, new THREE.SphereGeometry(0.54, 64, 48), skin, [0, 2.36, 0], [0.92, 1.05, 0.9]);
+    addMesh(avatarGroup, new THREE.SphereGeometry(0.06, 20, 16), skin, [-0.52, 2.34, 0.03], [0.75, 1.15, 0.5]);
+    addMesh(avatarGroup, new THREE.SphereGeometry(0.06, 20, 16), skin, [0.52, 2.34, 0.03], [0.75, 1.15, 0.5]);
+    addHairStyle(avatarGroup, hair, avatarConfig.gender, avatarConfig.hairStyle);
+    addMesh(avatarGroup, new THREE.SphereGeometry(0.065, 18, 18), dark, [-0.19, 2.38, 0.48]);
+    addMesh(avatarGroup, new THREE.SphereGeometry(0.065, 18, 18), dark, [0.19, 2.38, 0.48]);
+    addMesh(avatarGroup, new THREE.BoxGeometry(0.18, 0.025, 0.028), dark, [-0.19, 2.52, 0.5], [1, 1, 1], [0, 0, -0.08]);
+    addMesh(avatarGroup, new THREE.BoxGeometry(0.18, 0.025, 0.028), dark, [0.19, 2.52, 0.5], [1, 1, 1], [0, 0, 0.08]);
+    addMesh(avatarGroup, new THREE.ConeGeometry(0.065, 0.18, 24), skin, [0, 2.31, 0.55], [0.65, 1, 0.7], [Math.PI / 2, 0, 0]);
+    addMesh(avatarGroup, new THREE.SphereGeometry(0.055, 18, 12), cheek, [-0.32, 2.28, 0.49], [1.2, 0.55, 0.35]);
+    addMesh(avatarGroup, new THREE.SphereGeometry(0.055, 18, 12), cheek, [0.32, 2.28, 0.49], [1.2, 0.55, 0.35]);
+    addMesh(avatarGroup, new THREE.BoxGeometry(0.26, 0.04, 0.035), lip, [0, 2.14, 0.5]);
+    if (avatarConfig.accessory === 'glasses') {
+      addMesh(avatarGroup, new THREE.SphereGeometry(0.13, 24, 16), lens, [-0.2, 2.39, 0.51], [1, 0.72, 0.08]);
+      addMesh(avatarGroup, new THREE.SphereGeometry(0.13, 24, 16), lens, [0.2, 2.39, 0.51], [1, 0.72, 0.08]);
+      addGlasses(avatarGroup, dark);
+    }
+    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.54, 1.1, 16, 32), outfit, [0, 1.32, 0], style.bodyScale);
+    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.38, 0.22, 12, 24), white, [0, 1.78, 0.36], [1, 0.46, 0.25]);
+    const leftArmRotation = avatarConfig.pose === 'wave' ? [0.15, 0, -1.02] : [0, 0, -0.38];
+    const rightArmRotation = avatarConfig.pose === 'wave' ? [-0.2, 0, 0.18] : [0, 0, 0.38];
+    const leftArmPosition = avatarConfig.pose === 'wave' ? [-0.86, 1.7, 0.03] : [-0.76, 1.42, 0];
+    const rightArmPosition = avatarConfig.pose === 'wave' ? [0.88, 1.54, 0.02] : [0.76, 1.42, 0];
+    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.13, style.shoulder, 12, 24), outfit, leftArmPosition, [1, 1, 1], leftArmRotation);
+    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.13, style.shoulder, 12, 24), outfit, rightArmPosition, [1, 1, 1], rightArmRotation);
+    if (avatarConfig.pose === 'wave') {
+      addMesh(avatarGroup, new THREE.CapsuleGeometry(0.12, 0.58, 12, 24), skin, [-1.25, 2.08, 0.04], [1, 1, 1], [0.18, 0, -0.55]);
+      addMesh(avatarGroup, new THREE.SphereGeometry(0.14, 24, 18), skin, [-1.42, 2.36, 0.05], [0.9, 1.1, 0.76]);
+    } else {
+      addMesh(avatarGroup, new THREE.SphereGeometry(0.13, 24, 18), skin, [-1.02, 1.0, 0.02], [0.9, 1.1, 0.76]);
+      addMesh(avatarGroup, new THREE.SphereGeometry(0.13, 24, 18), skin, [1.02, 1.0, 0.02], [0.9, 1.1, 0.76]);
+    }
+    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.16, 0.92, 12, 24), dark, [-0.28, 0.2, 0], [1, 1, 1], [0.08, 0, 0.08]);
+    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.16, 0.92, 12, 24), dark, [0.28, 0.2, 0], [1, 1, 1], [0.08, 0, -0.08]);
+    addMesh(avatarGroup, new THREE.TorusGeometry(0.72, 0.018, 12, 96), accent, [0, 1.9, 0.04], [1, 1, 1], [Math.PI / 2, 0, 0]);
+    addMesh(avatarGroup, new THREE.BoxGeometry(0.95, 0.12, 0.18), white, [0, 0.9, 0.5]);
 
     const base = addMesh(
       scene,
@@ -163,8 +265,8 @@ export function PortfolioAvatar3D({ gender }) {
 
     function animate() {
       const elapsed = clock.getElapsedTime();
-      avatar.rotation.y = Math.sin(elapsed * 0.55) * 0.22;
-      avatar.position.y = -0.55 + Math.sin(elapsed * 1.2) * 0.04;
+      avatarGroup.rotation.y = Math.sin(elapsed * 0.55) * 0.22;
+      avatarGroup.position.y = -0.55 + Math.sin(elapsed * 1.2) * 0.04;
       ring.rotation.z = elapsed * 0.42;
       renderer.render(scene, camera);
       frameId = requestAnimationFrame(animate);
@@ -192,13 +294,13 @@ export function PortfolioAvatar3D({ gender }) {
         mount.removeChild(renderer.domElement);
       }
     };
-  }, [gender]);
+  }, [avatar, gender]);
 
   return <div className="portfolio-avatar-canvas" ref={mountRef} aria-label="3D portfolio avatar preview" />;
 }
 
 export function CandidatePortfolioPage() {
-  const [gender, setGender] = useState('female');
+  const [avatar, setAvatar] = useState(defaultAvatar);
   const [profile, setProfile] = useState({
     name: '',
     headline: '',
@@ -209,6 +311,16 @@ export function CandidatePortfolioPage() {
   });
   const [experiences, setExperiences] = useState(defaultExperiences);
   const [credentials, setCredentials] = useState(defaultCredentials);
+
+  function updateAvatar(field, value) {
+    setAvatar((current) => {
+      const nextAvatar = { ...current, [field]: value };
+      if (field === 'gender') {
+        nextAvatar.hairStyle = hairStyleOptions[value][0].value;
+      }
+      return nextAvatar;
+    });
+  }
 
   function updateProfile(event) {
     const { name, value } = event.target;
@@ -263,7 +375,7 @@ export function CandidatePortfolioPage() {
   function openPortfolioPreview() {
     const previewId = String(Date.now());
     const previewPayload = {
-      gender,
+      avatar,
       profile,
       experiences,
       credentials,
@@ -310,19 +422,85 @@ export function CandidatePortfolioPage() {
       <div className="portfolio-builder">
         <aside className="portfolio-studio">
           <div className="avatar-stage">
-            <PortfolioAvatar3D gender={gender} />
+            <PortfolioAvatar3D avatar={avatar} />
           </div>
           <div className="gender-picker" aria-label="Chọn giới tính nhân vật">
             {Object.entries(avatarStyles).map(([key, value]) => (
               <button
-                className={gender === key ? 'gender-option active' : 'gender-option'}
+                className={avatar.gender === key ? 'gender-option active' : 'gender-option'}
                 key={key}
-                onClick={() => setGender(key)}
+                onClick={() => updateAvatar('gender', key)}
                 type="button"
               >
                 {value.label}
               </button>
             ))}
+          </div>
+          <div className="avatar-customizer">
+            <div className="avatar-control-group">
+              <span>Màu da</span>
+              <div className="skin-tone-row">
+                {skinToneOptions.map((skinTone) => (
+                  <button
+                    aria-label={`Chọn màu da ${skinTone.label}`}
+                    className={avatar.skinTone === skinTone.value ? 'skin-tone active' : 'skin-tone'}
+                    key={skinTone.value}
+                    onClick={() => updateAvatar('skinTone', skinTone.value)}
+                    style={{ '--skin-tone': skinTone.value }}
+                    type="button"
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="avatar-control-group">
+              <span>Kiểu tóc</span>
+              <div className="avatar-option-row">
+                {hairStyleOptions[avatar.gender].map((hairStyle) => (
+                  <button
+                    className={avatar.hairStyle === hairStyle.value ? 'avatar-chip active' : 'avatar-chip'}
+                    key={hairStyle.value}
+                    onClick={() => updateAvatar('hairStyle', hairStyle.value)}
+                    type="button"
+                  >
+                    {hairStyle.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="avatar-control-grid">
+              <div className="avatar-control-group">
+                <span>Phụ kiện</span>
+                <div className="avatar-option-row compact">
+                  {accessoryOptions.map((accessory) => (
+                    <button
+                      className={avatar.accessory === accessory.value ? 'avatar-chip active' : 'avatar-chip'}
+                      key={accessory.value}
+                      onClick={() => updateAvatar('accessory', accessory.value)}
+                      type="button"
+                    >
+                      {accessory.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="avatar-control-group">
+                <span>Pose</span>
+                <div className="avatar-option-row compact">
+                  {poseOptions.map((pose) => (
+                    <button
+                      className={avatar.pose === pose.value ? 'avatar-chip active' : 'avatar-chip'}
+                      key={pose.value}
+                      onClick={() => updateAvatar('pose', pose.value)}
+                      type="button"
+                    >
+                      {pose.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
           <div className="portfolio-preview-card">
             <span className="avatar-badge">

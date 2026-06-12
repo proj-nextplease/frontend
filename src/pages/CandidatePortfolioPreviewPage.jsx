@@ -46,7 +46,7 @@ export function CandidatePortfolioPreviewPage() {
       <div className="public-portfolio-shell">
         <aside className="public-avatar-panel">
           <div className="avatar-stage">
-            <PortfolioAvatar3D gender={draft.gender || 'female'} />
+            <PortfolioAvatar3D avatar={draft.avatar || { gender: draft.gender || 'female' }} />
           </div>
           <div className="public-profile-card">
             <span className="avatar-badge">
