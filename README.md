@@ -26,6 +26,8 @@ Copy `.env.example` to `.env.local` and fill in the Supabase and backend API val
 - `VITE_SUPABASE_URL`: Supabase project URL.
 - `VITE_SUPABASE_ANON_KEY`: Supabase anon public key.
 
+See [docs/environment-setup.md](docs/environment-setup.md) for local, Vercel, and Supabase Auth redirect setup.
+
 ## Architecture Notes
 
 - Frontend handles Supabase sign-in/session UX.
@@ -47,7 +49,11 @@ Copy `.env.example` to `.env.local` and fill in the Supabase and backend API val
 ```text
 .
 +- .env.example
++- .github/
+  - .github/workflows/
 +- .gitignore
++- docs/
+  - docs/environment-setup.md
 +- eslint.config.js
 +- index.html
 +- package-lock.json
