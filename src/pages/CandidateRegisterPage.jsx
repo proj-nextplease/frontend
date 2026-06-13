@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowRight,
-  BadgeCheck,
+  CheckCircle2,
   Eye,
   EyeOff,
   GraduationCap,
@@ -37,6 +37,10 @@ const registrationFields = [
   { key: 'confirmPassword', label: 'Nhập lại mật khẩu', icon: ShieldCheck },
 ];
 
+const onboardingSteps = ['Trở thành ứng viên', 'Xác thực ứng viên', 'Bạn đã là ứng viên'];
+const testOtpCode = '123456';
+const candidateRegisterDraftKey = 'nextplease:candidate-register-draft';
+
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function isPasswordValid(password) {
@@ -49,14 +53,38 @@ function isPasswordValid(password) {
   );
 }
 
+function readCandidateRegisterDraft() {
+  if (typeof window === 'undefined') {
+    return initialForm;
+  }
+
+  try {
+    const draft = window.sessionStorage.getItem(candidateRegisterDraftKey);
+    return draft ? { ...initialForm, ...JSON.parse(draft) } : initialForm;
+  } catch {
+    return initialForm;
+  }
+}
+
 export function CandidateRegisterPage() {
-  const [formData, setFormData] = useState(initialForm);
+  const [formData, setFormData] = useState(readCandidateRegisterDraft);
+  const [currentStep, setCurrentStep] = useState(1);
   const [focusedField, setFocusedField] = useState('displayName');
+  const [otpCode, setOtpCode] = useState('');
+  const otpInputRefs = useRef([]);
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPasswordGuide, setShowPasswordGuide] = useState(false);
   const isSupabaseConfigured = Boolean(supabase);
+
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(candidateRegisterDraftKey, JSON.stringify(formData));
+    } catch {
+      // Draft persistence is a UX helper; the form should still work if storage is unavailable.
+    }
+  }, [formData]);
 
   function handlePointerMove(event) {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -72,6 +100,35 @@ export function CandidateRegisterPage() {
   function updateField(event) {
     const { name, value } = event.target;
     setFormData((current) => ({ ...current, [name]: value }));
+  }
+
+  function updateOtpDigit(index, event) {
+    const digits = event.target.value.replace(/\D/g, '').slice(0, 6).split('');
+    const nextOtp = otpCode.padEnd(6, ' ').split('');
+
+    if (digits.length > 1) {
+      digits.forEach((digit, digitIndex) => {
+        if (index + digitIndex < 6) {
+          nextOtp[index + digitIndex] = digit;
+        }
+      });
+      setOtpCode(nextOtp.join('').slice(0, 6));
+      otpInputRefs.current[Math.min(index + digits.length, 5)]?.focus();
+      return;
+    }
+
+    nextOtp[index] = digits[0] || ' ';
+    setOtpCode(nextOtp.join('').slice(0, 6));
+
+    if (digits[0] && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleOtpKeyDown(index, event) {
+    if (event.key === 'Backspace' && !otpCode[index]?.trim() && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
   }
 
   function getFieldState(fieldKey) {
@@ -130,9 +187,8 @@ export function CandidateRegisterPage() {
     }
   }
 
-  async function handleSubmit(event) {
-    event.preventDefault();
-    setStatus({ type: 'loading', message: 'Đang chuẩn bị tài khoản ứng viên...' });
+  function moveToOtpStep() {
+    setStatus({ type: 'loading', message: 'Đang chuẩn bị bước xác thực ứng viên...' });
 
     const invalidField = registrationFields.find((field) => getFieldState(field.key) !== 'valid');
 
@@ -145,41 +201,48 @@ export function CandidateRegisterPage() {
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      setStatus({ type: 'error', message: 'Mật khẩu nhập lại chưa khớp. Kiểm tra lại giúp mình nhé.' });
-      return;
-    }
-
-    if (!isSupabaseConfigured) {
-      setStatus({
-        type: 'success',
-        message: 'Đã lưu mô phỏng thông tin đăng ký. Khi auth sẵn sàng, luồng này sẽ tạo tài khoản thật.',
-      });
-      return;
-    }
-
-    const { error } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        data: {
-          display_name: formData.displayName,
-          student_email: formData.studentEmail,
-          role_intent: 'candidate_free',
-        },
-        emailRedirectTo: `${window.location.origin}/portfolio`,
-      },
-    });
-
-    if (error) {
-      setStatus({ type: 'error', message: error.message });
-      return;
-    }
-
+    setCurrentStep(2);
     setStatus({
       type: 'success',
-      message: 'Tài khoản đã được tạo. Kiểm tra email để xác nhận rồi tiếp tục dựng Portfolio 3D.',
+      message: `Mã OTP 6 số đã được gửi tới ${formData.email}. Nhập mã để hoàn tất xác thực ứng viên.`,
     });
+  }
+
+  function completeCandidateRegistration() {
+    setStatus({ type: 'loading', message: 'Đang xác thực mã OTP và tạo tài khoản ứng viên...' });
+
+    const sanitizedOtpCode = otpCode.replace(/\s/g, '');
+
+    if (!/^\d{6}$/.test(sanitizedOtpCode)) {
+      setStatus({ type: 'error', message: 'Nhập đủ mã OTP 6 số đã gửi qua email đăng nhập nhé.' });
+      return;
+    }
+
+    if (sanitizedOtpCode !== testOtpCode) {
+      setStatus({ type: 'error', message: 'Mã OTP test chưa đúng. Bạn dùng mã 123456 nhé.' });
+      return;
+    }
+
+    setCurrentStep(3);
+    window.sessionStorage.removeItem(candidateRegisterDraftKey);
+    setStatus({
+      type: 'success',
+      message: 'Đã xác thực OTP test thành công. Bạn có thể bắt đầu dựng Portfolio 3D.',
+    });
+  }
+
+  function returnToInfoStep() {
+    setCurrentStep(1);
+    setOtpCode('');
+    setStatus({ type: 'idle', message: '' });
+  }
+
+  function handlePanelSubmit(event) {
+    event.preventDefault();
+
+    if (currentStep === 1) {
+      moveToOtpStep();
+    }
   }
 
   return (
@@ -196,58 +259,65 @@ export function CandidateRegisterPage() {
             Quay lại trang ứng viên
           </Link>
           <p className="eyebrow">Bắt đầu làm ứng viên</p>
-          <h1>Đăng ký tài khoản theo cách nhẹ nhàng hơn.</h1>
-          <p>
-            Điền những thông tin cốt lõi từ schema: tài khoản, email sinh viên và
-            mật khẩu. Sau bước này, bạn sẽ tiếp tục dựng Portfolio 3D.
-          </p>
-          <div className="register-trust-row">
-            <span>
-              <ShieldCheck size={16} />
-              Backend xác thực role và trust data
-            </span>
-            <span>
-              <BadgeCheck size={16} />
-              Frontend chỉ thu thập onboarding data
-            </span>
-          </div>
+          <h1>Tạo tài khoản ứng viên theo cách nhẹ nhàng hơn.</h1>
         </div>
       </section>
 
-      <section className="register-workspace">
-        <aside className="register-field-rail" aria-label="Registration progress">
-          <div className="field-rail-line" aria-hidden="true" />
-          {registrationFields.map((field, index) => {
-            const Icon = field.icon;
-            const fieldState = getFieldState(field.key);
-            const isActive = focusedField === field.key;
-            return (
-              <article
-                className={`field-rail-item ${isActive ? 'active' : ''} ${fieldState}`}
-                key={field.key}
-              >
-                <span className="field-rail-dot">{index + 1}</span>
-                <Icon size={22} />
-                <div>
-                  <strong>{field.label}</strong>
-                  <p>
-                    {fieldState === 'valid'
-                      ? 'Đã có dữ liệu'
-                      : fieldState === 'invalid'
-                        ? 'Cần kiểm tra lại'
-                        : 'Đang chờ nhập'}
-                  </p>
-                </div>
-              </article>
-            );
-          })}
-        </aside>
+      <section className="candidate-onboarding-stepper" aria-label="Candidate onboarding steps">
+        {onboardingSteps.map((step, index) => {
+          const stepNumber = index + 1;
+          const stepState =
+            stepNumber < currentStep ? 'completed' : stepNumber === currentStep ? 'current' : 'pending';
 
-        <form className="register-form-panel" onSubmit={handleSubmit}>
+          return (
+            <div className={`candidate-step ${stepState}`} key={step}>
+              <span className="candidate-step-dot">
+                {stepNumber < currentStep ? <CheckCircle2 size={24} /> : stepNumber}
+              </span>
+              <span>{step}</span>
+            </div>
+          );
+        })}
+      </section>
+
+      <section className={`register-workspace step-${currentStep}`}>
+        {currentStep === 1 ? (
+          <aside className="register-field-rail" aria-label="Registration progress">
+            <div className="field-rail-line" aria-hidden="true" />
+            {registrationFields.map((field, index) => {
+              const Icon = field.icon;
+              const fieldState = getFieldState(field.key);
+              const isActive = focusedField === field.key;
+              return (
+                <article
+                  className={`field-rail-item ${isActive ? 'active' : ''} ${fieldState}`}
+                  key={field.key}
+                >
+                  <span className="field-rail-dot">{index + 1}</span>
+                  <Icon size={22} />
+                  <div>
+                    <strong>{field.label}</strong>
+                    <p>
+                      {fieldState === 'valid'
+                        ? 'Đã có dữ liệu'
+                        : fieldState === 'invalid'
+                          ? 'Cần kiểm tra lại'
+                          : 'Đang chờ nhập'}
+                    </p>
+                  </div>
+                </article>
+              );
+            })}
+          </aside>
+        ) : null}
+
+        <form className="register-form-panel" onSubmit={handlePanelSubmit}>
+          {currentStep === 1 ? (
+            <>
           <div className="register-form-header">
             <Sparkles size={22} />
             <div>
-              <p className="eyebrow">Candidate account</p>
+              <p className="eyebrow">Bắt đầu làm ứng viên</p>
               <h2>Tạo tài khoản ứng viên</h2>
             </div>
           </div>
@@ -367,13 +437,107 @@ export function CandidateRegisterPage() {
 
           <div className="register-action-row">
             <button className="button primary-button" disabled={status.type === 'loading'} type="submit">
-              Tạo tài khoản & mở Portfolio
+              Xác thực tài khoản
               <ArrowRight size={18} />
             </button>
             <Link className="text-link" to="/login">
               Tôi đã có tài khoản
             </Link>
           </div>
+            </>
+          ) : null}
+
+          {currentStep === 2 ? (
+            <div className="otp-step-panel">
+              <div className="register-form-header">
+                <Mail size={22} />
+                <div>
+                  <p className="eyebrow">Xác thực ứng viên</p>
+                  <h2>Nhập mã OTP 6 số</h2>
+                </div>
+              </div>
+              <p className="otp-step-copy">
+                Nhập mã OTP 6 số đã gửi đến <strong>{formData.email || 'email đăng nhập của bạn'}</strong>
+              </p>
+              <div
+                className={`otp-code-field ${
+                  otpCode.replace(/\s/g, '').length === 6
+                    ? 'valid'
+                    : otpCode.replace(/\s/g, '').length
+                      ? 'active'
+                      : ''
+                }`}
+              >
+                <div className="otp-digit-grid" aria-label="Mã OTP 6 số">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <input
+                      aria-label={`Số OTP thứ ${index + 1}`}
+                      className="otp-digit-input"
+                      inputMode="numeric"
+                      key={index}
+                      maxLength={1}
+                      onChange={(event) => updateOtpDigit(index, event)}
+                      onKeyDown={(event) => handleOtpKeyDown(index, event)}
+                      ref={(element) => {
+                        otpInputRefs.current[index] = element;
+                      }}
+                      type="text"
+                      value={otpCode[index]?.trim() || ''}
+                    />
+                  ))}
+                </div>
+              </div>
+              {status.message ? (
+                <div className={`register-status ${status.type}`}>
+                  <AlertCircle size={18} />
+                  <p>{status.message}</p>
+                </div>
+              ) : null}
+              <div className="register-action-row">
+                <button
+                  className="button primary-button"
+                  disabled={status.type === 'loading'}
+                  onClick={completeCandidateRegistration}
+                  type="button"
+                >
+                  Tôi đã sẵn sàng
+                  <ArrowRight size={18} />
+                </button>
+                <button className="text-link ghost-link-button" onClick={returnToInfoStep} type="button">
+                  Tôi cần chỉnh thông tin
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {currentStep === 3 ? (
+            <div className="candidate-complete-panel">
+              <div className="candidate-complete-icon">
+                <CheckCircle2 size={42} />
+              </div>
+              <p className="eyebrow">Bạn đã là ứng viên</p>
+              <h2>Sẵn sàng dựng Portfolio 3D của bạn.</h2>
+              <p>
+                Tài khoản ứng viên đã đi qua bước xác thực. Tiếp theo, bạn có thể kể câu chuyện kỹ năng,
+                thêm chứng chỉ và dựng nhân vật Portfolio của mình.
+              </p>
+              {status.message ? (
+                <div className={`register-status ${status.type}`}>
+                  <AlertCircle size={18} />
+                  <p>{status.message}</p>
+                </div>
+              ) : null}
+              <div className="register-action-row complete-actions">
+                <Link className="button primary-button" to="/portfolio">
+                  Khám phá ngay Portfolio
+                  <ArrowRight size={18} />
+                </Link>
+                <Link className="text-link" to="/candidates">
+                  Trở về trang ứng viên
+                </Link>
+              </div>
+            </div>
+          ) : null}
         </form>
       </section>
     </section>

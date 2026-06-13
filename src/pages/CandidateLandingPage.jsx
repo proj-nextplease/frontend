@@ -94,7 +94,7 @@ export function CandidateLandingPage() {
                 <ArrowRight size={18} />
               </Link>
               <Link className="button secondary-button candidate-login-button" to="/login">
-                Tôi đã làm ứng viên
+                Tôi đã là ứng viên
                 <ArrowRight size={18} />
               </Link>
             </div>
