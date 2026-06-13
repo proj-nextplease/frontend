@@ -6,7 +6,6 @@ import {
   Camera,
   FileCheck2,
   GraduationCap,
-  PlayCircle,
   Sparkles,
   Trophy,
   WandSparkles,
@@ -57,30 +56,6 @@ export function CandidateLandingPage() {
       <div className="cursor-spotlight" aria-hidden="true" />
 
       <section className="candidate-hero" aria-labelledby="candidate-title">
-        <div className="candidate-hero-copy">
-          <Link className="back-home-link" to="/">
-            Về trang chủ
-          </Link>
-          <p className="eyebrow">Nắm bắt cơ hội</p>
-          <h1 id="candidate-title">Biến trải nghiệm sinh viên thành hồ sơ ứng viên sống động.</h1>
-          <p>
-            Đây là không gian dành riêng cho ứng viên của nextplease: dựng Portfolio
-            3D, gom proof thật, kể câu chuyện kỹ năng và chuẩn bị bước vào marketplace
-            cơ hội một cách tự tin hơn.
-          </p>
-
-          <div className="candidate-hero-actions" aria-label="Candidate account actions">
-            <Link className="button primary-button" to="/portfolio">
-              Bắt đầu làm ứng viên
-              <ArrowRight size={18} />
-            </Link>
-            <Link className="button secondary-button candidate-login-button" to="/login">
-              Tôi đã làm ứng viên
-              <ArrowRight size={18} />
-            </Link>
-          </div>
-        </div>
-
         <div className="candidate-video-panel">
           <video
             aria-label="Ứng viên trẻ chuẩn bị hồ sơ và trao đổi trong không gian làm việc"
@@ -91,13 +66,38 @@ export function CandidateLandingPage() {
             poster="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1100&q=80"
           >
             <source
-              src="https://cdn.coverr.co/videos/coverr-a-young-woman-asking-questions-and-making-notes-in-a-meeting-1297/360p.mp4"
+              src="https://cdn.coverr.co/videos/coverr-focused-student-with-digital-devices/1080p.mp4"
               type="video/mp4"
             />
           </video>
-          <div className="candidate-video-badge">
-            <PlayCircle size={18} />
-            <span>Portfolio-first onboarding</span>
+
+          <div className="candidate-video-scrim" aria-hidden="true" />
+
+          <div className="candidate-hero-copy">
+            <Link className="back-home-link" to="/">
+              Về trang chủ
+            </Link>
+            <p className="eyebrow">Nắm bắt cơ hội</p>
+            <h1 id="candidate-title">
+              <span className="candidate-title-line">Biến trải nghiệm sinh viên thành</span>
+              <span className="candidate-title-line">hồ sơ ứng viên sống động.</span>
+            </h1>
+            <p>
+              Đây là không gian dành riêng cho ứng viên của nextplease: dựng Portfolio
+              3D, gom proof thật, kể câu chuyện kỹ năng và chuẩn bị bước vào marketplace
+              cơ hội một cách tự tin hơn.
+            </p>
+
+            <div className="candidate-hero-actions centered-actions" aria-label="Candidate account actions">
+              <Link className="button primary-button" to="/candidate/register">
+                Bắt đầu làm ứng viên
+                <ArrowRight size={18} />
+              </Link>
+              <Link className="button secondary-button candidate-login-button" to="/login">
+                Tôi đã làm ứng viên
+                <ArrowRight size={18} />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -133,8 +133,9 @@ export function CandidateLandingPage() {
           <p className="eyebrow">Flow dành cho ứng viên</p>
           <h2>Từ “mình đã làm gì?” đến “mình có thể chứng minh điều đó”.</h2>
           <p>
-            Trang Portfolio là bước tiếp theo sau landing này. Người mới có thể bắt đầu
-            tạo hồ sơ ngay, còn ứng viên đã có tài khoản có thể quay lại luồng đăng nhập.
+            Trang đăng ký là bước tiếp theo sau landing này. Người mới tạo tài khoản
+            ứng viên trước, rồi tiếp tục dựng Portfolio 3D; ứng viên đã có tài khoản
+            có thể quay lại luồng đăng nhập.
           </p>
           <div className="candidate-journey-list">
             {candidateJourney.map((step, index) => (
@@ -169,7 +170,7 @@ export function CandidateLandingPage() {
         <Sparkles size={24} />
         <h2>Sẵn sàng dựng Portfolio ứng viên của bạn?</h2>
         <div className="candidate-hero-actions centered-actions">
-          <Link className="button primary-button" to="/portfolio">
+          <Link className="button primary-button" to="/candidate/register">
             Bắt đầu làm ứng viên
             <ArrowRight size={18} />
           </Link>
@@ -179,6 +180,35 @@ export function CandidateLandingPage() {
           </Link>
         </div>
       </section>
+
+      <footer className="candidate-footer">
+        <div className="footer-brand">
+          <strong>nextplease</strong>
+          <p>
+            Không gian dành cho ứng viên biến hoạt động thật, kỹ năng và minh chứng
+            thành Portfolio 3D dễ hiểu, dễ chia sẻ và sẵn sàng cho cơ hội mới.
+          </p>
+        </div>
+
+        <div className="footer-column">
+          <span>Ứng viên</span>
+          <Link to="/candidate/register">Bắt đầu làm ứng viên</Link>
+          <Link to="/login">Tôi đã làm ứng viên</Link>
+          <Link to="/">Về trang chủ</Link>
+        </div>
+
+        <div className="footer-column">
+          <span>Hồ sơ uy tín</span>
+          <p>Portfolio 3D cá nhân</p>
+          <p>Proof, chứng chỉ, kinh nghiệm</p>
+          <p>Backend xác thực dữ liệu tin cậy</p>
+        </div>
+
+        <div className="footer-bottom">
+          <span>Candidate-first experience for nextplease.</span>
+          <span>Portfolio · Proof · Opportunity</span>
+        </div>
+      </footer>
     </section>
   );
 }

@@ -4,6 +4,7 @@ import { AppLayout } from '../components/layout/AppLayout.jsx';
 import { AdminPage } from '../pages/AdminPage.jsx';
 import { BusinessPage } from '../pages/BusinessPage.jsx';
 import { CandidateLandingPage } from '../pages/CandidateLandingPage.jsx';
+import { CandidateRegisterPage } from '../pages/CandidateRegisterPage.jsx';
 import { HomePage } from '../pages/HomePage.jsx';
 import { LoginPage } from '../pages/LoginPage.jsx';
 import { NotFoundPage } from '../pages/NotFoundPage.jsx';
@@ -27,6 +28,7 @@ export function AppRouter() {
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="/candidates" element={<CandidateLandingPage />} />
+        <Route path="/candidate/register" element={<CandidateRegisterPage />} />
         <Route
           path="/portfolio"
           element={
