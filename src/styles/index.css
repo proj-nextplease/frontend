@@ -1930,6 +1930,127 @@ img {
   justify-content: center;
 }
 
+.candidate-login-page {
+  position: relative;
+  isolation: isolate;
+  width: 100vw;
+  min-height: calc(100vh - 90px);
+  margin-left: calc(50% - 50vw);
+  padding: 54px max(16px, calc((100vw - 1180px) / 2)) 92px;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(37, 99, 235, 0.14), transparent 30rem),
+    radial-gradient(circle at 90% 18%, rgba(249, 115, 22, 0.12), transparent 28rem),
+    var(--bg);
+}
+
+.candidate-login-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(390px, 0.72fr);
+  align-items: center;
+  gap: 34px;
+  min-height: 620px;
+}
+
+.candidate-login-copy {
+  display: grid;
+  justify-items: start;
+  max-width: 680px;
+}
+
+.candidate-login-copy h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 4rem;
+  line-height: 1.02;
+}
+
+.candidate-login-copy > p:not(.eyebrow) {
+  max-width: 580px;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.78;
+}
+
+.candidate-login-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.candidate-login-highlights span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 850;
+  padding: 10px 13px;
+  box-shadow: var(--shadow-soft);
+}
+
+.candidate-login-highlights svg {
+  color: var(--primary);
+}
+
+.candidate-login-panel {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.9)),
+    radial-gradient(circle at 100% 0%, rgba(249, 115, 22, 0.1), transparent 16rem);
+  box-shadow: var(--shadow-soft);
+  padding: 28px;
+}
+
+.candidate-login-options {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.remember-password-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 820;
+}
+
+.remember-password-option input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.candidate-register-prompt {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-weight: 780;
+  padding-top: 18px;
+  text-align: center;
+}
+
+.candidate-register-prompt a {
+  color: var(--primary);
+  font-weight: 900;
+}
+
 .dashboard-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
@@ -2896,6 +3017,8 @@ img {
 :root[data-theme='dark'] .candidate-proof-strip article,
 :root[data-theme='dark'] .candidate-bottom-cta,
 :root[data-theme='dark'] .register-form-panel,
+:root[data-theme='dark'] .candidate-login-panel,
+:root[data-theme='dark'] .candidate-login-highlights span,
 :root[data-theme='dark'] .social-register-button,
 :root[data-theme='dark'] .field-rail-dot,
 :root[data-theme='dark'] .password-guide,
@@ -3083,6 +3206,7 @@ img {
   .candidate-showcase,
   .register-hero,
   .register-workspace,
+  .candidate-login-shell,
   .split-section,
   .dashboard-hero,
   .final-cta,
@@ -3144,6 +3268,14 @@ img {
 
   .candidate-hero {
     min-height: auto;
+  }
+
+  .candidate-login-shell {
+    min-height: auto;
+  }
+
+  .candidate-login-copy h1 {
+    font-size: 3.25rem;
   }
 
   .candidate-video-panel {
@@ -3246,11 +3378,20 @@ img {
     padding-top: 28px;
   }
 
+  .candidate-login-page {
+    padding-top: 28px;
+  }
+
   .register-hero h1 {
     font-size: 2.6rem;
   }
 
+  .candidate-login-copy h1 {
+    font-size: 2.7rem;
+  }
+
   .register-trust-row,
+  .candidate-login-options,
   .register-action-row {
     align-items: stretch;
     flex-direction: column;

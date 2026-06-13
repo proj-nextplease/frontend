@@ -93,7 +93,7 @@ export function CandidateLandingPage() {
                 Bắt đầu làm ứng viên
                 <ArrowRight size={18} />
               </Link>
-              <Link className="button secondary-button candidate-login-button" to="/login">
+              <Link className="button secondary-button candidate-login-button" to="/candidate/login">
                 Tôi đã là ứng viên
                 <ArrowRight size={18} />
               </Link>
@@ -174,7 +174,7 @@ export function CandidateLandingPage() {
             Bắt đầu làm ứng viên
             <ArrowRight size={18} />
           </Link>
-          <Link className="button secondary-button candidate-login-button" to="/login">
+          <Link className="button secondary-button candidate-login-button" to="/candidate/login">
             Tôi đã làm ứng viên
             <ArrowRight size={18} />
           </Link>
@@ -193,7 +193,7 @@ export function CandidateLandingPage() {
         <div className="footer-column">
           <span>Ứng viên</span>
           <Link to="/candidate/register">Bắt đầu làm ứng viên</Link>
-          <Link to="/login">Tôi đã làm ứng viên</Link>
+          <Link to="/candidate/login">Tôi đã làm ứng viên</Link>
           <Link to="/">Về trang chủ</Link>
         </div>
 

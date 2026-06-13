@@ -440,7 +440,7 @@ export function CandidateRegisterPage() {
               Xác thực tài khoản
               <ArrowRight size={18} />
             </button>
-            <Link className="text-link" to="/login">
+            <Link className="text-link" to="/candidate/login">
               Tôi đã có tài khoản
             </Link>
           </div>
