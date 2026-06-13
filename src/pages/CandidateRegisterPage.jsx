@@ -18,6 +18,7 @@ import {
   requestCandidateRegistrationOtp,
   verifyCandidateRegistrationOtp,
 } from '../api/candidateRegistrationApi.js';
+import { loginCandidate } from '../api/authApi.js';
 import { supabase } from '../services/supabaseClient.js';
 
 const socialProviders = [
@@ -310,11 +311,24 @@ export function CandidateRegisterPage() {
         password: formData.password,
       });
 
+      // Automatically log the user in to establish client-side session
+      try {
+        const loginData = await loginCandidate(formData.email, formData.password);
+        if (loginData && loginData.accessToken) {
+          await supabase.auth.setSession({
+            access_token: loginData.accessToken,
+            refresh_token: loginData.refreshToken,
+          });
+        }
+      } catch (loginError) {
+        console.error('Tự động đăng nhập sau đăng ký thất bại:', loginError);
+      }
+
       setCurrentStep(3);
       window.sessionStorage.removeItem(candidateRegisterDraftKey);
       setStatus({
         type: 'success',
-        message: 'Đã xác thực OTP thành công. Tài khoản ứng viên đã được tạo.',
+        message: 'Đã xác thực OTP thành công. Tài khoản ứng viên đã được tạo và tự động đăng nhập.',
       });
     } catch (error) {
       setStatus({
