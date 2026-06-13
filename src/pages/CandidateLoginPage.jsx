@@ -12,6 +12,7 @@ import {
   UserRoundCheck,
 } from 'lucide-react';
 import { supabase } from '../services/supabaseClient.js';
+import { loginCandidate } from '../api/authApi.js';
 
 const socialProviders = [
   { provider: 'google', label: 'Google', mark: 'G' },
@@ -79,17 +80,26 @@ export function CandidateLoginPage() {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: loginData.email,
-      password: loginData.password,
-    });
+    try {
+      const response = await loginCandidate(loginData.email, loginData.password);
 
-    if (error) {
-      setStatus({ type: 'error', message: error.message });
-      return;
+      const { error } = await supabase.auth.setSession({
+        access_token: response.accessToken,
+        refresh_token: response.refreshToken,
+      });
+
+      if (error) {
+        setStatus({ type: 'error', message: error.message || 'Không thể thiết lập phiên đăng nhập.' });
+        return;
+      }
+
+      navigate('/portfolio');
+    } catch (error) {
+      setStatus({
+        type: 'error',
+        message: error.response?.data?.message || error.message || 'Đăng nhập thất bại.',
+      });
     }
-
-    navigate('/portfolio');
   }
 
   return (
