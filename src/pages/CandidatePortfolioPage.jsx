@@ -11,7 +11,9 @@ import {
   Plus,
   Sparkles,
   UserRound,
+  Trash2,
 } from 'lucide-react';
+import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
 
 export const PORTFOLIO_PREVIEW_STORAGE_PREFIX = 'nextplease:portfolio-preview:';
 
@@ -312,6 +314,80 @@ export function CandidatePortfolioPage() {
   const [experiences, setExperiences] = useState(defaultExperiences);
   const [credentials, setCredentials] = useState(defaultCredentials);
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  useEffect(() => {
+    async function loadPortfolio() {
+      try {
+        setIsLoading(true);
+        const data = await getMyPortfolio();
+        if (data) {
+          if (data.avatar) {
+            setAvatar(prev => ({ ...prev, ...data.avatar }));
+          }
+          setProfile({
+            name: data.name || '',
+            headline: data.headline || '',
+            school: data.school || '',
+            location: data.location || '',
+            bio: data.bio || '',
+            skills: data.skills ? data.skills.join(', ') : '',
+          });
+          if (data.experiences && data.experiences.length > 0) {
+            setExperiences(data.experiences);
+          }
+          if (data.credentials && data.credentials.length > 0) {
+            setCredentials(data.credentials);
+          }
+        }
+      } catch (err) {
+        console.error('Không thể load portfolio từ backend:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadPortfolio();
+  }, []);
+
+  async function handleSavePortfolio() {
+    try {
+      setIsSaving(true);
+      setErrorMsg('');
+      setSuccessMsg('');
+      
+      const payload = {
+        name: profile.name,
+        headline: profile.headline,
+        school: profile.school,
+        location: profile.location,
+        bio: profile.bio,
+        skills: profile.skills
+          .split(',')
+          .map((skill) => skill.trim())
+          .filter(Boolean),
+        avatar,
+        experiences: experiences.filter(exp => exp.title.trim() || exp.organization.trim()),
+        credentials: credentials.filter(cred => cred.name.trim() || cred.issuer.trim()),
+      };
+      
+      await updateMyPortfolio(payload);
+      setSuccessMsg('Portfolio của bạn đã được lưu chính thức vào hệ thống!');
+      setShowConfirmModal(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message || 'Có lỗi xảy ra khi lưu portfolio. Vui lòng thử lại.');
+      setShowConfirmModal(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   function updateAvatar(field, value) {
     setAvatar((current) => {
       const nextAvatar = { ...current, [field]: value };
@@ -347,6 +423,10 @@ export function CandidatePortfolioPage() {
     ]);
   }
 
+  function removeExperience(id) {
+    setExperiences((current) => current.filter((exp) => exp.id !== id));
+  }
+
   function updateCredential(id, field, value) {
     setCredentials((current) =>
       current.map((credential) =>
@@ -356,7 +436,23 @@ export function CandidatePortfolioPage() {
   }
 
   function updateCredentialFile(id, file) {
+    if (file && file.size > 5 * 1024 * 1024) {
+      setErrorMsg('File bằng cấp/chứng chỉ không được vượt quá 5MB.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     updateCredential(id, 'fileName', file?.name || '');
+  }
+
+  function handleIssuedAtChange(id, rawValue) {
+    let clean = rawValue.replace(/[^0-9/]/g, '');
+    const digits = clean.replace(/\D/g, '');
+    if (digits.length > 2) {
+      clean = `${digits.substring(0, 2)}/${digits.substring(2, 4)}`;
+    } else {
+      clean = digits;
+    }
+    updateCredential(id, 'issuedAt', clean);
   }
 
   function addCredential() {
@@ -370,6 +466,54 @@ export function CandidatePortfolioPage() {
         fileName: '',
       },
     ]);
+  }
+
+  function removeCredential(id) {
+    setCredentials((current) => current.filter((cred) => cred.id !== id));
+  }
+
+  function validatePortfolio() {
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!profile.name.trim()) {
+      setErrorMsg('Vui lòng điền họ và tên.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return false;
+    }
+
+    for (let i = 0; i < experiences.length; i++) {
+      const exp = experiences[i];
+      if (!exp.title.trim() || !exp.organization.trim() || !exp.detail.trim()) {
+        setErrorMsg(`Vui lòng nhập đầy đủ thông tin (Vai trò, Tổ chức, Mô tả) cho kinh nghiệm #${i + 1}.`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return false;
+      }
+    }
+
+    for (let i = 0; i < credentials.length; i++) {
+      const cred = credentials[i];
+      if (!cred.name.trim() || !cred.issuer.trim() || !cred.issuedAt.trim()) {
+        setErrorMsg(`Vui lòng nhập đầy đủ thông tin (Tên chứng chỉ, Đơn vị cấp, Thời gian cấp) cho chứng chỉ #${i + 1}.`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return false;
+      }
+
+      const datePattern = /^(0[1-9]|1[0-2])\/[0-9]{2}$/;
+      if (!datePattern.test(cred.issuedAt)) {
+        setErrorMsg(`Thời gian cấp của chứng chỉ #${i + 1} phải đúng định dạng MM/YY (ví dụ: 06/26).`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  function handleOpenConfirmModal() {
+    if (validatePortfolio()) {
+      setShowConfirmModal(true);
+    }
   }
 
   function openPortfolioPreview() {
@@ -523,7 +667,69 @@ export function CandidatePortfolioPage() {
           </div>
         </aside>
 
-        <div className="portfolio-form-panel">
+        <div className="portfolio-form-panel" style={{ position: 'relative' }}>
+          {isLoading && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'var(--theme-loading-bg, rgba(255, 255, 255, 0.75))',
+              backdropFilter: 'blur(4px)',
+              zIndex: 10,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '24px'
+            }}>
+              <div style={{
+                color: 'var(--primary)',
+                fontWeight: 600,
+                fontSize: '1.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <Sparkles className="animate-spin" size={24} />
+                Đang tải dữ liệu portfolio...
+              </div>
+            </div>
+          )}
+
+          {successMsg && (
+            <div style={{
+              background: 'rgba(34, 197, 94, 0.15)',
+              border: '1px solid rgba(34, 197, 94, 0.4)',
+              color: '#22c55e',
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <BadgeCheck size={20} />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          {errorMsg && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              color: '#ef4444',
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span>⚠️ {errorMsg}</span>
+            </div>
+          )}
+
           <div className="form-section-heading">
             <UserRound size={22} />
             <div>
@@ -601,7 +807,27 @@ export function CandidatePortfolioPage() {
 
             {experiences.map((experience, index) => (
               <article className="experience-edit-card" key={experience.id}>
-                <div className="experience-index">{index + 1}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <div className="experience-index">Kinh nghiệm #{index + 1}</div>
+                  <button
+                    type="button"
+                    style={{
+                      padding: '6px 12px',
+                      color: '#ef4444',
+                      border: '1px solid rgba(239, 68, 68, 0.2)',
+                      borderRadius: '8px',
+                      background: 'rgba(239, 68, 68, 0.05)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => removeExperience(experience.id)}
+                  >
+                    <Trash2 size={14} /> Xoá
+                  </button>
+                </div>
                 <label>
                   Vai trò
                   <input
@@ -649,7 +875,27 @@ export function CandidatePortfolioPage() {
 
             {credentials.map((credential, index) => (
               <article className="credential-edit-card" key={credential.id}>
-                <div className="credential-index">{index + 1}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <div className="credential-index">Chứng chỉ #{index + 1}</div>
+                  <button
+                    type="button"
+                    style={{
+                      padding: '6px 12px',
+                      color: '#ef4444',
+                      border: '1px solid rgba(239, 68, 68, 0.2)',
+                      borderRadius: '8px',
+                      background: 'rgba(239, 68, 68, 0.05)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => removeCredential(credential.id)}
+                  >
+                    <Trash2 size={14} /> Xoá
+                  </button>
+                </div>
                 <label>
                   Tên bằng cấp / chứng chỉ
                   <input
@@ -667,10 +913,10 @@ export function CandidatePortfolioPage() {
                   />
                 </label>
                 <label>
-                  Thời gian cấp
+                  Thời gian cấp (MM/YY)
                   <input
-                    onChange={(event) => updateCredential(credential.id, 'issuedAt', event.target.value)}
-                    placeholder="Ví dụ: 06/2026"
+                    onChange={(event) => handleIssuedAtChange(credential.id, event.target.value)}
+                    placeholder="Ví dụ: 06/26"
                     value={credential.issuedAt}
                   />
                 </label>
@@ -680,7 +926,7 @@ export function CandidatePortfolioPage() {
                     <FileUp size={20} />
                     <span>
                       {credential.fileName || 'Tải lên PDF, PNG hoặc JPG'}
-                      <small>File sẽ được gửi sang backend/file_assets khi nối API.</small>
+                      <small>Yêu cầu dung lượng dưới 5MB.</small>
                     </span>
                     <input
                       accept=".pdf,.png,.jpg,.jpeg"
@@ -702,20 +948,121 @@ export function CandidatePortfolioPage() {
             <div className="form-section-heading">
               <Eye size={22} />
               <div>
-                <h2>Xem portfolio như ứng viên thật</h2>
+                <h2>Xem và nộp portfolio của bạn</h2>
                 <p>
-                  Mở một tab preview riêng từ dữ liệu bạn đang nhập. Đây vẫn là bản nháp UI,
-                  chưa gửi sang backend.
+                  Mở một tab preview riêng từ dữ liệu bạn đang nhập, hoặc lưu chính thức portfolio này vào hệ thống.
                 </p>
               </div>
             </div>
-            <button className="button primary-button preview-open-button" onClick={openPortfolioPreview} type="button">
-              <Eye size={18} />
-              Xem trước
-            </button>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <button className="button secondary-button preview-open-button" onClick={openPortfolioPreview} type="button">
+                <Eye size={18} />
+                Xem trước
+              </button>
+              <button className="button primary-button ready-submit-button" onClick={handleOpenConfirmModal} type="button">
+                <Sparkles size={18} />
+                Tôi đã sẵn sàng
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {showConfirmModal && (
+        <div className="confirm-overlay" onClick={() => setShowConfirmModal(false)}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-modal-header">
+              <h2>Xác nhận gửi Portfolio</h2>
+              <button
+                className="close-button"
+                onClick={() => setShowConfirmModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--ink)',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                }}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="confirm-modal-body">
+              <div className="confirm-avatar-container">
+                <div className="confirm-avatar-box">
+                  <PortfolioAvatar3D avatar={avatar} />
+                </div>
+                <p style={{ fontSize: '0.9rem', color: 'var(--ink-muted)', textAlign: 'center' }}>
+                  Nhân vật 3D đại diện cho hồ sơ ứng tuyển của bạn.
+                </p>
+              </div>
+              <div className="confirm-details-container">
+                <div className="confirm-section">
+                  <h3>Thông tin cơ bản</h3>
+                  <div className="confirm-field"><strong>Họ và tên:</strong> {profile.name || 'Chưa nhập'}</div>
+                  <div className="confirm-field"><strong>Headline:</strong> {profile.headline || 'Chưa nhập'}</div>
+                  <div className="confirm-field"><strong>Trường học:</strong> {profile.school || 'Chưa nhập'}</div>
+                  <div className="confirm-field"><strong>Khu vực:</strong> {profile.location || 'Chưa nhập'}</div>
+                  <div className="confirm-field"><strong>Giới thiệu:</strong> {profile.bio || 'Chưa nhập'}</div>
+                </div>
+
+                <div className="confirm-section">
+                  <h3>Kỹ năng</h3>
+                  <div className="confirm-skills">
+                    {skills.length > 0 ? (
+                      skills.map((skill) => (
+                        <span className="confirm-skill-tag" key={skill}>{skill}</span>
+                      ))
+                    ) : (
+                      <span className="confirm-field" style={{ color: 'var(--ink-muted)' }}>Chưa có kỹ năng nào.</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="confirm-section">
+                  <h3>Kinh nghiệm nổi bật</h3>
+                  {experiences.filter(exp => exp.title.trim() || exp.organization.trim()).length > 0 ? (
+                    experiences.filter(exp => exp.title.trim() || exp.organization.trim()).map((exp, index) => (
+                      <div className="confirm-list-item" key={exp.id || index}>
+                        <strong>{exp.title}</strong> tại <em>{exp.organization}</em>
+                        <p style={{ margin: '6px 0 0', fontSize: '0.9rem', color: 'var(--ink-muted)' }}>{exp.detail}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="confirm-field" style={{ color: 'var(--ink-muted)' }}>Chưa nhập kinh nghiệm.</span>
+                  )}
+                </div>
+
+                <div className="confirm-section">
+                  <h3>Bằng cấp & chứng chỉ</h3>
+                  {credentials.filter(cred => cred.name.trim() || cred.issuer.trim()).length > 0 ? (
+                    credentials.filter(cred => cred.name.trim() || cred.issuer.trim()).map((cred, index) => (
+                      <div className="confirm-list-item" key={cred.id || index}>
+                        <strong>{cred.name}</strong> cấp bởi <em>{cred.issuer}</em> {cred.issuedAt ? `(${cred.issuedAt})` : ''}
+                        {cred.fileName && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '0.85rem', color: 'var(--primary)' }}>
+                            <BadgeCheck size={14} /> File: {cred.fileName}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <span className="confirm-field" style={{ color: 'var(--ink-muted)' }}>Chưa có chứng chỉ.</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="confirm-modal-footer">
+              <button className="button secondary-button" onClick={() => setShowConfirmModal(false)} type="button">
+                Hủy bỏ
+              </button>
+              <button className="button primary-button" onClick={handleSavePortfolio} type="button" disabled={isSaving}>
+                {isSaving ? 'Đang lưu...' : 'Xác nhận & Gửi đi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
