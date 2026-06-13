@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import { AppLayout } from '../components/layout/AppLayout.jsx';
 import { AdminPage } from '../pages/AdminPage.jsx';
 import { BusinessPage } from '../pages/BusinessPage.jsx';
+import { CandidateLandingPage } from '../pages/CandidateLandingPage.jsx';
 import { HomePage } from '../pages/HomePage.jsx';
 import { LoginPage } from '../pages/LoginPage.jsx';
 import { NotFoundPage } from '../pages/NotFoundPage.jsx';
@@ -25,6 +26,7 @@ export function AppRouter() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
+        <Route path="/candidates" element={<CandidateLandingPage />} />
         <Route
           path="/portfolio"
           element={

@@ -20,7 +20,7 @@ const roleCards = [
     icon: GraduationCap,
     title: 'Dành cho Người dùng',
     copy: 'Xây dựng Reputation Capital Profile từ hoạt động CLB, sự kiện, dự án, internship và freelance.',
-    to: '/portfolio',
+    to: '/candidates',
     cta: 'Nắm bắt cơ hội',
   },
   {
@@ -99,6 +99,7 @@ function AnimatedStatNumber({ value, suffix }) {
 
 export function HomePage() {
   const pageRef = useRef(null);
+  const [activeTimelineItem, setActiveTimelineItem] = useState(null);
 
   function handlePointerMove(event) {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -131,7 +132,7 @@ export function HomePage() {
           </p>
 
           <div className="hero-actions" aria-label="Choose your path">
-            <Link className="button primary-button" to="/portfolio">
+            <Link className="button primary-button" to="/candidates">
               Nắm bắt cơ hội
               <ArrowRight size={18} />
             </Link>
@@ -170,8 +171,12 @@ export function HomePage() {
         ))}
       </section>
 
-      <section className="section-block" id="about">
-        <div className="section-heading centered">
+      <section
+        className="journey-timeline-section"
+        id="about"
+        onPointerLeave={() => setActiveTimelineItem(null)}
+      >
+        <div className="section-heading centered timeline-intro">
           <p className="eyebrow">Xây dựng sự nghiệp tương lai</p>
           <h2>Một nền tảng cho hai hành trình chính của MVP.</h2>
           <p>
@@ -180,79 +185,115 @@ export function HomePage() {
           </p>
         </div>
 
-        <div className="role-card-grid">
-          {roleCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <Link className="role-card" to={card.to} key={card.title}>
-                <span className="icon-tile">
-                  <Icon size={24} />
-                </span>
-                <h3>{card.title}</h3>
-                <p>{card.copy}</p>
-                <span className="card-link">
-                  {card.cta}
-                  <ArrowRight size={16} />
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="split-section">
-        <div className="split-image">
-          <img
-            alt="Modern office with students and recruiters"
-            src="https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1100&q=80"
-          />
-        </div>
-        <div className="split-content">
-          <p className="eyebrow">Nguồn nhân lực trẻ, thật và đáng tin</p>
-          <h2>Thay CV tự khai bằng bằng chứng có thể kiểm chứng.</h2>
-          <p>
-            nextplease không để frontend tự tính điểm uy tín. Mọi thay đổi liên quan
-            Reputation Score, EXP, NP Wallet, Premium và fraud đều đi qua backend,
-            transaction và event logs.
-          </p>
-          <div className="proof-step-list">
-            {proofSteps.map((step, index) => (
-              <article className="timeline-item" key={step}>
-                <span>{index + 1}</span>
-                <p>{step}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section-block">
-        <div className="section-heading">
-          <p className="eyebrow">Việc làm & thực tập nổi bật</p>
-          <h2>Cơ hội được thiết kế cho verified young talent.</h2>
-        </div>
-        <div className="job-grid">
-          {featuredJobs.map((job) => (
-            <article className="job-card" key={job.title}>
-              <div className="job-icon">
-                <BriefcaseBusiness size={22} />
+        <div className="journey-timeline" aria-label="Nextplease platform journey">
+          <article
+            className={`journey-node left ${activeTimelineItem === 'roles' ? 'active' : ''}`}
+            onPointerEnter={() => setActiveTimelineItem('roles')}
+            onFocus={() => setActiveTimelineItem('roles')}
+          >
+            <span className="journey-dot" aria-hidden="true" />
+            <div className="journey-card">
+              <p className="eyebrow">Hai lối vào chính</p>
+              <h3>Chọn vai trò phù hợp với mục tiêu của bạn.</h3>
+              <div className="role-card-grid timeline-role-grid">
+                {roleCards.map((card) => {
+                  const Icon = card.icon;
+                  return (
+                    <Link className="role-card" to={card.to} key={card.title}>
+                      <span className="icon-tile">
+                        <Icon size={24} />
+                      </span>
+                      <h3>{card.title}</h3>
+                      <p>{card.copy}</p>
+                      <span className="card-link">
+                        {card.cta}
+                        <ArrowRight size={16} />
+                      </span>
+                    </Link>
+                  );
+                })}
               </div>
-              <h3>{job.title}</h3>
-              <p>{job.company}</p>
-              <span>{job.meta}</span>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="testimonial-section">
-        {testimonials.map((item) => (
-          <article className="testimonial-card" key={item.name}>
-            <Sparkles size={20} />
-            <p>{item.quote}</p>
-            <strong>{item.name}</strong>
+            </div>
           </article>
-        ))}
+
+          <article
+            className={`journey-node right ${activeTimelineItem === 'proof' ? 'active' : ''}`}
+            onPointerEnter={() => setActiveTimelineItem('proof')}
+            onFocus={() => setActiveTimelineItem('proof')}
+          >
+            <span className="journey-dot" aria-hidden="true" />
+            <div className="journey-card proof-journey-card">
+              <div className="journey-media">
+                <img
+                  alt="Modern office with students and recruiters"
+                  src="https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=80"
+                />
+              </div>
+              <div>
+                <p className="eyebrow">Nguồn nhân lực trẻ, thật và đáng tin</p>
+                <h3>Thay CV tự khai bằng bằng chứng có thể kiểm chứng.</h3>
+                <p>
+                  nextplease không để frontend tự tính điểm uy tín. Mọi thay đổi
+                  liên quan Reputation Score, EXP, NP Wallet, Premium và fraud đều
+                  đi qua backend, transaction và event logs.
+                </p>
+                <div className="proof-step-list">
+                  {proofSteps.map((step, index) => (
+                    <article className="timeline-item" key={step}>
+                      <span>{index + 1}</span>
+                      <p>{step}</p>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article
+            className={`journey-node left ${activeTimelineItem === 'jobs' ? 'active' : ''}`}
+            onPointerEnter={() => setActiveTimelineItem('jobs')}
+            onFocus={() => setActiveTimelineItem('jobs')}
+          >
+            <span className="journey-dot" aria-hidden="true" />
+            <div className="journey-card">
+              <p className="eyebrow">Việc làm & thực tập nổi bật</p>
+              <h3>Cơ hội được thiết kế cho verified young talent.</h3>
+              <div className="job-grid timeline-job-grid">
+                {featuredJobs.map((job) => (
+                  <article className="job-card" key={job.title}>
+                    <div className="job-icon">
+                      <BriefcaseBusiness size={22} />
+                    </div>
+                    <h3>{job.title}</h3>
+                    <p>{job.company}</p>
+                    <span>{job.meta}</span>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </article>
+
+          <article
+            className={`journey-node right ${activeTimelineItem === 'voices' ? 'active' : ''}`}
+            onPointerEnter={() => setActiveTimelineItem('voices')}
+            onFocus={() => setActiveTimelineItem('voices')}
+          >
+            <span className="journey-dot" aria-hidden="true" />
+            <div className="journey-card">
+              <p className="eyebrow">Tín hiệu từ hệ sinh thái</p>
+              <h3>Để proof thật dẫn đường cho cơ hội thật.</h3>
+              <div className="testimonial-section timeline-testimonial-grid">
+                {testimonials.map((item) => (
+                  <article className="testimonial-card" key={item.name}>
+                    <Sparkles size={20} />
+                    <p>{item.quote}</p>
+                    <strong>{item.name}</strong>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </article>
+        </div>
       </section>
 
       <section className="final-cta">
@@ -261,7 +302,7 @@ export function HomePage() {
           <h2>Chọn vai trò và bắt đầu khám phá nextplease.</h2>
         </div>
         <div className="role-links">
-          <Link to="/portfolio">
+          <Link to="/candidates">
             <Users size={20} />
             Nắm bắt cơ hội
           </Link>
@@ -284,7 +325,7 @@ export function HomePage() {
         <div className="footer-column">
           <span>Sản phẩm</span>
           <a href="#about">Về chúng tôi</a>
-          <Link to="/users">Người dùng</Link>
+          <Link to="/candidates">Ứng viên</Link>
           <Link to="/businesses">Doanh nghiệp</Link>
         </div>
 

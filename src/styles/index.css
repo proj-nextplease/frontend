@@ -539,6 +539,164 @@ img {
   margin-top: 82px;
 }
 
+.journey-timeline-section {
+  position: relative;
+  width: 100vw;
+  margin: 82px 0 0 calc(50% - 50vw);
+  padding: 0 max(16px, calc((100vw - 1180px) / 2));
+}
+
+.timeline-intro {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 34px;
+}
+
+.journey-timeline {
+  position: relative;
+  display: grid;
+  gap: 26px;
+  padding: 34px 0 8px;
+}
+
+.journey-timeline::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  content: "";
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      rgba(37, 99, 235, 0.2) 10%,
+      rgba(102, 112, 133, 0.22) 50%,
+      rgba(249, 115, 22, 0.2) 90%,
+      transparent
+    );
+  transform: translateX(-50%);
+}
+
+.journey-node {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+  align-items: center;
+  min-height: 260px;
+}
+
+.journey-dot {
+  position: relative;
+  z-index: 2;
+  grid-column: 2;
+  justify-self: center;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow:
+    0 0 0 8px rgba(37, 99, 235, 0.08),
+    0 18px 44px rgba(37, 99, 235, 0.18);
+  transition:
+    background-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
+}
+
+.journey-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 530px);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, var(--card-bg) 0%, var(--card-bg-strong) 100%);
+  box-shadow: var(--shadow-soft);
+  opacity: 0.28;
+  filter: blur(1.2px);
+  transform: translateY(18px) scale(0.98);
+  transition:
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    filter 240ms ease,
+    opacity 240ms ease,
+    transform 240ms ease;
+  padding: 24px;
+}
+
+.journey-card h3 {
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-size: 1.45rem;
+  line-height: 1.18;
+}
+
+.journey-card p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.journey-node.left .journey-card {
+  grid-column: 1;
+  justify-self: end;
+}
+
+.journey-node.right .journey-card {
+  grid-column: 3;
+  justify-self: start;
+}
+
+.journey-node.active .journey-card,
+.journey-node:hover .journey-card,
+.journey-node:focus-within .journey-card {
+  border-color: rgba(37, 99, 235, 0.26);
+  box-shadow: var(--shadow);
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0) scale(1);
+}
+
+.journey-node.active .journey-dot,
+.journey-node:hover .journey-dot,
+.journey-node:focus-within .journey-dot {
+  background: var(--accent);
+  box-shadow:
+    0 0 0 10px rgba(249, 115, 22, 0.11),
+    0 20px 52px rgba(249, 115, 22, 0.22);
+  transform: scale(1.18);
+}
+
+.timeline-role-grid,
+.timeline-job-grid,
+.timeline-testimonial-grid {
+  grid-template-columns: 1fr;
+}
+
+.timeline-role-grid .role-card,
+.timeline-job-grid .job-card,
+.timeline-testimonial-grid .testimonial-card {
+  box-shadow: none;
+}
+
+.proof-journey-card {
+  display: grid;
+  gap: 18px;
+}
+
+.journey-media {
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.journey-media img {
+  display: block;
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+}
+
 .section-heading {
   width: min(740px, 100%);
 }
@@ -852,6 +1010,253 @@ img {
 .dashboard-page {
   display: grid;
   gap: 28px;
+}
+
+.candidate-landing {
+  position: relative;
+  overflow: hidden;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding: 34px max(16px, calc((100vw - 1180px) / 2)) 0;
+}
+
+.candidate-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(360px, 0.98fr);
+  align-items: center;
+  gap: 46px;
+  min-height: 620px;
+}
+
+.candidate-hero-copy {
+  min-width: 0;
+}
+
+.back-home-link {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 20px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 820;
+  padding: 9px 13px;
+}
+
+.back-home-link:hover {
+  border-color: rgba(37, 99, 235, 0.3);
+  color: var(--primary);
+}
+
+.candidate-hero h1 {
+  max-width: 820px;
+  margin: 0;
+  color: var(--ink);
+  font-size: 4rem;
+  line-height: 1.03;
+}
+
+.candidate-hero p {
+  max-width: 680px;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+
+.candidate-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.centered-actions {
+  justify-content: center;
+}
+
+.candidate-login-button {
+  background: var(--card-bg);
+}
+
+.candidate-video-panel {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(37, 99, 235, 0.12), transparent 18rem),
+    var(--image-frame-bg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  padding: 12px;
+  transform: rotate(1deg);
+}
+
+.candidate-video-panel video {
+  display: block;
+  width: 100%;
+  height: 520px;
+  border-radius: 20px;
+  object-fit: cover;
+}
+
+.candidate-video-badge {
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--shadow-soft);
+  color: #132033;
+  font-weight: 860;
+  backdrop-filter: blur(14px);
+  padding: 11px 14px;
+}
+
+.candidate-benefit-grid,
+.candidate-proof-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 34px;
+}
+
+.candidate-benefit-card,
+.candidate-proof-strip article,
+.candidate-bottom-cta {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-soft);
+}
+
+.candidate-benefit-card {
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+
+.candidate-benefit-card::after {
+  position: absolute;
+  inset: auto -20% -55% 16%;
+  height: 8rem;
+  content: "";
+  border-radius: 999px;
+  background: rgba(249, 115, 22, 0.08);
+  filter: blur(24px);
+}
+
+.candidate-benefit-card:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+  box-shadow: var(--shadow);
+  transform: translateY(-5px);
+}
+
+.candidate-benefit-card h2 {
+  margin: 18px 0 8px;
+  color: var(--ink);
+  font-size: 1.2rem;
+}
+
+.candidate-benefit-card p,
+.candidate-showcase-copy p,
+.candidate-proof-strip span {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.candidate-showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: 44px;
+  margin-top: 86px;
+  border-radius: 28px;
+  background:
+    linear-gradient(135deg, rgba(239, 246, 255, 0.88), rgba(255, 247, 237, 0.72)),
+    var(--card-bg);
+  box-shadow: var(--shadow-soft);
+  padding: 24px;
+}
+
+.candidate-showcase-media {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+}
+
+.candidate-showcase-media img {
+  display: block;
+  width: 100%;
+  height: 440px;
+  object-fit: cover;
+}
+
+.media-chip {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #132033;
+  font-weight: 860;
+  backdrop-filter: blur(12px);
+  padding: 10px 13px;
+}
+
+.candidate-showcase-copy h2,
+.candidate-bottom-cta h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 2.35rem;
+  line-height: 1.08;
+}
+
+.candidate-journey-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.candidate-proof-strip article {
+  display: grid;
+  gap: 8px;
+  padding: 22px;
+}
+
+.candidate-proof-strip svg,
+.candidate-bottom-cta svg {
+  color: var(--accent);
+}
+
+.candidate-proof-strip strong {
+  color: var(--ink);
+}
+
+.candidate-bottom-cta {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  margin: 86px 0 0;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.16), transparent 22rem),
+    var(--card-bg);
+  text-align: center;
+  padding: 42px 22px;
 }
 
 .dashboard-hero {
@@ -1814,8 +2219,31 @@ img {
   background: rgba(15, 23, 42, 0.92);
 }
 
+:root[data-theme='dark'] .back-home-link,
+:root[data-theme='dark'] .candidate-login-button,
+:root[data-theme='dark'] .candidate-benefit-card,
+:root[data-theme='dark'] .candidate-proof-strip article,
+:root[data-theme='dark'] .candidate-bottom-cta {
+  background: rgba(15, 23, 42, 0.82);
+  border-color: var(--line);
+}
+
+:root[data-theme='dark'] .candidate-showcase {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.82)),
+    radial-gradient(circle at 100% 0%, rgba(251, 146, 60, 0.1), transparent 18rem);
+}
+
+:root[data-theme='dark'] .candidate-video-badge,
+:root[data-theme='dark'] .media-chip {
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  color: var(--ink);
+}
+
 :root[data-theme='dark'] .hero-visual-card,
 :root[data-theme='dark'] .split-image,
+:root[data-theme='dark'] .candidate-video-panel,
 :root[data-theme='dark'] .portfolio-status-card,
 :root[data-theme='dark'] .portfolio-studio,
 :root[data-theme='dark'] .portfolio-form-panel,
@@ -1826,6 +2254,7 @@ img {
 :root[data-theme='dark'] .public-profile-card,
 :root[data-theme='dark'] .public-section-card,
 :root[data-theme='dark'] .preview-empty-state,
+:root[data-theme='dark'] .journey-card,
 :root[data-theme='dark'] .role-card,
 :root[data-theme='dark'] .job-card,
 :root[data-theme='dark'] .testimonial-card,
@@ -1837,6 +2266,15 @@ img {
 :root[data-theme='dark'] .status-panel {
   background: rgba(15, 23, 42, 0.82);
   border-color: var(--line);
+}
+
+:root[data-theme='dark'] .journey-card {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.86), rgba(30, 41, 59, 0.78));
+}
+
+:root[data-theme='dark'] .journey-dot {
+  border-color: #0b1220;
 }
 
 :root[data-theme='dark'] .portfolio-form-panel,
@@ -1952,6 +2390,8 @@ img {
   }
 
   .hero-section,
+  .candidate-hero,
+  .candidate-showcase,
   .split-section,
   .dashboard-hero,
   .final-cta,
@@ -1978,14 +2418,48 @@ img {
   }
 
   .role-card-grid,
+  .candidate-benefit-grid,
+  .candidate-proof-strip,
   .job-grid,
   .feature-grid,
   .two-column {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .journey-timeline::before {
+    left: 16px;
+  }
+
+  .journey-node {
+    grid-template-columns: 32px minmax(0, 1fr);
+    min-height: auto;
+  }
+
+  .journey-dot {
+    grid-column: 1;
+  }
+
+  .journey-node.left .journey-card,
+  .journey-node.right .journey-card {
+    grid-column: 2;
+    justify-self: stretch;
+    width: 100%;
+  }
+
   .home-footer {
     grid-template-columns: 1fr;
+  }
+
+  .candidate-hero {
+    min-height: auto;
+  }
+
+  .candidate-video-panel {
+    transform: none;
+  }
+
+  .candidate-video-panel video {
+    height: 420px;
   }
 
   .footer-bottom {
@@ -2027,6 +2501,7 @@ img {
   }
 
   .home-page h1,
+  .candidate-hero h1,
   .dashboard-hero h1,
   .portfolio-hero h1,
   .auth-page h1,
@@ -2043,6 +2518,7 @@ img {
   }
 
   .hero-actions,
+  .candidate-hero-actions,
   .button {
     width: 100%;
   }
@@ -2054,6 +2530,8 @@ img {
 
   .stats-strip,
   .role-card-grid,
+  .candidate-benefit-grid,
+  .candidate-proof-strip,
   .job-grid,
   .testimonial-section,
   .feature-grid,
@@ -2066,6 +2544,73 @@ img {
   .mini-stat-row,
   .role-links {
     grid-template-columns: 1fr;
+  }
+
+  .candidate-landing {
+    padding-top: 24px;
+  }
+
+  .candidate-hero {
+    gap: 28px;
+  }
+
+  .candidate-hero h1 {
+    font-size: 2.6rem;
+  }
+
+  .candidate-video-panel {
+    border-radius: 22px;
+    padding: 8px;
+  }
+
+  .candidate-video-panel video,
+  .candidate-showcase-media img {
+    height: 300px;
+  }
+
+  .candidate-video-badge {
+    right: 18px;
+    bottom: 18px;
+  }
+
+  .candidate-showcase {
+    margin-top: 54px;
+    border-radius: 22px;
+    padding: 16px;
+  }
+
+  .candidate-showcase-copy h2,
+  .candidate-bottom-cta h2 {
+    font-size: 1.75rem;
+  }
+
+  .candidate-bottom-cta {
+    margin-top: 54px;
+    padding: 30px 18px;
+  }
+
+  .journey-timeline-section {
+    margin-top: 58px;
+  }
+
+  .journey-timeline {
+    gap: 18px;
+    padding-top: 24px;
+  }
+
+  .journey-card {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    padding: 18px;
+  }
+
+  .journey-card h3 {
+    font-size: 1.22rem;
+  }
+
+  .journey-media img {
+    height: 180px;
   }
 
   .portfolio-page {
