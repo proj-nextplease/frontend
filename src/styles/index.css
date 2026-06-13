@@ -1336,12 +1336,24 @@ img {
   text-align: center;
 }
 
+.register-hero-copy {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+}
+
 .register-hero h1 {
   max-width: 840px;
   margin: 0 auto;
   color: var(--ink);
   font-size: 3.8rem;
   line-height: 1.04;
+}
+
+.register-hero .portfolio-back-link {
+  justify-self: start;
+  margin-left: 0;
+  margin-right: auto;
 }
 
 .register-hero-copy > p:not(.eyebrow) {
@@ -1394,7 +1406,7 @@ img {
 
 .register-field-rail {
   position: relative;
-  align-self: start;
+  align-self: center;
   display: grid;
   align-content: start;
   gap: 18px;
