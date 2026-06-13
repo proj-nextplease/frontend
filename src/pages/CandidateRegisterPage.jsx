@@ -4,6 +4,7 @@ import {
   AlertCircle,
   ArrowRight,
   CheckCircle2,
+  Clock,
   Eye,
   EyeOff,
   GraduationCap,
@@ -22,7 +23,7 @@ import { supabase } from '../services/supabaseClient.js';
 const socialProviders = [
   { provider: 'google', label: 'Google', mark: 'G' },
   { provider: 'facebook', label: 'Facebook', mark: 'f' },
-  { provider: 'apple', label: 'Apple', mark: '' },
+  { provider: 'apple', label: 'Apple', mark: '' },
 ];
 
 const initialForm = {
@@ -45,7 +46,8 @@ const onboardingSteps = ['Trở thành ứng viên', 'Xác thực ứng viên', 
 const candidateRegisterDraftKey = 'nextplease:candidate-register-draft';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const canUseDevAuthBypass = import.meta.env.DEV;
+/** Minimum seconds between OTP requests (matches backend cooldown). */
+const OTP_COOLDOWN_SECONDS = 60;
 
 function isPasswordValid(password) {
   return (
@@ -82,14 +84,47 @@ export function CandidateRegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPasswordGuide, setShowPasswordGuide] = useState(false);
   const isSupabaseConfigured = Boolean(supabase);
+  /** Countdown seconds remaining before user can request OTP again. */
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const cooldownTimerRef = useRef(null);
 
   useEffect(() => {
     try {
-      window.sessionStorage.setItem(candidateRegisterDraftKey, JSON.stringify(formData));
+      // Never persist password to sessionStorage
+      const { password, confirmPassword, ...safeDraft } = formData;
+      window.sessionStorage.setItem(candidateRegisterDraftKey, JSON.stringify(safeDraft));
     } catch {
       // Draft persistence is a UX helper; the form should still work if storage is unavailable.
     }
   }, [formData]);
+
+  // Cleanup cooldown timer on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) {
+        clearInterval(cooldownTimerRef.current);
+      }
+    };
+  }, []);
+
+  function startCooldownTimer() {
+    setOtpCooldown(OTP_COOLDOWN_SECONDS);
+
+    if (cooldownTimerRef.current) {
+      clearInterval(cooldownTimerRef.current);
+    }
+
+    cooldownTimerRef.current = setInterval(() => {
+      setOtpCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownTimerRef.current);
+          cooldownTimerRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
 
   function handlePointerMove(event) {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -193,6 +228,15 @@ export function CandidateRegisterPage() {
   }
 
   async function moveToOtpStep() {
+    // Prevent spamming while cooldown is active
+    if (otpCooldown > 0) {
+      setStatus({
+        type: 'warning',
+        message: `Vui lòng đợi ${otpCooldown} giây trước khi yêu cầu mã OTP mới.`,
+      });
+      return;
+    }
+
     setStatus({ type: 'loading', message: 'Đang chuẩn bị bước xác thực ứng viên...' });
 
     const invalidField = registrationFields.find((field) => getFieldState(field.key) !== 'valid');
@@ -206,75 +250,40 @@ export function CandidateRegisterPage() {
       return;
     }
 
-    if (!isSupabaseConfigured) {
-      setStatus({
-        type: 'error',
-        message: 'Supabase env chưa được cấu hình. Cần bật Supabase để tạo auth user trước khi gọi backend.',
-      });
-      return;
-    }
-
     try {
-      let supabaseUserId = '';
-      let usingDevAuthBypass = false;
-      let devAuthBypassReason = '';
-      const { data, error } = await supabase.auth.signUp({
+      // Send registration request directly to backend (no Supabase signUp needed)
+      const otpResponse = await requestCandidateRegistrationOtp({
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            display_name: formData.displayName,
-            student_email: formData.studentEmail,
-            role_intent: 'candidate_free',
-          },
-          emailRedirectTo: `${window.location.origin}/portfolio`,
-        },
-      });
-
-      if (error) {
-        if (!canUseDevAuthBypass) {
-          setStatus({ type: 'error', message: error.message });
-          return;
-        }
-
-        supabaseUserId = crypto.randomUUID();
-        usingDevAuthBypass = true;
-        devAuthBypassReason = error.message;
-      } else {
-        supabaseUserId = data.user?.id || '';
-      }
-
-      if (!supabaseUserId) {
-        setStatus({
-          type: 'error',
-          message: 'Supabase chưa trả về user id. Kiểm tra cấu hình email/password auth giúp mình nhé.',
-        });
-        return;
-      }
-
-      const otpResponse = await requestCandidateRegistrationOtp({
-        supabaseUserId,
-        email: formData.email,
         displayName: formData.displayName,
         studentEmail: formData.studentEmail,
       });
 
       setRegistrationId(otpResponse.registrationId);
       setCurrentStep(2);
+      startCooldownTimer();
       setStatus({
         type: 'success',
         message: otpResponse.devOtp
-          ? `${
-              usingDevAuthBypass
-                ? `Dev mode đã bỏ qua Supabase Auth (${devAuthBypassReason}) và tiếp tục test backend. `
-                : ''
-            }Mã OTP dev là ${otpResponse.devOtp}. Production sẽ gửi mã này qua email ${otpResponse.email}.`
+          ? `Mã OTP dev là ${otpResponse.devOtp}. Production sẽ gửi mã này qua email ${otpResponse.email}.`
           : `Mã OTP 6 số đã được gửi tới ${otpResponse.email}. Nhập mã để hoàn tất xác thực ứng viên.`,
       });
     } catch (error) {
+      const serverMessage = error?.response?.data?.message || error.message || '';
+
+      // Handle rate limit from backend
+      if (error?.response?.status === 429) {
+        startCooldownTimer();
+        setStatus({
+          type: 'warning',
+          message: serverMessage || 'Bạn đã gửi yêu cầu OTP quá nhanh. Vui lòng đợi rồi thử lại.',
+        });
+        return;
+      }
+
       setStatus({
         type: 'error',
-        message: error?.response?.data?.message || error.message || 'Không thể gửi mã OTP đăng ký ứng viên.',
+        message: serverMessage || 'Không thể gửi mã OTP đăng ký ứng viên.',
       });
     }
   }
@@ -298,13 +307,14 @@ export function CandidateRegisterPage() {
       await verifyCandidateRegistrationOtp({
         registrationId,
         otp: sanitizedOtpCode,
+        password: formData.password,
       });
 
       setCurrentStep(3);
       window.sessionStorage.removeItem(candidateRegisterDraftKey);
       setStatus({
         type: 'success',
-        message: 'Đã xác thực OTP thành công. Tài khoản ứng viên đã được tạo ở backend.',
+        message: 'Đã xác thực OTP thành công. Tài khoản ứng viên đã được tạo.',
       });
     } catch (error) {
       setStatus({
@@ -520,9 +530,22 @@ export function CandidateRegisterPage() {
           ) : null}
 
           <div className="register-action-row">
-            <button className="button primary-button" disabled={status.type === 'loading'} type="submit">
-              Xác thực tài khoản
-              <ArrowRight size={18} />
+            <button
+              className="button primary-button"
+              disabled={status.type === 'loading' || otpCooldown > 0}
+              type="submit"
+            >
+              {otpCooldown > 0 ? (
+                <>
+                  <Clock size={18} />
+                  Đợi {otpCooldown}s
+                </>
+              ) : (
+                <>
+                  Xác thực tài khoản
+                  <ArrowRight size={18} />
+                </>
+              )}
             </button>
             <Link className="text-link" to="/candidate/login">
               Tôi đã có tài khoản
