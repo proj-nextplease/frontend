@@ -13,6 +13,10 @@ import {
   Sparkles,
   UserRound,
 } from 'lucide-react';
+import {
+  requestCandidateRegistrationOtp,
+  verifyCandidateRegistrationOtp,
+} from '../api/candidateRegistrationApi.js';
 import { supabase } from '../services/supabaseClient.js';
 
 const socialProviders = [
@@ -38,10 +42,10 @@ const registrationFields = [
 ];
 
 const onboardingSteps = ['Trở thành ứng viên', 'Xác thực ứng viên', 'Bạn đã là ứng viên'];
-const testOtpCode = '123456';
 const candidateRegisterDraftKey = 'nextplease:candidate-register-draft';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const canUseDevAuthBypass = import.meta.env.DEV;
 
 function isPasswordValid(password) {
   return (
@@ -71,6 +75,7 @@ export function CandidateRegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [focusedField, setFocusedField] = useState('displayName');
   const [otpCode, setOtpCode] = useState('');
+  const [registrationId, setRegistrationId] = useState('');
   const otpInputRefs = useRef([]);
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -187,7 +192,7 @@ export function CandidateRegisterPage() {
     }
   }
 
-  function moveToOtpStep() {
+  async function moveToOtpStep() {
     setStatus({ type: 'loading', message: 'Đang chuẩn bị bước xác thực ứng viên...' });
 
     const invalidField = registrationFields.find((field) => getFieldState(field.key) !== 'valid');
@@ -201,14 +206,80 @@ export function CandidateRegisterPage() {
       return;
     }
 
-    setCurrentStep(2);
-    setStatus({
-      type: 'success',
-      message: `Mã OTP 6 số đã được gửi tới ${formData.email}. Nhập mã để hoàn tất xác thực ứng viên.`,
-    });
+    if (!isSupabaseConfigured) {
+      setStatus({
+        type: 'error',
+        message: 'Supabase env chưa được cấu hình. Cần bật Supabase để tạo auth user trước khi gọi backend.',
+      });
+      return;
+    }
+
+    try {
+      let supabaseUserId = '';
+      let usingDevAuthBypass = false;
+      let devAuthBypassReason = '';
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            display_name: formData.displayName,
+            student_email: formData.studentEmail,
+            role_intent: 'candidate_free',
+          },
+          emailRedirectTo: `${window.location.origin}/portfolio`,
+        },
+      });
+
+      if (error) {
+        if (!canUseDevAuthBypass) {
+          setStatus({ type: 'error', message: error.message });
+          return;
+        }
+
+        supabaseUserId = crypto.randomUUID();
+        usingDevAuthBypass = true;
+        devAuthBypassReason = error.message;
+      } else {
+        supabaseUserId = data.user?.id || '';
+      }
+
+      if (!supabaseUserId) {
+        setStatus({
+          type: 'error',
+          message: 'Supabase chưa trả về user id. Kiểm tra cấu hình email/password auth giúp mình nhé.',
+        });
+        return;
+      }
+
+      const otpResponse = await requestCandidateRegistrationOtp({
+        supabaseUserId,
+        email: formData.email,
+        displayName: formData.displayName,
+        studentEmail: formData.studentEmail,
+      });
+
+      setRegistrationId(otpResponse.registrationId);
+      setCurrentStep(2);
+      setStatus({
+        type: 'success',
+        message: otpResponse.devOtp
+          ? `${
+              usingDevAuthBypass
+                ? `Dev mode đã bỏ qua Supabase Auth (${devAuthBypassReason}) và tiếp tục test backend. `
+                : ''
+            }Mã OTP dev là ${otpResponse.devOtp}. Production sẽ gửi mã này qua email ${otpResponse.email}.`
+          : `Mã OTP 6 số đã được gửi tới ${otpResponse.email}. Nhập mã để hoàn tất xác thực ứng viên.`,
+      });
+    } catch (error) {
+      setStatus({
+        type: 'error',
+        message: error?.response?.data?.message || error.message || 'Không thể gửi mã OTP đăng ký ứng viên.',
+      });
+    }
   }
 
-  function completeCandidateRegistration() {
+  async function completeCandidateRegistration() {
     setStatus({ type: 'loading', message: 'Đang xác thực mã OTP và tạo tài khoản ứng viên...' });
 
     const sanitizedOtpCode = otpCode.replace(/\s/g, '');
@@ -218,22 +289,35 @@ export function CandidateRegisterPage() {
       return;
     }
 
-    if (sanitizedOtpCode !== testOtpCode) {
-      setStatus({ type: 'error', message: 'Mã OTP test chưa đúng. Bạn dùng mã 123456 nhé.' });
+    if (!registrationId) {
+      setStatus({ type: 'error', message: 'Thiếu mã phiên đăng ký. Quay lại bước 1 để nhận OTP mới nhé.' });
       return;
     }
 
-    setCurrentStep(3);
-    window.sessionStorage.removeItem(candidateRegisterDraftKey);
-    setStatus({
-      type: 'success',
-      message: 'Đã xác thực OTP test thành công. Bạn có thể bắt đầu dựng Portfolio 3D.',
-    });
+    try {
+      await verifyCandidateRegistrationOtp({
+        registrationId,
+        otp: sanitizedOtpCode,
+      });
+
+      setCurrentStep(3);
+      window.sessionStorage.removeItem(candidateRegisterDraftKey);
+      setStatus({
+        type: 'success',
+        message: 'Đã xác thực OTP thành công. Tài khoản ứng viên đã được tạo ở backend.',
+      });
+    } catch (error) {
+      setStatus({
+        type: 'error',
+        message: error?.response?.data?.message || error.message || 'Không thể xác thực OTP ứng viên.',
+      });
+    }
   }
 
   function returnToInfoStep() {
     setCurrentStep(1);
     setOtpCode('');
+    setRegistrationId('');
     setStatus({ type: 'idle', message: '' });
   }
 
