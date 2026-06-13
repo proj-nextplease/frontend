@@ -1,23 +1,18 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
-  BadgeCheck,
   BriefcaseBusiness,
-  CalendarCheck,
-  ClipboardCheck,
   GraduationCap,
-  Layers3,
   Search,
-  ShieldCheck,
   Sparkles,
   Users,
 } from 'lucide-react';
 
 const stats = [
-  { value: '500+', label: 'cơ hội, gig và quest được đăng' },
-  { value: '10,000+', label: 'hồ sơ sinh viên sẵn sàng xác thực' },
-  { value: '2,000+', label: 'proof logs có thể kiểm chứng' },
+  { value: 500, suffix: '+', label: 'cơ hội, gig và quest được đăng' },
+  { value: 10000, suffix: '+', label: 'hồ sơ sinh viên sẵn sàng xác thực' },
+  { value: 2000, suffix: '+', label: 'proof logs có thể kiểm chứng' },
 ];
 
 const roleCards = [
@@ -25,25 +20,21 @@ const roleCards = [
     icon: GraduationCap,
     title: 'Dành cho Người dùng',
     copy: 'Xây dựng Reputation Capital Profile từ hoạt động CLB, sự kiện, dự án, internship và freelance.',
-    to: '/users',
+    to: '/portfolio',
+    cta: 'Nắm bắt cơ hội',
   },
   {
     icon: BriefcaseBusiness,
     title: 'Dành cho Doanh nghiệp',
     copy: 'Tìm talent trẻ bằng verified proof, kỹ năng, mức độ uy tín, trường học và độ phù hợp với vai trò.',
     to: '/businesses',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Dành cho Admin',
-    copy: 'Quản trị verification queue, RBAC, audit logs, payment status và các luồng trust-critical.',
-    to: '/admin',
+    cta: 'Tìm kiếm tài năng',
   },
 ];
 
 const proofSteps = [
   'Sinh viên nộp minh chứng hoạt động thật',
-  'Organizer hoặc Admin kiểm duyệt proof',
+  'Organizer hoặc đội ngũ vận hành kiểm duyệt proof',
   'Backend cập nhật RS, EXP, Premium, NP theo event log',
 ];
 
@@ -76,6 +67,36 @@ const testimonials = [
   },
 ];
 
+function AnimatedStatNumber({ value, suffix }) {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    const duration = 1300;
+    const startedAt = performance.now();
+    let frameId;
+
+    function tick(now) {
+      const progress = Math.min((now - startedAt) / duration, 1);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      setDisplayValue(Math.round(value * easedProgress));
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(tick);
+      }
+    }
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [value]);
+
+  return (
+    <>
+      {displayValue.toLocaleString('en-US')}
+      {suffix}
+    </>
+  );
+}
+
 export function HomePage() {
   const pageRef = useRef(null);
 
@@ -106,7 +127,7 @@ export function HomePage() {
           <p className="hero-copy">
             nextplease biến hoạt động thật của sinh viên thành Verified Proof of Work.
             Người dùng xây dựng hồ sơ uy tín, doanh nghiệp tìm talent đáng tin cậy,
-            admin giữ mọi luồng xác thực và thanh toán an toàn.
+            hệ thống giữ mọi luồng xác thực và thanh toán an toàn.
           </p>
 
           <div className="hero-actions" aria-label="Choose your path">
@@ -121,32 +142,29 @@ export function HomePage() {
           </div>
         </div>
 
-        <div className="hero-visual-card">
-          <img
-            alt="Students collaborating with business mentors"
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1100&q=80"
-          />
-          <div className="floating-metric metric-top">
-            <BadgeCheck size={18} />
-            <div>
-              <strong>82 RS</strong>
-              <span>returned by backend</span>
-            </div>
-          </div>
-          <div className="floating-metric metric-bottom">
-            <CalendarCheck size={18} />
-            <div>
-              <strong>12 proof logs</strong>
-              <span>approved activities</span>
-            </div>
-          </div>
+        <div className="hero-visual-card hero-video-card">
+          <video
+            aria-label="Nhóm sinh viên và nhân sự doanh nghiệp đang cộng tác"
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1100&q=80"
+          >
+            <source
+              src="https://cdn.coverr.co/videos/coverr-teamwork-in-the-office-7943/1080p.mp4"
+              type="video/mp4"
+            />
+          </video>
         </div>
       </section>
 
       <section className="stats-strip" aria-label="Platform statistics">
         {stats.map((item) => (
           <article key={item.label}>
-            <strong>{item.value}</strong>
+            <strong>
+              <AnimatedStatNumber value={item.value} suffix={item.suffix} />
+            </strong>
             <span>{item.label}</span>
           </article>
         ))}
@@ -155,7 +173,7 @@ export function HomePage() {
       <section className="section-block" id="about">
         <div className="section-heading centered">
           <p className="eyebrow">Xây dựng sự nghiệp tương lai</p>
-          <h2>Một nền tảng cho ba vai trò chính của MVP.</h2>
+          <h2>Một nền tảng cho hai hành trình chính của MVP.</h2>
           <p>
             Giao diện này lấy cảm hứng từ Stitch: sáng, thân thiện, nhiều khoảng thở,
             nhưng vẫn giữ đúng bản chất nextplease là reputation infrastructure.
@@ -173,7 +191,7 @@ export function HomePage() {
                 <h3>{card.title}</h3>
                 <p>{card.copy}</p>
                 <span className="card-link">
-                  Xem trang
+                  {card.cta}
                   <ArrowRight size={16} />
                 </span>
               </Link>
@@ -243,21 +261,13 @@ export function HomePage() {
           <h2>Chọn vai trò và bắt đầu khám phá nextplease.</h2>
         </div>
         <div className="role-links">
-          <Link to="/users">
+          <Link to="/portfolio">
             <Users size={20} />
-            Người dùng
+            Nắm bắt cơ hội
           </Link>
           <Link to="/businesses">
             <Search size={20} />
-            Doanh nghiệp
-          </Link>
-          <Link to="/admin">
-            <ClipboardCheck size={20} />
-            Admin
-          </Link>
-          <Link to="/login">
-            <Layers3 size={20} />
-            Đăng nhập
+            Tìm kiếm tài năng
           </Link>
         </div>
       </section>
