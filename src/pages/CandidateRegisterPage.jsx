@@ -80,6 +80,7 @@ export function CandidateRegisterPage() {
   const [otpCode, setOtpCode] = useState('');
   const [registrationId, setRegistrationId] = useState('');
   const otpInputRefs = useRef([]);
+  const lastSubmittedOtpRef = useRef('');
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -322,6 +323,7 @@ export function CandidateRegisterPage() {
       });
 
       setRegistrationId(otpResponse.registrationId);
+      setOtpCode(''); // Clear OTP inputs when starting or resending OTP
       setCurrentStep(2);
       startCooldownTimer();
       setStatus({
@@ -350,12 +352,12 @@ export function CandidateRegisterPage() {
     }
   }
 
-  async function completeCandidateRegistration() {
+  async function completeCandidateRegistration(codeToVerify) {
+    const code = typeof codeToVerify === 'string' ? codeToVerify : otpCode.replace(/\s/g, '');
+
     setStatus({ type: 'loading', message: 'Đang xác thực mã OTP và tạo tài khoản ứng viên...' });
 
-    const sanitizedOtpCode = otpCode.replace(/\s/g, '');
-
-    if (!/^\d{6}$/.test(sanitizedOtpCode)) {
+    if (!/^\d{6}$/.test(code)) {
       setStatus({ type: 'error', message: 'Nhập đủ mã OTP 6 số đã gửi qua email đăng nhập nhé.' });
       return;
     }
@@ -368,7 +370,7 @@ export function CandidateRegisterPage() {
     try {
       await verifyCandidateRegistrationOtp({
         registrationId,
-        otp: sanitizedOtpCode,
+        otp: code,
         password: formData.password,
       });
 
@@ -398,6 +400,19 @@ export function CandidateRegisterPage() {
       });
     }
   }
+
+  // Tự động nộp mã OTP khi nhập đủ 6 chữ số
+  useEffect(() => {
+    const sanitized = otpCode.replace(/\s/g, '');
+    if (sanitized.length < 6) {
+      lastSubmittedOtpRef.current = '';
+    }
+    if (/^\d{6}$/.test(sanitized) && sanitized !== lastSubmittedOtpRef.current && currentStep === 2) {
+      lastSubmittedOtpRef.current = sanitized;
+      completeCandidateRegistration(sanitized);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otpCode, currentStep]);
 
   function returnToInfoStep() {
     setCurrentStep(1);
@@ -699,15 +714,6 @@ export function CandidateRegisterPage() {
                 </div>
               ) : null}
               <div className="register-action-row" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <button
-                  className="button primary-button"
-                  disabled={status.type === 'loading'}
-                  onClick={completeCandidateRegistration}
-                  type="button"
-                >
-                  Tôi đã sẵn sàng
-                  <ArrowRight size={18} />
-                </button>
                 <button
                   className="text-link ghost-link-button"
                   disabled={status.type === 'loading' || otpCooldown > 0}
