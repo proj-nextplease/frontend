@@ -3429,6 +3429,202 @@ img {
   opacity: 0;
 }
 
+/* Portfolio Form Validation Styles */
+.portfolio-form-grid input.input-error,
+.portfolio-form-grid textarea.input-error,
+.experience-edit-card input.input-error,
+.experience-edit-card textarea.input-error,
+.credential-edit-card input.input-error,
+.upload-dropzone.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08) !important;
+}
+
+.portfolio-form-grid input.input-error:focus,
+.portfolio-form-grid textarea.input-error:focus,
+.experience-edit-card input.input-error:focus,
+.experience-edit-card textarea.input-error:focus,
+.credential-edit-card input.input-error:focus,
+.upload-dropzone.input-error:hover {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15) !important;
+}
+
+.field-error-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-top: 2px;
+  animation: fieldFadeIn 220ms ease-in-out;
+}
+
+@keyframes fieldFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* Dashboard Nav Bar Avatar Dropdown Styles */
+.user-avatar-container {
+  position: relative;
+}
+
+.user-avatar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #a855f7);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.1rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.user-avatar-btn:hover {
+  transform: scale(1.05);
+  border-color: var(--primary);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.28);
+}
+
+.user-avatar-btn:active {
+  transform: scale(0.98);
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 240px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 100;
+  animation: dropdownFadeIn 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.dropdown-user-info {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdown-user-info .user-name {
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.dropdown-user-info .user-school {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.dropdown-user-info .user-wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--primary);
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin-top: 8px;
+  font-size: 0.82rem;
+  font-weight: 750;
+  width: fit-content;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 6px 8px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  color: var(--nav-text);
+  font-size: 0.88rem;
+  font-weight: 650;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: all 0.15s ease;
+}
+
+.dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.035);
+  color: var(--ink);
+}
+
+.dropdown-item.danger-action {
+  color: #dc2626;
+}
+
+.dropdown-item.danger-action:hover {
+  background: rgba(220, 38, 38, 0.06);
+  color: #dc2626;
+}
+
+:root[data-theme='dark'] .nav-dropdown-menu {
+  background: rgba(30, 41, 59, 0.88) !important;
+}
+
+:root[data-theme='dark'] .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+
 .add-experience-button {
   justify-self: start;
 }
