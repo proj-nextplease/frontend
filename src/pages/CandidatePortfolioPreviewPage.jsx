@@ -88,7 +88,10 @@ export function CandidatePortfolioPreviewPage() {
             <div className="experience-preview-list">
               {experiences.map((experience) => (
                 <article className="experience-preview-card" key={experience.id}>
-                  <span>{experience.organization || 'Tên tổ chức / dự án'}</span>
+                  <span>
+                    {experience.organization || 'Tên tổ chức / dự án'}
+                    {(experience.startDate || experience.endDate) && ` (${experience.startDate || '?'}${experience.endDate ? ` - ${experience.endDate}` : ''})`}
+                  </span>
                   <h3>{experience.title || 'Vai trò / vị trí'}</h3>
                   <p>
                     {experience.detail ||

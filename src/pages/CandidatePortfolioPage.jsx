@@ -72,6 +72,8 @@ const defaultExperiences = [
     title: '',
     organization: '',
     detail: '',
+    startDate: '',
+    endDate: '',
   },
 ];
 
@@ -319,6 +321,7 @@ export function CandidatePortfolioPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
 
   useEffect(() => {
     async function loadPortfolio() {
@@ -376,6 +379,7 @@ export function CandidatePortfolioPage() {
       
       await updateMyPortfolio(payload);
       setSuccessMsg('Portfolio của bạn đã được lưu chính thức vào hệ thống!');
+      setIsSubmittedSuccessfully(true);
       setShowConfirmModal(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
@@ -419,6 +423,8 @@ export function CandidatePortfolioPage() {
         title: '',
         organization: '',
         detail: '',
+        startDate: '',
+        endDate: '',
       },
     ]);
   }
@@ -455,6 +461,17 @@ export function CandidatePortfolioPage() {
     updateCredential(id, 'issuedAt', clean);
   }
 
+  function handleExperienceDateChange(id, field, rawValue) {
+    let clean = rawValue.replace(/[^0-9/]/g, '');
+    const digits = clean.replace(/\D/g, '');
+    if (digits.length > 2) {
+      clean = `${digits.substring(0, 2)}/${digits.substring(2, 4)}`;
+    } else {
+      clean = digits;
+    }
+    updateExperience(id, field, clean);
+  }
+
   function addCredential() {
     setCredentials((current) => [
       ...current,
@@ -482,10 +499,32 @@ export function CandidatePortfolioPage() {
       return false;
     }
 
+    const datePattern = /^(0[1-9]|1[0-2])\/[0-9]{2}$/;
+
     for (let i = 0; i < experiences.length; i++) {
       const exp = experiences[i];
-      if (!exp.title.trim() || !exp.organization.trim() || !exp.detail.trim()) {
-        setErrorMsg(`Vui lòng nhập đầy đủ thông tin (Vai trò, Tổ chức, Mô tả) cho kinh nghiệm #${i + 1}.`);
+      if (!exp.title.trim() || !exp.organization.trim() || !exp.detail.trim() || !exp.startDate?.trim() || !exp.endDate?.trim()) {
+        setErrorMsg(`Vui lòng nhập đầy đủ thông tin (Vai trò, Tổ chức, Mô tả, Thời gian bắt đầu/kết thúc) cho kinh nghiệm #${i + 1}.`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return false;
+      }
+
+      if (!datePattern.test(exp.startDate)) {
+        setErrorMsg(`Thời gian bắt đầu của kinh nghiệm #${i + 1} phải đúng định dạng MM/YY (ví dụ: 09/24).`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return false;
+      }
+
+      if (!datePattern.test(exp.endDate)) {
+        setErrorMsg(`Thời gian kết thúc của kinh nghiệm #${i + 1} phải đúng định dạng MM/YY (ví dụ: 06/26).`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return false;
+      }
+
+      const [startM, startY] = exp.startDate.split('/').map(Number);
+      const [endM, endY] = exp.endDate.split('/').map(Number);
+      if (startY > endY || (startY === endY && startM > endM)) {
+        setErrorMsg(`Kinh nghiệm #${i + 1} có thời gian bắt đầu (${exp.startDate}) sau thời gian kết thúc (${exp.endDate}).`);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return false;
       }
@@ -499,7 +538,6 @@ export function CandidatePortfolioPage() {
         return false;
       }
 
-      const datePattern = /^(0[1-9]|1[0-2])\/[0-9]{2}$/;
       if (!datePattern.test(cred.issuedAt)) {
         setErrorMsg(`Thời gian cấp của chứng chỉ #${i + 1} phải đúng định dạng MM/YY (ví dụ: 06/26).`);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -537,6 +575,88 @@ export function CandidatePortfolioPage() {
     .split(',')
     .map((skill) => skill.trim())
     .filter(Boolean);
+
+  if (isSubmittedSuccessfully) {
+    return (
+      <section className="portfolio-success-page" style={{
+        minHeight: '80vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px 20px',
+        background: 'var(--portfolio-bg)'
+      }}>
+        <div className="success-card" style={{
+          maxWidth: '560px',
+          width: '100%',
+          background: 'var(--surface)',
+          border: '1px solid var(--line)',
+          borderRadius: '24px',
+          padding: '40px',
+          textAlign: 'center',
+          boxShadow: 'var(--shadow)'
+        }}>
+          <div className="success-icon-wrapper" style={{
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #22c55e, #10b981)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 24px',
+            boxShadow: '0 0 20px rgba(34, 197, 150, 0.4)'
+          }}>
+            <BadgeCheck size={40} color="#ffffff" />
+          </div>
+          
+          <h1 style={{
+            fontSize: '1.8rem',
+            fontWeight: '800',
+            marginBottom: '16px',
+            color: 'var(--ink)',
+            textAlign: 'center'
+          }}>
+            Lưu Portfolio Thành Công!
+          </h1>
+          
+          <p style={{
+            color: 'var(--muted)',
+            lineHeight: '1.6',
+            marginBottom: '32px',
+            fontSize: '1rem',
+            textAlign: 'center'
+          }}>
+            Hồ sơ 3D và Proof of Work của bạn đã được ghi nhận chính thức trên hệ thống <strong>nextplease</strong>. Bạn đã sẵn sàng để khám phá các cơ hội nghề nghiệp.
+          </p>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px'
+          }}>
+            <Link to="/candidate/login" className="button primary-button" style={{
+              justifyContent: 'center',
+              padding: '14px',
+              fontSize: '1rem',
+              fontWeight: '600'
+            }}>
+              Đăng nhập ngay
+            </Link>
+            
+            <Link to="/" className="button secondary-button" style={{
+              justifyContent: 'center',
+              padding: '14px',
+              fontSize: '1rem',
+              fontWeight: '600'
+            }}>
+              Về trang chủ
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="portfolio-page">
@@ -826,6 +946,28 @@ export function CandidatePortfolioPage() {
                     value={experience.organization}
                   />
                 </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <label>
+                    Thời gian bắt đầu
+                    <input
+                      onChange={(event) =>
+                        handleExperienceDateChange(experience.id, 'startDate', event.target.value)
+                      }
+                      placeholder="mm/yy (Ví dụ: 09/24)"
+                      value={experience.startDate || ''}
+                    />
+                  </label>
+                  <label>
+                    Thời gian kết thúc
+                    <input
+                      onChange={(event) =>
+                        handleExperienceDateChange(experience.id, 'endDate', event.target.value)
+                      }
+                      placeholder="mm/yy (Ví dụ: 06/26)"
+                      value={experience.endDate || ''}
+                    />
+                  </label>
+                </div>
                 <label className="full-field">
                   Mô tả kinh nghiệm
                   <textarea
@@ -1002,6 +1144,11 @@ export function CandidatePortfolioPage() {
                     experiences.filter(exp => exp.title.trim() || exp.organization.trim()).map((exp, index) => (
                       <div className="confirm-list-item" key={exp.id || index}>
                         <strong>{exp.title}</strong> tại <em>{exp.organization}</em>
+                        {(exp.startDate || exp.endDate) && (
+                          <span style={{ fontSize: '0.85rem', color: 'var(--ink-muted)', marginLeft: '8px' }}>
+                            ({exp.startDate || '?'}{exp.endDate ? ` - ${exp.endDate}` : ''})
+                          </span>
+                        )}
                         <p style={{ margin: '6px 0 0', fontSize: '0.9rem', color: 'var(--ink-muted)' }}>{exp.detail}</p>
                       </div>
                     ))
