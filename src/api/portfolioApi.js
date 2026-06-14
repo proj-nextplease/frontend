@@ -8,8 +8,8 @@ export async function getMyPortfolio() {
   return response.data.data;
 }
 
-export async function updateMyPortfolio(payload) {
-  const response = await httpClient.put('/profiles/me', payload);
+export async function updateMyPortfolio(payload, isDraft = false) {
+  const response = await httpClient.put(isDraft ? '/profiles/me?draft=true' : '/profiles/me', payload);
   if (!response.data?.success) {
     throw new Error(response.data?.message || 'Không thể cập nhật portfolio.');
   }
