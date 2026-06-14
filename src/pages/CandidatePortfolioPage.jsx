@@ -355,6 +355,9 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             try {
               const draft = JSON.parse(localDraftJson);
               if (draft.profile) {
+                if (draft.profile.headline === "Ứng viên nextplease") {
+                  draft.profile.headline = "";
+                }
                 setProfile(draft.profile);
               }
               if (draft.experiences) {
@@ -716,6 +719,11 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         newErrors[`credential_${cred.id}_issuedAt`] = 'Vui lòng nhập thời gian cấp.';
       } else if (!datePattern.test(cred.issuedAt)) {
         newErrors[`credential_${cred.id}_issuedAt`] = 'Đúng định dạng MM/YY (ví dụ: 06/26).';
+      } else {
+        const [issuedM, issuedY] = cred.issuedAt.split('/').map(Number);
+        if (issuedY > currentYear2Digit || (issuedY === currentYear2Digit && issuedM > currentMonth)) {
+          newErrors[`credential_${cred.id}_issuedAt`] = `Thời gian cấp không được lớn hơn tháng hiện tại (${String(currentMonth).padStart(2, '0')}/${currentYear2Digit}).`;
+        }
       }
     });
 
