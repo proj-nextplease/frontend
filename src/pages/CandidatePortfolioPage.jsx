@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 import {
   ArrowLeft,
@@ -303,7 +303,8 @@ export function PortfolioAvatar3D({ avatar = defaultAvatar, gender }) {
   return <div className="portfolio-avatar-canvas" ref={mountRef} aria-label="3D portfolio avatar preview" />;
 }
 
-export function CandidatePortfolioPage() {
+export function CandidatePortfolioPage({ isEditing = false }) {
+  const navigate = useNavigate();
   const [avatar, setAvatar] = useState(defaultAvatar);
   const [profile, setProfile] = useState({
     name: '',
@@ -329,6 +330,10 @@ export function CandidatePortfolioPage() {
         setIsLoading(true);
         const data = await getMyPortfolio();
         if (data) {
+          if (data.onboardingCompleted && !isEditing) {
+            navigate('/candidates/dashboard');
+            return;
+          }
           if (data.avatar) {
             setAvatar(prev => ({ ...prev, ...data.avatar }));
           }
@@ -354,7 +359,7 @@ export function CandidatePortfolioPage() {
       }
     }
     loadPortfolio();
-  }, []);
+  }, [navigate]);
 
   async function handleSavePortfolio() {
     try {
@@ -617,7 +622,7 @@ export function CandidatePortfolioPage() {
             color: 'var(--ink)',
             textAlign: 'center'
           }}>
-            Lưu Portfolio Thành Công!
+            {isEditing ? 'Cập Nhật Portfolio Thành Công!' : 'Lưu Portfolio Thành Công!'}
           </h1>
           
           <p style={{
@@ -627,7 +632,9 @@ export function CandidatePortfolioPage() {
             fontSize: '1rem',
             textAlign: 'center'
           }}>
-            Hồ sơ 3D và Proof of Work của bạn đã được ghi nhận chính thức trên hệ thống <strong>nextplease</strong>. Bạn đã sẵn sàng để khám phá các cơ hội nghề nghiệp.
+            {isEditing
+              ? 'Hồ sơ 3D và Proof of Work của bạn đã được cập nhật thành công trên hệ thống nextplease.'
+              : 'Hồ sơ 3D và Proof of Work của bạn đã được ghi nhận chính thức trên hệ thống nextplease. Bạn đã sẵn sàng để khám phá các cơ hội nghề nghiệp.'}
           </p>
 
           <div style={{
@@ -635,23 +642,25 @@ export function CandidatePortfolioPage() {
             flexDirection: 'column',
             gap: '12px'
           }}>
-            <Link to="/candidate/login" className="button primary-button" style={{
+            <Link to="/candidates/dashboard" className="button primary-button" style={{
               justifyContent: 'center',
               padding: '14px',
               fontSize: '1rem',
               fontWeight: '600'
             }}>
-              Đăng nhập ngay
+              {isEditing ? 'Quay lại Dashboard' : 'Đến trang ứng viên'}
             </Link>
             
-            <Link to="/" className="button secondary-button" style={{
-              justifyContent: 'center',
-              padding: '14px',
-              fontSize: '1rem',
-              fontWeight: '600'
-            }}>
-              Về trang chủ
-            </Link>
+            {!isEditing && (
+              <Link to="/" className="button secondary-button" style={{
+                justifyContent: 'center',
+                padding: '14px',
+                fontSize: '1rem',
+                fontWeight: '600'
+              }}>
+                Về trang chủ
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -662,10 +671,12 @@ export function CandidatePortfolioPage() {
     <section className="portfolio-page">
       <div className="portfolio-hero">
         <div>
-          <Link className="portfolio-back-link" to="/">
-            <ArrowLeft size={17} />
-            Về trang chủ
-          </Link>
+          {!isEditing && (
+            <Link className="portfolio-back-link" to="/">
+              <ArrowLeft size={17} />
+              Về trang chủ
+            </Link>
+          )}
           <p className="eyebrow">3D candidate portfolio</p>
           <h1>Tạo Portfolio ứng viên bằng nhân vật 3D của riêng bạn.</h1>
           <p>

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
+import { getMyPortfolio } from '../api/portfolioApi.js';
 
 const socialProviders = [
   { provider: 'google', label: 'Google', mark: 'G' },
@@ -49,14 +50,14 @@ export function CandidateLoginPage() {
     setStatus({ type: 'loading', message: `Đang mở đăng nhập bằng ${provider}...` });
 
     if (!isSupabaseConfigured) {
-      navigate('/portfolio');
+      navigate('/candidates/dashboard');
       return;
     }
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/portfolio`,
+        redirectTo: `${window.location.origin}/candidates/dashboard`,
       },
     });
 
@@ -75,8 +76,8 @@ export function CandidateLoginPage() {
     }
 
     if (!isSupabaseConfigured) {
-      setStatus({ type: 'success', message: 'Đăng nhập mô phỏng thành công. Đang mở Portfolio...' });
-      navigate('/portfolio');
+      setStatus({ type: 'success', message: 'Đăng nhập mô phỏng thành công. Đang mở Candidate Hub...' });
+      navigate('/candidates/dashboard');
       return;
     }
 
@@ -93,7 +94,19 @@ export function CandidateLoginPage() {
         return;
       }
 
-      navigate('/portfolio');
+      // Check onboarding completed status to decide navigation path
+      try {
+        const portfolio = await getMyPortfolio();
+        if (portfolio && portfolio.onboardingCompleted) {
+          navigate('/candidates/dashboard');
+        } else {
+          navigate('/portfolio');
+        }
+      } catch (err) {
+        console.error('Không thể kiểm tra trạng thái onboarding:', err);
+        // Fallback to portfolio page to complete onboarding
+        navigate('/portfolio');
+      }
     } catch (error) {
       setStatus({
         type: 'error',
