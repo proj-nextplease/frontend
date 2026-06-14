@@ -403,7 +403,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       }
     }
     loadPortfolio();
-  }, [navigate]);
+  }, [navigate, isEditing]);
 
   // Auto-save form state to localStorage as a draft whenever it changes and is dirty
   useEffect(() => {
@@ -663,7 +663,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     const currentYear2Digit = currentDate.getFullYear() % 100;
     const currentMonth = currentDate.getMonth() + 1;
 
-    experiences.forEach((exp, index) => {
+    experiences.forEach((exp) => {
       if (!exp.title.trim()) {
         newErrors[`experience_${exp.id}_title`] = 'Vui lòng nhập vai trò.';
       }
@@ -708,7 +708,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       }
     });
 
-    credentials.forEach((cred, index) => {
+    credentials.forEach((cred) => {
       if (!cred.name.trim()) {
         newErrors[`credential_${cred.id}_name`] = 'Vui lòng nhập tên bằng cấp / chứng chỉ.';
       }
