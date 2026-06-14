@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   Award,
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { PortfolioAvatar3D, PORTFOLIO_PREVIEW_STORAGE_PREFIX } from './CandidatePortfolioPage.jsx';
-import { supabase } from '../services/supabaseClient.js';
+
 
 const quests = [
   {
@@ -60,7 +60,7 @@ const quests = [
 ];
 
 export function CandidateDashboardPage({ initialPortfolio }) {
-  const navigate = useNavigate();
+
   const [portfolio, setPortfolio] = useState(initialPortfolio || null);
   const [loading, setLoading] = useState(!initialPortfolio);
   const [activeView, setActiveView] = useState('quests');
