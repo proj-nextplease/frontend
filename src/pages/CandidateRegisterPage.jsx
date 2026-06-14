@@ -92,7 +92,11 @@ export function CandidateRegisterPage() {
   useEffect(() => {
     try {
       // Never persist password to sessionStorage
-      const { password, confirmPassword, ...safeDraft } = formData;
+      const safeDraft = {
+        displayName: formData.displayName,
+        email: formData.email,
+        studentEmail: formData.studentEmail,
+      };
       window.sessionStorage.setItem(candidateRegisterDraftKey, JSON.stringify(safeDraft));
     } catch {
       // Draft persistence is a UX helper; the form should still work if storage is unavailable.
@@ -266,8 +270,8 @@ export function CandidateRegisterPage() {
       setStatus({
         type: 'success',
         message: otpResponse.devOtp
-          ? `Mã OTP dev là ${otpResponse.devOtp}. Production sẽ gửi mã này qua email ${otpResponse.email}.`
-          : `Mã OTP 6 số đã được gửi tới ${otpResponse.email}. Nhập mã để hoàn tất xác thực ứng viên.`,
+          ? `Mã OTP dev là ${otpResponse.devOtp}. Khi bật production, mã sẽ được gửi qua email ${otpResponse.email}.`
+          : 'Kiểm tra hộp thư chính hoặc Spam nếu chưa thấy email trong vài giây.',
       });
     } catch (error) {
       const serverMessage = error?.response?.data?.message || error.message || '';
@@ -328,7 +332,7 @@ export function CandidateRegisterPage() {
       window.sessionStorage.removeItem(candidateRegisterDraftKey);
       setStatus({
         type: 'success',
-        message: 'Đã xác thực OTP thành công. Tài khoản ứng viên đã được tạo và tự động đăng nhập.',
+        message: 'Xác thực hoàn tất. Bạn có thể bắt đầu dựng Portfolio 3D ngay bây giờ.',
       });
     } catch (error) {
       setStatus({
@@ -609,9 +613,22 @@ export function CandidateRegisterPage() {
                 </div>
               </div>
               {status.message ? (
-                <div className={`register-status ${status.type}`}>
-                  <AlertCircle size={18} />
-                  <p>{status.message}</p>
+                <div className={`otp-status-card ${status.type}`}>
+                  <div className="otp-status-icon">
+                    {status.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+                  </div>
+                  <div>
+                    <strong>
+                      {status.type === 'success'
+                        ? 'Mã xác thực đã được gửi'
+                        : status.type === 'loading'
+                          ? 'Đang xử lý mã OTP'
+                          : status.type === 'warning'
+                            ? 'Cần đợi thêm một chút'
+                            : 'Chưa thể xác thực'}
+                    </strong>
+                    <p>{status.message}</p>
+                  </div>
                 </div>
               ) : null}
               <div className="register-action-row">
@@ -643,8 +660,10 @@ export function CandidateRegisterPage() {
                 thêm chứng chỉ và dựng nhân vật Portfolio của mình.
               </p>
               {status.message ? (
-                <div className={`register-status ${status.type}`}>
-                  <AlertCircle size={18} />
+                <div className={`complete-status-card ${status.type}`}>
+                  <span>
+                    {status.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+                  </span>
                   <p>{status.message}</p>
                 </div>
               ) : null}

@@ -554,13 +554,6 @@ export function CandidatePortfolioPage() {
             cơ bản, kỹ năng và kinh nghiệm nổi bật.
           </p>
         </div>
-        <div className="portfolio-status-card">
-          <Sparkles size={22} />
-          <strong>Preview trước, backend sau</strong>
-          <span>
-            Đây là prototype UI. RS, EXP, NP, Premium và verification vẫn phải do backend sở hữu.
-          </span>
-        </div>
       </div>
 
       <div className="portfolio-builder">
@@ -647,10 +640,6 @@ export function CandidatePortfolioPage() {
             </div>
           </div>
           <div className="portfolio-preview-card">
-            <span className="avatar-badge">
-              <BadgeCheck size={16} />
-              Portfolio draft
-            </span>
             <h2>{profile.name || 'Tên ứng viên'}</h2>
             <p>{profile.headline || 'Headline nghề nghiệp'}</p>
             <div className="preview-meta">
@@ -800,30 +789,21 @@ export function CandidatePortfolioPage() {
             <div className="form-section-heading">
               <BriefcaseBusiness size={22} />
               <div>
-                <h2>Kinh nghiệm & proof nổi bật</h2>
-                <p>Ghi theo kết quả thật, vai trò thật và bằng chứng có thể xác minh.</p>
+                <h2>Kinh nghiệm</h2>
               </div>
             </div>
 
             {experiences.map((experience, index) => (
               <article className="experience-edit-card" key={experience.id}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <div className="experience-index">Kinh nghiệm #{index + 1}</div>
+                <div className="edit-card-toolbar">
+                  <div className="edit-card-index">
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <strong>Kinh nghiệm nổi bật</strong>
+                  </div>
                   <button
-                    type="button"
-                    style={{
-                      padding: '6px 12px',
-                      color: '#ef4444',
-                      border: '1px solid rgba(239, 68, 68, 0.2)',
-                      borderRadius: '8px',
-                      background: 'rgba(239, 68, 68, 0.05)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '0.85rem',
-                      cursor: 'pointer'
-                    }}
+                    className="edit-card-remove"
                     onClick={() => removeExperience(experience.id)}
+                    type="button"
                   >
                     <Trash2 size={14} /> Xoá
                   </button>
@@ -869,29 +849,20 @@ export function CandidatePortfolioPage() {
               <Award size={22} />
               <div>
                 <h2>Bằng cấp & chứng chỉ</h2>
-                <p>Nộp file chứng minh để backend đưa vào hàng chờ xác thực sau này.</p>
               </div>
             </div>
 
             {credentials.map((credential, index) => (
               <article className="credential-edit-card" key={credential.id}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <div className="credential-index">Chứng chỉ #{index + 1}</div>
+                <div className="edit-card-toolbar">
+                  <div className="edit-card-index credential">
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <strong>Minh chứng học tập</strong>
+                  </div>
                   <button
-                    type="button"
-                    style={{
-                      padding: '6px 12px',
-                      color: '#ef4444',
-                      border: '1px solid rgba(239, 68, 68, 0.2)',
-                      borderRadius: '8px',
-                      background: 'rgba(239, 68, 68, 0.05)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '0.85rem',
-                      cursor: 'pointer'
-                    }}
+                    className="edit-card-remove"
                     onClick={() => removeCredential(credential.id)}
+                    type="button"
                   >
                     <Trash2 size={14} /> Xoá
                   </button>
@@ -948,22 +919,28 @@ export function CandidatePortfolioPage() {
             <div className="form-section-heading">
               <Eye size={22} />
               <div>
-                <h2>Xem và nộp portfolio của bạn</h2>
+                <h2>Xem trước Portfolio</h2>
                 <p>
-                  Mở một tab preview riêng từ dữ liệu bạn đang nhập, hoặc lưu chính thức portfolio này vào hệ thống.
+                  Mở một tab riêng để kiểm tra cách hồ sơ, nhân vật 3D, kinh nghiệm và chứng chỉ đang hiển thị.
                 </p>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <button className="button secondary-button preview-open-button" onClick={openPortfolioPreview} type="button">
-                <Eye size={18} />
-                Xem trước
-              </button>
-              <button className="button primary-button ready-submit-button" onClick={handleOpenConfirmModal} type="button">
-                <Sparkles size={18} />
-                Tôi đã sẵn sàng
-              </button>
+            <button className="button secondary-button preview-open-button" onClick={openPortfolioPreview} type="button">
+              <Eye size={18} />
+              Xem trước
+            </button>
+          </div>
+
+          <div className="portfolio-submit-panel">
+            <div>
+              <span>Hoàn tất Portfolio</span>
+              <h2>Sẵn sàng lưu hồ sơ của bạn?</h2>
+              <p>Kiểm tra lại thông tin lần cuối, sau đó gửi để lưu Portfolio vào hệ thống nextplease.</p>
             </div>
+            <button className="button primary-button ready-submit-button" onClick={handleOpenConfirmModal} type="button">
+              <Sparkles size={18} />
+              Tôi đã sẵn sàng
+            </button>
           </div>
         </div>
       </div>
