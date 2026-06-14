@@ -88,6 +88,22 @@ export function CandidateRegisterPage() {
   /** Countdown seconds remaining before user can request OTP again. */
   const [otpCooldown, setOtpCooldown] = useState(0);
   const cooldownTimerRef = useRef(null);
+  const passwordVal = formData.password || '';
+  const isPasswordEmpty = passwordVal.length === 0;
+  const isLengthValid = passwordVal.length >= 6 && passwordVal.length <= 25;
+  const isComplexityValid = /[a-z]/.test(passwordVal) && /[A-Z]/.test(passwordVal) && /\d/.test(passwordVal);
+
+  const lengthStyle = isPasswordEmpty
+    ? { color: 'var(--muted)' }
+    : isLengthValid
+      ? { color: '#16a34a', fontWeight: '600' }
+      : { color: '#dc2626', fontWeight: '500' };
+
+  const complexityStyle = isPasswordEmpty
+    ? { color: 'var(--muted)' }
+    : isComplexityValid
+      ? { color: '#16a34a', fontWeight: '600' }
+      : { color: '#dc2626', fontWeight: '500' };
 
   useEffect(() => {
     try {
@@ -111,6 +127,15 @@ export function CandidateRegisterPage() {
       }
     };
   }, []);
+
+  // Autofocus the first OTP input when step 2 is active
+  useEffect(() => {
+    if (currentStep === 2) {
+      setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 50);
+    }
+  }, [currentStep]);
 
   function startCooldownTimer() {
     setOtpCooldown(OTP_COOLDOWN_SECONDS);
@@ -198,6 +223,37 @@ export function CandidateRegisterPage() {
     return 'valid';
   }
 
+  function getFieldValidationErrorMessage(fieldKey) {
+    const value = formData[fieldKey].trim();
+    const fieldName = registrationFields.find((f) => f.key === fieldKey)?.label || '';
+
+    if (!value) {
+      return `${fieldName} không được để trống.`;
+    }
+
+    if (fieldKey === 'email') {
+      return emailPattern.test(value) ? '' : 'Email đăng nhập không đúng định dạng.';
+    }
+
+    if (fieldKey === 'studentEmail') {
+      return emailPattern.test(value) ? '' : 'Email sinh viên không đúng định dạng.';
+    }
+
+    if (fieldKey === 'password') {
+      return isPasswordValid(formData.password)
+        ? ''
+        : 'Mật khẩu phải từ 6-25 ký tự, bao gồm chữ hoa, chữ thường và chữ số.';
+    }
+
+    if (fieldKey === 'confirmPassword') {
+      return formData.confirmPassword === formData.password
+        ? ''
+        : 'Mật khẩu nhập lại không khớp với mật khẩu đã nhập.';
+    }
+
+    return '';
+  }
+
   function getFieldClass(fieldKey) {
     const fieldState = getFieldState(fieldKey);
     return [
@@ -248,9 +304,10 @@ export function CandidateRegisterPage() {
 
     if (invalidField) {
       setFocusedField(invalidField.key);
+      const errorMsg = getFieldValidationErrorMessage(invalidField.key);
       setStatus({
         type: 'error',
-        message: `Kiểm tra lại ${invalidField.label.toLowerCase()} trước khi tạo tài khoản nhé.`,
+        message: errorMsg || `Kiểm tra lại ${invalidField.label.toLowerCase()} trước khi tạo tài khoản nhé.`,
       });
       return;
     }
@@ -491,7 +548,11 @@ export function CandidateRegisterPage() {
               <input
                 name="password"
                 onChange={updateField}
-                onFocus={() => setFocusedField('password')}
+                onFocus={() => {
+                  setFocusedField('password');
+                  setShowPasswordGuide(true);
+                }}
+                onBlur={() => setShowPasswordGuide(false)}
                 placeholder="Mật khẩu"
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
@@ -530,12 +591,18 @@ export function CandidateRegisterPage() {
             </label>
           </div>
 
-          {showPasswordGuide ? (
-            <div className="password-guide">
+          {showPasswordGuide || focusedField === 'password' ? (
+            <div className="password-guide" style={{ transition: 'all 0.3s ease' }}>
               <p>Hướng dẫn tạo mật khẩu</p>
-              <ul>
-                <li>Mật khẩu từ 6 đến 25 ký tự</li>
-                <li>Bao gồm chữ hoa, chữ thường và ký tự số</li>
+              <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
+                <li style={{ ...lengthStyle, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>{isPasswordEmpty ? '•' : isLengthValid ? '✓' : '✗'}</span>
+                  Mật khẩu từ 6 đến 25 ký tự
+                </li>
+                <li style={{ ...complexityStyle, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>{isPasswordEmpty ? '•' : isComplexityValid ? '✓' : '✗'}</span>
+                  Bao gồm chữ hoa, chữ thường và ký tự số
+                </li>
               </ul>
             </div>
           ) : null}
@@ -631,7 +698,7 @@ export function CandidateRegisterPage() {
                   </div>
                 </div>
               ) : null}
-              <div className="register-action-row">
+              <div className="register-action-row" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <button
                   className="button primary-button"
                   disabled={status.type === 'loading'}
@@ -640,6 +707,15 @@ export function CandidateRegisterPage() {
                 >
                   Tôi đã sẵn sàng
                   <ArrowRight size={18} />
+                </button>
+                <button
+                  className="text-link ghost-link-button"
+                  disabled={status.type === 'loading' || otpCooldown > 0}
+                  onClick={moveToOtpStep}
+                  type="button"
+                  style={{ opacity: otpCooldown > 0 ? 0.6 : 1, cursor: otpCooldown > 0 ? 'not-allowed' : 'pointer' }}
+                >
+                  {otpCooldown > 0 ? `Gửi lại mã (${otpCooldown}s)` : 'Gửi lại mã OTP'}
                 </button>
                 <button className="text-link ghost-link-button" onClick={returnToInfoStep} type="button">
                   Tôi cần chỉnh thông tin

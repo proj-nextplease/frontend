@@ -12,6 +12,7 @@ import {
   Sparkles,
   UserRound,
   Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
 
@@ -323,6 +324,13 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
+  const [isDraftDirty, setIsDraftDirty] = useState(false);
+  const [showExitWarningModal, setShowExitWarningModal] = useState(false);
+
+  function markDirty() {
+    setIsDraftDirty(true);
+  }
+
 
   useEffect(() => {
     async function loadPortfolio() {
@@ -334,22 +342,54 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             navigate('/candidates/dashboard');
             return;
           }
-          if (data.avatar) {
-            setAvatar(prev => ({ ...prev, ...data.avatar }));
+
+          // 1. If headline is the default placeholder, parse it as empty
+          const dbHeadline = data.headline === "Ứng viên nextplease" ? "" : (data.headline || "");
+
+          // 2. Check if a local draft exists
+          const localDraftJson = localStorage.getItem('nextplease:portfolio-draft');
+          let draftLoaded = false;
+
+          if (localDraftJson) {
+            try {
+              const draft = JSON.parse(localDraftJson);
+              if (draft.profile) {
+                setProfile(draft.profile);
+              }
+              if (draft.experiences) {
+                setExperiences(draft.experiences);
+              }
+              if (draft.credentials) {
+                setCredentials(draft.credentials);
+              }
+              if (draft.avatar) {
+                setAvatar(draft.avatar);
+              }
+              setIsDraftDirty(true);
+              draftLoaded = true;
+            } catch (err) {
+              console.error('Lỗi khi tải bản nháp từ localStorage:', err);
+            }
           }
-          setProfile({
-            name: data.name || '',
-            headline: data.headline || '',
-            school: data.school || '',
-            location: data.location || '',
-            bio: data.bio || '',
-            skills: data.skills ? data.skills.join(', ') : '',
-          });
-          if (data.experiences && data.experiences.length > 0) {
-            setExperiences(data.experiences);
-          }
-          if (data.credentials && data.credentials.length > 0) {
-            setCredentials(data.credentials);
+
+          if (!draftLoaded) {
+            if (data.avatar) {
+              setAvatar(prev => ({ ...prev, ...data.avatar }));
+            }
+            setProfile({
+              name: data.name || '',
+              headline: dbHeadline,
+              school: data.school || '',
+              location: data.location || '',
+              bio: data.bio || '',
+              skills: data.skills ? data.skills.join(', ') : '',
+            });
+            if (data.experiences && data.experiences.length > 0) {
+              setExperiences(data.experiences);
+            }
+            if (data.credentials && data.credentials.length > 0) {
+              setCredentials(data.credentials);
+            }
           }
         }
       } catch (err) {
@@ -360,6 +400,20 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     }
     loadPortfolio();
   }, [navigate]);
+
+  // Auto-save form state to localStorage as a draft whenever it changes and is dirty
+  useEffect(() => {
+    if (isLoading || !isDraftDirty) return;
+
+    const draft = {
+      profile,
+      experiences,
+      credentials,
+      avatar,
+      savedAt: Date.now()
+    };
+    localStorage.setItem('nextplease:portfolio-draft', JSON.stringify(draft));
+  }, [profile, experiences, credentials, avatar, isLoading, isDraftDirty]);
 
   async function handleSavePortfolio() {
     try {
@@ -386,6 +440,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       setSuccessMsg('Portfolio của bạn đã được lưu chính thức vào hệ thống!');
       setIsSubmittedSuccessfully(true);
       setShowConfirmModal(false);
+      localStorage.removeItem('nextplease:portfolio-draft');
+      setIsDraftDirty(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       console.error(err);
@@ -397,7 +453,45 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     }
   }
 
+  async function handleSaveDraftAndExit() {
+    try {
+      setIsSaving(true);
+      setErrorMsg('');
+      setSuccessMsg('');
+      
+      const payload = {
+        name: profile.name,
+        headline: profile.headline,
+        school: profile.school,
+        location: profile.location,
+        bio: profile.bio,
+        skills: profile.skills
+          .split(',')
+          .map((skill) => skill.trim())
+          .filter(Boolean),
+        avatar,
+        experiences: experiences.filter(exp => exp.title.trim() || exp.organization.trim()),
+        credentials: credentials.filter(cred => cred.name.trim() || cred.issuer.trim()),
+      };
+      
+      await updateMyPortfolio(payload, true);
+      localStorage.removeItem('nextplease:portfolio-draft');
+      setIsDraftDirty(false);
+      setShowExitWarningModal(false);
+      navigate('/');
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message || 'Có lỗi xảy ra khi lưu bản nháp. Vui lòng thử lại.');
+      setShowExitWarningModal(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+
   function updateAvatar(field, value) {
+    markDirty();
     setAvatar((current) => {
       const nextAvatar = { ...current, [field]: value };
       if (field === 'gender') {
@@ -408,11 +502,13 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   }
 
   function updateProfile(event) {
+    markDirty();
     const { name, value } = event.target;
     setProfile((current) => ({ ...current, [name]: value }));
   }
 
   function updateExperience(id, field, value) {
+    markDirty();
     setExperiences((current) =>
       current.map((experience) =>
         experience.id === id ? { ...experience, [field]: value } : experience,
@@ -421,6 +517,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   }
 
   function addExperience() {
+    markDirty();
     setExperiences((current) => [
       ...current,
       {
@@ -435,10 +532,12 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   }
 
   function removeExperience(id) {
+    markDirty();
     setExperiences((current) => current.filter((exp) => exp.id !== id));
   }
 
   function updateCredential(id, field, value) {
+    markDirty();
     setCredentials((current) =>
       current.map((credential) =>
         credential.id === id ? { ...credential, [field]: value } : credential,
@@ -478,6 +577,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   }
 
   function addCredential() {
+    markDirty();
     setCredentials((current) => [
       ...current,
       {
@@ -491,6 +591,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   }
 
   function removeCredential(id) {
+    markDirty();
     setCredentials((current) => current.filter((cred) => cred.id !== id));
   }
 
@@ -528,8 +629,25 @@ export function CandidatePortfolioPage({ isEditing = false }) {
 
       const [startM, startY] = exp.startDate.split('/').map(Number);
       const [endM, endY] = exp.endDate.split('/').map(Number);
+
+      const currentDate = new Date();
+      const currentYear2Digit = currentDate.getFullYear() % 100;
+      const currentMonth = currentDate.getMonth() + 1;
+
+      if (startY > currentYear2Digit || (startY === currentYear2Digit && startM > currentMonth)) {
+        setErrorMsg(`Kinh nghiệm #${i + 1} có thời gian bắt đầu (${exp.startDate}) không được lớn hơn tháng hiện tại (${String(currentMonth).padStart(2, '0')}/${currentYear2Digit}).`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return false;
+      }
+
+      if (endY > currentYear2Digit || (endY === currentYear2Digit && endM > currentMonth)) {
+        setErrorMsg(`Kinh nghiệm #${i + 1} có thời gian kết thúc (${exp.endDate}) không được lớn hơn tháng hiện tại (${String(currentMonth).padStart(2, '0')}/${currentYear2Digit}).`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return false;
+      }
+
       if (startY > endY || (startY === endY && startM > endM)) {
-        setErrorMsg(`Kinh nghiệm #${i + 1} có thời gian bắt đầu (${exp.startDate}) sau thời gian kết thúc (${exp.endDate}).`);
+        setErrorMsg(`Kinh nghiệm #${i + 1} có thời gian kết thúc (${exp.endDate}) không được sớm hơn thời gian bắt đầu (${exp.startDate}). Vui lòng nhập lại.`);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return false;
       }
@@ -667,15 +785,39 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     );
   }
 
+  const handleExitClick = (e) => {
+    if (e) e.preventDefault();
+    if (isDraftDirty) {
+      setShowExitWarningModal(true);
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <section className="portfolio-page">
       <div className="portfolio-hero">
         <div>
           {!isEditing && (
-            <Link className="portfolio-back-link" to="/">
+            <button
+              onClick={handleExitClick}
+              className="portfolio-back-link ghost-link-button"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: 0,
+                color: 'var(--muted)',
+                fontSize: '1rem',
+                fontWeight: '600'
+              }}
+            >
               <ArrowLeft size={17} />
               Về trang chủ
-            </Link>
+            </button>
           )}
           <p className="eyebrow">3D candidate portfolio</p>
           <h1>Tạo Portfolio ứng viên bằng nhân vật 3D của riêng bạn.</h1>
@@ -1128,48 +1270,54 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               </div>
               <div className="confirm-details-container">
                 <div className="confirm-section">
-                  <h3>Thông tin cơ bản</h3>
-                  <div className="confirm-field"><strong>Họ và tên:</strong> {profile.name || 'Chưa nhập'}</div>
-                  <div className="confirm-field"><strong>Headline:</strong> {profile.headline || 'Chưa nhập'}</div>
-                  <div className="confirm-field"><strong>Trường học:</strong> {profile.school || 'Chưa nhập'}</div>
-                  <div className="confirm-field"><strong>Khu vực:</strong> {profile.location || 'Chưa nhập'}</div>
-                  <div className="confirm-field"><strong>Giới thiệu:</strong> {profile.bio || 'Chưa nhập'}</div>
+                  <h3>Thông tin cá nhân</h3>
+                  <div className="confirm-grid">
+                    <span className="confirm-label">Họ và tên:</span>
+                    <span className="confirm-field">{profile.name}</span>
+                    <span className="confirm-label">Headline:</span>
+                    <span className="confirm-field">{profile.headline || <em style={{ color: 'var(--ink-muted)' }}>Chưa điền</em>}</span>
+                    <span className="confirm-label">Trường học:</span>
+                    <span className="confirm-field">{profile.school || <em style={{ color: 'var(--ink-muted)' }}>Chưa điền</em>}</span>
+                    <span className="confirm-label">Địa điểm:</span>
+                    <span className="confirm-field">{profile.location || <em style={{ color: 'var(--ink-muted)' }}>Chưa điền</em>}</span>
+                  </div>
+                  <div style={{ marginTop: '12px' }}>
+                    <span className="confirm-label" style={{ display: 'block', marginBottom: '4px' }}>Giới thiệu bản thân:</span>
+                    <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--ink)', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                      {profile.bio || <em style={{ color: 'var(--ink-muted)' }}>Chưa điền giới thiệu.</em>}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="confirm-section">
-                  <h3>Kỹ năng</h3>
-                  <div className="confirm-skills">
+                  <h3>Kỹ năng & Chuyên môn</h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {skills.length > 0 ? (
-                      skills.map((skill) => (
-                        <span className="confirm-skill-tag" key={skill}>{skill}</span>
+                      skills.map((skill, index) => (
+                        <span className="confirm-tag" key={index}>{skill}</span>
                       ))
                     ) : (
-                      <span className="confirm-field" style={{ color: 'var(--ink-muted)' }}>Chưa có kỹ năng nào.</span>
+                      <span className="confirm-field" style={{ color: 'var(--ink-muted)' }}>Chưa có kỹ năng.</span>
                     )}
                   </div>
                 </div>
 
                 <div className="confirm-section">
-                  <h3>Kinh nghiệm nổi bật</h3>
+                  <h3>Kinh nghiệm làm việc</h3>
                   {experiences.filter(exp => exp.title.trim() || exp.organization.trim()).length > 0 ? (
                     experiences.filter(exp => exp.title.trim() || exp.organization.trim()).map((exp, index) => (
                       <div className="confirm-list-item" key={exp.id || index}>
-                        <strong>{exp.title}</strong> tại <em>{exp.organization}</em>
-                        {(exp.startDate || exp.endDate) && (
-                          <span style={{ fontSize: '0.85rem', color: 'var(--ink-muted)', marginLeft: '8px' }}>
-                            ({exp.startDate || '?'}{exp.endDate ? ` - ${exp.endDate}` : ''})
-                          </span>
-                        )}
-                        <p style={{ margin: '6px 0 0', fontSize: '0.9rem', color: 'var(--ink-muted)' }}>{exp.detail}</p>
+                        <strong>{exp.title}</strong> tại <em>{exp.organization}</em> {exp.startDate || exp.endDate ? `(${exp.startDate || '?'}${exp.endDate ? ` - ${exp.endDate}` : ''})` : ''}
+                        {exp.detail && <p style={{ margin: '6px 0 0', fontSize: '0.9rem', color: 'var(--ink-muted)' }}>{exp.detail}</p>}
                       </div>
                     ))
                   ) : (
-                    <span className="confirm-field" style={{ color: 'var(--ink-muted)' }}>Chưa nhập kinh nghiệm.</span>
+                    <span className="confirm-field" style={{ color: 'var(--ink-muted)' }}>Chưa có kinh nghiệm làm việc.</span>
                   )}
                 </div>
 
-                <div className="confirm-section">
-                  <h3>Bằng cấp & chứng chỉ</h3>
+                <div className="confirm-section" style={{ borderBottom: 'none', paddingBottom: 0 }}>
+                  <h3>Bằng cấp & Chứng chỉ</h3>
                   {credentials.filter(cred => cred.name.trim() || cred.issuer.trim()).length > 0 ? (
                     credentials.filter(cred => cred.name.trim() || cred.issuer.trim()).map((cred, index) => (
                       <div className="confirm-list-item" key={cred.id || index}>
@@ -1193,6 +1341,93 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               </button>
               <button className="button primary-button" onClick={handleSavePortfolio} type="button" disabled={isSaving}>
                 {isSaving ? 'Đang lưu...' : 'Xác nhận & Gửi đi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showExitWarningModal && (
+        <div className="confirm-overlay" onClick={() => setShowExitWarningModal(false)}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px', borderRadius: '24px' }}>
+            <div className="confirm-modal-header" style={{ borderBottom: 'none', padding: '24px 32px 12px' }}>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f59e0b', fontSize: '1.4rem' }}>
+                <AlertTriangle size={24} />
+                Bạn chưa lưu thay đổi!
+              </h2>
+              <button
+                className="close-button"
+                onClick={() => setShowExitWarningModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--ink)',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  padding: 0,
+                  lineHeight: 1
+                }}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="confirm-modal-body" style={{ display: 'block', padding: '12px 32px 24px' }}>
+              <p style={{ color: 'var(--muted)', lineHeight: '1.6', fontSize: '1.05rem', margin: 0 }}>
+                Bạn chưa hoàn tất gửi thông tin Portfolio lên hệ thống. Bạn có muốn lưu lại những thông tin đã nhập trên trình duyệt để lần sau hoàn thiện tiếp không?
+              </p>
+            </div>
+            <div className="confirm-modal-footer" style={{ borderTop: 'none', padding: '12px 32px 32px', display: 'flex', gap: '12px', flexDirection: 'column' }}>
+              <button
+                className="button primary-button"
+                onClick={handleSaveDraftAndExit}
+                type="button"
+                style={{ width: '100%', justifyContent: 'center', margin: 0, padding: '14px', fontSize: '1rem', fontWeight: '600', borderRadius: '12px' }}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Đang lưu nháp...' : 'Lưu nháp và Thoát'}
+              </button>
+              <button
+                className="button secondary-button"
+                onClick={() => {
+                  localStorage.removeItem('nextplease:portfolio-draft');
+                  setIsDraftDirty(false);
+                  setShowExitWarningModal(false);
+                  navigate('/');
+                }}
+                type="button"
+                style={{
+                  width: '100%',
+                  justifyContent: 'center',
+                  margin: 0,
+                  padding: '14px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  borderRadius: '12px',
+                  borderColor: '#dc2626',
+                  color: '#dc2626',
+                  background: 'rgba(220, 38, 38, 0.05)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Không lưu và Thoát
+              </button>
+              <button
+                className="text-link"
+                onClick={() => setShowExitWarningModal(false)}
+                type="button"
+                style={{
+                  alignSelf: 'center',
+                  marginTop: '8px',
+                  cursor: 'pointer',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--muted)',
+                  fontSize: '0.95rem',
+                  fontWeight: '500',
+                  textDecoration: 'underline'
+                }}
+              >
+                Ở lại tiếp tục chỉnh sửa
               </button>
             </div>
           </div>
