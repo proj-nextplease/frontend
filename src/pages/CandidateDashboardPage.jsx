@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -20,7 +20,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { getMyPortfolio } from '../api/portfolioApi.js';
-import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
+import { PortfolioAvatar3D, PORTFOLIO_PREVIEW_STORAGE_PREFIX } from './CandidatePortfolioPage.jsx';
 import { supabase } from '../services/supabaseClient.js';
 
 const quests = [
@@ -85,16 +85,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     return () => { isMounted = false; };
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      if (supabase) {
-        await supabase.auth.signOut();
-      }
-      navigate('/candidates');
-    } catch (err) {
-      console.error('Lỗi khi đăng xuất:', err);
-    }
-  };
+
 
   const currentLevel = portfolio?.currentLevel || 1;
   const currentExp = portfolio?.totalExp || 0;
@@ -159,58 +150,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   return (
     <section className="candidate-dashboard-page" style={{ paddingBottom: '60px' }}>
-      {/* Premium Dashboard Top Bar */}
-      <div className="dashboard-top-nav" style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '16px 24px',
-        background: 'rgba(255, 255, 255, 0.75)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid var(--line)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{
-            background: 'linear-gradient(135deg, var(--primary), #a855f7)',
-            color: '#fff',
-            fontWeight: 900,
-            fontSize: '1.1rem',
-            padding: '6px 12px',
-            borderRadius: '10px',
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
-          }}>np</span>
-          <strong style={{ fontSize: '1.2rem', color: 'var(--ink)', fontWeight: 800 }}>nextplease Hub</strong>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <Link to="/" style={{ color: 'var(--muted)', fontWeight: 650, fontSize: '0.88rem', textDecoration: 'none', transition: 'color 0.2s' }}>
-            Trang chủ
-          </Link>
-          <Link to="/candidates" style={{ color: 'var(--muted)', fontWeight: 650, fontSize: '0.88rem', textDecoration: 'none', transition: 'color 0.2s' }}>
-            Trang Ứng viên
-          </Link>
-          <button onClick={handleLogout} className="button secondary-button" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 16px',
-            fontSize: '0.82rem',
-            fontWeight: 700,
-            borderColor: 'rgba(239, 68, 68, 0.2)',
-            color: '#ef4444',
-            cursor: 'pointer',
-            background: 'rgba(239, 68, 68, 0.04)',
-            transition: 'all 0.2s'
-          }}>
-            <LogOut size={14} />
-            Đăng xuất
-          </button>
-        </div>
-      </div>
-
       <div className="candidate-dashboard-shell" style={{ marginTop: '24px' }}>
         <header className="candidate-hub-hero">
           <div className="candidate-hub-copy">

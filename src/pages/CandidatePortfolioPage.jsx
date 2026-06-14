@@ -326,6 +326,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
   const [isDraftDirty, setIsDraftDirty] = useState(false);
   const [showExitWarningModal, setShowExitWarningModal] = useState(false);
+  const [errors, setErrors] = useState({});
 
   function markDirty() {
     setIsDraftDirty(true);
@@ -505,6 +506,12 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     markDirty();
     const { name, value } = event.target;
     setProfile((current) => ({ ...current, [name]: value }));
+    setErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
   }
 
   function updateExperience(id, field, value) {
@@ -514,6 +521,13 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         experience.id === id ? { ...experience, [field]: value } : experience,
       ),
     );
+    const key = `experience_${id}_${field}`;
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   }
 
   function addExperience() {
@@ -534,6 +548,17 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   function removeExperience(id) {
     markDirty();
     setExperiences((current) => current.filter((exp) => exp.id !== id));
+    setErrors((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      Object.keys(next).forEach((key) => {
+        if (key.startsWith(`experience_${id}_`)) {
+          delete next[key];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
   }
 
   function updateCredential(id, field, value) {
@@ -543,14 +568,29 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         credential.id === id ? { ...credential, [field]: value } : credential,
       ),
     );
+    const key = `credential_${id}_${field}`;
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   }
 
   function updateCredentialFile(id, file) {
     if (file && file.size > 5 * 1024 * 1024) {
-      setErrorMsg('File bằng cấp/chứng chỉ không được vượt quá 5MB.');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setErrors((prev) => ({
+        ...prev,
+        [`credential_${id}_fileName`]: 'File bằng cấp/chứng chỉ không được vượt quá 5MB.',
+      }));
       return;
     }
+    setErrors((prev) => {
+      if (!prev[`credential_${id}_fileName`]) return prev;
+      const next = { ...prev };
+      delete next[`credential_${id}_fileName`];
+      return next;
+    });
     updateCredential(id, 'fileName', file?.name || '');
   }
 
@@ -593,79 +633,103 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   function removeCredential(id) {
     markDirty();
     setCredentials((current) => current.filter((cred) => cred.id !== id));
+    setErrors((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      Object.keys(next).forEach((key) => {
+        if (key.startsWith(`credential_${id}_`)) {
+          delete next[key];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
   }
 
   function validatePortfolio() {
     setErrorMsg('');
     setSuccessMsg('');
+    const newErrors = {};
 
     if (!profile.name.trim()) {
-      setErrorMsg('Vui lòng điền họ và tên.');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return false;
+      newErrors.name = 'Vui lòng điền họ và tên.';
     }
 
     const datePattern = /^(0[1-9]|1[0-2])\/[0-9]{2}$/;
+    const currentDate = new Date();
+    const currentYear2Digit = currentDate.getFullYear() % 100;
+    const currentMonth = currentDate.getMonth() + 1;
 
-    for (let i = 0; i < experiences.length; i++) {
-      const exp = experiences[i];
-      if (!exp.title.trim() || !exp.organization.trim() || !exp.detail.trim() || !exp.startDate?.trim() || !exp.endDate?.trim()) {
-        setErrorMsg(`Vui lòng nhập đầy đủ thông tin (Vai trò, Tổ chức, Mô tả, Thời gian bắt đầu/kết thúc) cho kinh nghiệm #${i + 1}.`);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return false;
+    experiences.forEach((exp, index) => {
+      if (!exp.title.trim()) {
+        newErrors[`experience_${exp.id}_title`] = 'Vui lòng nhập vai trò.';
+      }
+      if (!exp.organization.trim()) {
+        newErrors[`experience_${exp.id}_organization`] = 'Vui lòng nhập tổ chức / dự án.';
+      }
+      if (!exp.detail.trim()) {
+        newErrors[`experience_${exp.id}_detail`] = 'Vui lòng nhập mô tả kinh nghiệm.';
       }
 
-      if (!datePattern.test(exp.startDate)) {
-        setErrorMsg(`Thời gian bắt đầu của kinh nghiệm #${i + 1} phải đúng định dạng MM/YY (ví dụ: 09/24).`);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return false;
+      // Start date validation
+      if (!exp.startDate?.trim()) {
+        newErrors[`experience_${exp.id}_startDate`] = 'Vui lòng nhập thời gian bắt đầu.';
+      } else if (!datePattern.test(exp.startDate)) {
+        newErrors[`experience_${exp.id}_startDate`] = 'Đúng định dạng MM/YY (ví dụ: 09/24).';
+      } else {
+        const [startM, startY] = exp.startDate.split('/').map(Number);
+        if (startY > currentYear2Digit || (startY === currentYear2Digit && startM > currentMonth)) {
+          newErrors[`experience_${exp.id}_startDate`] = `Thời gian bắt đầu không được lớn hơn tháng hiện tại (${String(currentMonth).padStart(2, '0')}/${currentYear2Digit}).`;
+        }
       }
 
-      if (!datePattern.test(exp.endDate)) {
-        setErrorMsg(`Thời gian kết thúc của kinh nghiệm #${i + 1} phải đúng định dạng MM/YY (ví dụ: 06/26).`);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return false;
+      // End date validation
+      if (!exp.endDate?.trim()) {
+        newErrors[`experience_${exp.id}_endDate`] = 'Vui lòng nhập thời gian kết thúc.';
+      } else if (!datePattern.test(exp.endDate)) {
+        newErrors[`experience_${exp.id}_endDate`] = 'Đúng định dạng MM/YY (ví dụ: 06/26).';
+      } else {
+        const [endM, endY] = exp.endDate.split('/').map(Number);
+        if (endY > currentYear2Digit || (endY === currentYear2Digit && endM > currentMonth)) {
+          newErrors[`experience_${exp.id}_endDate`] = `Thời gian kết thúc không được lớn hơn tháng hiện tại (${String(currentMonth).padStart(2, '0')}/${currentYear2Digit}).`;
+        }
       }
 
-      const [startM, startY] = exp.startDate.split('/').map(Number);
-      const [endM, endY] = exp.endDate.split('/').map(Number);
-
-      const currentDate = new Date();
-      const currentYear2Digit = currentDate.getFullYear() % 100;
-      const currentMonth = currentDate.getMonth() + 1;
-
-      if (startY > currentYear2Digit || (startY === currentYear2Digit && startM > currentMonth)) {
-        setErrorMsg(`Kinh nghiệm #${i + 1} có thời gian bắt đầu (${exp.startDate}) không được lớn hơn tháng hiện tại (${String(currentMonth).padStart(2, '0')}/${currentYear2Digit}).`);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return false;
+      // Compare start and end dates
+      if (exp.startDate?.trim() && exp.endDate?.trim() && datePattern.test(exp.startDate) && datePattern.test(exp.endDate)) {
+        const [startM, startY] = exp.startDate.split('/').map(Number);
+        const [endM, endY] = exp.endDate.split('/').map(Number);
+        if (startY > endY || (startY === endY && startM > endM)) {
+          newErrors[`experience_${exp.id}_endDate`] = `Thời gian kết thúc không được sớm hơn thời gian bắt đầu (${exp.startDate}).`;
+        }
       }
+    });
 
-      if (endY > currentYear2Digit || (endY === currentYear2Digit && endM > currentMonth)) {
-        setErrorMsg(`Kinh nghiệm #${i + 1} có thời gian kết thúc (${exp.endDate}) không được lớn hơn tháng hiện tại (${String(currentMonth).padStart(2, '0')}/${currentYear2Digit}).`);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return false;
+    credentials.forEach((cred, index) => {
+      if (!cred.name.trim()) {
+        newErrors[`credential_${cred.id}_name`] = 'Vui lòng nhập tên bằng cấp / chứng chỉ.';
       }
+      if (!cred.issuer.trim()) {
+        newErrors[`credential_${cred.id}_issuer`] = 'Vui lòng nhập đơn vị cấp.';
+      }
+      if (!cred.issuedAt?.trim()) {
+        newErrors[`credential_${cred.id}_issuedAt`] = 'Vui lòng nhập thời gian cấp.';
+      } else if (!datePattern.test(cred.issuedAt)) {
+        newErrors[`credential_${cred.id}_issuedAt`] = 'Đúng định dạng MM/YY (ví dụ: 06/26).';
+      }
+    });
 
-      if (startY > endY || (startY === endY && startM > endM)) {
-        setErrorMsg(`Kinh nghiệm #${i + 1} có thời gian kết thúc (${exp.endDate}) không được sớm hơn thời gian bắt đầu (${exp.startDate}). Vui lòng nhập lại.`);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return false;
-      }
-    }
+    setErrors(newErrors);
 
-    for (let i = 0; i < credentials.length; i++) {
-      const cred = credentials[i];
-      if (!cred.name.trim() || !cred.issuer.trim() || !cred.issuedAt.trim()) {
-        setErrorMsg(`Vui lòng nhập đầy đủ thông tin (Tên chứng chỉ, Đơn vị cấp, Thời gian cấp) cho chứng chỉ #${i + 1}.`);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return false;
-      }
-
-      if (!datePattern.test(cred.issuedAt)) {
-        setErrorMsg(`Thời gian cấp của chứng chỉ #${i + 1} phải đúng định dạng MM/YY (ví dụ: 06/26).`);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return false;
-      }
+    if (Object.keys(newErrors).length > 0) {
+      setTimeout(() => {
+        const firstErrorEl = document.querySelector('.input-error');
+        if (firstErrorEl) {
+          firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          firstErrorEl.focus();
+        }
+      }, 50);
+      return false;
     }
 
     return true;
@@ -1008,7 +1072,14 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                 onChange={updateProfile}
                 placeholder="Ví dụ: Nguyễn Minh Anh"
                 value={profile.name}
+                className={errors.name ? 'input-error' : ''}
               />
+              {errors.name && (
+                <span className="field-error-message">
+                  <AlertTriangle size={14} className="flex-shrink-0" />
+                  {errors.name}
+                </span>
+              )}
             </label>
             <label>
               Headline
@@ -1087,7 +1158,14 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                     onChange={(event) => updateExperience(experience.id, 'title', event.target.value)}
                     placeholder="Ví dụ: Event Staff Lead"
                     value={experience.title}
+                    className={errors[`experience_${experience.id}_title`] ? 'input-error' : ''}
                   />
+                  {errors[`experience_${experience.id}_title`] && (
+                    <span className="field-error-message">
+                      <AlertTriangle size={14} className="flex-shrink-0" />
+                      {errors[`experience_${experience.id}_title`]}
+                    </span>
+                  )}
                 </label>
                 <label>
                   Tổ chức / dự án
@@ -1097,7 +1175,14 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                     }
                     placeholder="Ví dụ: Campus Tech Summit"
                     value={experience.organization}
+                    className={errors[`experience_${experience.id}_organization`] ? 'input-error' : ''}
                   />
+                  {errors[`experience_${experience.id}_organization`] && (
+                    <span className="field-error-message">
+                      <AlertTriangle size={14} className="flex-shrink-0" />
+                      {errors[`experience_${experience.id}_organization`]}
+                    </span>
+                  )}
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <label>
@@ -1108,7 +1193,14 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                       }
                       placeholder="mm/yy (Ví dụ: 09/24)"
                       value={experience.startDate || ''}
+                      className={errors[`experience_${experience.id}_startDate`] ? 'input-error' : ''}
                     />
+                    {errors[`experience_${experience.id}_startDate`] && (
+                      <span className="field-error-message">
+                        <AlertTriangle size={14} className="flex-shrink-0" />
+                        {errors[`experience_${experience.id}_startDate`]}
+                      </span>
+                    )}
                   </label>
                   <label>
                     Thời gian kết thúc
@@ -1118,7 +1210,14 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                       }
                       placeholder="mm/yy (Ví dụ: 06/26)"
                       value={experience.endDate || ''}
+                      className={errors[`experience_${experience.id}_endDate`] ? 'input-error' : ''}
                     />
+                    {errors[`experience_${experience.id}_endDate`] && (
+                      <span className="field-error-message">
+                        <AlertTriangle size={14} className="flex-shrink-0" />
+                        {errors[`experience_${experience.id}_endDate`]}
+                      </span>
+                    )}
                   </label>
                 </div>
                 <label className="full-field">
@@ -1128,7 +1227,14 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                     placeholder="Mô tả vai trò, kết quả, quy mô sự kiện/dự án và proof có thể xác minh."
                     rows="3"
                     value={experience.detail}
+                    className={errors[`experience_${experience.id}_detail`] ? 'input-error' : ''}
                   />
+                  {errors[`experience_${experience.id}_detail`] && (
+                    <span className="field-error-message">
+                      <AlertTriangle size={14} className="flex-shrink-0" />
+                      {errors[`experience_${experience.id}_detail`]}
+                    </span>
+                  )}
                 </label>
               </article>
             ))}
@@ -1168,7 +1274,14 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                     onChange={(event) => updateCredential(credential.id, 'name', event.target.value)}
                     placeholder="Ví dụ: IELTS 7.0 / Google UX Design Certificate"
                     value={credential.name}
+                    className={errors[`credential_${credential.id}_name`] ? 'input-error' : ''}
                   />
+                  {errors[`credential_${credential.id}_name`] && (
+                    <span className="field-error-message">
+                      <AlertTriangle size={14} className="flex-shrink-0" />
+                      {errors[`credential_${credential.id}_name`]}
+                    </span>
+                  )}
                 </label>
                 <label>
                   Đơn vị cấp
@@ -1176,7 +1289,14 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                     onChange={(event) => updateCredential(credential.id, 'issuer', event.target.value)}
                     placeholder="Ví dụ: British Council / Coursera"
                     value={credential.issuer}
+                    className={errors[`credential_${credential.id}_issuer`] ? 'input-error' : ''}
                   />
+                  {errors[`credential_${credential.id}_issuer`] && (
+                    <span className="field-error-message">
+                      <AlertTriangle size={14} className="flex-shrink-0" />
+                      {errors[`credential_${credential.id}_issuer`]}
+                    </span>
+                  )}
                 </label>
                 <label>
                   Thời gian cấp (MM/YY)
@@ -1184,11 +1304,18 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                     onChange={(event) => handleIssuedAtChange(credential.id, event.target.value)}
                     placeholder="Ví dụ: 06/26"
                     value={credential.issuedAt}
+                    className={errors[`credential_${credential.id}_issuedAt`] ? 'input-error' : ''}
                   />
+                  {errors[`credential_${credential.id}_issuedAt`] && (
+                    <span className="field-error-message">
+                      <AlertTriangle size={14} className="flex-shrink-0" />
+                      {errors[`credential_${credential.id}_issuedAt`]}
+                    </span>
+                  )}
                 </label>
                 <label className="credential-upload-field">
                   File bằng cấp / chứng chỉ
-                  <span className="upload-dropzone">
+                  <span className={`upload-dropzone ${errors[`credential_${credential.id}_fileName`] ? 'input-error' : ''}`}>
                     <FileUp size={20} />
                     <span>
                       {credential.fileName || 'Tải lên PDF, PNG hoặc JPG'}
@@ -1200,6 +1327,12 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                       type="file"
                     />
                   </span>
+                  {errors[`credential_${credential.id}_fileName`] && (
+                    <span className="field-error-message">
+                      <AlertTriangle size={14} className="flex-shrink-0" />
+                      {errors[`credential_${credential.id}_fileName`]}
+                    </span>
+                  )}
                 </label>
               </article>
             ))}
