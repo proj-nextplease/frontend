@@ -15,6 +15,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
+import { supabase } from '../services/supabaseClient.js';
 
 export const PORTFOLIO_PREVIEW_STORAGE_PREFIX = 'nextplease:portfolio-preview:';
 
