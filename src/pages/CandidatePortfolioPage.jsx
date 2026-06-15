@@ -482,6 +482,9 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       localStorage.removeItem('nextplease:portfolio-draft');
       setIsDraftDirty(false);
       setShowExitWarningModal(false);
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
       navigate('/');
     } catch (err) {
       console.error(err);
@@ -857,11 +860,18 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     );
   }
 
-  const handleExitClick = (e) => {
+  const handleExitClick = async (e) => {
     if (e) e.preventDefault();
     if (isDraftDirty) {
       setShowExitWarningModal(true);
     } else {
+      if (supabase) {
+        try {
+          await supabase.auth.signOut();
+        } catch (err) {
+          console.error('Lỗi khi đăng xuất:', err);
+        }
+      }
       navigate('/');
     }
   };
@@ -1529,10 +1539,17 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               </button>
               <button
                 className="button secondary-button"
-                onClick={() => {
+                onClick={async () => {
                   localStorage.removeItem('nextplease:portfolio-draft');
                   setIsDraftDirty(false);
                   setShowExitWarningModal(false);
+                  if (supabase) {
+                    try {
+                      await supabase.auth.signOut();
+                    } catch (err) {
+                      console.error('Lỗi khi đăng xuất:', err);
+                    }
+                  }
                   navigate('/');
                 }}
                 type="button"
