@@ -24,7 +24,7 @@ import { supabase } from '../services/supabaseClient.js';
 const socialProviders = [
   { provider: 'google', label: 'Google', mark: 'G' },
   { provider: 'facebook', label: 'Facebook', mark: 'f' },
-  { provider: 'apple', label: 'Apple', mark: '' },
+  { provider: 'github', label: 'GitHub', mark: 'GH' },
 ];
 
 const initialForm = {
