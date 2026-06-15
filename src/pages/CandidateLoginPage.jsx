@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Sparkles,
   UserRoundCheck,
+  Github,
 } from 'lucide-react';
 import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
@@ -18,7 +19,7 @@ import { getMyPortfolio } from '../api/portfolioApi.js';
 const socialProviders = [
   { provider: 'google', label: 'Google', mark: 'G' },
   { provider: 'facebook', label: 'Facebook', mark: 'f' },
-  { provider: 'github', label: 'GitHub', mark: 'GH' },
+  { provider: 'github', label: 'GitHub', mark: <Github size={14} /> },
 ];
 
 export function CandidateLoginPage() {

@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Sparkles,
   UserRound,
+  Github,
 } from 'lucide-react';
 import {
   requestCandidateRegistrationOtp,
@@ -24,7 +25,7 @@ import { supabase } from '../services/supabaseClient.js';
 const socialProviders = [
   { provider: 'google', label: 'Google', mark: 'G' },
   { provider: 'facebook', label: 'Facebook', mark: 'f' },
-  { provider: 'github', label: 'GitHub', mark: 'GH' },
+  { provider: 'github', label: 'GitHub', mark: <Github size={14} /> },
 ];
 
 const initialForm = {
