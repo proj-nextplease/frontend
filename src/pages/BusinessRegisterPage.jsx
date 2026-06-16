@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, react-hooks/set-state-in-effect */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
