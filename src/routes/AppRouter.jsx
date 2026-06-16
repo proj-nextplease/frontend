@@ -13,6 +13,11 @@ import { NotFoundPage } from '../pages/NotFoundPage.jsx';
 import { UserPage } from '../pages/UserPage.jsx';
 import { supabase } from '../services/supabaseClient.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
+import { BusinessLoginPage } from '../pages/BusinessLoginPage.jsx';
+import { BusinessRegisterPage } from '../pages/BusinessRegisterPage.jsx';
+import { AdminB2bReviewPage } from '../pages/AdminB2bReviewPage.jsx';
+import { BusinessLandingPage } from '../pages/BusinessLandingPage.jsx';
+import { AdminLoginPage } from '../pages/AdminLoginPage.jsx';
 
 const CandidatePortfolioPage = lazy(() =>
   import('../pages/CandidatePortfolioPage.jsx').then((module) => ({
@@ -185,6 +190,132 @@ function ProtectedPortfolioRoute({ isEditing = false }) {
   );
 }
 
+function ProtectedBusinessRoute() {
+  const [hasAccess, setHasAccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function checkSession() {
+      // 1. Check Supabase session
+      if (supabase) {
+        try {
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          if (currentSession && isMounted) {
+            setHasAccess(true);
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.error("Lỗi khi kiểm tra session B2B:", err);
+        }
+      }
+
+      // 2. Fallback: check sessionStorage token (set after BE login)
+      const token = sessionStorage.getItem('nextplease:access_token');
+      if (token && isMounted) {
+        setHasAccess(true);
+      }
+
+      if (isMounted) setLoading(false);
+    }
+    checkSession();
+    return () => { isMounted = false; };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="route-loading" style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        minHeight: '60vh', fontSize: '1.25rem', fontWeight: '600',
+        color: 'var(--muted)', background: 'var(--bg)',
+      }}>
+        Đang tải trang đối tác...
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return <Navigate to="/business/login" replace />;
+  }
+
+  return <BusinessPage />;
+}
+
+function ProtectedAdminRoute() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function checkSession() {
+      // Helper: decode JWT and check admin role
+      function hasAdminRole(token) {
+        try {
+          const parts = token.split('.');
+          if (parts.length < 2) return false;
+          const payload = JSON.parse(atob(parts[1]));
+          const roles = payload.app_metadata?.roles || [];
+          return roles.includes('admin');
+        } catch {
+          return false;
+        }
+      }
+
+      // 1. sessionStorage bypass (dev mode)
+      if (sessionStorage.getItem('nextplease:admin-bypass') === 'true') {
+        if (isMounted) { setIsAdmin(true); setLoading(false); }
+        return;
+      }
+
+      // 2. sessionStorage token (primary — set after BE login)
+      const storedToken = sessionStorage.getItem('nextplease:access_token');
+      if (storedToken) {
+        if (hasAdminRole(storedToken) && isMounted) {
+          setIsAdmin(true);
+        }
+        if (isMounted) setLoading(false);
+        return;
+      }
+
+      // 3. Supabase session fallback
+      if (supabase) {
+        try {
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          if (!isMounted) return;
+          if (currentSession && hasAdminRole(currentSession.access_token)) {
+            setIsAdmin(true);
+          }
+        } catch (err) {
+          console.error("Lỗi khi kiểm tra session admin:", err);
+        }
+      }
+
+      if (isMounted) setLoading(false);
+    }
+    checkSession();
+    return () => { isMounted = false; };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="route-loading" style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        minHeight: '60vh', fontSize: '1.25rem', fontWeight: '600',
+        color: 'var(--muted)', background: 'var(--bg)',
+      }}>
+        Đang xác thực quyền Admin...
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/nextplease-admin-portal/login" replace />;
+  }
+
+  return <AdminB2bReviewPage />;
+}
+
 export function AppRouter() {
   return (
     <Routes>
@@ -195,6 +326,18 @@ export function AppRouter() {
         <Route path="/candidate/dashboard" element={<Navigate to="/candidates/dashboard" replace />} />
         <Route path="/candidate/login" element={<CandidateLoginPage />} />
         <Route path="/candidate/register" element={<CandidateRegisterPage />} />
+        
+        {/* B2B Authentication and Dashboard Routes */}
+        <Route path="/business/login" element={<BusinessLoginPage />} />
+        <Route path="/business/register" element={<BusinessRegisterPage />} />
+        <Route path="/businesses" element={<BusinessLandingPage />} />
+        <Route path="/businesses/dashboard" element={<ProtectedBusinessRoute />} />
+        <Route path="/business/dashboard" element={<Navigate to="/businesses/dashboard" replace />} />
+        
+        {/* Private Admin review portal */}
+        <Route path="/nextplease-admin-portal/login" element={<AdminLoginPage />} />
+        <Route path="/nextplease-admin-portal/b2b-reviews" element={<ProtectedAdminRoute />} />
+
         <Route path="/portfolio" element={<ProtectedPortfolioRoute isEditing={false} />} />
         <Route path="/portfolio/edit" element={<ProtectedPortfolioRoute isEditing={true} />} />
         <Route
@@ -206,7 +349,6 @@ export function AppRouter() {
           }
         />
         <Route path="/users" element={<UserPage />} />
-        <Route path="/businesses" element={<BusinessPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="*" element={<NotFoundPage />} />
