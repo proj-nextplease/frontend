@@ -11,12 +11,16 @@ export const httpClient = axios.create({
 });
 
 httpClient.interceptors.request.use(async (config) => {
-  if (!supabase) {
-    return config;
-  }
+  let accessToken = null;
 
-  const { data } = await supabase.auth.getSession();
-  const accessToken = data.session?.access_token;
+  // 1. Prioritize explicitly stored token from BE login (freshest, most reliable)
+  accessToken = sessionStorage.getItem('nextplease:access_token');
+
+  // 2. Fall back to Supabase session (for candidate flow where supabase manages auth)
+  if (!accessToken && supabase) {
+    const { data } = await supabase.auth.getSession();
+    accessToken = data.session?.access_token ?? null;
+  }
 
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
