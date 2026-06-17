@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { createJob, getSkills } from '../api/jobApi.js';
 import { createQuest } from '../api/questApi.js';
 import {
@@ -118,9 +118,9 @@ function PremiumDateTimePicker({ value, onChange, error }) {
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
 
-  // Minimum allowed datetime = now + 1 hour (memoized to avoid impure call during render)
-  const minAllowed = useMemo(() => new Date(Date.now() + 60 * 60 * 1000), []);
-  const minAllowedDateOnly = useMemo(() => new Date(minAllowed.getFullYear(), minAllowed.getMonth(), minAllowed.getDate()), [minAllowed]);
+  // Minimum allowed datetime = now + 1 hour (lazy useState so Date.now() runs once on mount, not on every render)
+  const [minAllowed] = useState(() => new Date(Date.now() + 60 * 60 * 1000));
+  const [minAllowedDateOnly] = useState(() => { const d = new Date(Date.now() + 60 * 60 * 1000); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); });
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const rawFirstDay = new Date(year, month, 1).getDay();
