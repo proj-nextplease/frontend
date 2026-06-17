@@ -40,10 +40,26 @@ export async function getMyCompany() {
   return response.data.data;
 }
 
+export async function getCurrentUser() {
+  const response = await httpClient.get('/me');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể lấy thông tin tài khoản.');
+  }
+  return response.data.data;
+}
+
 export async function resubmitB2bDocument(documentUrl) {
   const response = await httpClient.post('/auth/b2b/resubmit', { documentUrl });
   if (!response.data?.success) {
     throw new Error(response.data?.message || 'Gửi lại minh chứng thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function updateB2bProfile(data) {
+  const response = await httpClient.post('/auth/b2b/company/update', data);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Cập nhật hồ sơ đối tác thất bại.');
   }
   return response.data.data;
 }

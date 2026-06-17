@@ -584,6 +584,9 @@ export function CandidateRegisterPage() {
                   setShowPasswordGuide(true);
                 }}
                 onBlur={() => setShowPasswordGuide(false)}
+                onPaste={(e) => e.preventDefault()}
+                onCopy={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
                 placeholder="Mật khẩu"
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
@@ -607,6 +610,9 @@ export function CandidateRegisterPage() {
                 name="confirmPassword"
                 onChange={updateField}
                 onFocus={() => setFocusedField('confirmPassword')}
+                onPaste={(e) => e.preventDefault()}
+                onCopy={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
                 placeholder="Nhập lại mật khẩu"
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={formData.confirmPassword}

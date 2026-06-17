@@ -18,6 +18,7 @@ import {
   Globe,
   FileText,
   Phone,
+  X,
 } from 'lucide-react';
 import { registerB2b } from '../api/b2bApi.js';
 import { supabase } from '../services/supabaseClient.js';
@@ -65,6 +66,8 @@ export function BusinessRegisterPage() {
   const [uploadedFileName, setUploadedFileName] = useState('');
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const [isCompleted, setIsCompleted] = useState(false);
+  const [agreeProvideTaxInfo, setAgreeProvideTaxInfo] = useState(false);
+  const [showUploadConfirm, setShowUploadConfirm] = useState(false);
   const isSupabaseConfigured = Boolean(supabase);
 
   const [showPasswordGuide, setShowPasswordGuide] = useState(false);
@@ -165,9 +168,11 @@ export function BusinessRegisterPage() {
   // Clear file uploads and status messages when switching active tab
   useEffect(() => {
     setUploadedFileName('');
+    setAgreeProvideTaxInfo(false);
     setFormData((current) => ({
       ...current,
       documentUrl: '',
+      taxCode: '',
     }));
     setStatus({ type: 'idle', message: '' });
   }, [activeTab]);
@@ -198,7 +203,7 @@ export function BusinessRegisterPage() {
     const file = event.target.files[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        setStatus({ type: 'error', message: 'Kích thước tệp quá lớn (yêu cầu dưới 2MB để chạy thử nghiệm).' });
+        setStatus({ type: 'error', message: 'Kích thước tệp quá lớn (yêu cầu dưới 2MB).' });
         return;
       }
       setUploadedFileName(file.name);
@@ -218,6 +223,14 @@ export function BusinessRegisterPage() {
     }
   }
 
+  function handleUploadZoneClick(event) {
+    if (event.target.id === 'b2b-file-input') {
+      return;
+    }
+    event.preventDefault();
+    setShowUploadConfirm(true);
+  }
+
   function validateForm() {
     if (!formData.email || !formData.password || !formData.displayName) {
       return 'Vui lòng điền đầy đủ các thông tin đăng nhập bắt buộc.';
@@ -231,13 +244,29 @@ export function BusinessRegisterPage() {
     if (!formData.representativeName || !formData.representativePhone) {
       return 'Vui lòng cung cấp đầy đủ thông tin người đại diện liên hệ.';
     }
+    
+    // Validate phone number length (must be 10-11 digits)
+    const repPhoneClean = (formData.representativePhone || '').replace(/\D/g, '');
+    if (repPhoneClean.length < 10 || repPhoneClean.length > 11) {
+      return 'Số điện thoại liên hệ của người đại diện phải từ 10 đến 11 số.';
+    }
+
     if (activeTab === 'BUSINESS') {
+      if (!agreeProvideTaxInfo) {
+        return 'Bạn phải đồng ý cung cấp thông tin mã số thuế doanh nghiệp (MST).';
+      }
       if (!formData.companyName || !formData.taxCode || !formData.documentUrl) {
         return 'Vui lòng điền Tên doanh nghiệp, Mã số thuế và upload Giấy phép kinh doanh.';
       }
     } else {
       if (!formData.companyName || !formData.documentUrl || !formData.fanpageUrl) {
         return 'Vui lòng điền Tên CLB, Link Fanpage và upload Quyết định thành lập.';
+      }
+      if (formData.advisorPhone) {
+        const advPhoneClean = formData.advisorPhone.replace(/\D/g, '');
+        if (advPhoneClean.length < 10 || advPhoneClean.length > 11) {
+          return 'Số điện thoại của Giảng viên cố vấn phải từ 10 đến 11 số.';
+        }
       }
     }
     return null;
@@ -440,6 +469,9 @@ export function BusinessRegisterPage() {
                     setFocusedField('');
                     setShowPasswordGuide(false);
                   }}
+                  onPaste={(e) => e.preventDefault()}
+                  onCopy={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
                   placeholder="Mật khẩu"
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
@@ -460,6 +492,9 @@ export function BusinessRegisterPage() {
                   onChange={updateField}
                   onFocus={() => setFocusedField('confirmPassword')}
                   onBlur={() => setFocusedField('')}
+                  onPaste={(e) => e.preventDefault()}
+                  onCopy={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
                   placeholder="Nhập lại mật khẩu"
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
@@ -514,7 +549,7 @@ export function BusinessRegisterPage() {
                 <input
                   name="representativePhone"
                   required
-                  maxLength={18}
+                  maxLength={11}
                   onChange={updateField}
                   onFocus={() => setFocusedField('representativePhone')}
                   onBlur={() => setFocusedField('')}
@@ -561,20 +596,48 @@ export function BusinessRegisterPage() {
                       ))}
                     </select>
                   </label>
-                  <label className={focusedField === 'taxCode' ? 'active' : ''}>
-                    <FileText size={18} />
-                    <input
-                      name="taxCode"
-                      required
-                      maxLength={45}
-                      onChange={updateField}
-                      onFocus={() => setFocusedField('taxCode')}
-                      onBlur={() => setFocusedField('')}
-                      placeholder="Mã số thuế doanh nghiệp (MST)"
-                      type="text"
-                      value={formData.taxCode}
-                    />
-                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label
+                      className={`${focusedField === 'taxCode' ? 'active' : ''}`}
+                      style={{
+                        opacity: agreeProvideTaxInfo ? 1 : 0.5,
+                        cursor: agreeProvideTaxInfo ? 'text' : 'not-allowed',
+                        pointerEvents: agreeProvideTaxInfo ? 'auto' : 'none',
+                        width: '100%'
+                      }}
+                    >
+                      <FileText size={18} />
+                      <input
+                        name="taxCode"
+                        required={agreeProvideTaxInfo}
+                        disabled={!agreeProvideTaxInfo}
+                        maxLength={45}
+                        onChange={updateField}
+                        onFocus={() => setFocusedField('taxCode')}
+                        onBlur={() => setFocusedField('')}
+                        placeholder={agreeProvideTaxInfo ? "Mã số thuế doanh nghiệp (MST)" : "Mã số thuế (Cần đồng ý cung cấp)"}
+                        type="text"
+                        value={formData.taxCode}
+                        style={{ cursor: agreeProvideTaxInfo ? 'text' : 'not-allowed' }}
+                      />
+                    </label>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--muted)', userSelect: 'none', paddingLeft: '4px' }}>
+                      <input
+                        type="checkbox"
+                        checked={agreeProvideTaxInfo}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setAgreeProvideTaxInfo(checked);
+                          if (!checked) {
+                            setFormData((current) => ({ ...current, taxCode: '' }));
+                          }
+                        }}
+                        style={{ width: '13px', height: '13px', cursor: 'pointer' }}
+                      />
+                      <span>Đồng ý cung cấp thông tin MST</span>
+                    </label>
+                  </div>
                 </>
               ) : (
                 <>
@@ -622,7 +685,11 @@ export function BusinessRegisterPage() {
               </label>
 
               {/* Styled Drag & Drop File Upload Dropzone */}
-              <label htmlFor="b2b-file-input" className={`b2b-upload-zone ${activeTab === 'CLUB' ? 'club' : ''}`}>
+              <div 
+                className={`b2b-upload-zone ${activeTab === 'CLUB' ? 'club' : ''}`}
+                onClick={handleUploadZoneClick}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="b2b-upload-icon">
                   <FileText size={24} />
                 </div>
@@ -632,8 +699,8 @@ export function BusinessRegisterPage() {
                   </span>
                   <span className="b2b-upload-desc">
                     {activeTab === 'BUSINESS'
-                      ? 'Bắt buộc tải lên tệp ảnh (JPEG/PNG) hoặc PDF của Giấy chứng nhận Đăng ký Doanh nghiệp để kiểm duyệt mã số thuế.'
-                      : 'Bắt buộc tải lên ảnh chụp Quyết định thành lập CLB hoặc Giấy xác nhận có đóng dấu đỏ để kiểm chứng tổ chức thật.'}
+                      ? 'Bắt buộc tải lên tệp ảnh (JPEG/PNG) hoặc PDF Giấy phép Đăng ký Doanh nghiệp (Kích thước tệp yêu cầu dưới 2MB).'
+                      : 'Bắt buộc tải lên ảnh chụp Quyết định thành lập CLB hoặc Giấy xác nhận có đóng dấu đỏ (Kích thước tệp yêu cầu dưới 2MB).'}
                   </span>
                 </div>
                 <input
@@ -643,6 +710,7 @@ export function BusinessRegisterPage() {
                   accept="image/*,.pdf"
                   onChange={handleFileUpload}
                   style={{ display: 'none' }}
+                  onClick={(e) => e.stopPropagation()}
                 />
 
                 {uploadedFileName && (
@@ -651,7 +719,7 @@ export function BusinessRegisterPage() {
                     <span>Đã chọn: {uploadedFileName}</span>
                   </div>
                 )}
-              </label>
+              </div>
             </div>
 
             {activeTab === 'CLUB' && (
@@ -676,11 +744,12 @@ export function BusinessRegisterPage() {
                     <Phone size={18} />
                     <input
                       name="advisorPhone"
+                      maxLength={11}
                       onChange={updateField}
                       onFocus={() => setFocusedField('advisorPhone')}
                       onBlur={() => setFocusedField('')}
-                      placeholder="Số điện thoại / Email cố vấn"
-                      type="text"
+                      placeholder="Số điện thoại cố vấn"
+                      type="tel"
                       value={formData.advisorPhone}
                     />
                   </label>
@@ -712,6 +781,52 @@ export function BusinessRegisterPage() {
           </form>
         )}
       </section>
+
+      {/* ── Custom Upload Confirmation Modal ── */}
+      {showUploadConfirm && (
+        <div className="modal-overlay" onClick={() => setShowUploadConfirm(false)}>
+          <div className="modal-card" style={{ maxWidth: '480px', width: '90%', padding: '24px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header" style={{ marginBottom: '16px' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(37,99,235,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
+                <FileText size={22} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--ink)' }}>Xác nhận tải lên minh chứng</h3>
+                <p style={{ margin: '4px 0 0', color: 'var(--muted)', fontSize: '0.82rem' }}>
+                  {activeTab === 'BUSINESS' ? 'Hồ sơ xác thực doanh nghiệp' : 'Hồ sơ quyết định thành lập CLB'}
+                </p>
+              </div>
+              <button type="button" onClick={() => setShowUploadConfirm(false)} className="modal-close-btn">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '20px' }}>
+              Bạn chuẩn bị mở trình chọn tệp để tải lên tài liệu xác thực. Vui lòng đảm bảo tệp tải lên là ảnh chụp rõ nét hoặc file PDF chính thức của doanh nghiệp/tổ chức, với **dung lượng dưới 2MB**.
+            </div>
+
+            <div className="modal-footer" style={{ gap: '12px', justifyContent: 'flex-end' }}>
+              <button type="button" className="button secondary-button" onClick={() => setShowUploadConfirm(false)}>
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                className="button primary-button"
+                style={{ background: activeTab === 'BUSINESS' ? '#2563eb' : '#ff7a1a', borderColor: 'transparent', color: '#fff' }}
+                onClick={() => {
+                  setShowUploadConfirm(false);
+                  const inputEl = document.getElementById('b2b-file-input');
+                  if (inputEl) {
+                    inputEl.click();
+                  }
+                }}
+              >
+                Tiếp tục
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

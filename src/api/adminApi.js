@@ -31,3 +31,22 @@ export async function getAdminAuditLogs() {
   }
   return response.data.data;
 }
+
+export async function approveJob(id) {
+  const response = await httpClient.post(`/admin/dashboard/jobs/${id}/approve`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Duyệt tin tuyển dụng thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function rejectJob(id, reason) {
+  const response = await httpClient.post(`/admin/dashboard/jobs/${id}/reject`, null, {
+    params: { reason }
+  });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Từ chối tin tuyển dụng thất bại.');
+  }
+  return response.data.data;
+}
+
