@@ -50,3 +50,29 @@ export async function rejectJob(id, reason) {
   return response.data.data;
 }
 
+export async function updateUserStatus(userId, status, reason = '') {
+  const response = await httpClient.patch(`/admin/dashboard/users/${userId}/status`, { status, reason });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Cập nhật trạng thái người dùng thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function getActiveFraudFlags() {
+  const response = await httpClient.get('/admin/dashboard/fraud-flags');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải danh sách cờ gian lận.');
+  }
+  return response.data.data || [];
+}
+
+export async function resolveFraudFlag(flagId, resolution = 'RESOLVED') {
+  const response = await httpClient.patch(`/admin/dashboard/fraud-flags/${flagId}/resolve`, null, {
+    params: { resolution }
+  });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Cập nhật fraud flag thất bại.');
+  }
+  return response.data.data;
+}
+

@@ -1,5 +1,11 @@
 import { httpClient } from './httpClient.js';
 
+export async function getPublicProfile(userId) {
+  const response = await httpClient.get(`/profiles/${userId}/public`);
+  if (!response.data?.success) throw new Error(response.data?.message || 'Không thể tải hồ sơ.');
+  return response.data.data;
+}
+
 export async function getMyPortfolio() {
   const response = await httpClient.get('/profiles/me');
   if (!response.data?.success) {

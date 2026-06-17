@@ -28,3 +28,15 @@ httpClient.interceptors.request.use(async (config) => {
 
   return config;
 });
+
+// Extract BE error message from 4xx/5xx responses
+httpClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const beMessage = error.response?.data?.message;
+    if (beMessage) {
+      error.message = beMessage;
+    }
+    return Promise.reject(error);
+  }
+);

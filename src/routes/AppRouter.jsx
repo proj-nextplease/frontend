@@ -18,6 +18,8 @@ import { BusinessRegisterPage } from '../pages/BusinessRegisterPage.jsx';
 import { AdminB2bReviewPage } from '../pages/AdminB2bReviewPage.jsx';
 import { BusinessLandingPage } from '../pages/BusinessLandingPage.jsx';
 import { AdminLoginPage } from '../pages/AdminLoginPage.jsx';
+import { JobDetailPage } from '../pages/JobDetailPage.jsx';
+import { CandidatePortfolioViewPage } from '../pages/CandidatePortfolioViewPage.jsx';
 
 const CandidatePortfolioPage = lazy(() =>
   import('../pages/CandidatePortfolioPage.jsx').then((module) => ({
@@ -346,6 +348,9 @@ export function AppRouter() {
         <Route path="/nextplease-admin-portal/b2b-reviews/:tabSlug" element={<ProtectedAdminRoute />} />
         <Route path="/nextplease-admin-portal/b2b-reviews/:tabSlug/:subTabSlug" element={<ProtectedAdminRoute />} />
 
+        <Route path="/jobs/:id" element={<JobDetailPage />} />
+        <Route path="/quests/:id" element={<JobDetailPage />} />
+        <Route path="/portfolio/view/:userId" element={<CandidatePortfolioViewPage />} />
         <Route path="/portfolio" element={<ProtectedPortfolioRoute isEditing={false} />} />
         <Route path="/portfolio/edit" element={<ProtectedPortfolioRoute isEditing={true} />} />
         <Route

@@ -33,10 +33,16 @@ import {
   ExternalLink,
   ArrowLeft,
   X,
+  SlidersHorizontal,
+  Users,
 } from 'lucide-react';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
 import { getJobs, getCompanies, getCompanyDetail } from '../api/jobApi.js';
+import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
+import { applyToJob, getMyApplications } from '../api/applicationApi.js';
+import { getWallet, topUp, buyPremium } from '../api/walletApi.js';
+import { searchQuests, applyToQuest, getMyQuestApplications } from '../api/questApi.js';
 import { supabase } from '../services/supabaseClient.js';
 
 const CATEGORY_MAP = {
@@ -95,6 +101,90 @@ const CATEGORY_MAP = {
   }
 };
 
+const MONTH_LABELS = [
+  'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+  'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
+];
+
+function getCurrentMonthValue() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function compareMonthValues(left, right) {
+  if (!left || !right) return 0;
+  return left.localeCompare(right);
+}
+
+function formatMonthValue(value) {
+  if (!value) return 'Chọn tháng / năm';
+  const [year, month] = value.split('-');
+  const monthIndex = Number(month) - 1;
+  if (!year || monthIndex < 0 || monthIndex > 11) return 'Chọn tháng / năm';
+  return `${MONTH_LABELS[monthIndex]} ${year}`;
+}
+
+function CredentialMonthPicker({ id, label, value, minValue, maxValue, openPicker, setOpenPicker, onChange, helperText }) {
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 12 }, (_, index) => currentYear - index);
+  const isOpen = openPicker === id;
+
+  function isDisabled(monthValue) {
+    if (maxValue && compareMonthValues(monthValue, maxValue) > 0) return true;
+    if (minValue && compareMonthValues(monthValue, minValue) < 0) return true;
+    return false;
+  }
+
+  return (
+    <div className="credential-month-field">
+      {label && <label className="form-label">{label}</label>}
+      <button
+        type="button"
+        className={`credential-month-trigger ${value ? 'has-value' : ''}`}
+        onClick={() => setOpenPicker(isOpen ? null : id)}
+        aria-expanded={isOpen}
+      >
+        <span>
+          <Calendar size={16} />
+          {formatMonthValue(value)}
+        </span>
+        <span className="credential-month-trigger-dot" />
+      </button>
+      {helperText && <p className="credential-month-helper">{helperText}</p>}
+
+      {isOpen && (
+        <div className="credential-month-popover">
+          {years.map((year) => (
+            <div className="credential-month-year" key={year}>
+              <div className="credential-month-year-label">{year}</div>
+              <div className="credential-month-grid">
+                {MONTH_LABELS.map((monthLabel, index) => {
+                  const monthValue = `${year}-${String(index + 1).padStart(2, '0')}`;
+                  const disabled = isDisabled(monthValue);
+                  return (
+                    <button
+                      key={monthValue}
+                      type="button"
+                      className={`credential-month-option ${value === monthValue ? 'selected' : ''}`}
+                      disabled={disabled}
+                      onClick={() => {
+                        onChange(monthValue);
+                        setOpenPicker(null);
+                      }}
+                    >
+                      {monthLabel.replace('Tháng ', 'T')}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const JOB_TYPES = [
   { value: 'INTERNSHIP', label: 'Thực tập sinh (Internship)' },
   { value: 'PART_TIME', label: 'Bán thời gian (Part-time)' },
@@ -121,29 +211,6 @@ function getCompanyGradient(name) {
   ];
   return gradients[hash % gradients.length];
 }
-
-const defaultMockApplications = [
-  {
-    id: 'mock-app-1',
-    title: 'Thực tập sinh Thiết kế UI/UX',
-    companyName: 'FPT Software',
-    category: 'DESIGN',
-    jobType: 'INTERNSHIP',
-    appliedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
-    status: 'REJECTED',
-    rejectionReason: 'Hồ sơ 3D chưa hoàn thành đầy đủ các thông tin kỹ năng thực tế về thiết kế sản phẩm Figma.'
-  },
-  {
-    id: 'mock-app-2',
-    title: 'Cộng tác viên Marketing Online',
-    companyName: 'VNG Corporation',
-    category: 'BUSINESS',
-    jobType: 'PART_TIME',
-    appliedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
-    status: 'PENDING',
-    rejectionReason: null
-  }
-];
 
 const defaultMockOrganizations = [
   {
@@ -208,6 +275,55 @@ const defaultMockOrganizations = [
   }
 ];
 
+/* ─── Apply modal: candidate profile snapshot ─────────────────────────────── */
+function CandidateProfilePreview({ portfolio, candidateRs, currentLevel, currentExp }) {
+  const rs = portfolio?.reputationScore ?? candidateRs ?? 0;
+
+  return (
+    <div style={{ border: '1px solid var(--line)', borderRadius: '14px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hồ sơ của bạn</p>
+
+      {/* Avatar + name + headline + school */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg,#2563eb,#ff7a1a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '1.05rem', color: '#fff', flexShrink: 0 }}>
+          {portfolio?.name ? portfolio.name.slice(0, 2).toUpperCase() : 'UV'}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <strong style={{ fontSize: '0.94rem', display: 'block', color: 'var(--ink)' }}>{portfolio?.name || 'Ứng viên'}</strong>
+          {portfolio?.headline && <span style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'block' }}>{portfolio.headline}</span>}
+          {portfolio?.school && (
+            <span style={{ fontSize: '0.76rem', color: '#2563eb', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+              🎓 {portfolio.school}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: 'flex', gap: '8px' }}>
+        {[{ label: 'RS', val: rs, color: '#2563eb' }, { label: 'Level', val: currentLevel, color: '#ff7a1a' }, { label: 'EXP', val: currentExp, color: '#7c3aed' }].map(s => (
+          <div key={s.label} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', background: `${s.color}08`, borderRadius: '10px', border: `1px solid ${s.color}20` }}>
+            <strong style={{ fontSize: '0.9rem', color: s.color, display: 'block' }}>{s.val}</strong>
+            <span style={{ fontSize: '0.68rem', color: 'var(--muted)', fontWeight: '700' }}>{s.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* View full portfolio link */}
+      <a
+        href="/portfolio/edit"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', color: 'var(--ink)', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none', transition: 'background 0.15s' }}
+        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'var(--surface-soft)'}
+      >
+        <ExternalLink size={14} /> Xem lại Portfolio của bạn
+      </a>
+    </div>
+  );
+}
+
 export function CandidateDashboardPage({ initialPortfolio }) {
   const navigate = useNavigate();
   const { tabSlug } = useParams();
@@ -215,7 +331,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   const [portfolio, setPortfolio] = useState(initialPortfolio || null);
   const [loading, setLoading] = useState(!initialPortfolio);
-  const [activeView, setActiveView] = useState('OVERVIEW'); // OVERVIEW, OPPORTUNITIES, ROADMAP, CREDENTIALS, ORGANIZATIONS, ORGANIZATION_DETAIL
+  const [activeView, setActiveView] = useState('OVERVIEW'); // OVERVIEW, OPPORTUNITIES, ROADMAP, CREDENTIALS, ORGANIZATIONS, ORGANIZATION_DETAIL, MY_APPLICATIONS
+  const [myAppsTab, setMyAppsTab] = useState('BUSINESS'); // BUSINESS | CLUB
+  const [myAppsSearch, setMyAppsSearch] = useState('');
+  const [myAppsStatusFilter, setMyAppsStatusFilter] = useState('');
+  const [myAppsClubSearch, setMyAppsClubSearch] = useState('');
+  const [myAppsClubStatusFilter, setMyAppsClubStatusFilter] = useState('');
 
   // Theme support
   const [isDarkTheme, setIsDarkTheme] = useState(() => {
@@ -227,22 +348,52 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     return localStorage.getItem('nextplease:candidate-sidebar-collapsed') === 'true';
   });
 
-  // Application simulator states
-  const [appliedJobs, setAppliedJobs] = useState(() => {
-    const saved = localStorage.getItem('nextplease:candidate-applied-jobs');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    localStorage.setItem('nextplease:candidate-applied-jobs', JSON.stringify(defaultMockApplications));
-    return defaultMockApplications;
-  });
+  // Application states
+  const [appliedJobs, setAppliedJobs] = useState([]);
+  const [applicationsLoading, setApplicationsLoading] = useState(true);
   const [selectedJobForApply, setSelectedJobForApply] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [applyModalLoading, setApplyModalLoading] = useState(false);
+  const [applyModalError, setApplyModalError] = useState('');
   const [applySuccessMsg, setApplySuccessMsg] = useState('');
+  const [showPremiumPaywall, setShowPremiumPaywall] = useState(false);
+
+  // Wallet & Premium states
+  const [wallet, setWallet] = useState(null);
+  const [walletLoading, setWalletLoading] = useState(true);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
+  const [topUpAmount, setTopUpAmount] = useState('50000');
+  const [topUpLoading, setTopUpLoading] = useState(false);
+  const [topUpError, setTopUpError] = useState('');
+  const [topUpSuccess, setTopUpSuccess] = useState('');
+  const [buyPremiumLoading, setBuyPremiumLoading] = useState(false);
+  const [buyPremiumError, setBuyPremiumError] = useState('');
+
+  // Quest states
+  const [questsList, setQuestsList] = useState([]);
+  const [questsLoading, setQuestsLoading] = useState(false);
+  const [questApplications, setQuestApplications] = useState([]);
+  const [questApplyLoading, setQuestApplyLoading] = useState(false);
+  const [questApplyError, setQuestApplyError] = useState('');
+  const [questApplySuccess, setQuestApplySuccess] = useState('');
+  const [questSearchFilter, setQuestSearchFilter] = useState('');
+  const [questCategoryFilter, setQuestCategoryFilter] = useState('');
+  const [showQuestApplyModal, setShowQuestApplyModal] = useState(false);
+  const [selectedQuestForApply, setSelectedQuestForApply] = useState(null);
+  const [questCoverNote, setQuestCoverNote] = useState('');
+
+  // Credential submission states
+  const [credentialSubmissions, setCredentialSubmissions] = useState([]);
+  const [credentialSubmissionsLoading, setCredentialSubmissionsLoading] = useState(false);
+  const [showCredentialForm, setShowCredentialForm] = useState(false);
+  const [credentialForm, setCredentialForm] = useState({
+    projectName: '', position: '', category: 'CLUB_SMALL', roleLevel: 'MEMBER',
+    description: '', proofLink: '', startedAt: '', endedAt: '',
+  });
+  const [credentialFormLoading, setCredentialFormLoading] = useState(false);
+  const [credentialFormError, setCredentialFormError] = useState('');
+  const [credentialFormSuccess, setCredentialFormSuccess] = useState('');
+  const [openCredentialMonthPicker, setOpenCredentialMonthPicker] = useState(null);
 
   // DB Loaded Organizations States
   const [companiesList, setCompaniesList] = useState([]);
@@ -307,11 +458,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   useEffect(() => {
     if (tabSlug) {
       const upperTab = tabSlug.toUpperCase();
-      if (['OVERVIEW', 'OPPORTUNITIES', 'ROADMAP', 'CREDENTIALS', 'ORGANIZATIONS'].includes(upperTab)) {
+      if (['OVERVIEW', 'OPPORTUNITIES', 'QUESTS', 'ROADMAP', 'CREDENTIALS', 'ORGANIZATIONS', 'MY_APPLICATIONS'].includes(upperTab)) {
         setActiveView(upperTab);
         setSelectedOrg(null);
-        
-        if (upperTab === 'OPPORTUNITIES') {
+
+        if (upperTab === 'OPPORTUNITIES' || upperTab === 'QUESTS') {
           setIsSidebarCollapsed(true);
           localStorage.setItem('nextplease:candidate-sidebar-collapsed', 'true');
         }
@@ -472,6 +623,177 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     };
   }, [filterSearch, filterCategory, filterSpecialty, filterJobType, filterIsRemote]);
 
+  // Fetch credential submissions when CREDENTIALS tab is active
+  useEffect(() => {
+    if (activeView !== 'CREDENTIALS') return;
+    let isMounted = true;
+    setCredentialSubmissionsLoading(true);
+    getMyCredentialSubmissions()
+      .then(data => { if (isMounted) setCredentialSubmissions(data || []); })
+      .catch(err => console.error('Lỗi tải minh chứng:', err))
+      .finally(() => { if (isMounted) setCredentialSubmissionsLoading(false); });
+    return () => { isMounted = false; };
+  }, [activeView]);
+
+  // Load real applications from API on mount
+  useEffect(() => {
+    let isMounted = true;
+    setApplicationsLoading(true);
+    getMyApplications()
+      .then(data => { if (isMounted) setAppliedJobs(data || []); })
+      .catch(err => console.error('Lỗi tải ứng tuyển:', err))
+      .finally(() => { if (isMounted) setApplicationsLoading(false); });
+    return () => { isMounted = false; };
+  }, []);
+
+  // Load wallet on mount
+  useEffect(() => {
+    let isMounted = true;
+    setWalletLoading(true);
+    getWallet()
+      .then(data => { if (isMounted) setWallet(data); })
+      .catch(err => console.error('Lỗi tải ví:', err))
+      .finally(() => { if (isMounted) setWalletLoading(false); });
+    return () => { isMounted = false; };
+  }, []);
+
+  // Load quests when OPPORTUNITIES tab opens (or on mount)
+  useEffect(() => {
+    let isMounted = true;
+    setQuestsLoading(true);
+    searchQuests(questSearchFilter, questCategoryFilter)
+      .then(data => { if (isMounted) setQuestsList(data || []); })
+      .catch(err => console.error('Lỗi tải Quest:', err))
+      .finally(() => { if (isMounted) setQuestsLoading(false); });
+    return () => { isMounted = false; };
+  }, [questSearchFilter, questCategoryFilter]);
+
+  // Load my quest applications on mount
+  useEffect(() => {
+    let isMounted = true;
+    getMyQuestApplications()
+      .then(data => { if (isMounted) setQuestApplications(data || []); })
+      .catch(err => console.error('Lỗi tải đơn Quest:', err));
+    return () => { isMounted = false; };
+  }, []);
+
+  async function handleApplyToQuest() {
+    if (!selectedQuestForApply) return;
+    setQuestApplyError('');
+    setQuestApplyLoading(true);
+    try {
+      await applyToQuest(selectedQuestForApply.id, questCoverNote);
+      setQuestApplications(prev => [...prev, {
+        questId: selectedQuestForApply.id,
+        questTitle: selectedQuestForApply.title,
+        companyName: selectedQuestForApply.companyName,
+        category: selectedQuestForApply.category,
+        expReward: selectedQuestForApply.expReward,
+        npReward: selectedQuestForApply.npReward,
+        status: 'SUBMITTED',
+        appliedAt: new Date().toISOString(),
+      }]);
+      setQuestApplySuccess(`Đã nộp đơn Quest "${selectedQuestForApply.title}" thành công!`);
+      setShowQuestApplyModal(false);
+      setSelectedQuestForApply(null);
+      setQuestCoverNote('');
+      setTimeout(() => setQuestApplySuccess(''), 4000);
+    } catch (err) {
+      if (err.errorCode === 'RS_TOO_LOW') {
+        setQuestApplyError(err.message);
+      } else if (err.errorCode === 'ALREADY_APPLIED') {
+        setQuestApplyError('Bạn đã ứng tuyển Quest này rồi.');
+      } else {
+        setQuestApplyError(err.message || 'Ứng tuyển Quest thất bại.');
+      }
+    } finally {
+      setQuestApplyLoading(false);
+    }
+  }
+
+  async function handleTopUp(e) {
+    e.preventDefault();
+    setTopUpError('');
+    const amount = parseInt(topUpAmount, 10);
+    if (!amount || amount < 10000) {
+      setTopUpError('Số tiền tối thiểu là 10,000 VND.');
+      return;
+    }
+    setTopUpLoading(true);
+    try {
+      const result = await topUp(amount);
+      setWallet(prev => prev ? { ...prev, npBalance: result.balanceAfter } : prev);
+      setTopUpSuccess(`Nạp thành công ${amount.toLocaleString('vi-VN')} NP vào ví!`);
+      setTopUpAmount('50000');
+      setTimeout(() => { setTopUpSuccess(''); setShowTopUpModal(false); }, 2500);
+    } catch (err) {
+      setTopUpError(err.message || 'Nạp thất bại. Vui lòng thử lại.');
+    } finally {
+      setTopUpLoading(false);
+    }
+  }
+
+  async function handleBuyPremium() {
+    setBuyPremiumError('');
+    setBuyPremiumLoading(true);
+    try {
+      const result = await buyPremium();
+      setWallet(prev => prev ? {
+        ...prev,
+        npBalance: result.npBalance,
+        isPremium: true,
+        premiumUntil: result.premiumUntil,
+      } : prev);
+      setShowPremiumPaywall(false);
+      setApplySuccessMsg('🎉 Premium Pass đã được kích hoạt! Bạn có thể ứng tuyển các cơ hội Premium ngay bây giờ.');
+      setTimeout(() => setApplySuccessMsg(''), 7000);
+    } catch (err) {
+      if (err.errorCode === 'INSUFFICIENT_NP') {
+        setBuyPremiumError(err.message);
+      } else {
+        setBuyPremiumError(err.message || 'Mua Premium thất bại. Vui lòng thử lại.');
+      }
+    } finally {
+      setBuyPremiumLoading(false);
+    }
+  }
+
+  const handleSubmitCredential = async (e) => {
+    e.preventDefault();
+    setCredentialFormError('');
+    setCredentialFormSuccess('');
+    const currentMonthValue = getCurrentMonthValue();
+    if (!credentialForm.projectName.trim() || !credentialForm.position.trim()) {
+      setCredentialFormError('Vui lòng điền tên hoạt động và vai trò.');
+      return;
+    }
+    if (credentialForm.startedAt && compareMonthValues(credentialForm.startedAt, currentMonthValue) > 0) {
+      setCredentialFormError('Thời gian bắt đầu không được sau tháng hiện tại.');
+      return;
+    }
+    if (credentialForm.endedAt && compareMonthValues(credentialForm.endedAt, currentMonthValue) > 0) {
+      setCredentialFormError('Thời gian kết thúc không được sau tháng hiện tại.');
+      return;
+    }
+    if (credentialForm.startedAt && credentialForm.endedAt && compareMonthValues(credentialForm.endedAt, credentialForm.startedAt) < 0) {
+      setCredentialFormError('Thời gian kết thúc không được trước thời gian bắt đầu.');
+      return;
+    }
+    setCredentialFormLoading(true);
+    try {
+      await submitCredential(credentialForm);
+      setCredentialFormSuccess('Nộp minh chứng thành công! Hệ thống sẽ xem xét và phản hồi trong 1-3 ngày làm việc.');
+      setCredentialForm({ projectName: '', position: '', category: 'CLUB_SMALL', roleLevel: 'MEMBER', description: '', proofLink: '', startedAt: '', endedAt: '' });
+      setShowCredentialForm(false);
+      const data = await getMyCredentialSubmissions();
+      setCredentialSubmissions(data || []);
+    } catch (err) {
+      setCredentialFormError(err.message || 'Nộp minh chứng thất bại. Vui lòng thử lại.');
+    } finally {
+      setCredentialFormLoading(false);
+    }
+  };
+
   const handleTabChange = (viewName) => {
     navigate(`/candidates/dashboard/${viewName.toLowerCase()}`);
   };
@@ -514,34 +836,33 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   function handleApplyJob(job) {
     setSelectedJobForApply(job);
+    setApplyModalError('');
     setShowApplyModal(true);
   }
 
-  function confirmApplyJob() {
-    if (!selectedJobForApply) return;
-
-    const newApplication = {
-      id: `app-${Date.now()}`,
-      title: selectedJobForApply.title,
-      companyName: selectedJobForApply.companyName || 'Đối tác',
-      category: selectedJobForApply.category,
-      jobType: selectedJobForApply.jobType,
-      appliedAt: new Date().toLocaleDateString('vi-VN'),
-      status: 'PENDING',
-      rejectionReason: null
-    };
-
-    const updated = [newApplication, ...appliedJobs];
-    setAppliedJobs(updated);
-    localStorage.setItem('nextplease:candidate-applied-jobs', JSON.stringify(updated));
-
-    setShowApplyModal(false);
-    setSelectedJobForApply(null);
-
-    setApplySuccessMsg(`Ứng tuyển thành công vị trí "${newApplication.title}"! Trạng thái đang ở chế độ Chờ duyệt.`);
-    setTimeout(() => {
-      setApplySuccessMsg('');
-    }, 6000);
+  async function confirmApplyJob() {
+    if (!selectedJobForApply || applyModalLoading) return;
+    setApplyModalError('');
+    setApplyModalLoading(true);
+    try {
+      await applyToJob(selectedJobForApply.id || selectedJobForApply.jobId);
+      // Reload real applications list
+      const data = await getMyApplications();
+      setAppliedJobs(data || []);
+      setShowApplyModal(false);
+      setSelectedJobForApply(null);
+      setApplySuccessMsg(`Ứng tuyển thành công vị trí "${selectedJobForApply.title}"! Nhà tuyển dụng sẽ xem xét trong thời gian sớm nhất.`);
+      setTimeout(() => setApplySuccessMsg(''), 6000);
+    } catch (err) {
+      if (err.errorCode === 'PREMIUM_REQUIRED') {
+        setShowApplyModal(false);
+        setShowPremiumPaywall(true);
+      } else {
+        setApplyModalError(err.message || 'Ứng tuyển thất bại. Vui lòng thử lại.');
+      }
+    } finally {
+      setApplyModalLoading(false);
+    }
   }
 
   // Level & EXP calculations
@@ -554,7 +875,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const has3D = portfolio?.onboardingCompleted === true;
   const hasSchool = !!portfolio?.school?.trim();
   const hasCredentials = portfolio?.credentials && portfolio.credentials.length > 0;
-  const hasApplications = appliedJobs.length > defaultMockApplications.length;
+  const hasApplications = appliedJobs.length > 0;
 
   const timeline = [
     {
@@ -620,13 +941,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     <div className={`candidate-portal-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       {/* ─── Sidebar Navigation ─── */}
       <aside className="candidate-portal-sidebar">
-        <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-          <div className="candidate-portal-brand" style={{ display: 'flex', justifyContent: isSidebarCollapsed ? 'center' : 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span className="candidate-portal-brand-logo">
-                <Sparkles size={18} />
-              </span>
-              {!isSidebarCollapsed && <span style={{ fontWeight: 950 }}>nextplease Hub</span>}
+        <div className="candidate-portal-sidebar-top">
+          <div className="candidate-portal-brand">
+            <div className="candidate-portal-brand-inner">
+              <Sparkles size={20} />
+              <span className="candidate-portal-brand-logo">nextplease hub</span>
             </div>
             <button
               aria-label={isSidebarCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
@@ -638,36 +957,24 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               }}
               title={isSidebarCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
               type="button"
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--muted)',
-                padding: '4px',
-                borderRadius: '6px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
             >
               {isSidebarCollapsed ? <ChevronsRight size={17} /> : <ChevronsLeft size={17} />}
             </button>
           </div>
 
           {/* Mini User Profile Card */}
-          {!isSidebarCollapsed && (
-            <div className="candidate-portal-profile-card">
-              <div className="candidate-portal-profile-avatar">
-                {portfolio?.name ? portfolio.name.slice(0, 2).toUpperCase() : 'C'}
-              </div>
-              <div className="candidate-portal-profile-info">
-                <span className="candidate-portal-profile-name" title={portfolio?.name || 'Ứng viên'}>
-                  {portfolio?.name || 'Ứng viên'}
-                </span>
-                <span className="candidate-portal-profile-level">Cấp độ {currentLevel}</span>
-              </div>
+          <div className="candidate-portal-profile-card">
+            <div className="candidate-portal-profile-avatar">
+              {portfolio?.name ? portfolio.name.slice(0, 2).toUpperCase() : 'C'}
             </div>
-          )}
+            <div className="candidate-portal-profile-info">
+              <span className="candidate-portal-profile-name" title={portfolio?.name || 'Ứng viên'}>
+                {portfolio?.name || 'Ứng viên'}
+              </span>
+              <span className="candidate-portal-profile-level">Candidate Talent</span>
+              <span className="candidate-portal-profile-badge">Cấp độ {currentLevel}</span>
+            </div>
+          </div>
 
           {/* Navigation Menu */}
           <nav className="candidate-portal-nav" style={{ marginTop: isSidebarCollapsed ? '16px' : '0' }}>
@@ -686,7 +993,16 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               type="button"
             >
               <BriefcaseBusiness size={18} />
-              {!isSidebarCollapsed && <span>Bảng cơ hội & Quest</span>}
+              {!isSidebarCollapsed && <span>Bảng cơ hội</span>}
+            </button>
+
+            <button
+              className={`candidate-portal-nav-item ${activeView === 'QUESTS' ? 'active' : ''}`}
+              onClick={() => handleTabChange('QUESTS')}
+              type="button"
+            >
+              <Zap size={18} />
+              {!isSidebarCollapsed && <span>Quest</span>}
             </button>
 
             <button
@@ -707,11 +1023,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   className={`candidate-portal-nav-item ${isActive ? 'active' : ''}`}
                   onClick={() => handleTabChange(`org-${org.id}`)}
                   type="button"
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isActive ? 'rgba(37, 99, 235, 0.12)' : 'transparent' }}
                   title={`Chi tiết: ${org.name}`}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-                    <div style={{
+                  <div className="candidate-org-tab-content">
+                    <div className="candidate-org-tab-logo" style={{
                       width: '18px',
                       height: '18px',
                       borderRadius: '4px',
@@ -731,27 +1046,34 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         org.name.slice(0, 1).toUpperCase()
                       )}
                     </div>
-                    {!isSidebarCollapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 'bold' }}>{org.name}</span>}
+                    <span>{org.name}</span>
                   </div>
-                  {!isSidebarCollapsed && (
-                    <X
-                      size={13}
-                      className="tab-close-icon"
-                      onClick={(e) => handleCloseOrgTab(e, org.id)}
-                      style={{
-                        marginLeft: '8px',
-                        borderRadius: '4px',
-                        transition: 'all 150ms ease',
-                        color: 'var(--muted)',
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={(e) => { e.target.style.background = 'rgba(239, 68, 68, 0.15)'; e.target.style.color = '#ef4444'; }}
-                      onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = 'var(--muted)'; }}
-                    />
-                  )}
+                  <X
+                    size={13}
+                    className="tab-close-icon"
+                    onClick={(e) => handleCloseOrgTab(e, org.id)}
+                  />
                 </button>
               );
             })}
+
+            <button
+              className={`candidate-portal-nav-item ${activeView === 'MY_APPLICATIONS' ? 'active' : ''}`}
+              onClick={() => handleTabChange('MY_APPLICATIONS')}
+              type="button"
+            >
+              <Clock3 size={18} />
+              {!isSidebarCollapsed && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', justifyContent: 'space-between' }}>
+                  Theo dõi ứng tuyển
+                  {(appliedJobs.length + questApplications.length) > 0 && (
+                    <span style={{ fontSize: '0.66rem', fontWeight: '900', background: 'var(--primary)', color: '#fff', borderRadius: '20px', padding: '1px 6px', minWidth: '18px', textAlign: 'center' }}>
+                      {appliedJobs.length + questApplications.length}
+                    </span>
+                  )}
+                </span>
+              )}
+            </button>
 
             <button
               className={`candidate-portal-nav-item ${activeView === 'ROADMAP' ? 'active' : ''}`}
@@ -787,6 +1109,26 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* Sidebar Footer Controls */}
         <div className="candidate-portal-sidebar-footer">
+          {/* NP Balance chip */}
+          {!isSidebarCollapsed && (
+            <button
+              type="button"
+              onClick={() => setShowTopUpModal(true)}
+              className={`candidate-wallet-chip ${wallet?.isPremium ? 'premium' : ''}`}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                <WalletCards size={15} color={wallet?.isPremium ? '#d97706' : 'var(--muted)'} />
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--ink)' }}>
+                  {walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString()} NP
+                </span>
+              </div>
+              {wallet?.isPremium
+                ? <Crown size={13} color="#d97706" />
+                : <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: '700' }}>Nạp</span>
+              }
+            </button>
+          )}
+
           <button
             className="theme-switch-btn"
             onClick={toggleTheme}
@@ -994,16 +1336,20 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
             {/* Metrics cards grid */}
             <section className="candidate-metrics-grid">
-              <div className="candidate-metric-box">
+              <div className="candidate-metric-box" style={{ cursor: 'pointer' }} onClick={() => setShowTopUpModal(true)} title="Nhấn để nạp NP">
                 <div className="candidate-metric-icon">
                   <WalletCards size={22} />
                 </div>
                 <div className="candidate-metric-details">
-                  <span className="candidate-metric-label">Số dư ví</span>
+                  <span className="candidate-metric-label">Số dư ví {wallet?.isPremium && <Crown size={11} color="#d97706" style={{ verticalAlign: 'middle', marginLeft: '4px' }} />}</span>
                   <span className="candidate-metric-value">
-                    {portfolio?.npBalance !== undefined ? portfolio.npBalance.toLocaleString() : '0'} NP
+                    {walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString()} NP
                   </span>
-                  <span className="candidate-metric-subtext">Điểm thưởng tích luỹ</span>
+                  <span className="candidate-metric-subtext" style={{ color: wallet?.isPremium ? '#16a34a' : undefined }}>
+                    {wallet?.isPremium
+                      ? `Premium đến ${wallet.premiumUntil ? new Date(wallet.premiumUntil).toLocaleDateString('vi-VN') : '—'}`
+                      : 'Nhấn để nạp NP'}
+                  </span>
                 </div>
               </div>
 
@@ -1040,328 +1386,507 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 2. OPPORTUNITIES VIEW */}
         {activeView === 'OPPORTUNITIES' && (
-          <section style={{ border: '1px solid var(--line)', background: 'rgba(255, 255, 255, 0.55)', backdropFilter: 'blur(15px)', borderRadius: '28px', padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <div>
-                <p className="eyebrow" style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em', margin: 0 }}>Opportunity board</p>
-                <h2 style={{ margin: '4px 0 0', fontSize: '1.75rem', fontWeight: '900', color: 'var(--ink)' }}>Bảng cơ hội phát triển sự nghiệp</h2>
-              </div>
-              <span style={{ fontSize: '0.86rem', color: 'var(--muted)', background: 'var(--surface-soft)', padding: '6px 12px', borderRadius: '10px', fontWeight: 'bold' }}>
-                Tìm thấy {filteredJobs.length} bài đăng
-              </span>
+          <section style={{ border: '1px solid var(--line)', background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(15px)', borderRadius: '28px', padding: '24px' }}>
+            {/* Header */}
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em', margin: '0 0 4px' }}>Opportunity board</p>
+              <h2 style={{ margin: '0', fontSize: '1.75rem', fontWeight: '900', color: 'var(--ink)' }}>Bảng cơ hội phát triển sự nghiệp</h2>
             </div>
 
-            {/* Filter Console */}
-            <div className="candidate-filters-panel" style={{
-              background: 'var(--surface-soft)',
-              border: '1px solid var(--line)',
-              borderRadius: '20px',
-              padding: '24px',
-              marginBottom: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px'
-            }}>
-              {/* Row 1: Search */}
-              <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
-                <div style={{ position: 'relative', flexGrow: 1 }}>
-                  <input
-                    type="text"
-                    value={filterSearch}
-                    onChange={(e) => {
-                      setFilterSearch(e.target.value);
-                      updateSearchUrl('q', e.target.value);
-                    }}
-                    placeholder="Tìm kiếm vị trí tuyển dụng, từ khóa kỹ năng, hoặc tên công ty..."
-                    style={{
-                      width: '100%',
-                      padding: '14px 16px 14px 44px',
-                      borderRadius: '14px',
-                      border: '1px solid var(--line)',
-                      background: 'var(--bg)',
-                      color: 'var(--ink)',
-                      boxSizing: 'border-box',
-                      fontSize: '0.94rem'
-                    }}
-                  />
-                  <Search size={18} style={{ position: 'absolute', left: '16px', top: '16px', color: 'var(--muted)' }} />
-                  {filterSearch && (
-                    <button
-                      onClick={() => {
-                        setFilterSearch('');
-                        updateSearchUrl('q', '');
-                      }}
-                      style={{
-                        position: 'absolute',
-                        right: '16px',
-                        top: '14px',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'var(--muted)',
-                        fontSize: '1.1rem'
-                      }}
-                      type="button"
-                    >
-                      ✕
-                    </button>
+            {/* Search bar */}
+            <div style={{ position: 'relative', marginBottom: '20px' }}>
+              <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: 'var(--muted)' }} />
+              <input type="text" value={filterSearch}
+                onChange={e => { setFilterSearch(e.target.value); updateSearchUrl('q', e.target.value); }}
+                placeholder="Tìm vị trí tuyển dụng, kỹ năng, hoặc tên công ty..."
+                style={{ width: '100%', padding: '13px 40px 13px 46px', borderRadius: '14px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none' }}
+              />
+              {filterSearch && (
+                <button type="button" onClick={() => { setFilterSearch(''); updateSearchUrl('q', ''); }}
+                  style={{ position: 'absolute', right: '14px', top: '13px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1rem', padding: '2px' }}>✕</button>
+              )}
+            </div>
+
+            {/* 2-col layout: filter sidebar + list */}
+            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '20px', alignItems: 'start' }}>
+              {/* LEFT FILTER PANEL */}
+              <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--line)', borderRadius: '18px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <strong style={{ fontSize: '0.84rem', fontWeight: '900', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '6px' }}><SlidersHorizontal size={14} /> Bộ lọc</strong>
+                  {(filterCategory || filterSpecialty || filterJobType || filterIsRemote || filterCanApply) && (
+                    <button type="button" onClick={() => { setFilterCategory(''); setFilterSpecialty(''); setFilterJobType(''); setFilterIsRemote(false); setFilterCanApply(false); }}
+                      style={{ fontSize: '0.74rem', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', padding: 0 }}>Xóa tất cả</button>
                   )}
                 </div>
-              </div>
 
-              {/* Row 2: Select Filters */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+                {/* Loại hình */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: '850', color: 'var(--muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Lĩnh vực chính</label>
-                  <select
-                    value={filterCategory}
-                    onChange={(e) => {
-                      setFilterCategory(e.target.value);
-                      setFilterSpecialty('');
-                      updateSearchUrl('c', e.target.value);
-                      updateSearchUrl('s', '');
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1px solid var(--line)',
-                      background: 'var(--bg)',
-                      color: 'var(--ink)',
-                      fontSize: '0.92rem',
-                      height: '46px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <option value="">Tất cả lĩnh vực</option>
-                    {Object.keys(CATEGORY_MAP).map(key => (
-                      <option key={key} value={key}>{CATEGORY_MAP[key].label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: '850', color: 'var(--muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Chuyên ngành chi tiết</label>
-                  <select
-                    value={filterSpecialty}
-                    onChange={(e) => {
-                      setFilterSpecialty(e.target.value);
-                      updateSearchUrl('s', e.target.value);
-                    }}
-                    disabled={!filterCategory}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1px solid var(--line)',
-                      background: !filterCategory ? 'var(--surface-soft)' : 'var(--bg)',
-                      color: !filterCategory ? 'var(--muted)' : 'var(--ink)',
-                      fontSize: '0.92rem',
-                      height: '46px',
-                      cursor: !filterCategory ? 'not-allowed' : 'pointer',
-                      opacity: !filterCategory ? 0.6 : 1
-                    }}
-                  >
-                    <option value="">Tất cả chuyên ngành</option>
-                    {filterCategory && (CATEGORY_MAP[filterCategory]?.specialties || []).map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: '850', color: 'var(--muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Loại hình làm việc</label>
-                  <select
-                    value={filterJobType}
-                    onChange={(e) => {
-                      setFilterJobType(e.target.value);
-                      updateSearchUrl('t', e.target.value);
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1px solid var(--line)',
-                      background: 'var(--bg)',
-                      color: 'var(--ink)',
-                      fontSize: '0.92rem',
-                      height: '46px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <option value="">Tất cả loại hình</option>
+                  <p style={{ margin: '0 0 10px', fontSize: '0.72rem', fontWeight: '850', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Loại hình làm việc</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {JOB_TYPES.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
+                        <input type="radio" name="jobType" checked={filterJobType === opt.value} onChange={() => { setFilterJobType(opt.value); updateSearchUrl('t', opt.value); }}
+                          style={{ accentColor: 'var(--primary)', width: '15px', height: '15px', cursor: 'pointer' }} />
+                        <span style={{ fontSize: '0.86rem', color: filterJobType === opt.value ? 'var(--primary)' : 'var(--ink)', fontWeight: filterJobType === opt.value ? '700' : '500' }}>{opt.label}</span>
+                        {opt.exp && <span style={{ fontSize: '0.68rem', color: '#f59e0b', fontWeight: '800', marginLeft: 'auto' }}>+{opt.exp} EXP</span>}
+                      </label>
                     ))}
+                    {filterJobType && (
+                      <button type="button" onClick={() => { setFilterJobType(''); updateSearchUrl('t', ''); }}
+                        style={{ fontSize: '0.78rem', color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '2px 0', fontWeight: '600' }}>
+                        Bỏ chọn
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Lĩnh vực */}
+                <div>
+                  <p style={{ margin: '0 0 8px', fontSize: '0.72rem', fontWeight: '850', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Lĩnh vực</p>
+                  <select value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setFilterSpecialty(''); updateSearchUrl('c', e.target.value); updateSearchUrl('s', ''); }}
+                    style={{ width: '100%', padding: '9px 11px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.84rem', color: 'var(--ink)', cursor: 'pointer' }}>
+                    <option value="">Tất cả lĩnh vực</option>
+                    {Object.keys(CATEGORY_MAP).map(key => <option key={key} value={key}>{CATEGORY_MAP[key].label}</option>)}
                   </select>
+                  {filterCategory && (
+                    <select value={filterSpecialty} onChange={e => { setFilterSpecialty(e.target.value); updateSearchUrl('s', e.target.value); }}
+                      style={{ width: '100%', padding: '9px 11px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.84rem', color: 'var(--ink)', cursor: 'pointer', marginTop: '8px' }}>
+                      <option value="">Tất cả chuyên ngành</option>
+                      {(CATEGORY_MAP[filterCategory]?.specialties || []).map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                    </select>
+                  )}
+                </div>
+
+                {/* Toggles */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', borderTop: '1px solid var(--line)', paddingTop: '16px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
+                    <input type="checkbox" checked={filterIsRemote} onChange={e => { setFilterIsRemote(e.target.checked); updateSearchUrl('r', e.target.checked); }}
+                      style={{ accentColor: 'var(--primary)', width: '16px', height: '16px', cursor: 'pointer' }} />
+                    <span style={{ fontSize: '0.86rem', color: 'var(--ink)', fontWeight: '600' }}>Chỉ Remote</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
+                    <input type="checkbox" checked={filterCanApply} onChange={e => { setFilterCanApply(e.target.checked); updateSearchUrl('fit', e.target.checked); }}
+                      style={{ accentColor: 'var(--primary)', width: '16px', height: '16px', cursor: 'pointer' }} />
+                    <span style={{ fontSize: '0.86rem', color: 'var(--ink)', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><ShieldCheck size={13} color="var(--primary)" /> Đủ RS</span>
+                  </label>
                 </div>
               </div>
 
-              {/* Row 3: Toggles */}
-              <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', borderTop: '1px solid var(--line)', paddingTop: '14px', marginTop: '4px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
-                  <input
-                    type="checkbox"
-                    checked={filterIsRemote}
-                    onChange={(e) => {
-                      setFilterIsRemote(e.target.checked);
-                      updateSearchUrl('r', e.target.checked);
-                    }}
-                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                  />
-                  <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--ink)' }}>Chỉ hiển thị việc Remote</span>
-                </label>
-
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
-                  <input
-                    type="checkbox"
-                    checked={filterCanApply}
-                    onChange={(e) => {
-                      setFilterCanApply(e.target.checked);
-                      updateSearchUrl('fit', e.target.checked);
-                    }}
-                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                  />
-                  <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--ink)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <ShieldCheck size={14} color="var(--primary)" /> Chỉ hiện Quest có thể ứng tuyển (Đủ RS)
+              {/* RIGHT: result count + list */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <span style={{ fontSize: '0.88rem', color: 'var(--muted)', fontWeight: '700' }}>
+                    Tìm thấy <strong style={{ color: 'var(--ink)' }}>{filteredJobs.length}</strong> cơ hội
                   </span>
-                </label>
-              </div>
-            </div>
+                </div>
 
-            {/* Grid of Cards */}
-            <div className="candidate-opportunities-grid">
-              {jobsLoading ? (
-                <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', gap: '12px', background: 'var(--surface-soft)', borderRadius: '24px', border: '1px solid var(--line)' }}>
-                  <RefreshCw className="animate-spin" size={26} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
-                  <p style={{ fontSize: '0.92rem', color: 'var(--muted)', fontWeight: '600' }}>Đang tải bảng cơ hội...</p>
-                </div>
-              ) : jobsError ? (
-                <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '12px', padding: '20px', background: 'rgba(220, 38, 38, 0.05)', borderRadius: '20px', border: '1px solid rgba(220, 38, 38, 0.2)', color: '#dc2626' }}>
-                  <AlertTriangle size={20} />
-                  <p style={{ margin: 0, fontSize: '0.92rem', fontWeight: '600' }}>{jobsError}</p>
-                </div>
-              ) : filteredJobs.length === 0 ? (
-                <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', gap: '16px', background: 'var(--surface-soft)', borderRadius: '24px', border: '1px dashed var(--line)', textAlign: 'center' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--card-bg-strong)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
-                    <Search size={22} />
+                {jobsLoading ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 20px', gap: '12px', background: 'var(--surface-soft)', borderRadius: '20px' }}>
+                    <RefreshCw size={26} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
+                    <p style={{ fontSize: '0.92rem', color: 'var(--muted)', fontWeight: '600', margin: 0 }}>Đang tải...</p>
                   </div>
-                  <div>
-                    <h3 style={{ margin: '0 0 6px', fontSize: '1.05rem', color: 'var(--ink)' }}>Không tìm thấy cơ hội nào</h3>
-                    <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--muted)' }}>Hãy thử điều chỉnh lại bộ lọc tìm kiếm ở phía trên.</p>
+                ) : jobsError ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '20px', background: 'rgba(220,38,38,0.05)', borderRadius: '16px', border: '1px solid rgba(220,38,38,0.2)', color: '#dc2626' }}>
+                    <AlertTriangle size={20} /><p style={{ margin: 0, fontSize: '0.92rem', fontWeight: '600' }}>{jobsError}</p>
                   </div>
-                </div>
-              ) : (
-                filteredJobs.map((job) => {
-                  const isLocked = candidateRs < job.minReqRs;
-                  const tone = getCategoryTone(job.category);
-                  const compensationText = job.compensation > 0
-                    ? `${Number(job.compensation).toLocaleString()} VND`
-                    : 'Thỏa thuận';
-
-                  return (
-                    <article className={`candidate-quest-item ${tone}`} key={job.id} style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      borderLeftWidth: '6px',
-                      padding: '20px',
-                      height: '100%',
-                      margin: 0
-                    }}>
-                      <div>
-                        {/* Top Line tags */}
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
-                          <span style={{ fontSize: '0.72rem', fontWeight: '850', padding: '4px 8px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--surface-soft)', color: 'var(--ink)' }}>
-                            <Building size={11} /> {job.companyName || 'Đối tác'}
-                          </span>
-                          <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', padding: '4px 8px' }}>
-                            {JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType}
-                          </span>
-                          {job.isRemote && (
-                            <span style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', padding: '4px 8px' }}>
-                              Remote
-                            </span>
-                          )}
-                        </div>
-
-                        <h3 style={{ margin: '4px 0 6px', fontSize: '1.2rem', fontWeight: '800', color: 'var(--ink)' }}>{job.title}</h3>
-                        
-                        <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: '8px 0 12px', lineHeight: 1.5 }}>
-                          {job.description?.length > 130 ? `${job.description.slice(0, 130)}...` : job.description}
-                        </p>
-
-                        {/* Skills Badge */}
-                        {job.skills && job.skills.length > 0 && (
-                          <div style={{ margin: '12px 0', display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
-                            {job.skills.slice(0, 3).map((s, idx) => (
-                              <span key={idx} style={{
-                                fontSize: '0.68rem',
-                                fontWeight: '700',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                background: 'var(--card-bg-strong)',
-                                border: '1px solid var(--line)',
-                                color: 'var(--ink)'
-                              }}>
-                                {s.skillName}
-                              </span>
-                            ))}
-                            {job.skills.length > 3 && (
-                              <span style={{ fontSize: '0.68rem', fontWeight: '700', color: 'var(--muted)' }}>+{job.skills.length - 3}</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Bottom row actions */}
-                      <div style={{
-                        marginTop: '16px',
-                        borderTop: '1px solid var(--line)',
-                        paddingTop: '14px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '12px'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                          <div>
-                            <span style={{ color: 'var(--muted)', fontSize: '0.74rem', display: 'block' }}>THÙ LAO</span>
-                            <strong style={{ color: 'var(--primary)', fontWeight: '900' }}>{compensationText}</strong>
-                          </div>
-                          <div style={{ textAlign: 'right' }}>
-                            <span style={{ color: 'var(--muted)', fontSize: '0.74rem', display: 'block' }}>YÊU CẦU RS</span>
-                            <strong style={{ color: isLocked ? '#ef4444' : 'var(--ink)', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                              {job.minReqRs > 0 ? `${job.minReqRs} RS` : 'Không'}
-                              {isLocked && <LockKeyhole size={11} color="#ef4444" />}
-                            </strong>
-                          </div>
-                        </div>
-
-                        <button
-                          disabled={isLocked}
-                          type="button"
-                          onClick={() => handleApplyJob(job)}
-                          style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '6px',
-                            padding: '10px 14px',
-                            fontSize: '0.88rem',
-                            fontWeight: '800'
-                          }}
+                ) : filteredJobs.length === 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 20px', gap: '12px', background: 'var(--surface-soft)', borderRadius: '20px', border: '1px dashed var(--line)', textAlign: 'center' }}>
+                    <Search size={28} style={{ color: 'var(--muted)' }} />
+                    <div><h3 style={{ margin: '0 0 4px', color: 'var(--ink)' }}>Không tìm thấy cơ hội nào</h3>
+                    <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--muted)' }}>Điều chỉnh bộ lọc để tìm thêm kết quả.</p></div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {filteredJobs.map(job => {
+                      const isLocked = candidateRs < job.minReqRs;
+                      const alreadyApplied = appliedJobs.some(a => (a.job_id || a.jobId) === job.id);
+                      const compensationText = job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận';
+                      const typeLabel = JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType;
+                      const typeExp = JOB_TYPES.find(t => t.value === job.jobType)?.exp;
+                      return (
+                        <article key={job.id} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '18px', border: '1px solid var(--line)', background: 'var(--bg)', transition: 'box-shadow 0.2s, border-color 0.2s' }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(37,99,235,0.08)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.boxShadow = 'none'; }}
                         >
-                          {isLocked ? 'Cần thêm điểm RS' : 'Ứng tuyển ngay'}
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })
-              )}
+                          {/* Logo */}
+                          <div style={{ width: '56px', height: '56px', borderRadius: '14px', border: '1px solid var(--line)', background: 'var(--surface-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                            {job.companyLogo ? <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={22} style={{ color: 'var(--muted)' }} />}
+                          </div>
+
+                          {/* Middle content */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '6px' }}>
+                              {job.requiresPremium && (
+                                <span style={{ fontSize: '0.68rem', fontWeight: '800', padding: '2px 7px', borderRadius: '5px', background: 'rgba(245,158,11,0.12)', color: '#d97706', border: '1px solid rgba(245,158,11,0.3)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                  <Crown size={9} /> Premium
+                                </span>
+                              )}
+                              {isLocked && (
+                                <span style={{ fontSize: '0.68rem', fontWeight: '800', padding: '2px 7px', borderRadius: '5px', background: 'rgba(220,38,38,0.08)', color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                  <LockKeyhole size={9} /> Cần {job.minReqRs} RS
+                                </span>
+                              )}
+                            </div>
+                            <h3 style={{ margin: '0 0 4px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)', lineHeight: 1.3 }}>{job.title}</h3>
+                            <div style={{ fontSize: '0.84rem', color: 'var(--muted)', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Building size={12} />{job.companyName || 'Đối tác'}</span>
+                              {job.location && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={12} />{job.isRemote ? 'Remote' : job.location}</span>}
+                              {(job.deadlineAt) && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={12} />HSD: {new Date(job.deadlineAt).toLocaleDateString('vi-VN')}</span>}
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              {typeLabel && <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '3px 9px', borderRadius: '6px', background: 'rgba(37,99,235,0.08)', color: '#2563eb' }}>{typeLabel}</span>}
+                              {job.isRemote && <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '3px 9px', borderRadius: '6px', background: 'rgba(139,92,246,0.08)', color: '#8b5cf6' }}>Remote</span>}
+                              {job.skills?.slice(0, 2).map((s, i) => <span key={i} style={{ fontSize: '0.75rem', fontWeight: '600', padding: '3px 9px', borderRadius: '6px', background: 'var(--surface-soft)', border: '1px solid var(--line)', color: 'var(--ink)' }}>{s.skillName}</span>)}
+                              {job.skills?.length > 2 && <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: '600' }}>+{job.skills.length - 2}</span>}
+                            </div>
+                          </div>
+
+                          {/* Right: salary + actions */}
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0, minWidth: '140px' }}>
+                            <div style={{ textAlign: 'right' }}>
+                              <strong style={{ display: 'block', fontSize: '0.96rem', color: '#16a34a', fontWeight: '900' }}>{compensationText}</strong>
+                              {typeExp && <span style={{ fontSize: '0.76rem', color: '#f59e0b', fontWeight: '800' }}>+{typeExp} EXP khi xong</span>}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+                              <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer"
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '7px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', textDecoration: 'none' }}>
+                                Xem chi tiết
+                              </a>
+                              <button type="button" disabled={isLocked || alreadyApplied} onClick={() => handleApplyJob(job)}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (isLocked || alreadyApplied) ? 'var(--surface-soft)' : 'var(--primary)', color: (isLocked || alreadyApplied) ? 'var(--muted)' : '#fff', cursor: (isLocked || alreadyApplied) ? 'not-allowed' : 'pointer' }}>
+                                {alreadyApplied ? <><Check size={12} /> Đã ứng tuyển</> : isLocked ? <><LockKeyhole size={12} /> Cần RS</> : 'Ứng tuyển'}
+                              </button>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </section>
         )}
+
+        {/* 2b. QUEST BOARD — dedicated QUESTS tab */}
+        {activeView === 'QUESTS' && (
+          <section style={{ border: '1px solid var(--line)', background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(15px)', borderRadius: '28px', padding: '24px' }}>
+            {questApplySuccess && <div className="alert-banner success" style={{ marginBottom: '16px' }}>{questApplySuccess}</div>}
+
+            {/* Header */}
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em', margin: '0 0 4px' }}>Quest CLB</p>
+              <h2 style={{ margin: '0', fontSize: '1.75rem', fontWeight: '900', color: 'var(--ink)' }}>Bảng Quest & Chiến dịch</h2>
+            </div>
+
+            {/* Search bar */}
+            <div style={{ position: 'relative', marginBottom: '20px' }}>
+              <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: 'var(--muted)' }} />
+              <input type="text" value={questSearchFilter} onChange={e => setQuestSearchFilter(e.target.value)}
+                placeholder="Tìm tên Quest, CLB, hoặc mô tả..."
+                style={{ width: '100%', padding: '13px 40px 13px 46px', borderRadius: '14px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none' }} />
+              {questSearchFilter && (
+                <button type="button" onClick={() => setQuestSearchFilter('')}
+                  style={{ position: 'absolute', right: '14px', top: '13px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1rem', padding: '2px' }}>✕</button>
+              )}
+            </div>
+
+            {/* 2-col layout */}
+            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '20px', alignItems: 'start' }}>
+              {/* LEFT FILTER PANEL */}
+              <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--line)', borderRadius: '18px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <strong style={{ fontSize: '0.84rem', fontWeight: '900', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '6px' }}><SlidersHorizontal size={14} /> Bộ lọc</strong>
+                  {questCategoryFilter && (
+                    <button type="button" onClick={() => setQuestCategoryFilter('')}
+                      style={{ fontSize: '0.74rem', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', padding: 0 }}>Xóa</button>
+                  )}
+                </div>
+
+                <div>
+                  <p style={{ margin: '0 0 10px', fontSize: '0.72rem', fontWeight: '850', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Loại Quest</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {[
+                      { value: 'SMALL_EVENT', label: 'Sự kiện nhỏ', exp: 100, color: '#8b5cf6' },
+                      { value: 'SCHOOL_CAMPAIGN', label: 'Chiến dịch trường', exp: 300, color: '#0ea5e9' },
+                      { value: 'COMPANY_PROJECT', label: 'Dự án DN', exp: 500, color: '#f59e0b' },
+                      { value: 'SHORT_INTERNSHIP', label: 'Thực tập ngắn', exp: 500, color: '#10b981' },
+                      { value: 'FREELANCE_GIG', label: 'Freelance', exp: 300, color: '#ec4899' },
+                    ].map(opt => (
+                      <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
+                        <input type="radio" name="questCat" checked={questCategoryFilter === opt.value} onChange={() => setQuestCategoryFilter(opt.value)}
+                          style={{ accentColor: opt.color, width: '15px', height: '15px', cursor: 'pointer' }} />
+                        <span style={{ fontSize: '0.86rem', color: questCategoryFilter === opt.value ? opt.color : 'var(--ink)', fontWeight: questCategoryFilter === opt.value ? '700' : '500', flex: 1 }}>{opt.label}</span>
+                        <span style={{ fontSize: '0.68rem', color: '#f59e0b', fontWeight: '800' }}>+{opt.exp}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT: list */}
+              <div>
+                {questsLoading ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '60px', gap: '12px', background: 'var(--surface-soft)', borderRadius: '20px' }}>
+                    <RefreshCw size={22} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
+                    <span style={{ color: 'var(--muted)', fontWeight: '600' }}>Đang tải Quest...</span>
+                  </div>
+                ) : questsList.length === 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px', gap: '12px', background: 'var(--surface-soft)', borderRadius: '20px', border: '1px dashed var(--line)', textAlign: 'center' }}>
+                    <Sparkles size={28} style={{ color: 'var(--muted)' }} />
+                    <p style={{ margin: 0, color: 'var(--muted)', fontWeight: '600' }}>Chưa có Quest nào đang mở. Quay lại sau nhé!</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ fontSize: '0.88rem', color: 'var(--muted)', fontWeight: '700', marginBottom: '2px' }}>
+                      Tìm thấy <strong style={{ color: 'var(--ink)' }}>{questsList.length}</strong> Quest
+                    </div>
+                    {questsList.map(quest => {
+                      const isLocked = candidateRs < (quest.minReqRs || 0);
+                      const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
+                      const categoryMeta = { SMALL_EVENT: { label: 'Sự kiện nhỏ', color: '#8b5cf6' }, SCHOOL_CAMPAIGN: { label: 'Chiến dịch trường', color: '#0ea5e9' }, COMPANY_PROJECT: { label: 'Dự án DN', color: '#f59e0b' }, SHORT_INTERNSHIP: { label: 'Thực tập ngắn', color: '#10b981' }, FREELANCE_GIG: { label: 'Freelance', color: '#ec4899' } }[quest.category] || { label: quest.category, color: 'var(--primary)' };
+                      return (
+                        <article key={quest.id} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '18px', border: '1px solid var(--line)', background: 'var(--bg)', borderLeftWidth: '4px', borderLeftColor: categoryMeta.color, transition: 'box-shadow 0.2s, border-color 0.2s', opacity: isLocked ? 0.75 : 1 }}
+                          onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 4px 20px ${categoryMeta.color}20`; }}
+                          onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
+                        >
+                          {/* Icon */}
+                          <div style={{ width: '56px', height: '56px', borderRadius: '14px', border: `1px solid ${categoryMeta.color}30`, background: `${categoryMeta.color}10`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Zap size={24} style={{ color: categoryMeta.color }} />
+                          </div>
+
+                          {/* Middle */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '6px' }}>
+                              <span style={{ fontSize: '0.72rem', fontWeight: '800', padding: '2px 8px', borderRadius: '6px', background: `${categoryMeta.color}15`, color: categoryMeta.color }}>{categoryMeta.label}</span>
+                              {alreadyApplied && <span style={{ fontSize: '0.72rem', fontWeight: '800', padding: '2px 8px', borderRadius: '6px', background: 'rgba(22,163,74,0.1)', color: '#16a34a', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><Check size={10} /> Đã đăng ký</span>}
+                              {isLocked && <span style={{ fontSize: '0.72rem', fontWeight: '800', padding: '2px 8px', borderRadius: '6px', background: 'rgba(220,38,38,0.08)', color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><LockKeyhole size={9} /> Cần {quest.minReqRs} RS</span>}
+                            </div>
+                            <h3 style={{ margin: '0 0 4px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)', lineHeight: 1.3 }}>{quest.title}</h3>
+                            <div style={{ fontSize: '0.84rem', color: 'var(--muted)', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Building size={12} />{quest.companyName || 'CLB'}</span>
+                              {quest.endsAt && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={12} />HSD: {new Date(quest.endsAt).toLocaleDateString('vi-VN')}</span>}
+                              {quest.capacity > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={12} />{quest.capacity - (quest.applicantCount || 0)}/{quest.capacity} chỗ</span>}
+                            </div>
+                            <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--muted)', lineHeight: 1.5 }}>
+                              {quest.description?.length > 100 ? `${quest.description.slice(0, 100)}...` : quest.description}
+                            </p>
+                          </div>
+
+                          {/* Right */}
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0, minWidth: '130px' }}>
+                            <div style={{ textAlign: 'right' }}>
+                              <strong style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '1.1rem', color: '#f59e0b', fontWeight: '900', justifyContent: 'flex-end' }}><Zap size={14} />+{quest.expReward} EXP</strong>
+                              {quest.npReward > 0 && <span style={{ fontSize: '0.76rem', color: '#10b981', fontWeight: '800' }}>+{quest.npReward} NP</span>}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+                              <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer"
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '7px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', textDecoration: 'none' }}>
+                                Xem chi tiết
+                              </a>
+                              <button type="button" disabled={isLocked || alreadyApplied}
+                                onClick={() => { setSelectedQuestForApply(quest); setQuestCoverNote(''); setQuestApplyError(''); setShowQuestApplyModal(true); }}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: alreadyApplied ? 'var(--surface-soft)' : isLocked ? 'var(--surface-soft)' : categoryMeta.color, color: (alreadyApplied || isLocked) ? 'var(--muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
+                                {alreadyApplied ? <><Check size={12} /> Đã đăng ký</> : isLocked ? <><LockKeyhole size={12} /> Cần RS</> : <><Zap size={12} /> Tham gia</>}
+                              </button>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 2c. MY APPLICATIONS VIEW */}
+        {activeView === 'MY_APPLICATIONS' && (() => {
+          const JOB_STATUS_COLOR = { SUBMITTED: '#d97706', VIEWED: '#2563eb', SHORTLISTED: '#7c3aed', ACCEPTED: '#16a34a', REJECTED: '#dc2626', COMPLETED: '#0ea5e9', WITHDRAWN: '#6b7280' };
+          const JOB_STATUS_LABEL = { SUBMITTED: 'Đã nộp', VIEWED: 'Đã xem', SHORTLISTED: 'Vào vòng tiếp', ACCEPTED: 'Chấp thuận', REJECTED: 'Từ chối', COMPLETED: 'Hoàn thành', WITHDRAWN: 'Rút đơn' };
+          const filteredBizApps = appliedJobs.filter(app => {
+            const title = (app.job_title || app.title || '').toLowerCase();
+            const company = (app.company_name || app.companyName || '').toLowerCase();
+            const matchSearch = !myAppsSearch || title.includes(myAppsSearch.toLowerCase()) || company.includes(myAppsSearch.toLowerCase());
+            const matchStatus = !myAppsStatusFilter || (app.status || '') === myAppsStatusFilter;
+            return matchSearch && matchStatus;
+          });
+          const filteredClubApps = questApplications.filter(qa => {
+            const title = (qa.questTitle || '').toLowerCase();
+            const company = (qa.companyName || '').toLowerCase();
+            const matchSearch = !myAppsClubSearch || title.includes(myAppsClubSearch.toLowerCase()) || company.includes(myAppsClubSearch.toLowerCase());
+            const matchStatus = !myAppsClubStatusFilter || (qa.status || '') === myAppsClubStatusFilter;
+            return matchSearch && matchStatus;
+          });
+
+          return (
+            <section style={{ border: '1px solid var(--line)', background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(15px)', borderRadius: '28px', padding: '28px' }}>
+              {/* Header */}
+              <div style={{ marginBottom: '24px' }}>
+                <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em', margin: '0 0 4px' }}>My Applications</p>
+                <h2 style={{ margin: '0', fontSize: '1.75rem', fontWeight: '900', color: 'var(--ink)' }}>Theo dõi hồ sơ ứng tuyển</h2>
+              </div>
+
+              {/* Sub-tabs */}
+              <div style={{ display: 'flex', background: 'var(--surface-soft)', padding: '4px', borderRadius: '14px', gap: '4px', marginBottom: '24px', width: 'fit-content' }}>
+                {[
+                  { key: 'BUSINESS', label: '🏢 Doanh nghiệp', count: appliedJobs.length },
+                  { key: 'CLUB', label: '⚡ CLB / Quest', count: questApplications.length },
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setMyAppsTab(tab.key)}
+                    style={{ padding: '8px 18px', borderRadius: '10px', border: 0, fontWeight: '800', fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', background: myAppsTab === tab.key ? 'var(--primary)' : 'transparent', color: myAppsTab === tab.key ? '#fff' : 'var(--muted)' }}
+                  >
+                    {tab.label}
+                    <span style={{ fontSize: '0.72rem', fontWeight: '900', background: myAppsTab === tab.key ? 'rgba(255,255,255,0.25)' : 'var(--line)', color: myAppsTab === tab.key ? '#fff' : 'var(--muted)', borderRadius: '20px', padding: '1px 7px' }}>
+                      {tab.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Filters */}
+              {myAppsTab === 'BUSINESS' ? (
+                <>
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+                      <Search size={15} style={{ position: 'absolute', left: '12px', top: '11px', color: 'var(--muted)' }} />
+                      <input type="text" value={myAppsSearch} onChange={e => setMyAppsSearch(e.target.value)}
+                        placeholder="Tìm vị trí hoặc công ty..." style={{ width: '100%', padding: '10px 12px 10px 36px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', color: 'var(--ink)', boxSizing: 'border-box', outline: 'none' }} />
+                    </div>
+                    <select value={myAppsStatusFilter} onChange={e => setMyAppsStatusFilter(e.target.value)}
+                      style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', color: 'var(--ink)', cursor: 'pointer' }}>
+                      <option value="">Tất cả trạng thái</option>
+                      {Object.entries(JOB_STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                    </select>
+                    {(myAppsSearch || myAppsStatusFilter) && (
+                      <button type="button" onClick={() => { setMyAppsSearch(''); setMyAppsStatusFilter(''); }}
+                        style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.84rem', color: 'var(--muted)', cursor: 'pointer', fontWeight: '700' }}>
+                        Xóa bộ lọc
+                      </button>
+                    )}
+                  </div>
+
+                  {applicationsLoading ? (
+                    <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>Đang tải...</div>
+                  ) : filteredBizApps.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '60px 20px', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
+                      <BriefcaseBusiness size={28} style={{ color: 'var(--muted)', marginBottom: '10px' }} />
+                      <p style={{ margin: 0, color: 'var(--muted)', fontWeight: '600' }}>
+                        {myAppsSearch || myAppsStatusFilter ? 'Không tìm thấy hồ sơ phù hợp.' : 'Bạn chưa ứng tuyển vị trí nào từ doanh nghiệp.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {filteredBizApps.map((app, idx) => {
+                        const st = app.status || 'SUBMITTED';
+                        const sc = JOB_STATUS_COLOR[st] || '#6b7280';
+                        const sl = JOB_STATUS_LABEL[st] || st;
+                        return (
+                          <div key={app.id || idx} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--line)', background: 'var(--bg)', borderLeftWidth: '4px', borderLeftColor: sc }}>
+                            <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'var(--surface-soft)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <Building size={20} style={{ color: 'var(--muted)' }} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <strong style={{ display: 'block', fontSize: '0.96rem', color: 'var(--ink)', marginBottom: '2px' }}>{app.job_title || app.title}</strong>
+                              <div style={{ fontSize: '0.82rem', color: 'var(--muted)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Building size={12} />{app.company_name || app.companyName || 'Đối tác'}</span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={12} />{app.applied_at ? new Date(app.applied_at).toLocaleDateString('vi-VN') : app.appliedAt || '—'}</span>
+                                <span style={{ padding: '2px 8px', borderRadius: '5px', background: 'var(--surface-soft)', fontWeight: '700', fontSize: '0.76rem' }}>
+                                  {JOB_TYPES.find(t => t.value === (app.job_type || app.jobType))?.label || app.job_type || app.jobType || '—'}
+                                </span>
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '8px', background: `${sc}15`, color: sc, fontWeight: '800', fontSize: '0.82rem' }}>
+                                {st === 'SUBMITTED' && <Clock3 size={12} />}
+                                {(st === 'ACCEPTED' || st === 'SHORTLISTED') && <CheckCircle2 size={12} />}
+                                {st === 'REJECTED' && <AlertTriangle size={12} />}
+                                {sl}
+                              </span>
+                              {st === 'REJECTED' && (app.reject_reason || app.rejectionReason) && (
+                                <div style={{ marginTop: '4px', fontSize: '0.76rem', color: '#dc2626', maxWidth: '200px', textAlign: 'right' }}>
+                                  Lý do: {app.reject_reason || app.rejectionReason}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+                      <Search size={15} style={{ position: 'absolute', left: '12px', top: '11px', color: 'var(--muted)' }} />
+                      <input type="text" value={myAppsClubSearch} onChange={e => setMyAppsClubSearch(e.target.value)}
+                        placeholder="Tìm tên Quest hoặc CLB..." style={{ width: '100%', padding: '10px 12px 10px 36px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', color: 'var(--ink)', boxSizing: 'border-box', outline: 'none' }} />
+                    </div>
+                    <select value={myAppsClubStatusFilter} onChange={e => setMyAppsClubStatusFilter(e.target.value)}
+                      style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', color: 'var(--ink)', cursor: 'pointer' }}>
+                      <option value="">Tất cả trạng thái</option>
+                      <option value="SUBMITTED">Đã nộp</option>
+                      <option value="ACCEPTED">Chấp thuận</option>
+                      <option value="REJECTED">Từ chối</option>
+                      <option value="COMPLETED">Hoàn thành (+EXP)</option>
+                      <option value="WITHDRAWN">Rút đơn</option>
+                    </select>
+                    {(myAppsClubSearch || myAppsClubStatusFilter) && (
+                      <button type="button" onClick={() => { setMyAppsClubSearch(''); setMyAppsClubStatusFilter(''); }}
+                        style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.84rem', color: 'var(--muted)', cursor: 'pointer', fontWeight: '700' }}>
+                        Xóa bộ lọc
+                      </button>
+                    )}
+                  </div>
+
+                  {filteredClubApps.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '60px 20px', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
+                      <Zap size={28} style={{ color: 'var(--muted)', marginBottom: '10px' }} />
+                      <p style={{ margin: 0, color: 'var(--muted)', fontWeight: '600' }}>
+                        {myAppsClubSearch || myAppsClubStatusFilter ? 'Không tìm thấy Quest phù hợp.' : 'Bạn chưa tham gia Quest nào từ CLB.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {filteredClubApps.map((qa, idx) => {
+                        const QUEST_SC = { SUBMITTED: '#d97706', ACCEPTED: '#16a34a', REJECTED: '#dc2626', COMPLETED: '#2563eb', WITHDRAWN: '#6b7280' };
+                        const QUEST_SL = { SUBMITTED: 'Đã nộp', ACCEPTED: 'Chấp thuận', REJECTED: 'Từ chối', COMPLETED: 'Hoàn thành', WITHDRAWN: 'Rút đơn' };
+                        const sc = QUEST_SC[qa.status] || '#6b7280';
+                        const sl = QUEST_SL[qa.status] || qa.status;
+                        return (
+                          <div key={qa.id || idx} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--line)', background: 'var(--bg)', borderLeftWidth: '4px', borderLeftColor: sc }}>
+                            <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <Zap size={20} style={{ color: '#f59e0b' }} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <strong style={{ display: 'block', fontSize: '0.96rem', color: 'var(--ink)', marginBottom: '2px' }}>{qa.questTitle}</strong>
+                              <div style={{ fontSize: '0.82rem', color: 'var(--muted)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Building size={12} />{qa.companyName || 'CLB'}</span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={12} />{qa.appliedAt ? new Date(qa.appliedAt).toLocaleDateString('vi-VN') : '—'}</span>
+                                {qa.expReward > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '800', color: '#f59e0b' }}><Zap size={12} />+{qa.expReward} EXP</span>}
+                              </div>
+                            </div>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '8px', background: `${sc}15`, color: sc, fontWeight: '800', fontSize: '0.82rem', flexShrink: 0 }}>
+                              {qa.status === 'COMPLETED' && <CheckCircle2 size={12} />}
+                              {qa.status === 'REJECTED' && <AlertTriangle size={12} />}
+                              {qa.status === 'SUBMITTED' && <Clock3 size={12} />}
+                              {sl}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+          );
+        })()}
 
         {/* 3. ORGANIZATIONS VIEW (DIRECTORY) */}
         {activeView === 'ORGANIZATIONS' && (
@@ -1814,73 +2339,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         {/* 5. CREDENTIALS & STATUS VIEW */}
         {activeView === 'CREDENTIALS' && (
           <div className="candidate-credentials-workspace">
-            {/* Applied Jobs Tracker Section */}
-            <section className="applications-tracker-section">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                <BriefcaseBusiness size={20} color="var(--primary)" />
-                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '850', color: 'var(--ink)' }}>Theo dõi Hồ sơ Ứng tuyển</h2>
-              </div>
-
-              {appliedJobs.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '30px 20px', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
-                  <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>Bạn chưa nộp hồ sơ ứng tuyển vị trí nào.</p>
-                </div>
-              ) : (
-                <div style={{ overflowX: 'auto' }}>
-                  <table className="credential-table">
-                    <thead>
-                      <tr>
-                        <th>Vị trí</th>
-                        <th>Công ty</th>
-                        <th>Thời gian</th>
-                        <th>Loại hình</th>
-                        <th>Trạng thái</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {appliedJobs.map((app) => (
-                        <tr key={app.id}>
-                          <td style={{ fontWeight: '800', color: 'var(--ink)' }}>{app.title}</td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <Building size={14} color="var(--muted)" />
-                              {app.companyName}
-                            </div>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.86rem', color: 'var(--muted)' }}>
-                              <Calendar size={13} />
-                              {app.appliedAt}
-                            </div>
-                          </td>
-                          <td>
-                            <span style={{ fontSize: '0.8rem', padding: '3px 8px', borderRadius: '6px', background: 'var(--surface-soft)', fontWeight: 'bold' }}>
-                              {JOB_TYPES.find(t => t.value === app.jobType)?.label || app.jobType}
-                            </span>
-                          </td>
-                          <td>
-                            <div>
-                              <span className={`status-badge ${app.status.toLowerCase()}`}>
-                                {app.status === 'PENDING' && <Clock3 size={12} />}
-                                {app.status === 'APPROVED' && <CheckCircle2 size={12} />}
-                                {app.status === 'REJECTED' && <AlertTriangle size={12} />}
-                                {app.status === 'PENDING' ? 'Chờ duyệt' : app.status === 'APPROVED' ? 'Đã duyệt' : 'Từ chối'}
-                              </span>
-                              {app.status === 'REJECTED' && app.rejectionReason && (
-                                <div className="rejection-reason-box">
-                                  <AlertTriangle size={13} style={{ flexShrink: 0, marginTop: '2px' }} />
-                                  <span>Lý do: {app.rejectionReason}</span>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
 
             {/* Certifications & Diplomas Grid (My Credentials) */}
             <section className="credentials-list-section">
@@ -1941,94 +2399,399 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               )}
             </section>
 
-            {/* Score transaction history mock */}
+            {/* Proof of Work submission section */}
             <section className="credentials-list-section" style={{ marginTop: '4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                <ShieldCheck size={20} color="var(--primary)" />
-                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '850', color: 'var(--ink)' }}>Lịch sử giao dịch điểm uy tín (RS)</h2>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: '12px', background: 'var(--soft-card-bg)', border: '1px solid var(--line)' }}>
-                  <div>
-                    <h5 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--ink)', fontWeight: '800' }}>Khởi tạo tài khoản và đồng bộ</h5>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>Hệ thống kích hoạt</span>
-                  </div>
-                  <strong style={{ color: '#22c55e', fontSize: '0.95rem' }}>+100 RS</strong>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <ShieldCheck size={20} color="var(--primary)" />
+                  <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '850', color: 'var(--ink)' }}>Nộp Minh chứng Hoạt động</h2>
                 </div>
-                {has3D && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: '12px', background: 'var(--soft-card-bg)', border: '1px solid var(--line)' }}>
-                    <div>
-                      <h5 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--ink)', fontWeight: '800' }}>Dựng hình ảnh 3D Portfolio cá nhân</h5>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>Xác thực cấu trúc hồ sơ</span>
-                    </div>
-                    <strong style={{ color: '#22c55e', fontSize: '0.95rem' }}>+50 RS</strong>
-                  </div>
-                )}
-                {hasCredentials && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: '12px', background: 'var(--soft-card-bg)', border: '1px solid var(--line)' }}>
-                    <div>
-                      <h5 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--ink)', fontWeight: '800' }}>Tải chứng chỉ ngoại ngữ và chuyên môn</h5>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>Minh chứng thực tế</span>
-                    </div>
-                    <strong style={{ color: '#22c55e', fontSize: '0.95rem' }}>+150 RS</strong>
-                  </div>
-                )}
+                <button
+                  className="button primary-button"
+                  style={{ fontSize: '0.82rem', padding: '7px 14px', borderRadius: '10px' }}
+                  onClick={() => { setShowCredentialForm(v => !v); setOpenCredentialMonthPicker(null); setCredentialFormError(''); setCredentialFormSuccess(''); }}
+                >
+                  {showCredentialForm ? 'Đóng form' : '+ Nộp minh chứng mới'}
+                </button>
               </div>
+
+              {credentialFormSuccess && (
+                <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#16a34a', fontSize: '0.88rem', marginBottom: '14px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                  <CheckCircle2 size={16} style={{ flexShrink: 0, marginTop: '1px' }} />
+                  {credentialFormSuccess}
+                </div>
+              )}
+
+              {showCredentialForm && (
+                <form onSubmit={handleSubmitCredential} className="credential-submit-form">
+                  <div className="credential-submit-topline">
+                    <div className="credential-submit-mark">
+                      <ShieldCheck size={20} />
+                    </div>
+                    <div>
+                      <h3>Biến hoạt động thật thành Reputation Capital</h3>
+                      <p>Điền thông tin hoạt động bạn đã tham gia. Sau khi Admin xét duyệt, EXP và RS sẽ được cộng tự động vào hồ sơ.</p>
+                    </div>
+                  </div>
+                  <div className="form-grid">
+                    <div className="form-full">
+                      <label className="form-label">Tên hoạt động / Dự án *</label>
+                      <input className="form-input" placeholder="VD: Chiến dịch Mùa hè xanh 2024" value={credentialForm.projectName} onChange={e => setCredentialForm(f => ({ ...f, projectName: e.target.value }))} required />
+                    </div>
+                    <div>
+                      <label className="form-label">Vai trò / Chức danh *</label>
+                      <input className="form-input" placeholder="VD: Trưởng ban truyền thông" value={credentialForm.position} onChange={e => setCredentialForm(f => ({ ...f, position: e.target.value }))} required />
+                    </div>
+                    <div>
+                      <label className="form-label">Cấp bậc vai trò</label>
+                      <select className="form-input" value={credentialForm.roleLevel} onChange={e => setCredentialForm(f => ({ ...f, roleLevel: e.target.value }))}>
+                        <option value="MEMBER">Thành viên (+5 RS khi duyệt)</option>
+                        <option value="LEADER">Trưởng nhóm / Ban (+10 RS khi duyệt)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="form-label">Loại hình hoạt động</label>
+                      <select className="form-input" value={credentialForm.category} onChange={e => setCredentialForm(f => ({ ...f, category: e.target.value }))}>
+                        <option value="CLUB_SMALL">Sự kiện CLB / Khoa (+100 EXP)</option>
+                        <option value="SCHOOL_CAMPAIGN">Chiến dịch cấp Trường (+300 EXP)</option>
+                        <option value="COMPANY_PROJECT">Dự án Doanh nghiệp (+500 EXP)</option>
+                        <option value="SHORT_INTERNSHIP">Thực tập ngắn hạn (+500 EXP)</option>
+                        <option value="FREELANCE_GIG">Công việc tự do (+500 EXP)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="form-label">Thời gian bắt đầu</label>
+                      <CredentialMonthPicker
+                        id="credential-started-at"
+                        label=""
+                        value={credentialForm.startedAt}
+                        maxValue={getCurrentMonthValue()}
+                        openPicker={openCredentialMonthPicker}
+                        setOpenPicker={setOpenCredentialMonthPicker}
+                        helperText="Không chọn sau tháng hiện tại."
+                        onChange={(value) => setCredentialForm((form) => ({
+                          ...form,
+                          startedAt: value,
+                          endedAt: form.endedAt && compareMonthValues(form.endedAt, value) < 0 ? '' : form.endedAt,
+                        }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Thời gian kết thúc</label>
+                      <CredentialMonthPicker
+                        id="credential-ended-at"
+                        label=""
+                        value={credentialForm.endedAt}
+                        minValue={credentialForm.startedAt}
+                        maxValue={getCurrentMonthValue()}
+                        openPicker={openCredentialMonthPicker}
+                        setOpenPicker={setOpenCredentialMonthPicker}
+                        helperText="Không trước tháng bắt đầu."
+                        onChange={(value) => setCredentialForm(f => ({ ...f, endedAt: value }))}
+                      />
+                    </div>
+                    <div className="form-full">
+                      <label className="form-label">Link minh chứng (certificate, fanpage sự kiện, ảnh...)</label>
+                      <input className="form-input" placeholder="https://drive.google.com/... hoặc link Facebook event" value={credentialForm.proofLink} onChange={e => setCredentialForm(f => ({ ...f, proofLink: e.target.value }))} />
+                    </div>
+                    <div className="form-full">
+                      <label className="form-label">Mô tả thêm (không bắt buộc)</label>
+                      <textarea className="form-input" placeholder="Mô tả ngắn về đóng góp của bạn trong hoạt động này..." value={credentialForm.description} onChange={e => setCredentialForm(f => ({ ...f, description: e.target.value }))} rows={3} style={{ resize: 'vertical' }} />
+                    </div>
+                  </div>
+                  {credentialFormError && (
+                    <div className="alert-banner error" style={{ marginTop: '14px', marginBottom: 0 }}>
+                      <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
+                      {credentialFormError}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
+                    <button type="submit" className="button primary-button" disabled={credentialFormLoading} style={{ fontSize: '0.86rem' }}>
+                      {credentialFormLoading ? 'Đang gửi...' : 'Nộp minh chứng'}
+                    </button>
+                    <button type="button" className="button secondary-button" onClick={() => { setShowCredentialForm(false); setOpenCredentialMonthPicker(null); }} style={{ fontSize: '0.86rem' }}>Hủy</button>
+                  </div>
+                </form>
+              )}
+
+              {/* List of submitted proofs */}
+              {credentialSubmissionsLoading ? (
+                <div className="empty-state">
+                  <div className="empty-state-icon"><ShieldCheck size={28} /></div>
+                  <p className="empty-state-title">Đang tải minh chứng...</p>
+                </div>
+              ) : credentialSubmissions.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-state-icon"><ShieldCheck size={28} /></div>
+                  <p className="empty-state-title">Chưa có minh chứng nào được nộp.</p>
+                  <p className="empty-state-desc">Nhấn "+ Nộp minh chứng mới" để bắt đầu tích luỹ EXP và RS thực tế.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {credentialSubmissions.map(sub => {
+                    const categoryLabels = { CLUB_SMALL: 'Sự kiện CLB', SCHOOL_CAMPAIGN: 'Chiến dịch Trường', COMPANY_PROJECT: 'Dự án DN', SHORT_INTERNSHIP: 'Thực tập', FREELANCE_GIG: 'Freelance' };
+                    const expRewards = { CLUB_SMALL: 100, SCHOOL_CAMPAIGN: 300, COMPANY_PROJECT: 500, SHORT_INTERNSHIP: 500, FREELANCE_GIG: 500 };
+                    const statusKey = (sub.verification_status || '').toLowerCase();
+                    const statusLabel = sub.verification_status === 'APPROVED' ? 'Đã duyệt' : sub.verification_status === 'REJECTED' ? 'Từ chối' : 'Chờ duyệt';
+                    return (
+                      <div key={sub.id} className={`proof-card ${statusKey}`}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', flexWrap: 'wrap' }}>
+                            <h4 style={{ margin: 0, fontSize: '0.94rem', fontWeight: '800', color: 'var(--ink)' }}>{sub.project_name}</h4>
+                            <span className="proof-chip category">{categoryLabels[sub.category] || sub.category}</span>
+                            <span className={`proof-chip ${(sub.role_level || 'MEMBER').toLowerCase()}`}>{sub.role_level === 'LEADER' ? 'Trưởng nhóm' : 'Thành viên'}</span>
+                          </div>
+                          <p style={{ margin: '0 0 6px', fontSize: '0.84rem', color: 'var(--muted)' }}>{sub.position}</p>
+                          {sub.proof_link && (
+                            <a href={sub.proof_link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.8rem', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <ExternalLink size={12} /> Link minh chứng
+                            </a>
+                          )}
+                          {sub.verification_status === 'REJECTED' && sub.reject_reason && (
+                            <div className="alert-banner error" style={{ marginTop: '8px', marginBottom: 0, padding: '6px 10px' }}>
+                              <AlertTriangle size={13} style={{ flexShrink: 0 }} />
+                              Lý do từ chối: {sub.reject_reason}
+                            </div>
+                          )}
+                          {sub.verification_status === 'APPROVED' && (
+                            <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: '#16a34a', fontWeight: '700' }}>
+                              +{expRewards[sub.category] || 100} EXP · +{sub.role_level === 'LEADER' ? 10 : 5} RS đã được cộng
+                            </p>
+                          )}
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <span className={`proof-status-badge ${statusKey}`}>{statusLabel}</span>
+                          <p style={{ margin: '6px 0 0', fontSize: '0.75rem', color: 'var(--muted)' }}>
+                            {sub.created_at ? new Date(sub.created_at).toLocaleDateString('vi-VN') : ''}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </section>
           </div>
         )}
       </main>
 
-      {/* ─── Application Confirmation Glass Modal ─── */}
-      {showApplyModal && selectedJobForApply && (
-        <div className="glass-modal-overlay" onClick={() => setShowApplyModal(false)}>
-          <div className="glass-modal-content" onClick={(e) => e.stopPropagation()}>
+      {/* ─── Quest Apply Modal ─── */}
+      {/* ─── Quest Apply Confirmation Modal ─── */}
+      {showQuestApplyModal && selectedQuestForApply && (
+        <div className="glass-modal-overlay" onClick={() => setShowQuestApplyModal(false)}>
+          <div className="glass-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="glass-modal-header">
-              <Sparkles size={20} color="var(--primary)" />
-              <h2>Xác nhận ứng tuyển cơ hội</h2>
+              <Zap size={20} color="var(--primary)" />
+              <h2>Tham gia Quest</h2>
             </div>
-            <div className="glass-modal-body">
-              <p style={{ margin: '0 0 16px', lineHeight: 1.5, fontSize: '0.95rem', color: 'var(--ink)' }}>
-                Bạn đang thực hiện nộp hồ sơ trực tuyến cho cơ hội sau:
-              </p>
-              <div style={{
-                background: 'var(--surface-soft)',
-                border: '1px solid var(--line)',
-                borderRadius: '16px',
-                padding: '16px',
-                marginBottom: '16px'
-              }}>
-                <h3 style={{ margin: '0 0 6px', fontSize: '1.15rem', color: 'var(--ink)', fontWeight: '800' }}>{selectedJobForApply.title}</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--muted)', fontSize: '0.88rem' }}>
-                  <Building size={14} />
-                  <span>{selectedJobForApply.companyName || 'Đối tác'}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', borderTop: '1px solid var(--line)', paddingTop: '10px', fontSize: '0.84rem', color: 'var(--muted)' }}>
-                  <span>Thù lao: <strong style={{ color: 'var(--primary)' }}>{selectedJobForApply.compensation > 0 ? `${Number(selectedJobForApply.compensation).toLocaleString()} VND` : 'Thỏa thuận'}</strong></span>
-                  <span>Điều kiện RS: <strong>{selectedJobForApply.minReqRs > 0 ? `${selectedJobForApply.minReqRs} RS` : 'Không có'}</strong></span>
+            <div className="glass-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Quest info */}
+              <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--line)', borderRadius: '14px', padding: '14px 16px' }}>
+                <h3 style={{ margin: '0 0 4px', fontSize: '1rem', color: 'var(--ink)', fontWeight: '800' }}>{selectedQuestForApply.title}</h3>
+                <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '8px' }}>{selectedQuestForApply.companyName}</div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '3px 8px', borderRadius: '6px' }}>+{selectedQuestForApply.expReward} EXP</span>
+                  {selectedQuestForApply.npReward > 0 && <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '3px 8px', borderRadius: '6px' }}>+{selectedQuestForApply.npReward} NP</span>}
                 </div>
               </div>
-              <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--muted)', lineHeight: 1.4 }}>
-                <ShieldCheck size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom', color: '#22c55e' }} />
-                Hệ thống sẽ tự động đính kèm Portfolio 3D hiện tại, học vấn và các bằng cấp đã được xác minh của bạn để gửi tới nhà tuyển dụng.
+
+              {/* Candidate profile preview */}
+              <CandidateProfilePreview portfolio={portfolio} candidateRs={candidateRs} currentLevel={currentLevel} currentExp={currentExp} />
+
+              {/* Cover note */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.86rem', fontWeight: '700', color: 'var(--ink)' }}>Giới thiệu bản thân (tùy chọn)</label>
+                <textarea
+                  value={questCoverNote}
+                  onChange={e => setQuestCoverNote(e.target.value)}
+                  placeholder="Hãy chia sẻ tại sao bạn muốn tham gia Quest này..."
+                  rows={3}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem', color: 'var(--ink)', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              {questApplyError && (
+                <div className="alert-banner error">
+                  <AlertTriangle size={15} style={{ flexShrink: 0 }} />
+                  {questApplyError}
+                </div>
+              )}
+            </div>
+            <div className="glass-modal-footer">
+              <button className="button secondary-button" onClick={() => { setShowQuestApplyModal(false); setQuestApplyError(''); }} type="button" disabled={questApplyLoading}>Hủy bỏ</button>
+              <button className="button primary-button" onClick={handleApplyToQuest} type="button" disabled={questApplyLoading}>
+                {questApplyLoading ? 'Đang nộp...' : 'Xác nhận tham gia'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Job Apply Confirmation Glass Modal ─── */}
+      {showApplyModal && selectedJobForApply && (
+        <div className="glass-modal-overlay" onClick={() => setShowApplyModal(false)}>
+          <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div className="glass-modal-header">
+              <Sparkles size={20} color="var(--primary)" />
+              <h2>Xác nhận ứng tuyển</h2>
+            </div>
+            <div className="glass-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Job info */}
+              <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--line)', borderRadius: '14px', padding: '14px 16px' }}>
+                <h3 style={{ margin: '0 0 6px', fontSize: '1rem', color: 'var(--ink)', fontWeight: '800' }}>{selectedJobForApply.title}</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--muted)', fontSize: '0.84rem', marginBottom: '8px' }}>
+                  <Building size={13} />
+                  <span>{selectedJobForApply.companyName || selectedJobForApply.company_name || 'Đối tác'}</span>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', fontSize: '0.82rem', color: 'var(--muted)', borderTop: '1px solid var(--line)', paddingTop: '10px', flexWrap: 'wrap' }}>
+                  <span>Thù lao: <strong style={{ color: '#16a34a' }}>{selectedJobForApply.compensation > 0 ? `${Number(selectedJobForApply.compensation).toLocaleString()} VND` : 'Thỏa thuận'}</strong></span>
+                  <span>Yêu cầu RS: <strong style={{ color: '#2563eb' }}>{(selectedJobForApply.minReqRs || selectedJobForApply.min_req_rs || 0) > 0 ? `${selectedJobForApply.minReqRs || selectedJobForApply.min_req_rs} RS` : 'Không có'}</strong></span>
+                </div>
+              </div>
+
+              {/* Candidate profile preview */}
+              <CandidateProfilePreview portfolio={portfolio} candidateRs={candidateRs} currentLevel={currentLevel} currentExp={currentExp} />
+
+              {applyModalError && (
+                <div className="alert-banner error">
+                  <AlertTriangle size={15} style={{ flexShrink: 0 }} />
+                  {applyModalError}
+                </div>
+              )}
+            </div>
+            <div className="glass-modal-footer">
+              <button className="button secondary-button" onClick={() => { setShowApplyModal(false); setApplyModalError(''); }} type="button" style={{ padding: '10px 16px', borderRadius: '12px' }} disabled={applyModalLoading}>
+                Hủy bỏ
+              </button>
+              <button className="button primary-button" onClick={confirmApplyJob} type="button" style={{ padding: '10px 18px', borderRadius: '12px' }} disabled={applyModalLoading}>
+                {applyModalLoading ? 'Đang nộp...' : 'Xác nhận nộp đơn'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Top-Up NP Modal ─── */}
+      {showTopUpModal && (
+        <div className="glass-modal-overlay" onClick={() => { setShowTopUpModal(false); setTopUpError(''); setTopUpSuccess(''); }}>
+          <div className="glass-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="glass-modal-header">
+              <WalletCards size={20} color="var(--primary)" />
+              <h2>Nạp NP vào ví</h2>
+            </div>
+            <div className="glass-modal-body">
+              <div style={{ background: 'var(--surface-soft)', borderRadius: '14px', padding: '14px 16px', marginBottom: '18px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '0.84rem', color: 'var(--muted)', fontWeight: '600' }}>Số dư hiện tại</span>
+                  <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)' }}>{(wallet?.npBalance ?? 0).toLocaleString()} NP</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.84rem', color: 'var(--muted)', fontWeight: '600' }}>Tỷ giá</span>
+                  <span style={{ fontSize: '0.84rem', color: 'var(--muted)' }}>1 VND = 1 NP</span>
+                </div>
+              </div>
+
+              {topUpSuccess ? (
+                <div className="alert-banner success">{topUpSuccess}</div>
+              ) : (
+                <form onSubmit={handleTopUp}>
+                  <label className="form-label" style={{ display: 'block', marginBottom: '8px' }}>Số tiền nạp (VND)</label>
+                  <input
+                    className="form-input"
+                    type="number"
+                    min="10000"
+                    max="10000000"
+                    step="10000"
+                    value={topUpAmount}
+                    onChange={e => setTopUpAmount(e.target.value)}
+                    placeholder="VD: 50000"
+                    style={{ marginBottom: '10px' }}
+                  />
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                    {[20000, 50000, 100000, 200000].map(amt => (
+                      <button key={amt} type="button" onClick={() => setTopUpAmount(String(amt))}
+                        style={{ fontSize: '0.78rem', fontWeight: '700', padding: '5px 10px', borderRadius: '8px', border: `1px solid ${topUpAmount === String(amt) ? 'var(--primary)' : 'var(--line)'}`, background: topUpAmount === String(amt) ? 'rgba(var(--primary-rgb),0.08)' : 'transparent', color: topUpAmount === String(amt) ? 'var(--primary)' : 'var(--muted)', cursor: 'pointer' }}>
+                        {(amt / 1000).toFixed(0)}K
+                      </button>
+                    ))}
+                  </div>
+                  {topUpAmount && parseInt(topUpAmount) >= 10000 && (
+                    <p style={{ margin: '0 0 12px', fontSize: '0.84rem', color: '#16a34a', fontWeight: '700' }}>
+                      → Nhận được {parseInt(topUpAmount).toLocaleString('vi-VN')} NP
+                    </p>
+                  )}
+                  {topUpError && (
+                    <div className="alert-banner error" style={{ marginBottom: '12px' }}>
+                      <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                      {topUpError}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button type="submit" className="button primary-button" disabled={topUpLoading} style={{ flex: 1 }}>
+                      {topUpLoading ? 'Đang nạp...' : 'Nạp ngay'}
+                    </button>
+                    <button type="button" className="button secondary-button" onClick={() => { setShowTopUpModal(false); setTopUpError(''); }}>Hủy</button>
+                  </div>
+                </form>
+              )}
+              <p style={{ margin: '14px 0 0', fontSize: '0.76rem', color: 'var(--muted)', textAlign: 'center', lineHeight: 1.4 }}>
+                Phiên bản demo — NP được cộng ngay lập tức (MOCK provider)
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Premium Paywall Modal ─── */}
+      {showPremiumPaywall && (
+        <div className="glass-modal-overlay" onClick={() => setShowPremiumPaywall(false)}>
+          <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+            <div className="glass-modal-header">
+              <Crown size={22} color="#f59e0b" />
+              <h2>Yêu cầu Premium Pass</h2>
+            </div>
+            <div className="glass-modal-body">
+              <div style={{ textAlign: 'center', padding: '8px 0 20px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                  <Crown size={32} color="#fff" />
+                </div>
+                <h3 style={{ margin: '0 0 10px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)' }}>Cơ hội này chỉ dành cho Premium</h3>
+                <p style={{ margin: '0 0 18px', fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.6 }}>
+                  Nhà tuyển dụng yêu cầu ứng viên có <strong>Premium Pass</strong> để ứng tuyển vị trí này — giúp đảm bảo chất lượng hồ sơ và giảm spam.
+                </p>
+                <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(217,119,6,0.05))', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '14px', padding: '14px 18px', textAlign: 'left', marginBottom: '6px' }}>
+                  <p style={{ margin: '0 0 8px', fontWeight: '800', fontSize: '0.9rem', color: 'var(--ink)' }}>Premium Pass bao gồm:</p>
+                  {['Ứng tuyển không giới hạn vị trí Premium', 'Hồ sơ nổi bật hơn trong kết quả tìm kiếm', 'Badge xác nhận Premium trên Profile 3D'].map(item => (
+                    <div key={item} style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '0.85rem', color: 'var(--ink)', marginBottom: '4px' }}>
+                      <Check size={14} color="#16a34a" style={{ flexShrink: 0 }} /> {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="glass-modal-body" style={{ paddingTop: 0 }}>
+              {buyPremiumError && (
+                <div className="alert-banner error" style={{ marginTop: 0, marginBottom: '12px' }}>
+                  <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                  {buyPremiumError}
+                  {buyPremiumError.includes('Số dư') && (
+                    <button onClick={() => { setShowPremiumPaywall(false); setShowTopUpModal(true); }} style={{ marginLeft: '8px', fontSize: '0.8rem', fontWeight: '700', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+                      Nạp NP ngay
+                    </button>
+                  )}
+                </div>
+              )}
+              <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--muted)', textAlign: 'center' }}>
+                Số dư hiện tại: <strong style={{ color: 'var(--ink)' }}>{walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString()} NP</strong>
+                {' · '}Chi phí: <strong style={{ color: '#d97706' }}>40,000 NP</strong>
               </p>
             </div>
             <div className="glass-modal-footer">
-              <button
-                className="button secondary-button"
-                onClick={() => setShowApplyModal(false)}
-                type="button"
-                style={{ padding: '10px 16px', borderRadius: '12px' }}
-              >
-                Hủy bỏ
+              <button className="button secondary-button" onClick={() => { setShowPremiumPaywall(false); setBuyPremiumError(''); }} type="button" style={{ padding: '10px 16px', borderRadius: '12px' }}>
+                Để sau
               </button>
-              <button
-                className="button primary-button"
-                onClick={confirmApplyJob}
-                type="button"
-                style={{ padding: '10px 18px', borderRadius: '12px' }}
-              >
-                Xác nhận nộp đơn
+              <button className="button primary-button" onClick={handleBuyPremium} type="button" disabled={buyPremiumLoading} style={{ padding: '10px 18px', borderRadius: '12px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none' }}>
+                {buyPremiumLoading ? 'Đang xử lý...' : <><Crown size={15} style={{ marginRight: '6px' }} /> Kích hoạt Premium</>}
               </button>
             </div>
           </div>

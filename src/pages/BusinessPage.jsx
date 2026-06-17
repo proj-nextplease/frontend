@@ -35,7 +35,9 @@ import {
 import { getCurrentUser, getMyCompany, resubmitB2bDocument, updateB2bProfile } from '../api/b2bApi.js';
 import { supabase } from '../services/supabaseClient.js';
 import { JobCreateForm } from '../components/JobCreateForm.jsx';
-import { getOrganizerJobs, getJobDetail } from '../api/jobApi.js';
+import { getOrganizerJobs, getJobDetail, getJobApplications, updateApplicationStatus } from '../api/jobApi.js';
+import { getOrganizerQuests, getQuestApplicants, updateQuestApplicationStatus } from '../api/questApi.js';
+import { Crown, ArrowLeft, Check, Calendar, Award, ChevronRight, ExternalLink as ExtLink } from 'lucide-react';
 
 
 const THEME_STORAGE_KEY = 'nextplease:theme';
@@ -65,6 +67,461 @@ function getInitialTheme() {
   if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
 
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+/* ─── CandidatesView ─────────────────────────────────────────────────────── */
+const STATUS_LABEL = { SUBMITTED: 'Đã nộp', APPLIED: 'Đã nộp', VIEWED: 'Đã xem', SHORTLISTED: 'Vào vòng tiếp', ACCEPTED: 'Chấp nhận', APPROVED: 'Chấp nhận', REJECTED: 'Từ chối', WITHDRAWN: 'Rút đơn', COMPLETED: 'Hoàn thành' };
+const STATUS_COLOR = { SUBMITTED: '#6366f1', APPLIED: '#6366f1', VIEWED: '#0284c7', SHORTLISTED: '#d97706', ACCEPTED: '#16a34a', APPROVED: '#16a34a', REJECTED: '#dc2626', WITHDRAWN: '#9ca3af', COMPLETED: '#7c3aed' };
+
+function CandidatesView() {
+  const [postings, setPostings] = useState([]);
+  const [postingsLoading, setPostingsLoading] = useState(true);
+  const [postingSearch, setPostingSearch] = useState('');
+  const [postingTypeFilter, setPostingTypeFilter] = useState('ALL'); // ALL | JOB | QUEST
+  const [postingStatusTab, setPostingStatusTab] = useState('active'); // active | closed
+
+  const [selectedPosting, setSelectedPosting] = useState(null);
+  const [applicants, setApplicants] = useState([]);
+  const [applicantsLoading, setApplicantsLoading] = useState(false);
+  const [applicantSearch, setApplicantSearch] = useState('');
+  const [applicantStatusFilter, setApplicantStatusFilter] = useState('');
+
+  const [selectedApplicant, setSelectedApplicant] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [showRejectInput, setShowRejectInput] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null);
+  const [actionMsg, setActionMsg] = useState({ type: 'idle', text: '' });
+
+  function loadPostings() {
+    setPostingsLoading(true);
+    Promise.all([
+      getOrganizerJobs().catch(() => []),
+      getOrganizerQuests().catch(() => []),
+    ]).then(([jobs, quests]) => {
+      const jobItems = (jobs || []).map(j => ({ ...j, postType: 'JOB', _count: j.applicantsCount || j.applicants_count || 0 }));
+      const questItems = (quests || []).map(q => ({ ...q, postType: 'QUEST', _count: q.applicantCount || q.applicantsCount || q.applicants_count || 0 }));
+      setPostings([...questItems, ...jobItems]);
+    }).finally(() => setPostingsLoading(false));
+  }
+
+  useEffect(() => { loadPostings(); }, []);
+
+  function selectPosting(posting) {
+    setSelectedPosting(posting);
+    setSelectedApplicant(null);
+    setApplicants([]);
+    setApplicantSearch('');
+    setApplicantStatusFilter('');
+    setApplicantsLoading(true);
+    const fetchFn = posting.postType === 'QUEST' ? getQuestApplicants(posting.id) : getJobApplications(posting.id);
+    fetchFn
+      .then(data => {
+        setApplicants(data || []);
+        // update count on the posting list in real time
+        setPostings(prev => prev.map(p => p.id === posting.id ? { ...p, _count: (data || []).length } : p));
+      })
+      .catch(err => console.error('Lỗi tải ứng viên:', err))
+      .finally(() => setApplicantsLoading(false));
+  }
+
+  async function handleAction(appId, status, reason) {
+    setActionLoading(appId + '_' + status);
+    try {
+      if (selectedPosting.postType === 'QUEST') {
+        await updateQuestApplicationStatus(appId, status, reason || null);
+      } else {
+        await updateApplicationStatus(appId, status, reason || null);
+      }
+      setApplicants(prev => prev.map(a => a.id === appId ? { ...a, status } : a));
+      if (selectedApplicant?.id === appId) setSelectedApplicant(prev => ({ ...prev, status }));
+      setShowRejectInput(false);
+      setRejectReason('');
+      setActionMsg({ type: 'success', text: 'Đã cập nhật trạng thái ứng viên.' });
+    } catch (err) {
+      setActionMsg({ type: 'error', text: err.message || 'Thất bại.' });
+    } finally {
+      setActionLoading(null);
+      setTimeout(() => setActionMsg({ type: 'idle', text: '' }), 3500);
+    }
+  }
+
+  const isQuest = selectedPosting?.postType === 'QUEST';
+  const accent = isQuest ? '#ff7a1a' : '#2563eb';
+  const getName = app => app.candidateName || app.candidate_name || app.display_name || 'Ứng viên';
+  const getEmail = app => app.candidateEmail || app.candidate_email || app.email || '';
+
+  // ── Level 1: Posting list ─────────────────────────────────────────────────
+  if (!selectedPosting) {
+    const ACTIVE_STATUSES = ['OPEN', 'PENDING'];
+    const CLOSED_STATUSES = ['CLOSED', 'REJECTED', 'COMPLETED', 'CANCELLED'];
+
+    const activePostings = postings.filter(p => ACTIVE_STATUSES.includes(p.status));
+    const closedPostings = postings.filter(p => CLOSED_STATUSES.includes(p.status));
+    const currentPool = postingStatusTab === 'active' ? activePostings : closedPostings;
+
+    const filtered = currentPool.filter(p => {
+      const matchType = postingTypeFilter === 'ALL' || p.postType === postingTypeFilter;
+      const matchSearch = !postingSearch || (p.title || '').toLowerCase().includes(postingSearch.toLowerCase());
+      return matchType && matchSearch;
+    });
+
+    return (
+      <div>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h2 style={{ margin: '0 0 4px', fontSize: '1.3rem', fontWeight: '900', color: 'var(--ink)' }}>Quản lý ứng viên</h2>
+            <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--muted)' }}>Chọn bài đăng để xem hồ sơ ứng viên đã nộp.</p>
+          </div>
+          <button className="button secondary-button" style={{ fontSize: '0.8rem', padding: '7px 14px', gap: '5px' }} onClick={loadPostings}>
+            <RefreshCw size={13} /> Làm mới
+          </button>
+        </div>
+
+        {/* Status tabs */}
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', background: 'var(--surface-soft)', borderRadius: '14px', padding: '4px', width: 'fit-content' }}>
+          {[
+            { key: 'active', label: 'Đang hoạt động', count: activePostings.length, color: '#16a34a' },
+            { key: 'closed', label: 'Đã đóng / Hết hạn', count: closedPostings.length, color: '#6b7280' },
+          ].map(tab => (
+            <button key={tab.key} type="button" onClick={() => { setPostingStatusTab(tab.key); setPostingSearch(''); setPostingTypeFilter('ALL'); }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 16px', borderRadius: '10px', border: 0, fontSize: '0.84rem', fontWeight: '700', cursor: 'pointer', transition: 'all 0.15s',
+                background: postingStatusTab === tab.key ? 'var(--bg)' : 'transparent',
+                color: postingStatusTab === tab.key ? 'var(--ink)' : 'var(--muted)',
+                boxShadow: postingStatusTab === tab.key ? '0 1px 6px rgba(0,0,0,0.08)' : 'none' }}>
+              {tab.label}
+              {tab.count > 0 && (
+                <span style={{ fontSize: '0.72rem', fontWeight: '800', minWidth: '18px', height: '18px', borderRadius: '9px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px',
+                  background: postingStatusTab === tab.key ? tab.color : 'var(--line)',
+                  color: postingStatusTab === tab.key ? '#fff' : 'var(--muted)' }}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Search + type filter */}
+        {currentPool.length > 0 && (
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+              <Search size={15} style={{ position: 'absolute', left: '12px', top: '11px', color: 'var(--muted)' }} />
+              <input type="text" value={postingSearch} onChange={e => setPostingSearch(e.target.value)}
+                placeholder="Tìm tên bài đăng..."
+                style={{ width: '100%', padding: '10px 12px 10px 34px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', color: 'var(--ink)', boxSizing: 'border-box', outline: 'none' }} />
+            </div>
+            <div style={{ display: 'flex', background: 'var(--surface-soft)', borderRadius: '12px', padding: '3px', gap: '3px' }}>
+              {[['ALL', 'Tất cả'], ['JOB', '🏢 Tuyển dụng'], ['QUEST', '⚡ Quest']].map(([k, l]) => (
+                <button key={k} type="button" onClick={() => setPostingTypeFilter(k)}
+                  style={{ padding: '6px 12px', borderRadius: '9px', border: 0, fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer', background: postingTypeFilter === k ? 'var(--primary)' : 'transparent', color: postingTypeFilter === k ? '#fff' : 'var(--muted)', transition: 'all 0.15s' }}>
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {postingsLoading ? (
+          <div className="empty-state"><div className="empty-state-icon"><UsersRound size={32} /></div><p className="empty-state-title">Đang tải...</p></div>
+        ) : filtered.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon"><FileText size={32} /></div>
+            <p className="empty-state-title">
+              {postingStatusTab === 'active'
+                ? (postings.length === 0 ? 'Bạn chưa có bài đăng nào.' : 'Không có bài đăng đang hoạt động.')
+                : 'Không có bài đăng đã đóng.'}
+            </p>
+            {postings.length === 0 && <p className="empty-state-desc">Tạo tin tuyển dụng hoặc Quest để bắt đầu nhận hồ sơ ứng viên.</p>}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {filtered.map(posting => {
+              const isQ = posting.postType === 'QUEST';
+              const ac = isQ ? '#ff7a1a' : '#2563eb';
+              const count = posting._count || 0;
+              const statusLabel = { PENDING: 'Chờ duyệt', OPEN: 'Đang mở', CLOSED: 'Đã đóng', COMPLETED: 'Hoàn thành', CANCELLED: 'Đã hủy', REJECTED: 'Từ chối' }[posting.status] || posting.status;
+              const statusColor = { PENDING: '#f59e0b', OPEN: '#16a34a', CLOSED: '#6b7280', COMPLETED: '#7c3aed', CANCELLED: '#dc2626', REJECTED: '#dc2626' }[posting.status] || '#6b7280';
+              const deadline = posting.deadline_at || posting.deadlineAt || posting.endsAt || posting.ends_at;
+              return (
+                <div key={posting.id} onClick={() => selectPosting(posting)}
+                  style={{ border: '1px solid var(--line)', borderRadius: '16px', padding: '16px 20px', background: 'var(--bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = ac + '50'; }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--line)'; }}
+                >
+                  <div style={{ width: '46px', height: '46px', borderRadius: '13px', background: `${ac}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: ac, flexShrink: 0, border: `1px solid ${ac}20` }}>
+                    {isQ ? <Zap size={22} /> : <BriefcaseBusiness size={22} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '5px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: '800', color: ac, background: `${ac}12`, padding: '2px 8px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {isQ ? 'Quest' : 'Tuyển dụng'}
+                      </span>
+                      <span style={{ fontSize: '0.7rem', fontWeight: '700', color: statusColor, background: `${statusColor}12`, padding: '2px 8px', borderRadius: '6px' }}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                    <h3 style={{ margin: '0 0 3px', fontSize: '0.96rem', fontWeight: '800', color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{posting.title}</h3>
+                    <p style={{ margin: 0, fontSize: '0.79rem', color: 'var(--muted)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <span>{isQ ? (posting.category || '') : (posting.jobType || posting.job_type || '')}</span>
+                      {deadline && <span>· Hạn: {new Date(deadline).toLocaleDateString('vi-VN')}</span>}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
+                    <div style={{ textAlign: 'center', minWidth: '44px' }}>
+                      <strong style={{ fontSize: '1.5rem', fontWeight: '900', color: count > 0 ? ac : 'var(--muted)', display: 'block', lineHeight: 1 }}>{count}</strong>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: '600' }}>Ứng viên</span>
+                    </div>
+                    <ChevronRight size={18} style={{ color: 'var(--muted)' }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Level 2+3: Applicant list + detail panel ──────────────────────────────
+  const filteredApplicants = applicants.filter(app => {
+    const name = getName(app).toLowerCase();
+    const email = getEmail(app).toLowerCase();
+    const matchSearch = !applicantSearch || name.includes(applicantSearch.toLowerCase()) || email.includes(applicantSearch.toLowerCase());
+    const matchStatus = !applicantStatusFilter || app.status === applicantStatusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  return (
+    <div>
+      {/* Back */}
+      <button onClick={() => { setSelectedPosting(null); setSelectedApplicant(null); }}
+        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 16px', fontWeight: '700' }}>
+        <ArrowLeft size={15} /> Quay lại danh sách bài đăng
+      </button>
+
+      {/* Posting header card */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '20px', padding: '16px 20px', background: `${accent}08`, border: `1px solid ${accent}25`, borderRadius: '16px' }}>
+        <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: `${accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: accent, flexShrink: 0 }}>
+          {isQuest ? <Zap size={20} /> : <BriefcaseBusiness size={20} />}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h2 style={{ margin: '0 0 2px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)' }}>{selectedPosting.title}</h2>
+          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--muted)' }}>
+            {isQuest ? 'Quest' : 'Tin tuyển dụng'} · {applicantsLoading ? '...' : `${applicants.length} ứng viên đã nộp`}
+          </p>
+        </div>
+        <button className="button secondary-button" style={{ fontSize: '0.8rem', padding: '7px 14px', gap: '5px', flexShrink: 0 }} onClick={() => selectPosting(selectedPosting)}>
+          <RefreshCw size={13} /> Làm mới
+        </button>
+      </div>
+
+      {actionMsg.type !== 'idle' && (
+        <div style={{ marginBottom: '14px', padding: '10px 16px', borderRadius: '10px', fontSize: '0.86rem', fontWeight: '700', background: actionMsg.type === 'success' ? 'rgba(22,163,74,0.08)' : 'rgba(220,38,38,0.08)', color: actionMsg.type === 'success' ? '#16a34a' : '#dc2626', border: `1px solid ${actionMsg.type === 'success' ? '#16a34a' : '#dc2626'}30` }}>
+          {actionMsg.text}
+        </div>
+      )}
+
+      {/* Search + status filter */}
+      {!applicantsLoading && applicants.length > 0 && (
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: '180px' }}>
+            <Search size={14} style={{ position: 'absolute', left: '11px', top: '10px', color: 'var(--muted)' }} />
+            <input type="text" value={applicantSearch} onChange={e => setApplicantSearch(e.target.value)}
+              placeholder="Tìm ứng viên..."
+              style={{ width: '100%', padding: '9px 11px 9px 32px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.86rem', color: 'var(--ink)', boxSizing: 'border-box', outline: 'none' }} />
+          </div>
+          <select value={applicantStatusFilter} onChange={e => setApplicantStatusFilter(e.target.value)}
+            style={{ padding: '9px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.86rem', color: 'var(--ink)', cursor: 'pointer' }}>
+            <option value="">Tất cả trạng thái</option>
+            {Object.entries(STATUS_LABEL).filter(([k]) => !['APPLIED'].includes(k)).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        </div>
+      )}
+
+      {/* Two-panel */}
+      <div style={{ display: 'grid', gridTemplateColumns: selectedApplicant ? '1fr 1.15fr' : '1fr', gap: '16px', alignItems: 'start' }}>
+        {/* Left: applicant cards */}
+        <div>
+          {applicantsLoading ? (
+            <div className="empty-state" style={{ padding: '40px 0' }}><div className="empty-state-icon"><UsersRound size={28} /></div><p className="empty-state-title">Đang tải ứng viên...</p></div>
+          ) : filteredApplicants.length === 0 ? (
+            <div className="empty-state" style={{ padding: '40px 0' }}>
+              <div className="empty-state-icon"><UsersRound size={28} /></div>
+              <p className="empty-state-title">{applicants.length === 0 ? 'Chưa có ứng viên nào.' : 'Không tìm thấy ứng viên phù hợp.'}</p>
+              {applicants.length === 0 && <p className="empty-state-desc">Khi có người ứng tuyển, họ sẽ xuất hiện ở đây.</p>}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {filteredApplicants.map(app => {
+                const isSelected = selectedApplicant?.id === app.id;
+                const sColor = STATUS_COLOR[app.status] || '#6366f1';
+                return (
+                  <div key={app.id} onClick={() => { setSelectedApplicant(app); setShowRejectInput(false); setRejectReason(''); }}
+                    style={{ border: `1.5px solid ${isSelected ? accent : 'var(--line)'}`, borderRadius: '14px', padding: '14px 16px', background: isSelected ? `${accent}06` : 'var(--bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.borderColor = accent + '30'; }}
+                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.borderColor = 'var(--line)'; }}
+                  >
+                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.05rem', color: accent, flexShrink: 0, overflow: 'hidden' }}>
+                      {app.avatar_url ? <img src={app.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (getName(app)[0]?.toUpperCase() || 'U')}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '3px', flexWrap: 'wrap' }}>
+                        <strong style={{ fontSize: '0.92rem', color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getName(app)}</strong>
+                        <span style={{ fontSize: '0.7rem', fontWeight: '700', color: sColor, background: `${sColor}15`, padding: '1px 7px', borderRadius: '6px', flexShrink: 0 }}>{STATUS_LABEL[app.status] || app.status}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '10px', fontSize: '0.78rem', color: 'var(--muted)', flexWrap: 'wrap' }}>
+                        <span>RS: <strong style={{ color: 'var(--ink)' }}>{app.reputation_score ?? '—'}</strong></span>
+                        <span>Lv.<strong style={{ color: 'var(--ink)' }}>{app.current_level ?? '—'}</strong></span>
+                        {(app.appliedAt || app.applied_at) && <span>{new Date(app.appliedAt || app.applied_at).toLocaleDateString('vi-VN')}</span>}
+                      </div>
+                    </div>
+                    <ChevronRight size={16} style={{ color: isSelected ? accent : 'var(--muted)', flexShrink: 0 }} />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Right: detail panel */}
+        {selectedApplicant && (
+          <div style={{ border: '1px solid var(--line)', borderRadius: '20px', background: 'var(--bg)', position: 'sticky', top: '16px', overflow: 'hidden' }}>
+            {/* Panel header */}
+            <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: `${accent}04` }}>
+              <h3 style={{ margin: 0, fontSize: '0.96rem', fontWeight: '800', color: 'var(--ink)' }}>Hồ sơ ứng viên</h3>
+              <button onClick={() => setSelectedApplicant(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: '4px', borderRadius: '6px' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: '20px' }}>
+              {/* Avatar + name block */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '1.5rem', color: accent, flexShrink: 0, overflow: 'hidden', border: `2px solid ${accent}30` }}>
+                  {selectedApplicant.avatar_url ? <img src={selectedApplicant.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (getName(selectedApplicant)[0]?.toUpperCase() || 'U')}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <strong style={{ fontSize: '1.08rem', display: 'block', color: 'var(--ink)', marginBottom: '2px' }}>{getName(selectedApplicant)}</strong>
+                  {getEmail(selectedApplicant) && <div style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>{getEmail(selectedApplicant)}</div>}
+                  {selectedApplicant.headline && <p style={{ margin: '3px 0 0', fontSize: '0.82rem', color: 'var(--muted)', fontStyle: 'italic' }}>{selectedApplicant.headline}</p>}
+                  {(selectedApplicant.school) && (
+                    <p style={{ margin: '3px 0 0', fontSize: '0.8rem', color: accent, fontWeight: '700' }}>🎓 {selectedApplicant.school}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+                {[
+                  { label: 'RS', value: selectedApplicant.reputation_score ?? '—', color: '#2563eb' },
+                  { label: 'Level', value: selectedApplicant.current_level ?? '—', color: '#ff7a1a' },
+                  { label: 'EXP', value: selectedApplicant.total_exp ?? '—', color: '#7c3aed' },
+                ].map(stat => (
+                  <div key={stat.label} style={{ textAlign: 'center', padding: '10px 6px', background: `${stat.color}08`, border: `1px solid ${stat.color}20`, borderRadius: '12px' }}>
+                    <strong style={{ fontSize: '1.1rem', color: stat.color, display: 'block', lineHeight: 1.2 }}>{stat.value}</strong>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: '700' }}>{stat.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Major */}
+              {selectedApplicant.major && (
+                <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '10px', display: 'flex', gap: '6px' }}>
+                  <span>Chuyên ngành:</span>
+                  <strong style={{ color: 'var(--ink)' }}>{selectedApplicant.major}</strong>
+                </div>
+              )}
+
+              {/* Portfolio button */}
+              <a
+                href={`/portfolio/view/${selectedApplicant.candidateId || selectedApplicant.candidate_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', padding: '10px 14px', borderRadius: '12px', border: `1.5px solid ${accent}30`, background: `${accent}06`, color: accent, fontSize: '0.86rem', fontWeight: '800', textDecoration: 'none', marginBottom: '14px', transition: 'all 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = `${accent}12`; }}
+                onMouseLeave={e => { e.currentTarget.style.background = `${accent}06`; }}
+              >
+                <ExtLink size={14} /> Xem Portfolio của ứng viên
+              </a>
+
+              {/* Cover note */}
+              {selectedApplicant.cover_note && (
+                <div style={{ padding: '12px 14px', background: 'var(--surface-soft)', borderRadius: '10px', fontSize: '0.84rem', color: 'var(--ink)', lineHeight: 1.65, marginBottom: '14px', borderLeft: `3px solid ${accent}` }}>
+                  <p style={{ margin: '0 0 4px', fontSize: '0.7rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Thư giới thiệu</p>
+                  <span style={{ fontStyle: 'italic' }}>"{selectedApplicant.cover_note}"</span>
+                </div>
+              )}
+
+              {/* Status + applied date */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: STATUS_COLOR[selectedApplicant.status] || '#6366f1', background: `${STATUS_COLOR[selectedApplicant.status] || '#6366f1'}12`, padding: '4px 12px', borderRadius: '8px' }}>
+                  {STATUS_LABEL[selectedApplicant.status] || selectedApplicant.status}
+                </span>
+                {(selectedApplicant.appliedAt || selectedApplicant.applied_at) && (
+                  <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
+                    Nộp ngày {new Date(selectedApplicant.appliedAt || selectedApplicant.applied_at).toLocaleDateString('vi-VN')}
+                  </span>
+                )}
+              </div>
+
+              {/* Actions */}
+              {selectedApplicant.status !== 'REJECTED' && selectedApplicant.status !== 'WITHDRAWN' && selectedApplicant.status !== 'COMPLETED' ? (
+                showRejectInput ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <input placeholder="Lý do từ chối..." value={rejectReason} onChange={e => setRejectReason(e.target.value)}
+                      style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.86rem', outline: 'none' }} />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button className="button danger-button" style={{ flex: 1, fontSize: '0.83rem' }} disabled={!rejectReason.trim() || !!actionLoading}
+                        onClick={() => handleAction(selectedApplicant.id, 'REJECTED', rejectReason)}>
+                        {actionLoading ? '...' : 'Xác nhận từ chối'}
+                      </button>
+                      <button className="button secondary-button" style={{ fontSize: '0.83rem' }} onClick={() => { setShowRejectInput(false); setRejectReason(''); }}>Hủy</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {selectedApplicant.status !== 'ACCEPTED' && selectedApplicant.status !== 'APPROVED' && (
+                      <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', width: '100%' }} disabled={!!actionLoading}
+                        onClick={() => handleAction(selectedApplicant.id, isQuest ? 'APPROVED' : 'ACCEPTED')}>
+                        <Check size={14} /> Chấp nhận ứng viên
+                      </button>
+                    )}
+                    {isQuest && selectedApplicant.status === 'APPROVED' && (
+                      <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', background: 'linear-gradient(135deg,#7c3aed,#2563eb)', width: '100%' }} disabled={!!actionLoading}
+                        onClick={() => handleAction(selectedApplicant.id, 'COMPLETED')}>
+                        <Award size={14} /> Đánh dấu hoàn thành (+EXP)
+                      </button>
+                    )}
+                    {!isQuest && selectedApplicant.status !== 'ACCEPTED' && selectedApplicant.status !== 'SHORTLISTED' && (
+                      <button className="button secondary-button" style={{ fontSize: '0.86rem', gap: '6px', width: '100%' }} disabled={!!actionLoading}
+                        onClick={() => handleAction(selectedApplicant.id, 'SHORTLISTED')}>
+                        <Star size={14} /> Đưa vào danh sách ngắn
+                      </button>
+                    )}
+                    {!isQuest && selectedApplicant.status === 'ACCEPTED' && (
+                      <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', background: 'linear-gradient(135deg,#7c3aed,#2563eb)', width: '100%' }} disabled={!!actionLoading}
+                        onClick={() => handleAction(selectedApplicant.id, 'COMPLETED')}>
+                        <Award size={14} /> Đánh dấu hoàn thành (+EXP)
+                      </button>
+                    )}
+                    <button className="button danger-button" style={{ fontSize: '0.86rem', width: '100%' }} disabled={!!actionLoading} onClick={() => setShowRejectInput(true)}>
+                      Từ chối ứng viên
+                    </button>
+                  </div>
+                )
+              ) : (
+                <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--surface-soft)', textAlign: 'center' }}>
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--muted)', fontStyle: 'italic' }}>
+                    {selectedApplicant.status === 'COMPLETED' ? '✅ Ứng viên đã hoàn thành.' : '❌ Đơn ứng tuyển này đã kết thúc.'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function TabPlaceholderView({ icon: Icon, title, desc }) {
@@ -599,8 +1056,15 @@ function ManageJobsView({ onTabChange }) {
   async function fetchJobs() {
     setLoading(true);
     try {
-      const data = await getOrganizerJobs();
-      setJobs(data || []);
+      const [jobsData, questsData] = await Promise.all([
+        getOrganizerJobs().catch(() => []),
+        getOrganizerQuests().catch(() => []),
+      ]);
+      const merged = [
+        ...(questsData || []).map(q => ({ ...q, postType: 'QUEST' })),
+        ...(jobsData || []).map(j => ({ ...j, postType: 'JOB' })),
+      ];
+      setJobs(merged);
       setError(null);
     } catch (err) {
       console.error("Lỗi khi tải danh sách tin đã đăng:", err);
@@ -653,13 +1117,27 @@ function ManageJobsView({ onTabChange }) {
   const activeJobs = jobs.filter(j => (j.status || '').toLowerCase() === 'open').length;
   const totalApplicants = jobs.reduce((sum, j) => sum + (j.applicantsCount || 0), 0);
 
+  const isPostingExpired = (job) => {
+    const dl = job.deadlineAt || job.deadline_at || job.endsAt || job.ends_at;
+    return dl ? new Date(dl) < new Date() : false;
+  };
+
   // Filter jobs based on local search & status dropdown
   const filteredJobs = jobs.filter(job => {
     const titleMatch = (job.title || '').toLowerCase().includes(searchTerm.toLowerCase());
     const categoryMatch = (CATEGORY_MAP[job.category] || job.category || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSearch = titleMatch || categoryMatch;
-    
-    const matchesStatus = statusFilter === 'ALL' || (job.status || '').toUpperCase() === statusFilter;
+
+    let matchesStatus;
+    if (statusFilter === 'ALL') {
+      matchesStatus = true;
+    } else if (statusFilter === 'EXPIRED') {
+      matchesStatus = isPostingExpired(job);
+    } else if (statusFilter === 'OPEN') {
+      matchesStatus = (job.status || '').toUpperCase() === 'OPEN' && !isPostingExpired(job);
+    } else {
+      matchesStatus = (job.status || '').toUpperCase() === statusFilter;
+    }
     return matchesSearch && matchesStatus;
   });
 
@@ -790,10 +1268,11 @@ function ManageJobsView({ onTabChange }) {
                 }}
               >
                 <option value="ALL">Tất cả</option>
-                <option value="OPEN">Hoạt động (Approved)</option>
-                <option value="PENDING">Chờ duyệt (Pending)</option>
-                <option value="REJECTED">Từ chối (Rejected)</option>
-                <option value="CLOSED">Đã đóng (Closed)</option>
+                <option value="OPEN">Đang hoạt động</option>
+                <option value="PENDING">Chờ duyệt</option>
+                <option value="EXPIRED">Hết hạn nộp</option>
+                <option value="REJECTED">Từ chối</option>
+                <option value="CLOSED">Đã đóng</option>
               </select>
             </div>
           </div>
@@ -841,12 +1320,18 @@ function ManageJobsView({ onTabChange }) {
           }}>
             {filteredJobs.map((job) => {
               const statusLower = (job.status || '').toLowerCase();
+              const expired = isPostingExpired(job);
               let badgeBg = 'rgba(107, 114, 128, 0.08)';
               let badgeColor = '#6b7280';
               let statusText = job.status;
               let StatusIcon = Clock;
 
-              if (statusLower === 'open') {
+              if (statusLower === 'open' && expired) {
+                badgeBg = 'rgba(220, 38, 38, 0.08)';
+                badgeColor = '#dc2626';
+                statusText = 'Hết hạn';
+                StatusIcon = Clock;
+              } else if (statusLower === 'open') {
                 badgeBg = 'rgba(22, 163, 74, 0.08)';
                 badgeColor = '#16a34a';
                 statusText = 'Hoạt động';
@@ -949,16 +1434,31 @@ function ManageJobsView({ onTabChange }) {
                     </h3>
 
                     {/* Metadata info */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Building size={14} />
-                        <span>{JOB_TYPES[job.jobType] || job.jobType}</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Clock size={14} />
-                        <span>Đăng ngày: {job.createdAt ? new Date(job.createdAt).toLocaleDateString('vi-VN') : '—'}</span>
-                      </div>
-                    </div>
+                    {(() => {
+                      const dl = job.deadlineAt || job.deadline_at || job.endsAt || job.ends_at;
+                      const expired = dl ? new Date(dl) < new Date() : false;
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Building size={14} />
+                            <span>{JOB_TYPES[job.jobType] || job.jobType || (job.postType === 'QUEST' ? 'Quest' : '—')}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Clock size={14} />
+                            <span>Đăng ngày: {job.createdAt ? new Date(job.createdAt).toLocaleDateString('vi-VN') : '—'}</span>
+                          </div>
+                          {dl && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: expired ? '#dc2626' : 'var(--muted)', fontWeight: expired ? '700' : '400' }}>
+                              <Calendar size={14} style={{ color: expired ? '#dc2626' : 'var(--muted)', flexShrink: 0 }} />
+                              <span>
+                                {job.postType === 'QUEST' ? 'Kết thúc' : 'Hạn nộp'}: {new Date(dl).toLocaleDateString('vi-VN')}
+                                {expired && <span style={{ marginLeft: '6px', fontSize: '0.76rem', background: 'rgba(220,38,38,0.1)', color: '#dc2626', padding: '1px 6px', borderRadius: '4px', fontWeight: '800' }}>Đã hết hạn</span>}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Footer/Stats Block */}
@@ -1684,6 +2184,7 @@ export function BusinessPage() {
       case 'create-job':
         return (
           <JobCreateForm
+            companyType={company?.companyType}
             onSuccess={() => handleTabChange('dashboard')}
             onCancel={() => handleTabChange('dashboard')}
           />
@@ -1703,13 +2204,7 @@ export function BusinessPage() {
           />
         );
       case 'candidates':
-        return (
-          <TabPlaceholderView
-            icon={UsersRound}
-            title="Quản lý ứng viên"
-            desc="Xem danh sách hồ sơ của các ứng viên ứng tuyển, lọc danh sách rút gọn (shortlist), duyệt hồ sơ và liên hệ trực tiếp với ứng viên qua hệ thống."
-          />
-        );
+        return <CandidatesView />;
       default:
         return <ApprovedView company={company} onTabChange={handleTabChange} />;
     }

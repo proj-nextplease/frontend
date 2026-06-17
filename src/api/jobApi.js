@@ -63,3 +63,19 @@ export async function getCompanyDetail(id) {
   }
   return response.data.data;
 }
+
+export async function getJobApplications(jobId) {
+  const response = await httpClient.get(`/organizer/jobs/${jobId}/applications`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải danh sách ứng viên.');
+  }
+  return response.data.data;
+}
+
+export async function updateApplicationStatus(applicationId, status, rejectReason = null) {
+  const response = await httpClient.patch(`/organizer/applications/${applicationId}/status`, { status, rejectReason });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Cập nhật trạng thái thất bại.');
+  }
+  return response.data.data;
+}

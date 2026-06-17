@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createJob, getSkills } from '../api/jobApi.js';
+import { createQuest } from '../api/questApi.js';
 import {
   FileText,
   AlertTriangle,
@@ -76,11 +77,17 @@ const CATEGORY_MAP = {
 };
 
 const JOB_TYPES = [
-  { value: 'INTERNSHIP', label: 'Thực tập sinh (Internship)' },
-  { value: 'PART_TIME', label: 'Bán thời gian (Part-time)' },
-  { value: 'FREELANCE', label: 'Công việc tự do (Freelance)' },
-  { value: 'EVENT_STAFF', label: 'Nhân sự sự kiện (Event staff)' },
-  { value: 'MICRO_INTERNSHIP', label: 'Thực tập ngắn hạn / Dự án (Micro-internship)' },
+  { value: 'INTERNSHIP', label: 'Thực tập sinh (Internship)', exp: 500 },
+  { value: 'PART_TIME', label: 'Bán thời gian (Part-time)', exp: 300 },
+  { value: 'FREELANCE', label: 'Công việc tự do (Freelance)', exp: 300 },
+  { value: 'EVENT_STAFF', label: 'Nhân sự sự kiện (Event staff)', exp: 200 },
+  { value: 'MICRO_INTERNSHIP', label: 'Thực tập ngắn hạn / Dự án (Micro-internship)', exp: 500 },
+];
+
+// Quest categories for CLUB partners — EXP reward fixed server-side by category.
+const QUEST_CATEGORIES = [
+  { value: 'SMALL_EVENT', label: 'Sự kiện CLB nhỏ', exp: 100 },
+  { value: 'SCHOOL_CAMPAIGN', label: 'Chiến dịch cấp trường', exp: 300 },
 ];
 
 const SKILL_LEVELS = [
@@ -103,7 +110,7 @@ function PremiumDateTimePicker({ value, onChange, error }) {
   
   const initialDate = value ? new Date(value) : null;
   const [viewDate, setViewDate] = useState(initialDate || new Date());
-  
+
   const selectedDate = initialDate ? new Date(initialDate.getFullYear(), initialDate.getMonth(), initialDate.getDate()) : null;
   const selectedHour = initialDate ? initialDate.getHours() : 12;
   const selectedMinute = initialDate ? initialDate.getMinutes() : 0;
@@ -111,8 +118,9 @@ function PremiumDateTimePicker({ value, onChange, error }) {
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Minimum allowed datetime = now + 1 hour
+  const minAllowed = new Date(Date.now() + 60 * 60 * 1000);
+  const minAllowedDateOnly = new Date(minAllowed.getFullYear(), minAllowed.getMonth(), minAllowed.getDate());
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const rawFirstDay = new Date(year, month, 1).getDay();
@@ -134,23 +142,20 @@ function PremiumDateTimePicker({ value, onChange, error }) {
 
   function handleSelectDay(day) {
     const targetDate = new Date(year, month, day);
-    if (targetDate < today) return;
-    
-    // Adjust hour and minute selection if picking today to avoid past hours
+    if (targetDate < minAllowedDateOnly) return;
+
     let h = selectedHour;
     let m = selectedMinute;
-    const isToday = targetDate.getFullYear() === new Date().getFullYear() &&
-                    targetDate.getMonth() === new Date().getMonth() &&
-                    targetDate.getDate() === new Date().getDate();
+    const isMinAllowedDate = targetDate.getTime() === minAllowedDateOnly.getTime();
 
-    if (isToday) {
-      const currentH = new Date().getHours();
-      if (h < currentH) {
-        h = currentH;
-      }
-      const currentM = new Date().getMinutes();
-      if (h === currentH && m < currentM) {
-        m = Math.min(55, Math.ceil(currentM / 5) * 5);
+    if (isMinAllowedDate) {
+      const minH = minAllowed.getHours();
+      const minM = minAllowed.getMinutes();
+      if (h < minH) {
+        h = minH;
+        m = Math.ceil(minM / 5) * 5 % 60;
+      } else if (h === minH && m < minM) {
+        m = Math.ceil(minM / 5) * 5 % 60;
       }
     }
 
@@ -178,12 +183,12 @@ function PremiumDateTimePicker({ value, onChange, error }) {
   }
   for (let d = 1; d <= daysInMonth; d++) {
     const cellDate = new Date(year, month, d);
-    const isPast = cellDate < today;
+    const isPast = cellDate < minAllowedDateOnly;
     const isSelected = selectedDate && 
                        selectedDate.getFullYear() === year && 
                        selectedDate.getMonth() === month && 
                        selectedDate.getDate() === d;
-    const isCurrentToday = new Date().getDate() === d && new Date().getMonth() === month && new Date().getFullYear() === year;
+    const isCurrentToday = d === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear();
 
     dayCells.push(
       <button
@@ -322,13 +327,10 @@ function PremiumDateTimePicker({ value, onChange, error }) {
                   }}
                 >
                   {hours.map(h => {
-                    const isToday = selectedDate && 
-                                    selectedDate.getFullYear() === new Date().getFullYear() &&
-                                    selectedDate.getMonth() === new Date().getMonth() &&
-                                    selectedDate.getDate() === new Date().getDate();
-                    const isPastHour = isToday && h < new Date().getHours();
+                    const isMinDate = selectedDate && selectedDate.getTime() === minAllowedDateOnly.getTime();
+                    const isBeforeMin = isMinDate && h < minAllowed.getHours();
                     return (
-                      <option key={h} value={h} disabled={isPastHour}>{String(h).padStart(2, '0')}</option>
+                      <option key={h} value={h} disabled={isBeforeMin}>{String(h).padStart(2, '0')}</option>
                     );
                   })}
                 </select>
@@ -348,14 +350,11 @@ function PremiumDateTimePicker({ value, onChange, error }) {
                   }}
                 >
                   {minutes.map(m => {
-                    const isToday = selectedDate && 
-                                    selectedDate.getFullYear() === new Date().getFullYear() &&
-                                    selectedDate.getMonth() === new Date().getMonth() &&
-                                    selectedDate.getDate() === new Date().getDate();
-                    const isCurrentHour = isToday && selectedHour === new Date().getHours();
-                    const isPastMinute = isCurrentHour && m < new Date().getMinutes();
+                    const isMinDate = selectedDate && selectedDate.getTime() === minAllowedDateOnly.getTime();
+                    const isMinHour = isMinDate && selectedHour === minAllowed.getHours();
+                    const isBeforeMin = isMinHour && m < minAllowed.getMinutes();
                     return (
-                      <option key={m} value={m} disabled={isPastMinute}>{String(m).padStart(2, '0')}</option>
+                      <option key={m} value={m} disabled={isBeforeMin}>{String(m).padStart(2, '0')}</option>
                     );
                   })}
                 </select>
@@ -387,7 +386,10 @@ function PremiumDateTimePicker({ value, onChange, error }) {
   );
 }
 
-export function JobCreateForm({ onSuccess, onCancel }) {
+export function JobCreateForm({ onSuccess, onCancel, companyType }) {
+  // CLB/Tổ chức đăng Quest sự kiện; Doanh nghiệp đăng tin tuyển dụng (Job).
+  const isQuestMode = companyType === 'CLUB';
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -400,6 +402,8 @@ export function JobCreateForm({ onSuccess, onCancel }) {
     isRemote: false,
     capacity: '',
     deadlineAt: '',
+    // Quest-only fields
+    questCategory: 'SMALL_EVENT',
   });
 
   const [availableSkills, setAvailableSkills] = useState([]);
@@ -446,7 +450,7 @@ export function JobCreateForm({ onSuccess, onCancel }) {
       newErrors.description = `Mô tả tuyển dụng quá ngắn (tối thiểu 30 ký tự, hiện tại: ${formData.description.trim().length} ký tự).`;
     }
 
-    if (formData.compensation) {
+    if (!isQuestMode && formData.compensation) {
       const comp = parseFloat(formData.compensation);
       if (isNaN(comp) || comp <= 0) {
         newErrors.compensation = 'Thù lao tuyển dụng phải là số dương lớn hơn 0.';
@@ -522,7 +526,7 @@ export function JobCreateForm({ onSuccess, onCancel }) {
       return;
     }
 
-    setStatus({ type: 'loading', message: 'Đang gửi thông tin tuyển dụng...' });
+    setStatus({ type: 'loading', message: isQuestMode ? 'Đang gửi Quest...' : 'Đang gửi thông tin tuyển dụng...' });
 
     // Format deadline
     let formattedDeadline = null;
@@ -530,30 +534,40 @@ export function JobCreateForm({ onSuccess, onCancel }) {
       formattedDeadline = new Date(formData.deadlineAt).toISOString().split('.')[0];
     }
 
-    const payload = {
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      jobType: formData.jobType,
-      category: formData.category,
-      specialty: formData.specialty,
-      compensation: formData.compensation ? parseFloat(formData.compensation) : null,
-      minReqRs: parseInt(formData.minReqRs) || 0,
-      location: formData.isRemote ? null : (formData.location || null),
-      isRemote: formData.isRemote,
-      capacity: formData.capacity ? parseInt(formData.capacity) : null,
-      deadlineAt: formattedDeadline,
-      skills: selectedSkills,
-    };
-
     try {
-      await createJob(payload);
-      setStatus({ type: 'success', message: 'Đăng tin thành công! Tin tuyển dụng đang ở trạng thái chờ duyệt.' });
+      if (isQuestMode) {
+        await createQuest({
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          category: formData.questCategory,
+          minReqRs: parseInt(formData.minReqRs) || 0,
+          capacity: formData.capacity ? parseInt(formData.capacity) : null,
+          endsAt: formattedDeadline,
+        });
+        setStatus({ type: 'success', message: 'Đăng Quest thành công! Quest đang chờ Admin duyệt.' });
+      } else {
+        await createJob({
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          jobType: formData.jobType,
+          category: formData.category,
+          specialty: formData.specialty,
+          compensation: formData.compensation ? parseFloat(formData.compensation) : null,
+          minReqRs: parseInt(formData.minReqRs) || 0,
+          location: formData.isRemote ? null : (formData.location || null),
+          isRemote: formData.isRemote,
+          capacity: formData.capacity ? parseInt(formData.capacity) : null,
+          deadlineAt: formattedDeadline,
+          skills: selectedSkills,
+        });
+        setStatus({ type: 'success', message: 'Đăng tin thành công! Tin tuyển dụng đang ở trạng thái chờ duyệt.' });
+      }
       setTimeout(() => {
         setStatus({ type: 'idle', message: '' });
         onSuccess();
       }, 2000);
     } catch (err) {
-      setStatus({ type: 'error', message: err.message || 'Không thể đăng tin tuyển dụng.' });
+      setStatus({ type: 'error', message: err.message || (isQuestMode ? 'Không thể đăng Quest.' : 'Không thể đăng tin tuyển dụng.') });
     }
   }
 
@@ -566,12 +580,18 @@ export function JobCreateForm({ onSuccess, onCancel }) {
     <section className="panel" style={{ borderRadius: '24px', padding: '36px', border: '1px solid var(--line)' }}>
       {/* Title */}
       <div className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px', paddingBottom: '16px', borderBottom: '1px solid var(--line)' }}>
-        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(37, 99, 235, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
-          <BriefcaseBusiness size={24} />
+        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: isQuestMode ? 'rgba(255, 122, 26, 0.1)' : 'rgba(37, 99, 235, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isQuestMode ? '#ff7a1a' : '#2563eb' }}>
+          {isQuestMode ? <Sparkles size={24} /> : <BriefcaseBusiness size={24} />}
         </div>
         <div>
-          <h2 style={{ fontSize: '1.4rem', margin: 0, color: 'var(--ink)' }}>Đăng tin tuyển dụng mới</h2>
-          <p style={{ margin: '4px 0 0', fontSize: '0.84rem', color: 'var(--muted)' }}>Tạo Job/Gig mới gửi hệ thống chờ Admin xét duyệt.</p>
+          <h2 style={{ fontSize: '1.4rem', margin: 0, color: 'var(--ink)' }}>
+            {isQuestMode ? 'Tạo Quest Sự kiện / Chiến dịch CLB' : 'Đăng tin tuyển dụng mới'}
+          </h2>
+          <p style={{ margin: '4px 0 0', fontSize: '0.84rem', color: 'var(--muted)' }}>
+            {isQuestMode
+              ? 'Tạo Quest cho sự kiện / chiến dịch của CLB, thưởng EXP cho ứng viên hoàn thành. Gửi hệ thống chờ Admin xét duyệt.'
+              : 'Tạo Job/Gig mới gửi hệ thống chờ Admin xét duyệt.'}
+          </p>
         </div>
       </div>
 
@@ -580,19 +600,19 @@ export function JobCreateForm({ onSuccess, onCancel }) {
         {/* SECTION 1: THÔNG TIN VỊ TRÍ TUYỂN DỤNG */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderLeft: '3px solid #2563eb', paddingLeft: '10px' }}>
-            <span style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>1. Thông tin vị trí tuyển dụng</span>
+            <span style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{isQuestMode ? '1. Thông tin Quest' : '1. Thông tin vị trí tuyển dụng'}</span>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>
-              <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Tiêu đề tuyển dụng (từ 10 - 200 ký tự) *</label>
+              <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>{isQuestMode ? 'Tiêu đề Quest (từ 10 - 200 ký tự) *' : 'Tiêu đề tuyển dụng (từ 10 - 200 ký tự) *'}</label>
               <input
                 type="text"
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
                 className="input-field"
-                placeholder="VD: Thực tập sinh Thiết kế UI/UX Mobile App"
+                placeholder={isQuestMode ? 'VD: Ban Tổ chức Sự kiện Chào Tân Sinh Viên 2026' : 'VD: Thực tập sinh Thiết kế UI/UX Mobile App'}
                 style={{
                   padding: '12px 16px',
                   borderRadius: '12px',
@@ -609,53 +629,76 @@ export function JobCreateForm({ onSuccess, onCancel }) {
               )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Lĩnh vực chính *</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                className="input-field"
-                style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', height: '46px' }}
-                required
-              >
-                {Object.keys(CATEGORY_MAP).map(key => (
-                  <option key={key} value={key}>{CATEGORY_MAP[key].label}</option>
-                ))}
-              </select>
-            </div>
+            {isQuestMode ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>
+                <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Loại hình Quest *</label>
+                <select
+                  name="questCategory"
+                  value={formData.questCategory}
+                  onChange={handleInputChange}
+                  className="input-field"
+                  style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', height: '46px' }}
+                  required
+                >
+                  {QUEST_CATEGORIES.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label} (+{opt.exp} EXP)</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Lĩnh vực chính *</label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    className="input-field"
+                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', height: '46px' }}
+                    required
+                  >
+                    {Object.keys(CATEGORY_MAP).map(key => (
+                      <option key={key} value={key}>{CATEGORY_MAP[key].label}</option>
+                    ))}
+                  </select>
+                </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Chuyên ngành chi tiết *</label>
-              <select
-                name="specialty"
-                value={formData.specialty}
-                onChange={handleInputChange}
-                className="input-field"
-                style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', height: '46px' }}
-                required
-              >
-                {(CATEGORY_MAP[formData.category]?.specialties || []).map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Chuyên ngành chi tiết *</label>
+                  <select
+                    name="specialty"
+                    value={formData.specialty}
+                    onChange={handleInputChange}
+                    className="input-field"
+                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', height: '46px' }}
+                    required
+                  >
+                    {(CATEGORY_MAP[formData.category]?.specialties || []).map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Loại hình công việc *</label>
-              <select
-                name="jobType"
-                value={formData.jobType}
-                onChange={handleInputChange}
-                className="input-field"
-                style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', height: '46px' }}
-                required
-              >
-                {JOB_TYPES.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Loại hình công việc *</label>
+                  <select
+                    name="jobType"
+                    value={formData.jobType}
+                    onChange={handleInputChange}
+                    className="input-field"
+                    style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', height: '46px' }}
+                    required
+                  >
+                    {JOB_TYPES.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <span style={{ fontSize: '0.78rem', color: '#2563eb', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Award size={13} /> Ứng viên nhận +{JOB_TYPES.find(t => t.value === formData.jobType)?.exp || 300} EXP khi hoàn thành (cao hơn Quest vì đây là kinh nghiệm thực tế với Doanh nghiệp).
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -666,31 +709,52 @@ export function JobCreateForm({ onSuccess, onCancel }) {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Thù lao / Phụ cấp (VND)</label>
-              <input
-                type="text"
-                name="compensation"
-                value={formatVND(formData.compensation)}
-                onChange={handleInputChange}
-                className="input-field"
-                placeholder="VD: 1.500.000 (để trống nếu thỏa thuận)"
-                style={{
+            {isQuestMode ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Phần thưởng khi hoàn thành Quest</label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
                   padding: '12px 16px',
                   borderRadius: '12px',
-                  border: errors.compensation ? '1.5px solid #dc2626' : '1px solid var(--line)',
-                  background: 'var(--bg)',
-                  color: 'var(--ink)',
-                  width: '100%',
-                  boxSizing: 'border-box'
-                }}
-              />
-              {errors.compensation && (
-                <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: '600', marginTop: '4px' }}>
-                  {errors.compensation}
-                </span>
-              )}
-            </div>
+                  border: '1.5px solid rgba(255, 122, 26, 0.3)',
+                  background: 'rgba(255, 122, 26, 0.05)',
+                }}>
+                  <Award size={18} style={{ color: '#ff7a1a', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#ff7a1a' }}>
+                    +{QUEST_CATEGORIES.find(c => c.value === formData.questCategory)?.exp || 100} EXP
+                  </span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>— tự động trao khi Admin xác nhận hoàn thành Quest</span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Thù lao / Phụ cấp (VND)</label>
+                <input
+                  type="text"
+                  name="compensation"
+                  value={formatVND(formData.compensation)}
+                  onChange={handleInputChange}
+                  className="input-field"
+                  placeholder="VD: 1.500.000 (để trống nếu thỏa thuận)"
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    border: errors.compensation ? '1.5px solid #dc2626' : '1px solid var(--line)',
+                    background: 'var(--bg)',
+                    color: 'var(--ink)',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}
+                />
+                {errors.compensation && (
+                  <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: '600', marginTop: '4px' }}>
+                    {errors.compensation}
+                  </span>
+                )}
+              </div>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Số lượng tuyển (Capacity)</label>
@@ -719,7 +783,7 @@ export function JobCreateForm({ onSuccess, onCancel }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Clock size={14} style={{ color: '#ff7a1a' }} />
-                <span>Hạn nộp hồ sơ (Tối thiểu 1 giờ kể từ hiện tại) *</span>
+                <span>{isQuestMode ? 'Hạn kết thúc Quest (Tối thiểu 1 giờ kể từ hiện tại) *' : 'Hạn nộp hồ sơ (Tối thiểu 1 giờ kể từ hiện tại) *'}</span>
               </label>
               <PremiumDateTimePicker
                 value={formData.deadlineAt}
@@ -765,10 +829,12 @@ export function JobCreateForm({ onSuccess, onCancel }) {
         {/* SECTION 3: MÔ TẢ & YÊU CẦU CHI TIẾT */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', borderLeft: '3px solid #16a34a', paddingLeft: '10px' }}>
-            <span style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>3. Yêu cầu chi tiết & Mô tả công việc</span>
+            <span style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{isQuestMode ? '3. Mô tả chi tiết Quest' : '3. Yêu cầu chi tiết & Mô tả công việc'}</span>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {!isQuestMode && (
+            <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Địa điểm làm việc</label>
               <div style={{ position: 'relative' }}>
@@ -883,9 +949,12 @@ export function JobCreateForm({ onSuccess, onCancel }) {
               </div>
             </div>
 
-            {/* Job Description TextArea */}
+            </>
+            )}
+
+            {/* Description TextArea (chung cho Job & Quest) */}
             <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>Mô tả chi tiết công việc (JD) (tối thiểu 30 ký tự) *</label>
+              <label style={{ fontSize: '0.86rem', fontWeight: 'bold', color: 'var(--muted)' }}>{isQuestMode ? 'Mô tả chi tiết Quest (nhiệm vụ, quyền lợi, yêu cầu) (tối thiểu 30 ký tự) *' : 'Mô tả chi tiết công việc (JD) (tối thiểu 30 ký tự) *'}</label>
               <textarea
                 name="description"
                 value={formData.description}
@@ -965,7 +1034,7 @@ export function JobCreateForm({ onSuccess, onCancel }) {
               fontWeight: '800'
             }}
           >
-            Đăng tin tuyển dụng
+            {isQuestMode ? 'Đăng Quest' : 'Đăng tin tuyển dụng'}
           </button>
           <button
             type="button"

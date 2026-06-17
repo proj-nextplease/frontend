@@ -14,8 +14,12 @@ import {
   getAdminAuditLogs,
   approveJob,
   rejectJob,
+  updateUserStatus,
+  getActiveFraudFlags,
+  resolveFraudFlag,
 } from '../api/adminApi.js';
 import { getJobDetail } from '../api/jobApi.js';
+import { getVerificationQueue, approveCredential, rejectCredential } from '../api/credentialApi.js';
 import {
   AlertCircle,
   AlertTriangle,
@@ -57,13 +61,21 @@ const SIDEBAR_TABS = [
   { key: 'USERS', route: 'users', label: 'Quản lý người dùng', icon: Users },
   { key: 'B2B_REVIEWS', route: 'b2b-partners', label: 'Duyệt đối tác B2B', icon: Building, badgeCount: true },
   {
-    key: 'JOBS', route: 'jobs', label: 'Quản lý đăng tin', icon: FileText,
+    key: 'JOBS', route: 'jobs', label: 'Quản lý đăng tin', icon: FileText, badgeCount: true,
     subItems: [
       { key: 'JOBS_NEW', subRoute: 'new', label: 'Quản lý tin mới', icon: Clock },
       { key: 'JOBS_ALL', subRoute: 'all', label: 'Quản lý tin', icon: FileText },
     ],
   },
-  { key: 'AUDIT_LOGS', route: 'audit-logs', label: 'Ghi nhận hệ thống', icon: ShieldCheck },
+  {
+    key: 'VERIF_QUEUE', route: 'verification-queue', label: 'Hàng chờ xác thực', icon: ShieldCheck, badgeCount: true,
+    subItems: [
+      { key: 'VERIF_PENDING', subRoute: 'pending', label: 'Xác thực', icon: ShieldCheck },
+      { key: 'VERIF_MANAGE', subRoute: 'manage', label: 'Quản lý minh chứng', icon: FileText },
+    ],
+  },
+  { key: 'FRAUD_FLAGS', route: 'fraud-flags', label: 'Cờ gian lận', icon: ShieldAlert },
+  { key: 'AUDIT_LOGS', route: 'audit-logs', label: 'Ghi nhận hệ thống', icon: Activity },
 ];
 
 const ROUTE_TO_TAB = SIDEBAR_TABS.reduce((acc, tab) => {
@@ -97,6 +109,13 @@ const POST_TYPE_FILTERS = [
   { key: 'QUEST', label: 'Quest sự kiện (Quest)' },
 ];
 
+const VERIF_STATUS_FILTERS = [
+  { key: 'ALL', label: 'Tất cả trạng thái' },
+  { key: 'PENDING', label: 'Chờ xác thực' },
+  { key: 'APPROVED', label: 'Đã duyệt' },
+  { key: 'REJECTED', label: 'Từ chối' },
+];
+
 function getInitialTheme() {
   if (typeof window === 'undefined') return 'light';
 
@@ -111,6 +130,7 @@ export function AdminB2bReviewPage() {
   const { tabSlug = '', subTabSlug = '' } = useParams();
   const activeTab = ROUTE_TO_TAB[tabSlug] || 'OVERVIEW';
   const [jobsSubTab, setJobsSubTab] = useState('new');
+  const [verifSubTab, setVerifSubTab] = useState('pending');
   const [adminEmail, setAdminEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -143,7 +163,8 @@ export function AdminB2bReviewPage() {
   const [filteredJobs, setFilteredJobs] = useState([]);
   const [searchJobQuery, setSearchJobQuery] = useState('');
   const [jobPostTypeFilter, setJobPostTypeFilter] = useState('ALL');
-  const [expandedCompany, setExpandedCompany] = useState(null);
+  const [jobManageTypeTab, setJobManageTypeTab] = useState('JOB');
+  const [selectedJobGroup, setSelectedJobGroup] = useState(null);
   const [selectedJobDetail, setSelectedJobDetail] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -156,8 +177,24 @@ export function AdminB2bReviewPage() {
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [searchLogQuery, setSearchLogQuery] = useState('');
   const [expandedLogId, setExpandedLogId] = useState(null);
+
+  /* ─── State for Verification Queue ─── */
+  const [verifQueue, setVerifQueue] = useState([]);
+  const [verifLoading, setVerifLoading] = useState(false);
+  const [verifActionLoading, setVerifActionLoading] = useState(null);
+  const [verifRejectingId, setVerifRejectingId] = useState(null);
+  const [verifRejectReason, setVerifRejectReason] = useState('');
+  const [verifStatusFilter, setVerifStatusFilter] = useState('ALL');
+  const [selectedVerifGroup, setSelectedVerifGroup] = useState(null);
   const [auditLogTab, setAuditLogTab] = useState('ALL');
   const [expandedActors, setExpandedActors] = useState({});
+
+  /* ─── State for Fraud Flags ─── */
+  const [fraudFlags, setFraudFlags] = useState([]);
+  const [fraudFlagsLoading, setFraudFlagsLoading] = useState(false);
+
+  /* ─── State for User Moderation ─── */
+  const [userModerateLoading, setUserModerateLoading] = useState(false);
 
   /* ─── State for Custom Confirmation Modal ─── */
   const [confirmModal, setConfirmModal] = useState({
@@ -193,6 +230,27 @@ export function AdminB2bReviewPage() {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchSidebarCounts() {
+      try {
+        const [b2bData, jobsData, verifData] = await Promise.all([
+          getPendingB2bRegistrations(),
+          getAdminJobs(),
+          getVerificationQueue(),
+        ]);
+        if (!isMounted) return;
+        setPendingB2b(b2bData || []);
+        setJobs(jobsData || []);
+        setVerifQueue(verifData || []);
+      } catch (err) {
+        console.warn('Không thể tải số lượng cảnh báo sidebar admin:', err);
+      }
+    }
+    fetchSidebarCounts();
+    return () => { isMounted = false; };
+  }, []);
+
   /* Sync jobsSubTab from URL */
   useEffect(() => {
     if (activeTab === 'JOBS' && subTabSlug) {
@@ -200,6 +258,17 @@ export function AdminB2bReviewPage() {
         setJobsSubTab(subTabSlug);
       } else {
         navigate(getAdminTabPath('JOBS', 'new'), { replace: true });
+      }
+    }
+  }, [activeTab, subTabSlug, navigate]);
+
+  /* Sync verification sub-tab from URL */
+  useEffect(() => {
+    if (activeTab === 'VERIF_QUEUE' && subTabSlug) {
+      if (subTabSlug === 'pending' || subTabSlug === 'manage') {
+        setVerifSubTab(subTabSlug);
+      } else {
+        navigate(getAdminTabPath('VERIF_QUEUE', 'pending'), { replace: true });
       }
     }
   }, [activeTab, subTabSlug, navigate]);
@@ -212,6 +281,8 @@ export function AdminB2bReviewPage() {
       navigate(`${ADMIN_BASE_PATH}/overview`, { replace: true });
     } else if (tabSlug === 'jobs' && !subTabSlug) {
       navigate(getAdminTabPath('JOBS', 'new'), { replace: true });
+    } else if (tabSlug === 'verification-queue' && !subTabSlug) {
+      navigate(getAdminTabPath('VERIF_QUEUE', 'pending'), { replace: true });
     }
   }, [tabSlug, subTabSlug, navigate]);
 
@@ -255,6 +326,16 @@ export function AdminB2bReviewPage() {
       } else if (tabKey === 'AUDIT_LOGS') {
         const data = await getAdminAuditLogs();
         setLogs(data || []);
+      } else if (tabKey === 'VERIF_QUEUE') {
+        setVerifLoading(true);
+        const data = await getVerificationQueue();
+        setVerifQueue(data || []);
+        setVerifLoading(false);
+      } else if (tabKey === 'FRAUD_FLAGS') {
+        setFraudFlagsLoading(true);
+        const data = await getActiveFraudFlags();
+        setFraudFlags(data || []);
+        setFraudFlagsLoading(false);
       }
     } catch (err) {
       const status = err.response?.status;
@@ -322,9 +403,6 @@ export function AdminB2bReviewPage() {
   // 3. Jobs Filter
   useEffect(() => {
     let result = [...jobs];
-    if (jobPostTypeFilter !== 'ALL') {
-      result = result.filter((job) => job.postType === jobPostTypeFilter);
-    }
     if (searchJobQuery.trim()) {
       const q = searchJobQuery.toLowerCase();
       result = result.filter(
@@ -334,7 +412,7 @@ export function AdminB2bReviewPage() {
       );
     }
     setFilteredJobs(result);
-  }, [jobs, jobPostTypeFilter, searchJobQuery]);
+  }, [jobs, searchJobQuery]);
 
   // 4. Logs Filter
   useEffect(() => {
@@ -584,6 +662,141 @@ export function AdminB2bReviewPage() {
   /* ───────────────────────────────────────────────
      Users Tab Component View
   ─────────────────────────────────────────────── */
+  async function handleUpdateUserStatus(userId, newStatus, displayName) {
+    const verb = newStatus === 'FROZEN' ? 'đóng băng' : newStatus === 'BANNED' ? 'cấm vĩnh viễn' : 'kích hoạt lại';
+    setConfirmModal({
+      isOpen: true,
+      title: `Xác nhận ${verb} tài khoản`,
+      message: `Bạn có chắc muốn ${verb} tài khoản của "${displayName || 'người dùng này'}"?`,
+      confirmText: verb.charAt(0).toUpperCase() + verb.slice(1),
+      confirmColor: newStatus === 'ACTIVE' ? '#16a34a' : newStatus === 'FROZEN' ? '#d97706' : '#dc2626',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setUserModerateLoading(true);
+        setActionStatus({ type: 'loading', message: `Đang ${verb} tài khoản...` });
+        try {
+          await updateUserStatus(userId, newStatus);
+          setUsers(prev => prev.map(u => u.id === userId ? { ...u, userStatus: newStatus } : u));
+          setSelectedUserDetail(prev => prev ? { ...prev, userStatus: newStatus } : prev);
+          setActionStatus({ type: 'success', message: `Đã ${verb} tài khoản thành công.` });
+        } catch (err) {
+          setActionStatus({ type: 'error', message: err.message || `Không thể ${verb} tài khoản.` });
+        } finally {
+          setUserModerateLoading(false);
+        }
+      },
+    });
+  }
+
+  function renderFraudFlags() {
+    if (fraudFlagsLoading) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px', gap: '12px' }}>
+          <div className="b2b-loader" />
+          <span style={{ color: 'var(--muted)', fontWeight: '600' }}>Đang tải danh sách cờ gian lận...</span>
+        </div>
+      );
+    }
+
+    const SEVERITY_COLORS = {
+      LOW:      { bg: 'rgba(107,114,128,0.1)', color: '#6b7280', label: 'Thấp' },
+      MEDIUM:   { bg: 'rgba(245,158,11,0.1)',  color: '#d97706', label: 'Trung bình' },
+      HIGH:     { bg: 'rgba(220,38,38,0.1)',   color: '#dc2626', label: 'Cao' },
+      CRITICAL: { bg: 'rgba(127,29,29,0.15)',  color: '#7f1d1d', label: 'Nguy hiểm' },
+    };
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: 'var(--ink)' }}>
+            Cờ gian lận đang hoạt động ({fraudFlags.length})
+          </h3>
+          <button className="button primary-button" style={{ fontSize: '0.82rem', padding: '8px 14px' }}
+            onClick={() => fetchTabData('FRAUD_FLAGS')}>
+            <RefreshCw size={14} /> Làm mới
+          </button>
+        </div>
+
+        {fraudFlags.length === 0 ? (
+          <div className="empty-state">
+            <ShieldCheck size={32} style={{ color: 'var(--muted)', marginBottom: '8px' }} />
+            <p>Không có cờ gian lận nào đang hoạt động.</p>
+          </div>
+        ) : (
+          fraudFlags.map((flag) => {
+            const sev = SEVERITY_COLORS[flag.severity] || SEVERITY_COLORS.LOW;
+            return (
+              <div key={flag.id} className="verif-queue-card">
+                <div className="verif-queue-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <ShieldAlert size={18} style={{ color: sev.color }} />
+                    <div>
+                      <strong style={{ color: 'var(--ink)', fontSize: '0.95rem' }}>{flag.userName || flag.userEmail}</strong>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '2px' }}>{flag.userEmail}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '800', padding: '3px 8px', borderRadius: '6px', background: sev.bg, color: sev.color }}>
+                      {sev.label}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
+                      {flag.createdAt ? new Date(flag.createdAt).toLocaleDateString('vi-VN') : '—'}
+                    </span>
+                  </div>
+                </div>
+                <div className="verif-queue-body">
+                  <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '10px', fontSize: '0.84rem' }}>
+                    <div><span style={{ color: 'var(--muted)' }}>Mã lý do:</span> <strong>{flag.reasonCode}</strong></div>
+                    <div><span style={{ color: 'var(--muted)' }}>Trạng thái TK:</span> <strong>{flag.userStatus}</strong></div>
+                    <div><span style={{ color: 'var(--muted)' }}>Báo cáo bởi:</span> <strong>{flag.reportedByEmail || 'Hệ thống'}</strong></div>
+                  </div>
+                </div>
+                <div className="verif-queue-actions">
+                  <button
+                    className="button secondary-button"
+                    style={{ fontSize: '0.82rem', padding: '7px 14px' }}
+                    onClick={async () => {
+                      try {
+                        await resolveFraudFlag(flag.id, 'FALSE_POSITIVE');
+                        setFraudFlags(prev => prev.filter(f => f.id !== flag.id));
+                        setActionStatus({ type: 'success', message: 'Đã đánh dấu là báo cáo sai.' });
+                      } catch (err) {
+                        setActionStatus({ type: 'error', message: err.message });
+                      }
+                    }}
+                  >Báo cáo sai</button>
+                  <button
+                    className="button danger-button"
+                    style={{ fontSize: '0.82rem', padding: '7px 14px' }}
+                    onClick={async () => {
+                      try {
+                        await resolveFraudFlag(flag.id, 'RESOLVED');
+                        setFraudFlags(prev => prev.filter(f => f.id !== flag.id));
+                        setActionStatus({ type: 'success', message: 'Đã đánh dấu là đã xử lý.' });
+                      } catch (err) {
+                        setActionStatus({ type: 'error', message: err.message });
+                      }
+                    }}
+                  >Đã xử lý</button>
+                  <button
+                    className="button danger-button"
+                    style={{ fontSize: '0.82rem', padding: '7px 14px' }}
+                    onClick={() => handleUpdateUserStatus(flag.userId, 'FROZEN', flag.userName)}
+                  >Đóng băng TK</button>
+                  <button
+                    className="button danger-button"
+                    style={{ fontSize: '0.82rem', padding: '7px 14px', background: '#7f1d1d' }}
+                    onClick={() => handleUpdateUserStatus(flag.userId, 'BANNED', flag.userName)}
+                  >Cấm vĩnh viễn</button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    );
+  }
+
   function renderUsers() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -727,13 +940,15 @@ export function AdminB2bReviewPage() {
 
   function renderJobs() {
     const isPendingView = jobsSubTab === 'new';
-    const displayedJobs = isPendingView
-      ? filteredJobs.filter((j) => (j.status || '').toLowerCase() === 'pending')
-      : filteredJobs;
+    const managedType = isPendingView ? 'ALL' : jobManageTypeTab;
+    const displayedJobs = filteredJobs.filter((j) => {
+      const isPending = (j.status || '').toLowerCase() === 'pending';
+      if (isPendingView) return isPending && (jobPostTypeFilter === 'ALL' || j.postType === jobPostTypeFilter);
+      return j.postType === managedType;
+    });
+    const opportunityCount = jobs.filter((j) => j.postType === 'JOB').length;
+    const questCount = jobs.filter((j) => j.postType === 'QUEST').length;
 
-    const pendingCount = jobs.filter((j) => (j.status || '').toLowerCase() === 'pending').length;
-
-    // Group jobs by companyName
     const groupedByCompany = {};
     displayedJobs.forEach((j) => {
       const key = j.companyName || 'Không rõ tổ chức';
@@ -747,76 +962,13 @@ export function AdminB2bReviewPage() {
       groupedByCompany[key].jobs.push(j);
     });
     const companyGroups = Object.values(groupedByCompany);
+    const manageTabs = [
+      { key: 'JOB', label: 'Cơ hội', icon: Building, count: opportunityCount, accent: '#2563eb' },
+      { key: 'QUEST', label: 'Quest', icon: GraduationCap, count: questCount, accent: '#ff7a1a' },
+    ];
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {/* Sub-tab pills */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '4px' }}>
-          <button
-            onClick={() => navigate(getAdminTabPath('JOBS', 'new'))}
-            style={{
-              padding: '8px 18px',
-              borderRadius: '10px',
-              border: isPendingView ? '1px solid rgba(220,38,38,0.2)' : '1px solid var(--line)',
-              background: isPendingView ? 'linear-gradient(135deg, rgba(220,38,38,0.08), rgba(255,122,26,0.03))' : 'var(--card-bg-strong)',
-              color: isPendingView ? '#dc2626' : 'var(--muted)',
-              fontWeight: isPendingView ? '750' : '600',
-              fontSize: '0.86rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 180ms ease',
-            }}
-          >
-            <Clock size={14} />
-            Tin chờ duyệt
-            {pendingCount > 0 && (
-              <span style={{
-                padding: '1px 7px',
-                borderRadius: '6px',
-                fontSize: '0.72rem',
-                fontWeight: '800',
-                background: isPendingView ? '#dc2626' : 'var(--line)',
-                color: isPendingView ? '#fff' : 'var(--muted)',
-              }}>
-                {pendingCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => navigate(getAdminTabPath('JOBS', 'all'))}
-            style={{
-              padding: '8px 18px',
-              borderRadius: '10px',
-              border: !isPendingView ? '1px solid rgba(220,38,38,0.2)' : '1px solid var(--line)',
-              background: !isPendingView ? 'linear-gradient(135deg, rgba(220,38,38,0.08), rgba(255,122,26,0.03))' : 'var(--card-bg-strong)',
-              color: !isPendingView ? '#dc2626' : 'var(--muted)',
-              fontWeight: !isPendingView ? '750' : '600',
-              fontSize: '0.86rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 180ms ease',
-            }}
-          >
-            <FileText size={14} />
-            Tất cả tin đăng
-            <span style={{
-              padding: '1px 7px',
-              borderRadius: '6px',
-              fontSize: '0.72rem',
-              fontWeight: '800',
-              background: !isPendingView ? '#dc2626' : 'var(--line)',
-              color: !isPendingView ? '#fff' : 'var(--muted)',
-            }}>
-              {jobs.length}
-            </span>
-          </button>
-        </div>
-
-        {/* Controls */}
         <div className="admin-controls">
           <div className="admin-search-wrap" style={{ flex: 1 }}>
             <Search size={16} className="admin-search-icon" />
@@ -827,249 +979,365 @@ export function AdminB2bReviewPage() {
               onChange={(e) => setSearchJobQuery(e.target.value)}
             />
           </div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <ListFilter size={15} style={{ color: 'var(--muted)' }} />
-            <select
-              value={jobPostTypeFilter}
-              onChange={(e) => setJobPostTypeFilter(e.target.value)}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '10px',
-                border: '1px solid var(--line)',
-                background: 'var(--card-bg-strong)',
-                color: 'var(--ink)',
-                fontSize: '0.88rem',
-              }}
-            >
-              {POST_TYPE_FILTERS.map((f) => (
-                <option key={f.key} value={f.key}>{f.label}</option>
-              ))}
-            </select>
-          </div>
+
+          {isPendingView && (
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <ListFilter size={15} style={{ color: 'var(--muted)' }} />
+              <select
+                value={jobPostTypeFilter}
+                onChange={(e) => setJobPostTypeFilter(e.target.value)}
+                className="admin-select"
+              >
+                {POST_TYPE_FILTERS.map((f) => (
+                  <option key={f.key} value={f.key}>{f.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
-        {/* Grouped Company Cards */}
+        {!isPendingView && (
+          <div className="admin-filter-tabs">
+            {manageTabs.map((tab) => {
+              const TabIcon = tab.icon;
+              const isActive = jobManageTypeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  className={`admin-filter-tab ${isActive ? 'active' : ''}`}
+                  onClick={() => {
+                    setJobManageTypeTab(tab.key);
+                    setSelectedJobGroup(null);
+                  }}
+                  type="button"
+                >
+                  <TabIcon size={14} />
+                  {tab.label}
+                  <span className="admin-tab-count">{tab.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {companyGroups.length === 0 ? (
-          <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            padding: '80px 20px', gap: '16px', background: 'var(--card-bg-strong)',
-            borderRadius: '20px', border: '1px dashed var(--line)', textAlign: 'center',
-          }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(22,163,74,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}>
+          <div className="admin-empty-panel">
+            <div className="admin-empty-icon">
               <CheckCircle2 size={28} />
             </div>
-            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem' }}>
-              {isPendingView ? 'Không có tin nào đang chờ duyệt' : 'Không tìm thấy tin đăng phù hợp'}
+            <h3>
+              {isPendingView
+                ? 'Không có tin nào đang chờ duyệt'
+                : `Không tìm thấy ${jobManageTypeTab === 'JOB' ? 'cơ hội' : 'quest'} phù hợp`}
             </h3>
-            <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--muted)' }}>
+            <p>
               {isPendingView ? 'Tất cả tin đăng đã được xử lý. Tốt lắm!' : 'Hãy thử tìm kiếm với từ khóa hoặc bộ lọc khác.'}
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="admin-square-grid">
             {companyGroups.map((group) => {
               const isClub = group.companyType === 'CLUB';
               const accentColor = isClub ? '#ff7a1a' : '#2563eb';
-              const isExpanded = expandedCompany === group.companyName;
               const pendingInGroup = group.jobs.filter((j) => (j.status || '').toLowerCase() === 'pending').length;
               const activeInGroup = group.jobs.filter((j) => (j.status || '').toLowerCase() === 'open').length;
 
               return (
-                <div
+                <button
                   key={group.companyName}
-                  style={{
-                    background: 'var(--card-bg-strong)',
-                    border: `1px solid ${isExpanded ? accentColor + '40' : 'var(--line)'}`,
-                    borderRadius: '20px',
-                    overflow: 'hidden',
-                    transition: 'border-color 200ms ease, box-shadow 200ms ease',
-                    boxShadow: isExpanded ? `0 4px 20px ${accentColor}12` : 'var(--shadow-soft)',
-                  }}
+                  className="admin-square-group-card"
+                  style={{ '--accent-color': accentColor }}
+                  onClick={() => setSelectedJobGroup(group)}
+                  type="button"
                 >
-                  {/* Company Header — click to expand */}
-                  <button
-                    onClick={() => setExpandedCompany(isExpanded ? null : group.companyName)}
-                    type="button"
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '16px',
-                      padding: '20px 24px',
-                      background: isExpanded
-                        ? `linear-gradient(135deg, ${accentColor}08, transparent)`
-                        : 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'background 200ms ease',
-                      color: 'var(--ink)',
-                    }}
-                  >
-                    {/* Avatar */}
-                    <div style={{
-                      width: '48px', height: '48px', borderRadius: '14px',
-                      background: `${accentColor}12`, color: accentColor,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0, fontWeight: '800', fontSize: '1.1rem',
-                    }}>
-                      {isClub ? <GraduationCap size={22} /> : <Building size={22} />}
+                  <div className="admin-square-card-top">
+                    <div className="admin-square-avatar large">
+                      {isClub ? <GraduationCap size={24} /> : <Building size={24} />}
                     </div>
+                    <span className="admin-mini-badge">
+                      {isClub ? <GraduationCap size={10} /> : <Building size={10} />}
+                      {isClub ? 'CLB / Tổ chức' : group.companyType}
+                    </span>
+                  </div>
 
-                    {/* Company Info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-                        <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {group.companyName}
-                        </h3>
-                        <span style={{
-                          padding: '2px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '750',
-                          background: `${accentColor}14`, color: accentColor,
-                          display: 'inline-flex', alignItems: 'center', gap: '4px',
-                        }}>
-                          {isClub ? <GraduationCap size={10} /> : <Building size={10} />}
-                          {isClub ? 'CLB / Tổ chức' : group.companyType}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: 'var(--muted)' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <FileText size={12} /> {group.jobs.length} tin đăng
-                        </span>
-                        {pendingInGroup > 0 && (
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#d97706' }}>
-                            <Clock size={12} /> {pendingInGroup} chờ duyệt
-                          </span>
-                        )}
-                        {activeInGroup > 0 && (
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#16a34a' }}>
-                            <CheckCircle2 size={12} /> {activeInGroup} hoạt động
-                          </span>
-                        )}
-                      </div>
+                  <div className="admin-square-card-main">
+                    <h3>{group.companyName}</h3>
+                    <div className="admin-accordion-meta">
+                      <span><FileText size={12} /> {group.jobs.length} tin đăng</span>
+                      {activeInGroup > 0 && <span className="success"><CheckCircle2 size={12} /> {activeInGroup} hoạt động</span>}
+                      {pendingInGroup > 0 && <span className="warning"><Clock size={12} /> {pendingInGroup} chờ duyệt</span>}
                     </div>
+                  </div>
 
-                    {/* Expand icon */}
-                    <div style={{
-                      width: '32px', height: '32px', borderRadius: '8px',
-                      background: isExpanded ? `${accentColor}14` : 'var(--surface-soft)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: isExpanded ? accentColor : 'var(--muted)',
-                      flexShrink: 0, transition: 'all 200ms ease',
-                    }}>
-                      {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    </div>
-                  </button>
-
-                  {/* Expanded Job List */}
-                  {isExpanded && (
-                    <div style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {/* Divider */}
-                      <div style={{ height: '1px', background: 'var(--line)' }} />
-
-                      {group.jobs.map((j) => {
-                        const si = getStatusInfo(j.status);
-
-                        return (
-                          <div key={j.id} style={{
-                            background: 'var(--bg)',
-                            border: '1px solid var(--line)',
-                            borderRadius: '16px',
-                            overflow: 'hidden',
-                            transition: 'border-color 200ms ease',
-                          }}>
-                            {/* Job Summary Row */}
-                            <div
-                              onClick={() => handleShowJobDetails(j.id)}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '14px',
-                                padding: '14px 18px',
-                                cursor: 'pointer',
-                                transition: 'background 150ms ease',
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface-soft)'}
-                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                            >
-                              {/* Post type indicator */}
-                              <div style={{
-                                width: '36px', height: '36px', borderRadius: '10px',
-                                background: j.postType === 'JOB' ? 'rgba(37,99,235,0.08)' : 'rgba(255,122,26,0.08)',
-                                color: j.postType === 'JOB' ? '#2563eb' : '#ff7a1a',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                              }}>
-                                <FileText size={16} />
-                              </div>
-
-                              {/* Title + Meta */}
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <h4 style={{
-                                  margin: 0, fontSize: '0.92rem', fontWeight: '750',
-                                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--ink)',
-                                }}>
-                                  {j.title}
-                                </h4>
-                                <div style={{ display: 'flex', gap: '10px', marginTop: '3px', fontSize: '0.76rem', color: 'var(--muted)' }}>
-                                  <span className={`badge-role ${j.postType === 'JOB' ? 'candidate' : 'partner'}`} style={{ fontSize: '0.68rem' }}>
-                                    {j.postType}
-                                  </span>
-                                  <span>{j.jobType || '—'}</span>
-                                  <span>{j.createdAt ? new Date(j.createdAt).toLocaleDateString('vi-VN') : '—'}</span>
-                                </div>
-                              </div>
-
-                              {/* Status badge */}
-                              <span className={`badge-status ${si.badge}`} style={{ flexShrink: 0 }}>
-                                {si.text}
-                              </span>
-
-                              {/* Actions for pending */}
-                              {(j.status || '').toLowerCase() === 'pending' && (
-                                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
-                                  <button
-                                    onClick={() => openApproveJobConfirmation(j.id, j.title)}
-                                    style={{
-                                      padding: '6px 12px', borderRadius: '8px', background: '#16a34a',
-                                      color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.78rem',
-                                      fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px',
-                                      transition: 'opacity 0.15s ease',
-                                    }}
-                                  >
-                                    <Check size={12} /> Duyệt
-                                  </button>
-                                  <button
-                                    onClick={() => openRejectJobConfirmation(j.id, j.title)}
-                                    style={{
-                                      padding: '6px 12px', borderRadius: '8px', background: '#dc2626',
-                                      color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.78rem',
-                                      fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px',
-                                      transition: 'opacity 0.15s ease',
-                                    }}
-                                  >
-                                    <X size={12} /> Từ chối
-                                  </button>
-                                </div>
-                              )}
-
-                              {/* Expand indicator */}
-                              <div style={{ color: 'var(--muted)', flexShrink: 0, display: 'flex' }}>
-                                <ChevronRight size={14} />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                  <div className="admin-square-detail-cta">
+                    <span>Xem chi tiết</span>
+                    <ChevronRight size={16} />
+                  </div>
+                </button>
               );
             })}
+          </div>
+        )}
+
+      </div>
+    );
+  }
+
+
+  /* ───────────────────────────────────────────────
+     Verification Queue Tab
+  ─────────────────────────────────────────────── */
+  function renderVerifQueue() {
+    const CATEGORY_LABELS = { CLUB_SMALL: 'Sự kiện CLB', SCHOOL_CAMPAIGN: 'Chiến dịch Trường', COMPANY_PROJECT: 'Dự án DN', SHORT_INTERNSHIP: 'Thực tập', FREELANCE_GIG: 'Freelance' };
+    const EXP_REWARDS = { CLUB_SMALL: 100, SCHOOL_CAMPAIGN: 300, COMPANY_PROJECT: 500, SHORT_INTERNSHIP: 500, FREELANCE_GIG: 500 };
+
+    const handleApprove = async (id) => {
+      setVerifActionLoading(id + '_approve');
+      try {
+        await approveCredential(id, '');
+        const data = await getVerificationQueue();
+        setVerifQueue(data || []);
+        setSelectedVerifGroup(null);
+        setActionStatus({ type: 'success', message: 'Đã phê duyệt — EXP và RS đã được cộng cho ứng viên.' });
+      } catch (err) {
+        setActionStatus({ type: 'error', message: err.message || 'Phê duyệt thất bại.' });
+      } finally {
+        setVerifActionLoading(null);
+        setTimeout(() => setActionStatus({ type: 'idle', message: '' }), 4000);
+      }
+    };
+
+    const handleReject = async (id) => {
+      if (!verifRejectReason.trim()) return;
+      setVerifActionLoading(id + '_reject');
+      try {
+        await rejectCredential(id, verifRejectReason);
+        const data = await getVerificationQueue();
+        setVerifQueue(data || []);
+        setSelectedVerifGroup(null);
+        setVerifRejectingId(null);
+        setVerifRejectReason('');
+        setActionStatus({ type: 'success', message: 'Đã từ chối minh chứng.' });
+      } catch (err) {
+        setActionStatus({ type: 'error', message: err.message || 'Từ chối thất bại.' });
+      } finally {
+        setVerifActionLoading(null);
+        setTimeout(() => setActionStatus({ type: 'idle', message: '' }), 4000);
+      }
+    };
+
+    const pendingCount = verifQueue.filter((item) => ((item.status || 'PENDING').toUpperCase()) === 'PENDING').length;
+    const isPendingView = verifSubTab === 'pending';
+    const displayedCredentials = verifQueue.filter((item) => {
+      const status = (item.status || 'PENDING').toUpperCase();
+      if (isPendingView) return status === 'PENDING';
+      return verifStatusFilter === 'ALL' || status === verifStatusFilter;
+    });
+    const groupedByCandidate = {};
+    displayedCredentials.forEach((item) => {
+      const key = item.candidate_email || item.candidate_id || item.candidate_name || item.id;
+      if (!groupedByCandidate[key]) {
+        groupedByCandidate[key] = {
+          key,
+          name: item.candidate_name || 'Ứng viên',
+          email: item.candidate_email || '',
+          reputationScore: item.reputation_score,
+          currentLevel: item.current_level,
+          credentials: [],
+        };
+      }
+      groupedByCandidate[key].credentials.push(item);
+    });
+    const candidateGroups = Object.values(groupedByCandidate);
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="admin-controls">
+          <div className="admin-filter-tabs">
+            <button
+              className={`admin-filter-tab ${isPendingView ? 'active' : ''}`}
+              onClick={() => navigate(getAdminTabPath('VERIF_QUEUE', 'pending'))}
+              type="button"
+            >
+              <ShieldCheck size={14} />
+              Xác thực
+              <span className="admin-tab-count">{pendingCount}</span>
+            </button>
+            <button
+              className={`admin-filter-tab ${!isPendingView ? 'active' : ''}`}
+              onClick={() => navigate(getAdminTabPath('VERIF_QUEUE', 'manage'))}
+              type="button"
+            >
+              <FileText size={14} />
+              Quản lý minh chứng
+              <span className="admin-tab-count">{verifQueue.length}</span>
+            </button>
+          </div>
+
+          {!isPendingView && (
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <ListFilter size={15} style={{ color: 'var(--muted)' }} />
+              <select
+                value={verifStatusFilter}
+                onChange={(e) => {
+                  setVerifStatusFilter(e.target.value);
+                  setSelectedVerifGroup(null);
+                }}
+                className="admin-select"
+              >
+                {VERIF_STATUS_FILTERS.map((filter) => (
+                  <option key={filter.key} value={filter.key}>{filter.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {actionStatus.type !== 'idle' && (
+          <div className={`alert-banner ${actionStatus.type}`} style={{ marginBottom: '16px' }}>
+            {actionStatus.message}
+          </div>
+        )}
+
+        {verifLoading ? (
+          <div className="empty-state">
+            <div className="empty-state-icon"><ShieldCheck size={32} /></div>
+            <p className="empty-state-title">Đang tải hàng chờ...</p>
+          </div>
+        ) : candidateGroups.length === 0 ? (
+          <div className="admin-empty-panel">
+            <div className="admin-empty-icon"><CheckCircle size={28} /></div>
+            <h3>{isPendingView ? 'Không có yêu cầu xác thực mới' : 'Không tìm thấy minh chứng phù hợp'}</h3>
+            <p>{isPendingView ? 'Tất cả minh chứng đã được xử lý. Quay lại sau nhé!' : 'Hãy thử đổi bộ lọc trạng thái.'}</p>
+          </div>
+        ) : (
+          <div className="admin-square-grid">
+            {candidateGroups.map((group) => {
+              const pendingInGroup = group.credentials.filter((item) => ((item.status || 'PENDING').toUpperCase()) === 'PENDING').length;
+              return (
+                <button
+                  key={group.key}
+                  className="admin-square-group-card"
+                  style={{ '--accent-color': '#7c3aed' }}
+                  onClick={() => setSelectedVerifGroup(group)}
+                  type="button"
+                >
+                  <div className="admin-square-card-top">
+                    <div className="admin-square-avatar large">
+                      {(group.name || 'UV').slice(0, 2).toUpperCase()}
+                    </div>
+                    <span className="admin-mini-badge">
+                      <User size={10} /> Ứng viên
+                    </span>
+                  </div>
+
+                  <div className="admin-square-card-main">
+                    <h3>{group.name}</h3>
+                    <div className="admin-accordion-meta">
+                      {group.email && <span><Mail size={12} /> {group.email}</span>}
+                      <span><FileText size={12} /> {group.credentials.length} minh chứng</span>
+                      {pendingInGroup > 0 && <span className="warning"><Clock size={12} /> {pendingInGroup} chờ xác thực</span>}
+                      <span>RS: {group.reputationScore ?? '—'} · Lv.{group.currentLevel ?? '—'}</span>
+                    </div>
+                  </div>
+
+                  <div className="admin-square-detail-cta">
+                    <span>Xem chi tiết</span>
+                    <ChevronRight size={16} />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {selectedVerifGroup && (
+          <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setSelectedVerifGroup(null)}>
+            <div className="modal-card admin-group-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header" style={{ marginBottom: '20px' }}>
+                <div className="admin-square-avatar" style={{ '--accent-color': '#7c3aed' }}>
+                  {(selectedVerifGroup.name || 'UV').slice(0, 2).toUpperCase()}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span className="admin-mini-badge" style={{ '--accent-color': '#7c3aed' }}>
+                    <User size={10} /> Ứng viên
+                  </span>
+                  <h3 style={{ margin: '8px 0 0', fontSize: '1.35rem', fontWeight: 850 }}>{selectedVerifGroup.name}</h3>
+                  <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontSize: '0.9rem' }}>
+                    {selectedVerifGroup.email || 'Chưa có email'} · RS: {selectedVerifGroup.reputationScore ?? '—'} · Lv.{selectedVerifGroup.currentLevel ?? '—'}
+                  </p>
+                </div>
+                <button type="button" onClick={() => setSelectedVerifGroup(null)} className="modal-close-btn">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="admin-group-modal-grid">
+                {selectedVerifGroup.credentials.map((item) => {
+                  const status = (item.status || 'PENDING').toUpperCase();
+                  return (
+                    <article key={item.id} className="admin-group-job-card credential">
+                      <div className="admin-post-icon credential">
+                        <ShieldCheck size={16} />
+                      </div>
+                      <div className="admin-subitem-main">
+                        <h4>{item.project_name}</h4>
+                        <div className="admin-subitem-meta">
+                          <span className="proof-chip category">{CATEGORY_LABELS[item.category] || item.category}</span>
+                          <span className={`proof-chip ${(item.role_level || 'MEMBER').toLowerCase()}`}>{item.role_level === 'LEADER' ? 'Trưởng nhóm' : 'Thành viên'}</span>
+                          <span>{item.position}</span>
+                          <span>{item.created_at ? new Date(item.created_at).toLocaleDateString('vi-VN') : '—'}</span>
+                        </div>
+                        {item.description && <p className="admin-subitem-desc">{item.description}</p>}
+                        {item.proof_link && (
+                          <a href={item.proof_link} target="_blank" rel="noopener noreferrer" className="proof-card-proof-link">
+                            <ExternalLink size={12} /> Mở minh chứng
+                          </a>
+                        )}
+                        <span className="verif-reward-badge">+{EXP_REWARDS[item.category] || 100} EXP · +{item.role_level === 'LEADER' ? 10 : 5} RS</span>
+                      </div>
+                      <span className={`proof-status-badge ${status.toLowerCase()}`}>
+                        {status === 'APPROVED' ? 'Đã duyệt' : status === 'REJECTED' ? 'Từ chối' : 'Chờ xác thực'}
+                      </span>
+
+                      {status === 'PENDING' && (
+                        <div className="admin-group-job-actions">
+                          {verifRejectingId === item.id ? (
+                            <div className="verif-reject-inline">
+                              <input
+                                className="form-input"
+                                placeholder="Nhập lý do từ chối..."
+                                value={verifRejectReason}
+                                onChange={e => setVerifRejectReason(e.target.value)}
+                                style={{ flex: 1, fontSize: '0.86rem' }}
+                              />
+                              <button className="button danger-button" disabled={verifActionLoading === item.id + '_reject' || !verifRejectReason.trim()} onClick={() => handleReject(item.id)}>
+                                {verifActionLoading === item.id + '_reject' ? 'Đang xử lý...' : 'Xác nhận'}
+                              </button>
+                              <button className="button secondary-button" onClick={() => { setVerifRejectingId(null); setVerifRejectReason(''); }}>Hủy</button>
+                            </div>
+                          ) : (
+                            <>
+                              <button className="button primary-button" disabled={verifActionLoading === item.id + '_approve'} onClick={() => handleApprove(item.id)}>
+                                {verifActionLoading === item.id + '_approve' ? 'Đang duyệt...' : 'Phê duyệt'}
+                              </button>
+                              <button className="button danger-button" onClick={() => { setVerifRejectingId(item.id); setVerifRejectReason(''); }}>
+                                Từ chối
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
       </div>
     );
   }
-
 
   /* ───────────────────────────────────────────────
      Audit Logs Tab Component View
@@ -1728,8 +1996,17 @@ export function AdminB2bReviewPage() {
             const isActive = activeTab === tab.key;
             const hasSubItems = tab.subItems && tab.subItems.length > 0;
             const isExpanded = isActive && hasSubItems;
-            // Get count of pending B2B only
-            const showBadge = tab.badgeCount && pendingB2b.length > 0;
+            const pendingJobsCount = jobs.filter((j) => (j.status || '').toLowerCase() === 'pending').length;
+            const pendingVerifCount = verifQueue.filter((item) => ((item.status || 'PENDING').toUpperCase()) === 'PENDING').length;
+            const badgeValue =
+              tab.key === 'B2B_REVIEWS'
+                ? pendingB2b.length
+                : tab.key === 'JOBS'
+                  ? pendingJobsCount
+                  : tab.key === 'VERIF_QUEUE'
+                    ? pendingVerifCount
+                    : 0;
+            const showBadge = tab.badgeCount && badgeValue > 0;
 
             return (
               <div key={tab.key}>
@@ -1750,7 +2027,7 @@ export function AdminB2bReviewPage() {
                   <span>{tab.label}</span>
                   {showBadge && (
                     <span className="admin-tab-count" style={{ marginLeft: 'auto', background: isActive ? '#dc2626' : 'var(--line)', color: isActive ? '#fff' : 'var(--muted)' }}>
-                      {pendingB2b.length}
+                      {badgeValue}
                     </span>
                   )}
                   {hasSubItems && (
@@ -1765,7 +2042,8 @@ export function AdminB2bReviewPage() {
                   <div className="admin-subnav-menu">
                     {tab.subItems.map((sub) => {
                       const SubIcon = sub.icon;
-                      const isSubActive = jobsSubTab === sub.subRoute;
+                      const currentSubRoute = tab.key === 'VERIF_QUEUE' ? verifSubTab : jobsSubTab;
+                      const isSubActive = currentSubRoute === sub.subRoute;
                       return (
                         <button
                           key={sub.key}
@@ -1818,6 +2096,8 @@ export function AdminB2bReviewPage() {
               <h1>
                 {activeTab === 'JOBS'
                   ? (jobsSubTab === 'new' ? 'Quản lý tin mới' : 'Quản lý tin')
+                  : activeTab === 'VERIF_QUEUE'
+                    ? (verifSubTab === 'pending' ? 'Xác thực minh chứng' : 'Quản lý minh chứng')
                   : SIDEBAR_TABS.find((t) => t.key === activeTab)?.label}
               </h1>
               <p>
@@ -1825,7 +2105,10 @@ export function AdminB2bReviewPage() {
                 {activeTab === 'USERS' && 'Quản lý tài khoản Ứng viên, Doanh nghiệp & CLB và Quản trị viên.'}
                 {activeTab === 'B2B_REVIEWS' && 'Duyệt các yêu cầu tham gia tuyển dụng của SME và CLB Sinh Viên.'}
                 {activeTab === 'JOBS' && jobsSubTab === 'new' && 'Xét duyệt tin tuyển dụng mới đang chờ phê duyệt từ đối tác.'}
-                {activeTab === 'JOBS' && jobsSubTab === 'all' && 'Tổng quan tất cả tin đăng tuyển dụng và chiến dịch Quest.'}
+                {activeTab === 'JOBS' && jobsSubTab === 'all' && `Theo dõi ${jobManageTypeTab === 'JOB' ? 'các bài đăng Cơ hội từ Doanh nghiệp' : 'các Quest từ CLB và Tổ chức'}.`}
+                {activeTab === 'VERIF_QUEUE' && verifSubTab === 'pending' && 'Tiếp nhận yêu cầu xác thực mới từ ứng viên, mở từng hồ sơ để xem minh chứng chi tiết.'}
+                {activeTab === 'VERIF_QUEUE' && verifSubTab === 'manage' && 'Quản lý toàn bộ minh chứng theo từng ứng viên và lọc theo trạng thái xử lý.'}
+                {activeTab === 'FRAUD_FLAGS' && 'Danh sách cờ gian lận đang hoạt động, chờ xử lý.'}
                 {activeTab === 'AUDIT_LOGS' && 'Lịch sử nhật ký hoạt động hệ thống chi tiết.'}
               </p>
             </div>
@@ -1853,6 +2136,8 @@ export function AdminB2bReviewPage() {
               {activeTab === 'USERS' && renderUsers()}
               {activeTab === 'B2B_REVIEWS' && renderB2bReviews()}
               {activeTab === 'JOBS' && renderJobs()}
+              {activeTab === 'VERIF_QUEUE' && renderVerifQueue()}
+              {activeTab === 'FRAUD_FLAGS' && renderFraudFlags()}
               {activeTab === 'AUDIT_LOGS' && renderAuditLogs()}
             </div>
           )}
@@ -2040,6 +2325,77 @@ export function AdminB2bReviewPage() {
         </div>
       )}
 
+      {/* ── Job Group Details Modal ── */}
+      {selectedJobGroup && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setSelectedJobGroup(null)}>
+          <div className="modal-card admin-group-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header" style={{ marginBottom: '20px' }}>
+              <div
+                className="admin-square-avatar"
+                style={{ '--accent-color': selectedJobGroup.companyType === 'CLUB' ? '#ff7a1a' : '#2563eb' }}
+              >
+                {selectedJobGroup.companyType === 'CLUB' ? <GraduationCap size={22} /> : <Building size={22} />}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span className="admin-mini-badge" style={{ '--accent-color': selectedJobGroup.companyType === 'CLUB' ? '#ff7a1a' : '#2563eb' }}>
+                  {selectedJobGroup.companyType === 'CLUB' ? 'CLB / Tổ chức' : selectedJobGroup.companyType}
+                </span>
+                <h3 style={{ margin: '8px 0 0', fontSize: '1.35rem', fontWeight: 850 }}>{selectedJobGroup.companyName}</h3>
+                <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontSize: '0.9rem' }}>
+                  {selectedJobGroup.jobs.length} tin đăng trong nhóm này. Chọn một tin để xem chi tiết đầy đủ.
+                </p>
+              </div>
+              <button type="button" onClick={() => setSelectedJobGroup(null)} className="modal-close-btn">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="admin-group-modal-grid">
+              {selectedJobGroup.jobs.map((job) => {
+                const si = getStatusInfo(job.status);
+                return (
+                  <article key={job.id} className="admin-group-job-card">
+                    <div className={`admin-post-icon ${job.postType === 'QUEST' ? 'quest' : ''}`}>
+                      <FileText size={16} />
+                    </div>
+                    <div className="admin-subitem-main">
+                      <h4>{job.title}</h4>
+                      <div className="admin-subitem-meta">
+                        <span className={`badge-role ${job.postType === 'JOB' ? 'candidate' : 'partner'}`} style={{ fontSize: '0.68rem' }}>
+                          {job.postType === 'QUEST' ? 'Quest' : 'Cơ hội'}
+                        </span>
+                        <span>{job.jobType || '—'}</span>
+                        <span>{job.createdAt ? new Date(job.createdAt).toLocaleDateString('vi-VN') : '—'}</span>
+                      </div>
+                    </div>
+                    <span className={`badge-status ${si.badge}`}>{si.text}</span>
+                    <div className="admin-group-job-actions">
+                      <button
+                        type="button"
+                        className="button secondary-button"
+                        onClick={() => handleShowJobDetails(job.id)}
+                      >
+                        Xem chi tiết
+                      </button>
+                      {(job.status || '').toLowerCase() === 'pending' && (
+                        <>
+                          <button type="button" className="button primary-button" onClick={() => openApproveJobConfirmation(job.id, job.title)}>
+                            <Check size={13} /> Duyệt
+                          </button>
+                          <button type="button" className="button danger-button" onClick={() => openRejectJobConfirmation(job.id, job.title)}>
+                            <X size={13} /> Từ chối
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Beautiful Overlay Job/Quest Details Modal ── */}
       {selectedJobId && (
         <div
@@ -2170,12 +2526,22 @@ export function AdminB2bReviewPage() {
                     <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Địa điểm:</span>
                     <strong>{selectedJobDetail.isRemote ? 'Làm việc từ xa (Remote)' : (selectedJobDetail.location || 'Chưa cập nhật')}</strong>
                   </div>
-                  <div>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Thù lao / Phụ cấp:</span>
-                    <strong style={{ color: '#16a34a' }}>
-                      {selectedJobDetail.compensation ? `${parseInt(selectedJobDetail.compensation, 10).toLocaleString('vi-VN')} VND` : 'Thỏa thuận'}
-                    </strong>
-                  </div>
+                  {selectedJobDetail.postType === 'QUEST' ? (
+                    <div>
+                      <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Thù lao / Phụ cấp:</span>
+                      <strong style={{ color: 'var(--muted)' }}>Không có</strong>
+                      <span style={{ fontSize: '0.76rem', color: '#ff7a1a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                        🏅 Điểm EXP: +{selectedJobDetail.expReward || 100} EXP khi hoàn thành
+                      </span>
+                    </div>
+                  ) : (
+                    <div>
+                      <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Thù lao / Phụ cấp:</span>
+                      <strong style={{ color: '#16a34a' }}>
+                        {selectedJobDetail.compensation ? `${parseInt(selectedJobDetail.compensation, 10).toLocaleString('vi-VN')} VND` : 'Thỏa thuận'}
+                      </strong>
+                    </div>
+                  )}
                   <div>
                     <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Chỉ tiêu Capacity:</span>
                     <strong>{selectedJobDetail.capacity ? `${selectedJobDetail.capacity} chỉ tiêu` : 'Không giới hạn'}</strong>
@@ -2491,6 +2857,47 @@ export function AdminB2bReviewPage() {
                 })()}
               </div>
             </div>
+
+            {/* Moderation Actions */}
+            {!(selectedUserDetail.roles || '').toLowerCase().includes('admin') && (
+              <div style={{ borderTop: '1px solid var(--line)', paddingTop: '16px', marginTop: '16px' }}>
+                <h4 style={{ margin: '0 0 10px', fontSize: '0.86rem', fontWeight: '800', color: '#dc2626', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ShieldAlert size={14} /> Quản lý tài khoản
+                </h4>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {(selectedUserDetail.userStatus || 'ACTIVE').toUpperCase() !== 'ACTIVE' && (
+                    <button
+                      className="button secondary-button"
+                      style={{ fontSize: '0.82rem', padding: '7px 14px' }}
+                      disabled={userModerateLoading}
+                      onClick={() => handleUpdateUserStatus(selectedUserDetail.id, 'ACTIVE', selectedUserDetail.displayName)}
+                    >
+                      Kích hoạt lại
+                    </button>
+                  )}
+                  {(selectedUserDetail.userStatus || 'ACTIVE').toUpperCase() !== 'FROZEN' && (
+                    <button
+                      className="button danger-button"
+                      style={{ fontSize: '0.82rem', padding: '7px 14px' }}
+                      disabled={userModerateLoading}
+                      onClick={() => handleUpdateUserStatus(selectedUserDetail.id, 'FROZEN', selectedUserDetail.displayName)}
+                    >
+                      Đóng băng (Tạm khóa)
+                    </button>
+                  )}
+                  {(selectedUserDetail.userStatus || 'ACTIVE').toUpperCase() !== 'BANNED' && (
+                    <button
+                      className="button danger-button"
+                      style={{ fontSize: '0.82rem', padding: '7px 14px', background: 'rgba(127,29,29,0.85)' }}
+                      disabled={userModerateLoading}
+                      onClick={() => handleUpdateUserStatus(selectedUserDetail.id, 'BANNED', selectedUserDetail.displayName)}
+                    >
+                      Cấm vĩnh viễn (Ban)
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Modal Footer */}
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--line)', paddingTop: '16px', marginTop: '20px' }}>
