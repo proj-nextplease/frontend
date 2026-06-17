@@ -97,15 +97,6 @@ function formatVND(value) {
   return parseInt(clean, 10).toLocaleString('vi-VN');
 }
 
-function getMinDateTime() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
 // Premium Date & Time Picker Component to resolve past hour/date selection & native UI issues
 function PremiumDateTimePicker({ value, onChange, error }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -433,6 +424,7 @@ export function JobCreateForm({ onSuccess, onCancel }) {
   useEffect(() => {
     const specs = CATEGORY_MAP[formData.category]?.specialties || [];
     if (specs.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(prev => ({ ...prev, specialty: specs[0].value }));
     }
   }, [formData.category]);
