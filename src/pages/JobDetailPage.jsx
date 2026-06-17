@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   MapPin, Clock, Building, Shield, Zap, Award, LockKeyhole,
   ArrowLeft, Users, Calendar, Briefcase, CheckCircle2, Star,
@@ -29,7 +29,6 @@ const CATEGORY_COLOR = {
 
 export function JobDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const isQuestPage = window.location.pathname.startsWith('/quests/');
 
   const [job, setJob] = useState(null);
@@ -107,7 +106,6 @@ export function JobDetailPage() {
   const rs = portfolio?.reputationScore || 0;
   const isLocked = rs < (job.minReqRs || 0);
   const typeLabel = JOB_TYPE_LABELS[job.jobType] || job.jobType || (isQuest ? 'Quest' : 'Job');
-  const categoryColor = CATEGORY_COLOR[job.category] || accent;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg, #f8fafc)', fontFamily: 'var(--font-sans, system-ui, sans-serif)' }}>
