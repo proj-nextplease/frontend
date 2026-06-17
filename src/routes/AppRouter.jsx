@@ -209,6 +209,10 @@ function ProtectedBusinessRoute() {
         } catch (err) {
           console.error("Lỗi khi kiểm tra session B2B:", err);
         }
+      } else if (isMounted) {
+        setHasAccess(true);
+        setLoading(false);
+        return;
       }
 
       // 2. Fallback: check sessionStorage token (set after BE login)
@@ -332,11 +336,14 @@ export function AppRouter() {
         <Route path="/business/register" element={<BusinessRegisterPage />} />
         <Route path="/businesses" element={<BusinessLandingPage />} />
         <Route path="/businesses/dashboard" element={<ProtectedBusinessRoute />} />
+        <Route path="/businesses/dashboard/:tabSlug" element={<ProtectedBusinessRoute />} />
         <Route path="/business/dashboard" element={<Navigate to="/businesses/dashboard" replace />} />
         
         {/* Private Admin review portal */}
         <Route path="/nextplease-admin-portal/login" element={<AdminLoginPage />} />
         <Route path="/nextplease-admin-portal/b2b-reviews" element={<ProtectedAdminRoute />} />
+        <Route path="/nextplease-admin-portal/b2b-reviews/:tabSlug" element={<ProtectedAdminRoute />} />
+        <Route path="/nextplease-admin-portal/b2b-reviews/:tabSlug/:subTabSlug" element={<ProtectedAdminRoute />} />
 
         <Route path="/portfolio" element={<ProtectedPortfolioRoute isEditing={false} />} />
         <Route path="/portfolio/edit" element={<ProtectedPortfolioRoute isEditing={true} />} />
