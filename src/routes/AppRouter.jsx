@@ -327,7 +327,8 @@ export function AppRouter() {
         <Route index element={<HomePage />} />
         <Route path="/candidates" element={<CandidateLandingPage />} />
         <Route path="/candidates/dashboard" element={<ProtectedDashboardRoute />} />
-        <Route path="/candidate/dashboard" element={<Navigate to="/candidates/dashboard" replace />} />
+        <Route path="/candidates/dashboard/:tabSlug" element={<ProtectedDashboardRoute />} />
+        <Route path="/candidate/dashboard" element={<Navigate to="/candidates/dashboard/overview" replace />} />
         <Route path="/candidate/login" element={<CandidateLoginPage />} />
         <Route path="/candidate/register" element={<CandidateRegisterPage />} />
         

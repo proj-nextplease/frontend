@@ -5,7 +5,8 @@ export function AppLayout() {
   const location = useLocation();
   const isBusinessWorkspace = location.pathname.startsWith('/businesses/dashboard');
   const isAdminWorkspace = location.pathname.startsWith('/nextplease-admin-portal/b2b-reviews');
-  const isWorkspace = isBusinessWorkspace || isAdminWorkspace;
+  const isCandidateWorkspace = location.pathname.startsWith('/candidates/dashboard');
+  const isWorkspace = isBusinessWorkspace || isAdminWorkspace || isCandidateWorkspace;
 
   return (
     <div className={`app-shell ${isWorkspace ? 'business-workspace-shell' : ''}`}>

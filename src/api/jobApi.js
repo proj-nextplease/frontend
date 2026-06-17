@@ -47,3 +47,19 @@ export async function getSkills() {
   }
   return response.data.data;
 }
+
+export async function getCompanies() {
+  const response = await httpClient.get('/companies');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải danh sách đối tác.');
+  }
+  return response.data.data;
+}
+
+export async function getCompanyDetail(id) {
+  const response = await httpClient.get(`/companies/${id}`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải chi tiết đối tác.');
+  }
+  return response.data.data;
+}
