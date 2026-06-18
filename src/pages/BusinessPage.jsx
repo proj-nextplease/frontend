@@ -1628,7 +1628,7 @@ function ManageJobsView({ onTabChange }) {
                     <div>
                       <span style={{ fontSize: '0.78rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Hạn nộp hồ sơ:</span>
                       <strong style={{ fontSize: '0.88rem', fontWeight: '700', color: '#ff7a1a' }}>
-                        {selectedJobDetail.deadlineAt ? new Date(selectedJobDetail.deadlineAt).toLocaleString('vi-VN') : 'Không giới hạn'}
+                        {selectedJobDetail.deadlineAt ? new Date(selectedJobDetail.deadlineAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Không giới hạn'}
                       </strong>
                     </div>
                   </div>
