@@ -60,7 +60,20 @@ export function AdminB2bReviewPage() {
   }
 
   useEffect(() => {
-    loadPending();
+    let cancelled = false;
+    async function fetchOnMount() {
+      try {
+        setLoading(true);
+        const data = await getPendingB2bRegistrations();
+        if (!cancelled) setItems(data);
+      } catch (err) {
+        if (!cancelled) setError(err.message || 'Không thể tải danh sách phê duyệt.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchOnMount();
+    return () => { cancelled = true; };
   }, []);
 
   async function handleApprove(companyId) {
