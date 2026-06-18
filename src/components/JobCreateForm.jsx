@@ -104,6 +104,17 @@ function formatVND(value) {
   return parseInt(clean, 10).toLocaleString('vi-VN');
 }
 
+// Format a local Date to ISO string WITH the browser's UTC offset (e.g. "2026-06-18T12:00:00+07:00")
+// This lets the backend know the exact timezone the user is in.
+function toLocalISOString(date) {
+  const pad = n => String(n).padStart(2, '0');
+  const offsetMin = -date.getTimezoneOffset();
+  const sign = offsetMin >= 0 ? '+' : '-';
+  const absMin = Math.abs(offsetMin);
+  const offsetStr = `${sign}${pad(Math.floor(absMin / 60))}:${pad(absMin % 60)}`;
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00${offsetStr}`;
+}
+
 // Premium Date & Time Picker Component to resolve past hour/date selection & native UI issues
 function PremiumDateTimePicker({ value, onChange, error }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -160,21 +171,21 @@ function PremiumDateTimePicker({ value, onChange, error }) {
     }
 
     const newCombined = new Date(year, month, day, h, m);
-    onChange(newCombined.toISOString());
+    onChange(toLocalISOString(newCombined));
   }
 
   function handleSelectHour(e) {
     const h = parseInt(e.target.value);
     const day = selectedDate ? selectedDate.getDate() : new Date().getDate();
     const newCombined = new Date(year, month, day, h, selectedMinute);
-    onChange(newCombined.toISOString());
+    onChange(toLocalISOString(newCombined));
   }
 
   function handleSelectMinute(e) {
     const m = parseInt(e.target.value);
     const day = selectedDate ? selectedDate.getDate() : new Date().getDate();
     const newCombined = new Date(year, month, day, selectedHour, m);
-    onChange(newCombined.toISOString());
+    onChange(toLocalISOString(newCombined));
   }
 
   const dayCells = [];
@@ -531,7 +542,9 @@ export function JobCreateForm({ onSuccess, onCancel, companyType }) {
     // Format deadline
     let formattedDeadline = null;
     if (formData.deadlineAt) {
-      formattedDeadline = new Date(formData.deadlineAt).toISOString().split('.')[0];
+      formattedDeadline = formData.deadlineAt.length > 19
+        ? toLocalISOString(new Date(formData.deadlineAt))
+        : formData.deadlineAt;
     }
 
     try {
