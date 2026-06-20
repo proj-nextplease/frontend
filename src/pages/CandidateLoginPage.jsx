@@ -1,19 +1,18 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  AlertCircle,
-  ArrowRight,
-  Eye,
-  EyeOff,
-  LockKeyhole,
-  Mail,
-  ShieldCheck,
-  Sparkles,
-  UserRoundCheck,
-} from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, Mail, LockKeyhole } from 'lucide-react';
 import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
+import { AuthBrandPanel } from '../components/AuthBrandPanel.jsx';
+
+const INK = '#1d1320';
+const MUTED = '#6e6470';
+const RED = '#e5533f';
+const PLUM = '#1e1320';
+const PINK = '#fdeeeb';
+const LINE = '#ece6e2';
+const WHITE = '#ffffff';
 
 const socialProviders = [
   { provider: 'google', label: 'Google', mark: 'G' },
@@ -22,40 +21,37 @@ const socialProviders = [
     provider: 'github',
     label: 'GitHub',
     mark: (
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 16 16"
-        version="1.1"
-        width="14"
-        height="14"
-        fill="currentColor"
-        style={{ display: 'inline-block', verticalAlign: 'middle' }}
-      >
+      <svg aria-hidden="true" viewBox="0 0 16 16" width="15" height="15" fill="currentColor" style={{ verticalAlign: 'middle' }}>
         <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82a7.48 7.48 0 0 0-4 0c-1.53-1.04-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.35 3.12.9.01.64.01 1.11.01 1.25 0 .21-.15.47-.55.38A8.014 8.014 0 0 1 0 8c0-4.42 3.58-8 8-8z" />
       </svg>
     ),
   },
 ];
 
+const FIELD = {
+  width: '100%', padding: '14px 14px 14px 44px', borderRadius: '12px',
+  border: `1.5px solid ${LINE}`, background: WHITE, color: INK,
+  fontSize: '0.98rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit',
+};
+
+
+function statusStyle(type) {
+  const m = {
+    error: { bg: 'rgba(220,38,38,0.06)', border: 'rgba(220,38,38,0.25)', color: '#dc2626' },
+    success: { bg: 'rgba(22,163,74,0.06)', border: 'rgba(22,163,74,0.25)', color: '#16a34a' },
+    warning: { bg: 'rgba(217,119,6,0.06)', border: 'rgba(217,119,6,0.25)', color: '#b45309' },
+    loading: { bg: 'rgba(37,99,235,0.06)', border: 'rgba(37,99,235,0.2)', color: '#2563eb' },
+  };
+  return m[type] || m.loading;
+}
+
 export function CandidateLoginPage() {
   const navigate = useNavigate();
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [rememberPassword, setRememberPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState('email');
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const isSupabaseConfigured = Boolean(supabase);
-
-  function handlePointerMove(event) {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    event.currentTarget.style.setProperty('--cursor-x', `${event.clientX - bounds.left}px`);
-    event.currentTarget.style.setProperty('--cursor-y', `${event.clientY - bounds.top}px`);
-    event.currentTarget.style.setProperty('--cursor-opacity', '1');
-  }
-
-  function handlePointerLeave(event) {
-    event.currentTarget.style.setProperty('--cursor-opacity', '0');
-  }
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -64,22 +60,15 @@ export function CandidateLoginPage() {
 
   async function handleSocialLogin(provider) {
     setStatus({ type: 'loading', message: `Đang mở đăng nhập bằng ${provider}...` });
-
     if (!isSupabaseConfigured) {
       navigate('/candidates/dashboard');
       return;
     }
-
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: {
-        redirectTo: `${window.location.origin}/candidates/dashboard`,
-      },
+      options: { redirectTo: `${window.location.origin}/candidates/dashboard` },
     });
-
-    if (error) {
-      setStatus({ type: 'error', message: error.message });
-    }
+    if (error) setStatus({ type: 'error', message: error.message });
   }
 
   async function handleSubmit(event) {
@@ -90,181 +79,109 @@ export function CandidateLoginPage() {
       setStatus({ type: 'error', message: 'Nhập email và mật khẩu ứng viên trước nhé.' });
       return;
     }
-
     if (!isSupabaseConfigured) {
       setStatus({ type: 'success', message: 'Đăng nhập mô phỏng thành công. Đang mở Candidate Hub...' });
       navigate('/candidates/dashboard');
       return;
     }
-
     try {
       const response = await loginCandidate(loginData.email, loginData.password);
-
       const { error } = await supabase.auth.setSession({
         access_token: response.accessToken,
         refresh_token: response.refreshToken,
       });
-
       if (error) {
         setStatus({ type: 'error', message: error.message || 'Không thể thiết lập phiên đăng nhập.' });
         return;
       }
-
-      // Check onboarding completed status to decide navigation path
       try {
         const portfolio = await getMyPortfolio();
-        if (portfolio && portfolio.onboardingCompleted) {
-          navigate('/candidates/dashboard');
-        } else {
-          navigate('/portfolio');
-        }
+        if (portfolio && portfolio.onboardingCompleted) navigate('/candidates/dashboard');
+        else navigate('/portfolio');
       } catch (err) {
         console.error('Không thể kiểm tra trạng thái onboarding:', err);
-        // Fallback to portfolio page to complete onboarding
         navigate('/portfolio');
       }
     } catch (error) {
-      setStatus({
-        type: 'error',
-        message: error.response?.data?.message || error.message || 'Đăng nhập thất bại.',
-      });
+      setStatus({ type: 'error', message: error.response?.data?.message || error.message || 'Đăng nhập thất bại.' });
     }
   }
 
+  const st = statusStyle(status.type);
+
   return (
-    <section
-      className="candidate-login-page interactive-stage"
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-    >
-      <div className="cursor-spotlight" aria-hidden="true" />
+    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 1.12fr) minmax(0, 0.88fr)', background: WHITE, color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
+      <style>{`
+        @keyframes npBrandInR { from { opacity:0; transform: translateX(48px);} to { opacity:1; transform:none; } }
+        @keyframes npFormIn { from { opacity:0; transform: translateY(22px);} to { opacity:1; transform:none; } }
+        @keyframes npFloat { 0%{transform:translateY(-7px)} 100%{transform:translateY(9px)} }
+        @media (max-width: 900px){ .np-auth{ grid-template-columns: 1fr !important; } .np-auth-brand{ display:none !important; } }
+      `}</style>
 
-      <section className="candidate-login-shell">
-        <div className="candidate-login-copy">
-          <Link className="portfolio-back-link" to="/candidates">
-            Quay lại trang ứng viên
-          </Link>
-          <h1>Tiếp tục nắm bắt cơ hội của bạn.</h1>
-          
-          <div className="candidate-login-highlights">
-            <span>
-              <UserRoundCheck size={18} />
-              Hồ sơ ứng viên
-            </span>
-            <span>
-              <ShieldCheck size={18} />
-              Proof-ready
-            </span>
-            <span>
-              <Sparkles size={18} />
-              Portfolio 3D
-            </span>
-          </div>
-        </div>
+      {/* LEFT — form */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px, 5vw, 56px)', animation: 'npFormIn 0.6s ease-out 0.08s both' }}>
+        <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '410px' }}>
+          <p style={{ fontSize: '0.82rem', fontWeight: '800', letterSpacing: '0.04em', textTransform: 'uppercase', color: RED, margin: '0 0 10px' }}>Đăng nhập ứng viên</p>
+          <h2 style={{ fontSize: 'clamp(1.8rem, 3vw, 2.4rem)', fontWeight: '800', letterSpacing: '-0.03em', color: INK, margin: '0 0 8px' }}>Chào mừng trở lại</h2>
+          <p style={{ fontSize: '0.98rem', color: MUTED, margin: '0 0 26px' }}>Đăng nhập để tiếp tục với hồ sơ của bạn.</p>
 
-        <form className="candidate-login-panel" onSubmit={handleSubmit}>
-          <div className="register-form-header">
-            <Sparkles size={22} />
-            <div>
-              <p className="eyebrow">Candidate login</p>
-              <h2>Đăng nhập ứng viên</h2>
-            </div>
-          </div>
-
-          <div className="social-register-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
             {socialProviders.map((item) => (
-              <button
-                className="social-register-button"
-                key={item.provider}
-                onClick={() => handleSocialLogin(item.provider)}
-                type="button"
-              >
-                <span>{item.mark}</span>
-                {item.label}
+              <button key={item.provider} type="button" onClick={() => handleSocialLogin(item.provider)}
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px', borderRadius: '12px', border: `1.5px solid ${LINE}`, background: WHITE, color: INK, fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer' }}>
+                <span style={{ display: 'flex', fontWeight: '800' }}>{item.mark}</span>{item.label}
               </button>
             ))}
           </div>
 
-          <div className="register-divider">
-            <span>hoặc đăng nhập bằng email ứng viên</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '0 0 20px' }}>
+            <div style={{ flex: 1, height: '1px', background: LINE }} />
+            <span style={{ fontSize: '0.82rem', color: MUTED, fontWeight: '600' }}>hoặc dùng email</span>
+            <div style={{ flex: 1, height: '1px', background: LINE }} />
           </div>
 
-          <div className="register-form-grid">
-            <label className={focusedField === 'email' ? 'active' : ''}>
-              <Mail size={18} />
-              <input
-                name="email"
-                onChange={updateField}
-                onFocus={() => setFocusedField('email')}
-                placeholder="Email đăng nhập"
-                type="email"
-                value={loginData.email}
-              />
-            </label>
-            <label className={focusedField === 'password' ? 'active' : ''}>
-              <LockKeyhole size={18} />
-              <input
-                name="password"
-                onChange={updateField}
-                onFocus={() => setFocusedField('password')}
-                placeholder="Mật khẩu"
-                type={showPassword ? 'text' : 'password'}
-                value={loginData.password}
-              />
-              <button
-                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                className="password-visibility-button"
-                onClick={() => setShowPassword((current) => !current)}
-                type="button"
-              >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '14px' }}>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex' }}><Mail size={18} /></span>
+              <input name="email" type="email" value={loginData.email} onChange={updateField} placeholder="Email đăng nhập" style={FIELD} />
+            </div>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex' }}><LockKeyhole size={18} /></span>
+              <input name="password" type={showPassword ? 'text' : 'password'} value={loginData.password} onChange={updateField} placeholder="Mật khẩu" style={{ ...FIELD, paddingRight: '44px' }} />
+              <button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} onClick={() => setShowPassword((c) => !c)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: MUTED, cursor: 'pointer', display: 'flex' }}>
                 {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
               </button>
-            </label>
+            </div>
           </div>
 
-          <div className="candidate-login-options">
-            <label className="remember-password-option">
-              <input
-                checked={rememberPassword}
-                onChange={(event) => setRememberPassword(event.target.checked)}
-                type="checkbox"
-              />
-              <span>Ghi nhớ mật khẩu</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', color: MUTED, cursor: 'pointer' }}>
+              <input type="checkbox" checked={rememberPassword} onChange={(e) => setRememberPassword(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: RED, cursor: 'pointer' }} />
+              Ghi nhớ đăng nhập
             </label>
-            <button
-              className="text-link ghost-link-button"
-              onClick={() =>
-                setStatus({
-                  type: 'warning',
-                  message: 'Luồng quên mật khẩu sẽ nối với backend/auth provider ở bước tiếp theo.',
-                })
-              }
-              type="button"
-            >
-              Quên mật khẩu
-            </button>
+            <button type="button" onClick={() => setStatus({ type: 'warning', message: 'Luồng quên mật khẩu sẽ nối với backend/auth provider ở bước tiếp theo.' })}
+              style={{ background: 'none', border: 'none', color: RED, fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer' }}>Quên mật khẩu?</button>
           </div>
 
           {status.message ? (
-            <div className={`register-status ${status.type}`}>
-              <AlertCircle size={18} />
-              <p>{status.message}</p>
+            <div style={{ display: 'flex', gap: '10px', padding: '12px 16px', borderRadius: '12px', background: st.bg, border: `1px solid ${st.border}`, color: st.color, fontSize: '0.9rem', fontWeight: '600', marginBottom: '18px' }}>
+              {status.message}
             </div>
           ) : null}
 
-          <div className="register-action-row">
-            <button className="button primary-button" disabled={status.type === 'loading'} type="submit">
-              Nắm bắt cơ hội
-              <ArrowRight size={18} />
-            </button>
-          </div>
+          <button type="submit" disabled={status.type === 'loading'}
+            style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: 'pointer' }}>
+            {status.type === 'loading' ? 'Đang đăng nhập...' : 'Đăng nhập'} <ArrowRight size={18} />
+          </button>
 
-          <div className="candidate-register-prompt">
-            <span>Bạn chưa là ứng viên?</span>
-            <Link to="/candidate/register">Hãy bắt đầu trở thành ứng viên</Link>
-          </div>
+          <p style={{ textAlign: 'center', fontSize: '0.92rem', color: MUTED, margin: '22px 0 0' }}>
+            Chưa có tài khoản? <Link to="/candidate/register" style={{ color: RED, fontWeight: '700', textDecoration: 'none' }}>Đăng ký ngay</Link>
+          </p>
         </form>
-      </section>
-    </section>
+      </div>
+
+      {/* RIGHT — brand panel */}
+      <AuthBrandPanel animation="npBrandInR" headline="Tiếp tục hành trình của bạn" subcopy="Đăng nhập để quay lại với hồ sơ năng lực có kiểm chứng của bạn." />
+    </div>
   );
 }

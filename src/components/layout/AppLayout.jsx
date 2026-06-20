@@ -7,10 +7,12 @@ export function AppLayout() {
   const isAdminWorkspace = location.pathname.startsWith('/nextplease-admin-portal/b2b-reviews');
   const isCandidateWorkspace = location.pathname.startsWith('/candidates/dashboard');
   const isWorkspace = isBusinessWorkspace || isAdminWorkspace || isCandidateWorkspace;
+  const isLandingPage = ['/', '/candidates', '/businesses'].includes(location.pathname);
+  const isAuthPage = location.pathname.endsWith('/login') || location.pathname.endsWith('/register');
 
   return (
     <div className={`app-shell ${isWorkspace ? 'business-workspace-shell' : ''}`}>
-      {!isWorkspace && <Header />}
+      {!isWorkspace && !isLandingPage && !isAuthPage && <Header />}
       <main className="app-main">
         <Outlet />
       </main>
