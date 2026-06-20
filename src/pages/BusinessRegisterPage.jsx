@@ -339,6 +339,23 @@ export function BusinessRegisterPage() {
           <h1 style={{ background: 'linear-gradient(to right, #2563eb, #ff7a1a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Đăng ký tài khoản đối tác tuyển dụng
           </h1>
+          <div
+            style={{
+              marginTop: 16,
+              padding: '12px 16px',
+              borderRadius: 12,
+              background: 'rgba(37,99,235,0.07)',
+              border: '1px solid rgba(37,99,235,0.18)',
+              fontSize: '0.88rem',
+              lineHeight: 1.6,
+              color: 'var(--ink)',
+              maxWidth: 560,
+            }}
+          >
+            <strong>Đã có lời mời từ tổ chức?</strong> Nếu bạn được mời tham gia một Doanh nghiệp/CLB,
+            hãy mở liên kết trong email mời rồi <Link to="/business/login" style={{ color: '#2563eb', fontWeight: 600 }}>đăng nhập</Link> để tham gia —
+            không cần đăng ký mới. Người đại diện có thể mời và ủy quyền cho đồng đội ngay trong trang quản trị.
+          </div>
         </div>
       </section>
 

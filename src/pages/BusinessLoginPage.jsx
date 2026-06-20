@@ -48,9 +48,11 @@ export function BusinessLoginPage() {
       return;
     }
 
+    const pendingInvite = sessionStorage.getItem('nextplease:pending_invite');
+
     if (!isSupabaseConfigured) {
       setStatus({ type: 'success', message: 'Đăng nhập mô phỏng thành công. Đang mở dashboard...' });
-      navigate('/businesses/dashboard');
+      navigate(pendingInvite ? `/business/accept-invite?token=${pendingInvite}` : '/businesses/dashboard');
       return;
     }
 
@@ -73,9 +75,12 @@ export function BusinessLoginPage() {
         }
       }
 
-      // Check user roles, redirect admin to admin reviews, else to businesses dashboard
+      // Check user roles, redirect admin to admin reviews, else to businesses dashboard.
+      // If the user arrived via an invitation link, return them to the accept page.
       if (response.user?.roles?.includes('admin')) {
         navigate('/nextplease-admin-portal/b2b-reviews');
+      } else if (pendingInvite) {
+        navigate(`/business/accept-invite?token=${pendingInvite}`);
       } else {
         navigate('/businesses/dashboard');
       }

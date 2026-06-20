@@ -32,11 +32,27 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from 'lucide-react';
-import { getCurrentUser, getMyCompany, resubmitB2bDocument, updateB2bProfile } from '../api/b2bApi.js';
+import {
+  getCurrentUser,
+  getMyCompany,
+  resubmitB2bDocument,
+  updateB2bProfile,
+  getCompanyMembers,
+  inviteCompanyMember,
+  listCompanyInvitations,
+  revokeCompanyInvitation,
+  changeMemberRole,
+  transferOwnership,
+  removeCompanyMember,
+  resendCompanyInvitation,
+  leaveCompany,
+} from '../api/b2bApi.js';
 import { supabase } from '../services/supabaseClient.js';
-import { JobCreateForm } from '../components/JobCreateForm.jsx';
-import { getOrganizerJobs, getJobDetail, getJobApplications, updateApplicationStatus } from '../api/jobApi.js';
-import { getOrganizerQuests, getQuestApplicants, updateQuestApplicationStatus } from '../api/questApi.js';
+import { JobPostForm } from '../components/JobPostForm.jsx';
+import { QuestPostForm } from '../components/QuestPostForm.jsx';
+import { getOrganizerJobs, getOrganizerJobById, closeJob, deleteJob, getJobDetail, getJobApplications, updateApplicationStatus } from '../api/jobApi.js';
+import { getOrganizerQuests, getOrganizerQuestById, closeQuest, deleteQuest, getQuestApplicants, updateQuestApplicationStatus } from '../api/questApi.js';
+import { getRating, createRating, updateRating } from '../api/ratingApi.js';
 import { Crown, ArrowLeft, Check, Calendar, Award, ChevronRight, ExternalLink as ExtLink } from 'lucide-react';
 
 
@@ -51,6 +67,7 @@ const SIDEBAR_TABS = [
   { key: 'manage-jobs', route: 'manage-jobs', label: 'Quản lý tin đăng', icon: FileText, lockable: true },
   { key: 'find-talent', route: 'find-talent', label: 'Tìm kiếm Talent', icon: Search, lockable: true },
   { key: 'candidates', route: 'candidates', label: 'Quản lý ứng viên', icon: UsersRound, lockable: true },
+  { key: 'members', route: 'members', label: 'Thành viên & Phân quyền', icon: ShieldCheck, lockable: true },
 ];
 
 const ALL_TABS = [...SIDEBAR_TABS, ACCOUNT_TAB];
@@ -482,11 +499,11 @@ function CandidatesView() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {selectedApplicant.status !== 'ACCEPTED' && selectedApplicant.status !== 'APPROVED' && (
                       <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', width: '100%' }} disabled={!!actionLoading}
-                        onClick={() => handleAction(selectedApplicant.id, isQuest ? 'APPROVED' : 'ACCEPTED')}>
+                        onClick={() => handleAction(selectedApplicant.id, 'ACCEPTED')}>
                         <Check size={14} /> Chấp nhận ứng viên
                       </button>
                     )}
-                    {isQuest && selectedApplicant.status === 'APPROVED' && (
+                    {isQuest && selectedApplicant.status === 'ACCEPTED' && (
                       <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', background: 'linear-gradient(135deg,#7c3aed,#2563eb)', width: '100%' }} disabled={!!actionLoading}
                         onClick={() => handleAction(selectedApplicant.id, 'COMPLETED')}>
                         <Award size={14} /> Đánh dấu hoàn thành (+EXP)
@@ -509,10 +526,16 @@ function CandidatesView() {
                     </button>
                   </div>
                 )
+              ) : selectedApplicant.status === 'COMPLETED' ? (
+                <RatingPanel
+                  applicationId={isQuest ? null : selectedApplicant.id}
+                  questApplicationId={isQuest ? selectedApplicant.id : null}
+                  accent={accent}
+                />
               ) : (
                 <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--surface-soft)', textAlign: 'center' }}>
                   <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--muted)', fontStyle: 'italic' }}>
-                    {selectedApplicant.status === 'COMPLETED' ? '✅ Ứng viên đã hoàn thành.' : '❌ Đơn ứng tuyển này đã kết thúc.'}
+                    Đơn ứng tuyển này đã kết thúc.
                   </p>
                 </div>
               )}
@@ -520,6 +543,418 @@ function CandidatesView() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function StarPicker({ value, onChange, readOnly = false, size = 26 }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div style={{ display: 'flex', gap: '4px' }}>
+      {[1, 2, 3, 4, 5].map(n => {
+        const filled = (hover || value) >= n;
+        return (
+          <button
+            key={n}
+            type="button"
+            disabled={readOnly}
+            onClick={() => !readOnly && onChange(n)}
+            onMouseEnter={() => !readOnly && setHover(n)}
+            onMouseLeave={() => !readOnly && setHover(0)}
+            style={{ background: 'none', border: 'none', padding: 0, cursor: readOnly ? 'default' : 'pointer', lineHeight: 0 }}
+            aria-label={`${n} sao`}
+          >
+            <Star size={size} fill={filled ? '#f59e0b' : 'none'} color={filled ? '#f59e0b' : 'var(--muted)'} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Khung đánh giá ứng viên cho đơn đã COMPLETED. Tự load đánh giá hiện có. */
+function RatingPanel({ applicationId, questApplicationId, accent }) {
+  const idKey = { applicationId, questApplicationId };
+  const [loading, setLoading] = useState(true);
+  const [rating, setRating] = useState(null); // bản ghi đã có
+  const [editing, setEditing] = useState(false);
+  const [score, setScore] = useState(0);
+  const [comment, setComment] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    getRating(idKey)
+      .then(data => {
+        if (!alive) return;
+        setRating(data);
+        if (data) { setScore(data.score); setComment(data.comment || ''); }
+        else { setEditing(true); }
+      })
+      .catch(() => { if (alive) setEditing(true); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicationId, questApplicationId]);
+
+  async function submit() {
+    if (score < 1) { setError('Vui lòng chọn số sao.'); return; }
+    setBusy(true); setError('');
+    try {
+      if (rating?.id) {
+        await updateRating(rating.id, { score, comment });
+      } else {
+        await createRating({ ...idKey, score, comment });
+      }
+      const fresh = await getRating(idKey);
+      setRating(fresh);
+      setEditing(false);
+    } catch (err) {
+      setError(err.message || 'Không thể lưu đánh giá.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (loading) {
+    return <div style={{ padding: '14px', textAlign: 'center', color: 'var(--muted)', fontSize: '0.84rem' }}>Đang tải đánh giá...</div>;
+  }
+
+  return (
+    <div style={{ padding: '16px', borderRadius: '12px', background: 'var(--surface-soft)', border: `1px solid ${accent}20` }}>
+      <p style={{ margin: '0 0 10px', fontSize: '0.74rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        Đánh giá ứng viên
+      </p>
+
+      {!editing && rating ? (
+        <>
+          <StarPicker value={rating.score} readOnly size={24} />
+          {rating.comment && (
+            <p style={{ margin: '10px 0 0', fontSize: '0.86rem', color: 'var(--ink)', lineHeight: 1.6, fontStyle: 'italic' }}>
+              "{rating.comment}"
+            </p>
+          )}
+          {rating.score === 5 && (
+            <p style={{ margin: '8px 0 0', fontSize: '0.78rem', color: '#16a34a', fontWeight: '700' }}>
+              Ứng viên đã được thưởng 2.000 NP cho đánh giá 5 sao.
+            </p>
+          )}
+          {rating.canEdit ? (
+            <button onClick={() => setEditing(true)}
+              style={{ marginTop: '12px', padding: '7px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer' }}>
+              Sửa đánh giá
+            </button>
+          ) : (
+            <p style={{ margin: '10px 0 0', fontSize: '0.76rem', color: 'var(--muted)' }}>
+              Đã quá 3 giờ — không thể sửa.
+            </p>
+          )}
+        </>
+      ) : (
+        <>
+          <StarPicker value={score} onChange={setScore} />
+          <textarea
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            rows={3}
+            placeholder="Nhận xét về ứng viên (không bắt buộc)..."
+            style={{ width: '100%', marginTop: '12px', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.86rem', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
+          />
+          {score === 5 && (
+            <p style={{ margin: '8px 0 0', fontSize: '0.78rem', color: '#16a34a', fontWeight: '700' }}>
+              Đánh giá 5 sao sẽ thưởng 2.000 NP cho ứng viên.
+            </p>
+          )}
+          {error && <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: '#dc2626', fontWeight: '600' }}>{error}</p>}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <button onClick={submit} disabled={busy}
+              style={{ flex: 1, padding: '9px', borderRadius: '10px', border: 'none', background: accent, color: '#fff', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer' }}>
+              {busy ? 'Đang lưu...' : rating ? 'Lưu thay đổi' : 'Gửi đánh giá'}
+            </button>
+            {rating && (
+              <button onClick={() => { setEditing(false); setScore(rating.score); setComment(rating.comment || ''); setError(''); }} disabled={busy}
+                style={{ padding: '9px 16px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' }}>
+                Hủy
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const ROLE_LABELS = { OWNER: 'Chủ sở hữu', MANAGER: 'Quản lý', MEMBER: 'Thành viên' };
+
+function MembersView({ company, setToast }) {
+  const [members, setMembers] = useState([]);
+  const [invitations, setInvitations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('MEMBER');
+  const [busy, setBusy] = useState(false);
+  const [confirmTransfer, setConfirmTransfer] = useState(null); // member object pending transfer
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [lastInviteLink, setLastInviteLink] = useState('');
+  const membersNavigate = useNavigate();
+
+  const myRole = company?.myRole || null;
+  const canManage = myRole === 'OWNER' || myRole === 'MANAGER';
+  const isOwner = myRole === 'OWNER';
+
+  async function handleLeave() {
+    setBusy(true);
+    try {
+      await leaveCompany();
+      setToast({ type: 'success', message: 'Bạn đã rời khỏi tổ chức.' });
+      membersNavigate('/businesses');
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'Rời tổ chức thất bại.' });
+      setBusy(false);
+      setConfirmLeave(false);
+    }
+  }
+
+  async function load() {
+    setLoading(true);
+    try {
+      const [m, inv] = await Promise.all([getCompanyMembers(), listCompanyInvitations()]);
+      setMembers(m || []);
+      setInvitations(inv || []);
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'Không thể tải danh sách thành viên.' });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []);
+
+  async function handleInvite(event) {
+    event.preventDefault();
+    if (!inviteEmail.trim()) {
+      setToast({ type: 'error', message: 'Nhập email người được mời.' });
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await inviteCompanyMember(inviteEmail.trim(), inviteRole);
+      setInviteEmail('');
+      setInviteRole('MEMBER');
+      setLastInviteLink(result?.inviteUrl || '');
+      setToast({
+        type: result?.emailSent ? 'success' : 'error',
+        message: result?.emailSent
+          ? 'Đã gửi lời mời qua email.'
+          : `Đã tạo lời mời nhưng CHƯA gửi được email${result?.emailError ? ` (${result.emailError})` : ''}. Hãy sao chép link mời bên dưới.`,
+      });
+      await load();
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'Gửi lời mời thất bại.' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runAction(fn, successMsg) {
+    setBusy(true);
+    try {
+      await fn();
+      setToast({ type: 'success', message: successMsg });
+      await load();
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'Thao tác thất bại.' });
+    } finally {
+      setBusy(false);
+      setConfirmTransfer(null);
+    }
+  }
+
+  if (loading) {
+    return <div className="partner-placeholder-pane"><p>Đang tải thành viên...</p></div>;
+  }
+
+  return (
+    <div style={{ padding: '8px 4px', maxWidth: 920 }}>
+      <div className="register-form-header" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <ShieldCheck size={22} style={{ color: '#2563eb' }} />
+        <div style={{ flex: 1 }}>
+          <p className="eyebrow">Phân quyền tổ chức</p>
+          <h2 style={{ margin: 0 }}>Thành viên & Ủy quyền</h2>
+        </div>
+        {myRole && myRole !== 'OWNER' && (
+          <button type="button" className="button secondary-button" disabled={busy} onClick={() => setConfirmLeave(true)} style={{ color: '#dc2626' }}>
+            Rời tổ chức
+          </button>
+        )}
+      </div>
+
+      {canManage && (
+        <form onSubmit={handleInvite} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 24, padding: 16, border: '1px solid var(--border, #e5edff)', borderRadius: 16 }}>
+          <input
+            type="email"
+            placeholder="Email người được mời"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            style={{ flex: '1 1 240px', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border, #cbd5e1)' }}
+          />
+          <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border, #cbd5e1)' }}>
+            <option value="MEMBER">Thành viên</option>
+            {isOwner && <option value="MANAGER">Quản lý</option>}
+          </select>
+          <button type="submit" className="button primary-button" disabled={busy} style={{ background: 'linear-gradient(135deg, #2563eb, #ff7a1a)', borderColor: 'transparent' }}>
+            <Send size={16} /> Mời thành viên
+          </button>
+        </form>
+      )}
+
+      {lastInviteLink && (
+        <div style={{ marginBottom: 24, padding: 12, background: 'rgba(37,99,235,0.06)', borderRadius: 12, fontSize: '0.82rem', wordBreak: 'break-all' }}>
+          <strong>Link lời mời (gửi thủ công nếu email chưa tới):</strong>
+          <div style={{ marginTop: 6, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <code style={{ flex: '1 1 280px' }}>{lastInviteLink}</code>
+            <button
+              type="button"
+              className="button secondary-button"
+              style={{ padding: '6px 12px' }}
+              onClick={() => { navigator.clipboard?.writeText(lastInviteLink); setToast({ type: 'success', message: 'Đã sao chép link mời.' }); }}
+            >
+              Sao chép
+            </button>
+          </div>
+        </div>
+      )}
+
+      <h3 style={{ fontSize: '1rem', marginBottom: 12 }}>Thành viên hiện tại ({members.length})</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
+        {members.map((m) => (
+          <div key={m.userId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, border: '1px solid var(--border, #e5edff)', borderRadius: 14 }}>
+            <div style={{ flex: 1 }}>
+              <strong>{m.displayName || m.email}</strong>
+              <div style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{m.email}</div>
+              {m.joinedAt && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
+                  Tham gia: {new Date(m.joinedAt).toLocaleDateString('vi-VN')}
+                </div>
+              )}
+            </div>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: m.nodeRole === 'OWNER' ? 'rgba(255,122,26,0.12)' : 'rgba(37,99,235,0.1)', color: m.nodeRole === 'OWNER' ? '#ff7a1a' : '#2563eb', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              {m.nodeRole === 'OWNER' && <Crown size={13} />}{ROLE_LABELS[m.nodeRole] || m.nodeRole}
+            </span>
+            {isOwner && m.nodeRole !== 'OWNER' && (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <select
+                  value={m.nodeRole}
+                  disabled={busy}
+                  onChange={(e) => runAction(() => changeMemberRole(m.userId, e.target.value), 'Đã đổi vai trò.')}
+                  style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid var(--border, #cbd5e1)', fontSize: '0.8rem' }}
+                >
+                  <option value="MEMBER">Thành viên</option>
+                  <option value="MANAGER">Quản lý</option>
+                </select>
+                <button type="button" className="button secondary-button" disabled={busy} onClick={() => setConfirmTransfer(m)} title="Chuyển quyền sở hữu" style={{ padding: '6px 10px' }}>
+                  <Crown size={14} />
+                </button>
+                <button type="button" className="button secondary-button" disabled={busy} onClick={() => runAction(() => removeCompanyMember(m.userId), 'Đã gỡ thành viên.')} title="Gỡ khỏi tổ chức" style={{ padding: '6px 10px', color: '#dc2626' }}>
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+            {myRole === 'MANAGER' && m.nodeRole === 'MEMBER' && (
+              <button type="button" className="button secondary-button" disabled={busy} onClick={() => runAction(() => removeCompanyMember(m.userId), 'Đã gỡ thành viên.')} title="Gỡ khỏi tổ chức" style={{ padding: '6px 10px', color: '#dc2626' }}>
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {canManage && (
+        <>
+          <h3 style={{ fontSize: '1rem', marginBottom: 12 }}>Lời mời đang chờ ({invitations.length})</h3>
+          {invitations.length === 0 ? (
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Chưa có lời mời nào đang chờ.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {invitations.map((inv) => (
+                <div key={inv.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, border: '1px dashed var(--border, #cbd5e1)', borderRadius: 14 }}>
+                  <div style={{ flex: 1 }}>
+                    <strong>{inv.invitedEmail}</strong>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Vai trò: {ROLE_LABELS[inv.nodeRole] || inv.nodeRole}</div>
+                  </div>
+                  <button
+                    type="button"
+                    className="button secondary-button"
+                    disabled={busy}
+                    onClick={async () => {
+                      setBusy(true);
+                      try {
+                        const r = await resendCompanyInvitation(inv.id);
+                        setLastInviteLink(r?.inviteUrl || '');
+                        setToast({
+                          type: r?.emailSent ? 'success' : 'error',
+                          message: r?.emailSent
+                            ? 'Đã gửi lại lời mời qua email.'
+                            : `Đã tạo lại link nhưng CHƯA gửi được email${r?.emailError ? ` (${r.emailError})` : ''}. Dùng link bên trên.`,
+                        });
+                        await load();
+                      } catch (err) {
+                        setToast({ type: 'error', message: err.message || 'Gửi lại thất bại.' });
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                    style={{ padding: '6px 12px' }}
+                  >
+                    Gửi lại
+                  </button>
+                  <button type="button" className="button secondary-button" disabled={busy} onClick={() => runAction(() => revokeCompanyInvitation(inv.id), 'Đã thu hồi lời mời.')} style={{ padding: '6px 12px' }}>
+                    Thu hồi
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {confirmTransfer && (
+        <div className="modal-overlay" onClick={() => setConfirmTransfer(null)}>
+          <div className="modal-card" style={{ maxWidth: 460, width: '90%', padding: 24 }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ marginTop: 0 }}>Chuyển quyền sở hữu</h3>
+            <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
+              Bạn sắp chuyển quyền <strong>Chủ sở hữu</strong> cho <strong>{confirmTransfer.displayName || confirmTransfer.email}</strong>.
+              Bạn sẽ trở thành <strong>Quản lý</strong>. Hành động này không thể tự hoàn tác.
+            </p>
+            <div className="modal-footer" style={{ gap: 12, justifyContent: 'flex-end' }}>
+              <button type="button" className="button secondary-button" onClick={() => setConfirmTransfer(null)}>Hủy</button>
+              <button type="button" className="button primary-button" disabled={busy} onClick={() => runAction(() => transferOwnership(confirmTransfer.userId), 'Đã chuyển quyền sở hữu.')} style={{ background: '#ff7a1a', borderColor: 'transparent' }}>
+                Xác nhận chuyển quyền
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmLeave && (
+        <div className="modal-overlay" onClick={() => setConfirmLeave(false)}>
+          <div className="modal-card" style={{ maxWidth: 460, width: '90%', padding: 24 }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ marginTop: 0 }}>Rời khỏi tổ chức</h3>
+            <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
+              Bạn sẽ mất quyền truy cập vào tổ chức này. Tài khoản của bạn vẫn còn, và có thể được mời lại sau. Bạn chắc chứ?
+            </p>
+            <div className="modal-footer" style={{ gap: 12, justifyContent: 'flex-end' }}>
+              <button type="button" className="button secondary-button" onClick={() => setConfirmLeave(false)}>Hủy</button>
+              <button type="button" className="button primary-button" disabled={busy} onClick={handleLeave} style={{ background: '#dc2626', borderColor: 'transparent' }}>
+                Xác nhận rời
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1040,12 +1475,28 @@ function formatVND(value) {
   return parseInt(clean, 10).toLocaleString('vi-VN');
 }
 
-function ManageJobsView({ onTabChange }) {
+function ManageJobsView({ onTabChange, company }) {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+
+  // Edit mode state
+  const [editingJob, setEditingJob] = useState(null); // { postType, data }
+
+  // Delete confirm state
+  const [deletingJob, setDeletingJob] = useState(null); // { id, postType, title }
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  // Close confirm state
+  const [closingJob, setClosingJob] = useState(null); // { id, postType, title }
+  const [closeLoading, setCloseLoading] = useState(false);
+  const [closeError, setCloseError] = useState('');
+
+  // Edit success message
+  const [editSuccessMsg, setEditSuccessMsg] = useState('');
 
   // Detail Modal state
   const [selectedJobId, setSelectedJobId] = useState(null);
@@ -1091,6 +1542,59 @@ function ManageJobsView({ onTabChange }) {
       setDetailError("Không thể tải chi tiết công việc này. Vui lòng thử lại.");
     } finally {
       setLoadingDetail(false);
+    }
+  }
+
+  async function handleEditClick(e, job) {
+    e.stopPropagation();
+    try {
+      let detail;
+      if (job.postType === 'QUEST') {
+        detail = await getOrganizerQuestById(job.id);
+      } else {
+        detail = await getOrganizerJobById(job.id);
+      }
+      setEditingJob({ postType: job.postType, data: detail });
+    } catch (err) {
+      console.error('Không thể tải dữ liệu để sửa:', err);
+    }
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deletingJob) return;
+    setDeleteLoading(true);
+    setDeleteError('');
+    try {
+      if (deletingJob.postType === 'QUEST') {
+        await deleteQuest(deletingJob.id);
+      } else {
+        await deleteJob(deletingJob.id);
+      }
+      setDeletingJob(null);
+      fetchJobs();
+    } catch (err) {
+      setDeleteError(err.message || 'Xoá thất bại.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
+  async function handleCloseConfirm() {
+    if (!closingJob) return;
+    setCloseLoading(true);
+    setCloseError('');
+    try {
+      if (closingJob.postType === 'QUEST') {
+        await closeQuest(closingJob.id);
+      } else {
+        await closeJob(closingJob.id);
+      }
+      setClosingJob(null);
+      fetchJobs();
+    } catch (err) {
+      setCloseError(err.message || 'Đóng thất bại.');
+    } finally {
+      setCloseLoading(false);
     }
   }
 
@@ -1141,8 +1645,79 @@ function ManageJobsView({ onTabChange }) {
     return matchesSearch && matchesStatus;
   });
 
+  // If editing, show the form instead of the list
+  if (editingJob) {
+    const wasOpen = (editingJob.data?.status || '').toUpperCase() === 'OPEN';
+    const editProps = {
+      initialData: editingJob.data,
+      onSuccess: () => {
+        setEditingJob(null);
+        fetchJobs();
+        if (wasOpen) setEditSuccessMsg('Đã gửi lại để Admin duyệt.');
+      },
+      onCancel: () => setEditingJob(null),
+    };
+    return editingJob.postType === 'QUEST'
+      ? <QuestPostForm {...editProps} />
+      : <JobPostForm {...editProps} />;
+  }
+
   return (
     <section className="dashboard-page">
+      {/* Edit success banner */}
+      {editSuccessMsg && (
+        <div style={{ background: '#dcfce7', border: '1px solid #86efac', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          <span style={{ color: '#15803d', fontWeight: '600', fontSize: '0.9rem' }}>✅ {editSuccessMsg}</span>
+          <button onClick={() => setEditSuccessMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#15803d', fontSize: '1.1rem', lineHeight: 1 }}>×</button>
+        </div>
+      )}
+
+      {/* Close confirm modal */}
+      {closingJob && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '90%', maxWidth: '420px', background: 'var(--card-bg-strong, #fff)', borderRadius: '20px', padding: '28px', boxShadow: '0 10px 40px rgba(0,0,0,0.15)' }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', color: 'var(--ink)' }}>Xác nhận đóng tin</h3>
+            <p style={{ margin: '0 0 20px', fontSize: '0.9rem', color: 'var(--muted)' }}>
+              Bạn có chắc muốn đóng <strong style={{ color: 'var(--ink)' }}>&ldquo;{closingJob.title}&rdquo;</strong>? Ứng viên sẽ không thể nộp thêm sau khi đóng.
+            </p>
+            {closeError && <p style={{ color: '#dc2626', fontSize: '0.85rem', fontWeight: '600', margin: '0 0 12px' }}>{closeError}</p>}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={handleCloseConfirm} disabled={closeLoading} className="button"
+                style={{ flex: 1, padding: '10px', background: '#f59e0b', color: '#fff', borderColor: 'transparent', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}>
+                {closeLoading ? 'Đang đóng...' : '🔒 Đóng tin'}
+              </button>
+              <button onClick={() => { setClosingJob(null); setCloseError(''); }} disabled={closeLoading} className="button secondary-button"
+                style={{ flex: 1, padding: '10px', borderRadius: '12px', fontWeight: '700' }}>
+                Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirm modal */}
+      {deletingJob && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '90%', maxWidth: '420px', background: 'var(--card-bg-strong, #fff)', borderRadius: '20px', padding: '28px', boxShadow: '0 10px 40px rgba(0,0,0,0.15)' }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', color: 'var(--ink)' }}>Xác nhận xoá</h3>
+            <p style={{ margin: '0 0 20px', fontSize: '0.9rem', color: 'var(--muted)' }}>
+              Bạn có chắc muốn xoá <strong style={{ color: 'var(--ink)' }}>&ldquo;{deletingJob.title}&rdquo;</strong>? Hành động này không thể hoàn tác.
+            </p>
+            {deleteError && <p style={{ color: '#dc2626', fontSize: '0.85rem', fontWeight: '600', margin: '0 0 12px' }}>{deleteError}</p>}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={handleDeleteConfirm} disabled={deleteLoading} className="button"
+                style={{ flex: 1, padding: '10px', background: '#dc2626', color: '#fff', borderColor: 'transparent', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}>
+                {deleteLoading ? 'Đang xoá...' : 'Xoá'}
+              </button>
+              <button onClick={() => { setDeletingJob(null); setDeleteError(''); }} disabled={deleteLoading} className="button secondary-button"
+                style={{ flex: 1, padding: '10px', borderRadius: '12px', fontWeight: '700' }}>
+                Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 1. Dashboard Metric Row */}
       {!loading && !error && jobs.length > 0 && (
         <div className="b2b-stats-row" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', marginBottom: '28px' }}>
@@ -1462,28 +2037,36 @@ function ManageJobsView({ onTabChange }) {
                   </div>
 
                   {/* Footer/Stats Block */}
-                  <div style={{
-                    borderTop: '1px solid var(--line)',
-                    paddingTop: '12px',
-                    marginTop: '12px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <UsersRound size={15} style={{ color: '#2563eb' }} />
-                      <strong style={{ fontSize: '0.86rem', color: 'var(--ink)' }}>
-                        {job.applicantsCount || 0} ứng viên
-                      </strong>
+                  <div style={{ borderTop: '1px solid var(--line)', paddingTop: '12px', marginTop: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <UsersRound size={15} style={{ color: '#2563eb' }} />
+                        <strong style={{ fontSize: '0.86rem', color: 'var(--ink)' }}>
+                          {job.applicantsCount || job.applicantCount || 0} ứng viên
+                        </strong>
+                      </div>
+                      <span style={{ fontSize: '0.78rem', color: '#2563eb', fontWeight: '800', textDecoration: 'underline' }}>
+                        Xem chi tiết
+                      </span>
                     </div>
-                    <span style={{
-                      fontSize: '0.78rem',
-                      color: '#2563eb',
-                      fontWeight: '800',
-                      textDecoration: 'underline'
-                    }}>
-                      Xem chi tiết
-                    </span>
+                    {/* Edit / Close / Delete action row */}
+                    <div style={{ display: 'flex', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
+                      <button onClick={(e) => handleEditClick(e, job)}
+                        style={{ flex: 1, padding: '7px 0', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                        ✏️ Sửa
+                      </button>
+                      {(job.status || '').toUpperCase() === 'OPEN' ? (
+                        <button onClick={(e) => { e.stopPropagation(); setClosingJob({ id: job.id, postType: job.postType, title: job.title }); setCloseError(''); }}
+                          style={{ flex: 1, padding: '7px 0', borderRadius: '10px', border: '1px solid rgba(245,158,11,0.4)', background: 'rgba(245,158,11,0.06)', color: '#d97706', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                          🔒 Đóng
+                        </button>
+                      ) : (
+                        <button onClick={(e) => { e.stopPropagation(); setDeletingJob({ id: job.id, postType: job.postType, title: job.title }); setDeleteError(''); }}
+                          style={{ flex: 1, padding: '7px 0', borderRadius: '10px', border: '1px solid rgba(220,38,38,0.3)', background: 'rgba(220,38,38,0.04)', color: '#dc2626', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                          🗑 Xoá
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -2040,6 +2623,7 @@ export function BusinessPage() {
   const [account, setAccount] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [noOrg, setNoOrg] = useState(false);
   const [toast, setToast] = useState({ type: 'idle', message: '' });
   const [theme, setTheme] = useState(getInitialTheme);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -2049,6 +2633,7 @@ export function BusinessPage() {
 
   async function fetchCompanyData() {
     setError(null);
+    setNoOrg(false);
     if (!isSupabaseConfigured) {
       setAccount({
         appUserId: 'demo-app-user',
@@ -2086,6 +2671,9 @@ export function BusinessPage() {
       const status = err.response?.status;
       if (status === 401 || status === 403) {
         navigate('/business/login');
+      } else if (status === 404) {
+        // Authenticated, but the account no longer belongs to any organization.
+        setNoOrg(true);
       } else {
         setError(err.response?.data?.message || err.message || 'Không thể tải thông tin đối tác.');
       }
@@ -2145,6 +2733,27 @@ export function BusinessPage() {
     );
   }
 
+  /* Account no longer belongs to any organization (removed / left / ownership transferred away) */
+  if (noOrg) {
+    return (
+      <section style={{ maxWidth: '560px', margin: '60px auto', padding: '0 16px', textAlign: 'center' }}>
+        <div className="panel" style={{ padding: '40px', borderRadius: '20px', border: '1px solid rgba(37,99,235,0.2)' }}>
+          <Lock size={40} style={{ color: '#2563eb', marginBottom: '16px' }} />
+          <h2 style={{ marginBottom: '12px' }}>Bạn không còn thuộc tổ chức nào</h2>
+          <p style={{ color: 'var(--muted)', marginBottom: '24px', lineHeight: 1.6 }}>
+            Tài khoản của bạn hiện không có quyền truy cập tổ chức Doanh nghiệp/CLB nào
+            (có thể bạn đã rời tổ chức hoặc bị gỡ quyền). Nếu cho rằng đây là nhầm lẫn,
+            hãy liên hệ Chủ sở hữu/Quản lý của tổ chức để được mời lại.
+          </p>
+          <button className="button primary-button" onClick={handleLogout}
+            style={{ background: 'linear-gradient(135deg, #2563eb, #ff7a1a)', borderColor: 'transparent' }}>
+            <LogOut size={16} /> Đăng xuất
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   /* Error */
   if (error) {
     return (
@@ -2182,19 +2791,20 @@ export function BusinessPage() {
       case 'dashboard':
         return <ApprovedView company={company} onTabChange={handleTabChange} />;
       case 'create-job':
-        return (
-          <JobCreateForm
-            companyType={company?.companyType}
-            onSuccess={() => handleTabChange('dashboard')}
-            onCancel={() => handleTabChange('dashboard')}
-          />
-        );
+        if (company?.myRole === 'MEMBER') {
+          return (
+            <TabPlaceholderView
+              icon={Lock}
+              title="Không có quyền đăng tin"
+              desc="Với vai trò Thành viên, bạn có thể xem tin đăng và duyệt ứng viên, nhưng không thể tạo tin mới. Hãy liên hệ Chủ sở hữu hoặc Quản lý của tổ chức."
+            />
+          );
+        }
+        return company?.companyType === 'CLUB'
+          ? <QuestPostForm onSuccess={() => handleTabChange('manage-jobs')} onCancel={() => handleTabChange('manage-jobs')} />
+          : <JobPostForm onSuccess={() => handleTabChange('manage-jobs')} onCancel={() => handleTabChange('manage-jobs')} />;
       case 'manage-jobs':
-        return (
-          <ManageJobsView
-            onTabChange={handleTabChange}
-          />
-        );
+        return <ManageJobsView onTabChange={handleTabChange} company={company} />;
       case 'find-talent':
         return (
           <TabPlaceholderView
@@ -2205,6 +2815,8 @@ export function BusinessPage() {
         );
       case 'candidates':
         return <CandidatesView />;
+      case 'members':
+        return <MembersView company={company} setToast={setToast} />;
       default:
         return <ApprovedView company={company} onTabChange={handleTabChange} />;
     }
@@ -2254,7 +2866,9 @@ export function BusinessPage() {
 
         {/* Navigation Menu */}
         <nav className="partner-nav-menu">
-          {SIDEBAR_TABS.map((tab) => {
+          {SIDEBAR_TABS
+            .filter((tab) => !(tab.key === 'create-job' && company?.myRole === 'MEMBER'))
+            .map((tab) => {
             const Icon = tab.icon;
             const isLocked = company?.verificationStatus !== 'APPROVED' && tab.lockable;
             const isActive = !isLocked && activeTab === tab.key;

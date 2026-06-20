@@ -40,6 +40,24 @@ export async function updateJob(id, data) {
   return response.data.data;
 }
 
+export async function getOrganizerJobById(id) {
+  const response = await httpClient.get(`/organizer/jobs/${id}`);
+  if (!response.data?.success) throw new Error(response.data?.message || 'Không thể tải tin tuyển dụng.');
+  return response.data.data;
+}
+
+export async function closeJob(id) {
+  const response = await httpClient.patch(`/organizer/jobs/${id}/close`);
+  if (!response.data?.success) throw new Error(response.data?.message || 'Đóng tin thất bại.');
+  return response.data.data;
+}
+
+export async function deleteJob(id) {
+  const response = await httpClient.delete(`/organizer/jobs/${id}`);
+  if (!response.data?.success) throw new Error(response.data?.message || 'Xoá tin thất bại.');
+  return response.data.data;
+}
+
 export async function getSkills() {
   const response = await httpClient.get('/skills');
   if (!response.data?.success) {

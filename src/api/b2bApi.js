@@ -64,3 +64,109 @@ export async function updateB2bProfile(data) {
   return response.data.data;
 }
 
+// ── Membership & delegation ──────────────────────────────────────────────────
+
+export async function getCompanyMembers() {
+  const response = await httpClient.get('/company/members');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải danh sách thành viên.');
+  }
+  return response.data.data;
+}
+
+export async function inviteCompanyMember(email, role) {
+  const response = await httpClient.post('/company/invitations', { email, role });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Gửi lời mời thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function listCompanyInvitations() {
+  const response = await httpClient.get('/company/invitations');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải danh sách lời mời.');
+  }
+  return response.data.data;
+}
+
+export async function revokeCompanyInvitation(invitationId) {
+  const response = await httpClient.delete(`/company/invitations/${invitationId}`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Thu hồi lời mời thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function acceptCompanyInvitation(token) {
+  const response = await httpClient.post('/company/invitations/accept', { token });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Chấp nhận lời mời thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function previewInvitation(token) {
+  const response = await httpClient.get('/company/invitations/preview', { params: { token } });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể đọc lời mời.');
+  }
+  return response.data.data;
+}
+
+export async function registerInvitation(token, password) {
+  const response = await httpClient.post('/company/invitations/register', { token, password });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Tạo tài khoản từ lời mời thất bại.');
+  }
+  return response.data.data; // { accessToken, refreshToken, user }
+}
+
+export async function changeMemberRole(userId, role) {
+  const response = await httpClient.patch(`/company/members/${userId}/role`, { role });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Đổi vai trò thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function transferOwnership(targetUserId) {
+  const response = await httpClient.post('/company/transfer-ownership', { targetUserId });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Chuyển quyền sở hữu thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function removeCompanyMember(userId) {
+  const response = await httpClient.delete(`/company/members/${userId}`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Gỡ thành viên thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function resendCompanyInvitation(invitationId) {
+  const response = await httpClient.post(`/company/invitations/${invitationId}/resend`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Gửi lại lời mời thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function leaveCompany() {
+  const response = await httpClient.post('/company/leave');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Rời tổ chức thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function provisionCompany(data) {
+  const response = await httpClient.post('/admin/b2b/provision', data);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Cấp quyền tổ chức thất bại.');
+  }
+  return response.data.data;
+}
+

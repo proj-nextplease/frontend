@@ -6,6 +6,7 @@ import {
   getPendingB2bRegistrations,
   approveB2bRegistration,
   rejectB2bRegistration,
+  provisionCompany,
 } from '../api/b2bApi.js';
 import {
   getAdminStats,
@@ -15,6 +16,7 @@ import {
   approveJob,
   rejectJob,
   updateUserStatus,
+  deleteUserAccount,
   getActiveFraudFlags,
   resolveFraudFlag,
 } from '../api/adminApi.js';
@@ -60,6 +62,7 @@ const SIDEBAR_TABS = [
   { key: 'OVERVIEW', route: 'overview', label: 'Tổng quan hệ thống', icon: BarChart2 },
   { key: 'USERS', route: 'users', label: 'Quản lý người dùng', icon: Users },
   { key: 'B2B_REVIEWS', route: 'b2b-partners', label: 'Duyệt đối tác B2B', icon: Building, badgeCount: true },
+  { key: 'PROVISION', route: 'provision', label: 'Cấp quyền tổ chức', icon: Building },
   {
     key: 'JOBS', route: 'jobs', label: 'Quản lý đăng tin', icon: FileText, badgeCount: true,
     subItems: [
@@ -123,6 +126,81 @@ function getInitialTheme() {
   if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
 
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function ProvisionPanel() {
+  const [form, setForm] = useState({ name: '', companyType: 'SME', representativeEmail: '' });
+  const [status, setStatus] = useState({ type: 'idle', message: '' });
+  const [lastLink, setLastLink] = useState('');
+
+  function update(event) {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (!form.name.trim() || !form.representativeEmail.trim()) {
+      setStatus({ type: 'error', message: 'Nhập tên tổ chức và email người đại diện.' });
+      return;
+    }
+    setStatus({ type: 'loading', message: 'Đang tạo tổ chức và gửi lời mời...' });
+    setLastLink('');
+    try {
+      const result = await provisionCompany(form);
+      setLastLink(result?.inviteUrl || '');
+      setStatus({
+        type: result?.emailSent ? 'success' : 'error',
+        message: result?.emailSent
+          ? `Đã cấp quyền và gửi lời mời tới ${result.email}.`
+          : `Đã cấp quyền cho ${result.email} nhưng CHƯA gửi được email${result?.emailError ? ` (${result.emailError})` : ''}. Hãy gửi link mời bên dưới thủ công.`,
+      });
+      setForm({ name: '', companyType: 'SME', representativeEmail: '' });
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message || 'Cấp quyền tổ chức thất bại.' });
+    }
+  }
+
+  return (
+    <div style={{ maxWidth: 640 }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 20, border: '1px solid var(--border, #e5edff)', borderRadius: 16 }}>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.85rem', fontWeight: 600 }}>
+          Tên tổ chức
+          <input name="name" value={form.name} onChange={update} placeholder="VD: CLB Truyền thông FPTU" style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border, #cbd5e1)' }} />
+        </label>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.85rem', fontWeight: 600 }}>
+          Loại hình
+          <select name="companyType" value={form.companyType} onChange={update} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border, #cbd5e1)' }}>
+            <option value="SME">Doanh nghiệp (SME)</option>
+            <option value="STARTUP">Startup</option>
+            <option value="AGENCY">Agency</option>
+            <option value="ENTERPRISE">Tập đoàn</option>
+            <option value="CLUB">CLB / Tổ chức sinh viên</option>
+          </select>
+        </label>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.85rem', fontWeight: 600 }}>
+          Email người đại diện (Chủ sở hữu)
+          <input name="representativeEmail" type="email" value={form.representativeEmail} onChange={update} placeholder="nguoidaidien@tochuc.vn" style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border, #cbd5e1)' }} />
+        </label>
+
+        {status.message && (
+          <div className={`register-status ${status.type === 'loading' ? 'loading' : status.type}`}>
+            <p style={{ margin: 0 }}>{status.message}</p>
+          </div>
+        )}
+
+        {lastLink && (
+          <div style={{ fontSize: '0.82rem', wordBreak: 'break-all', padding: 12, background: 'rgba(37,99,235,0.06)', borderRadius: 10 }}>
+            <strong>Link lời mời:</strong><br />{lastLink}
+          </div>
+        )}
+
+        <button type="submit" className="button primary-button" disabled={status.type === 'loading'} style={{ alignSelf: 'flex-start', background: 'linear-gradient(135deg, #2563eb, #ff7a1a)', borderColor: 'transparent' }}>
+          Cấp quyền & gửi lời mời
+        </button>
+      </form>
+    </div>
+  );
 }
 
 export function AdminB2bReviewPage() {
@@ -681,6 +759,31 @@ export function AdminB2bReviewPage() {
           setActionStatus({ type: 'success', message: `Đã ${verb} tài khoản thành công.` });
         } catch (err) {
           setActionStatus({ type: 'error', message: err.message || `Không thể ${verb} tài khoản.` });
+        } finally {
+          setUserModerateLoading(false);
+        }
+      },
+    });
+  }
+
+  async function handleDeleteUser(userId, displayName) {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Xác nhận xóa tài khoản',
+      message: `Xóa tài khoản của "${displayName || 'người dùng này'}"? Tài khoản sẽ bị thu hồi mọi quyền truy cập và không thể đăng nhập lại. Hành động này không thể hoàn tác.`,
+      confirmText: 'Xóa tài khoản',
+      confirmColor: '#dc2626',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setUserModerateLoading(true);
+        setActionStatus({ type: 'loading', message: 'Đang xóa tài khoản...' });
+        try {
+          await deleteUserAccount(userId);
+          setUsers(prev => prev.filter(u => u.id !== userId));
+          setSelectedUserDetail(null);
+          setActionStatus({ type: 'success', message: 'Đã xóa tài khoản thành công.' });
+        } catch (err) {
+          setActionStatus({ type: 'error', message: err.message || 'Không thể xóa tài khoản.' });
         } finally {
           setUserModerateLoading(false);
         }
@@ -2104,6 +2207,7 @@ export function AdminB2bReviewPage() {
                 {activeTab === 'OVERVIEW' && 'Số liệu tổng quan hoạt động và hạ tầng hệ thống.'}
                 {activeTab === 'USERS' && 'Quản lý tài khoản Ứng viên, Doanh nghiệp & CLB và Quản trị viên.'}
                 {activeTab === 'B2B_REVIEWS' && 'Duyệt các yêu cầu tham gia tuyển dụng của SME và CLB Sinh Viên.'}
+                {activeTab === 'PROVISION' && 'Cấp quyền truy cập tổ chức cho một người đại diện qua lời mời email.'}
                 {activeTab === 'JOBS' && jobsSubTab === 'new' && 'Xét duyệt tin tuyển dụng mới đang chờ phê duyệt từ đối tác.'}
                 {activeTab === 'JOBS' && jobsSubTab === 'all' && `Theo dõi ${jobManageTypeTab === 'JOB' ? 'các bài đăng Cơ hội từ Doanh nghiệp' : 'các Quest từ CLB và Tổ chức'}.`}
                 {activeTab === 'VERIF_QUEUE' && verifSubTab === 'pending' && 'Tiếp nhận yêu cầu xác thực mới từ ứng viên, mở từng hồ sơ để xem minh chứng chi tiết.'}
@@ -2135,6 +2239,7 @@ export function AdminB2bReviewPage() {
               {activeTab === 'OVERVIEW' && renderOverview()}
               {activeTab === 'USERS' && renderUsers()}
               {activeTab === 'B2B_REVIEWS' && renderB2bReviews()}
+              {activeTab === 'PROVISION' && <ProvisionPanel />}
               {activeTab === 'JOBS' && renderJobs()}
               {activeTab === 'VERIF_QUEUE' && renderVerifQueue()}
               {activeTab === 'FRAUD_FLAGS' && renderFraudFlags()}
@@ -2893,6 +2998,16 @@ export function AdminB2bReviewPage() {
                       onClick={() => handleUpdateUserStatus(selectedUserDetail.id, 'BANNED', selectedUserDetail.displayName)}
                     >
                       Cấm vĩnh viễn (Ban)
+                    </button>
+                  )}
+                  {!(selectedUserDetail.roles || '').toLowerCase().includes('admin') && (
+                    <button
+                      className="button danger-button"
+                      style={{ fontSize: '0.82rem', padding: '7px 14px', background: '#dc2626' }}
+                      disabled={userModerateLoading}
+                      onClick={() => handleDeleteUser(selectedUserDetail.id, selectedUserDetail.displayName)}
+                    >
+                      Xóa tài khoản
                     </button>
                   )}
                 </div>

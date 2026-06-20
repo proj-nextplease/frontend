@@ -15,6 +15,7 @@ import { supabase } from '../services/supabaseClient.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { BusinessLoginPage } from '../pages/BusinessLoginPage.jsx';
 import { BusinessRegisterPage } from '../pages/BusinessRegisterPage.jsx';
+import { AcceptInvitePage } from '../pages/AcceptInvitePage.jsx';
 import { AdminB2bReviewPage } from '../pages/AdminB2bReviewPage.jsx';
 import { BusinessLandingPage } from '../pages/BusinessLandingPage.jsx';
 import { AdminLoginPage } from '../pages/AdminLoginPage.jsx';
@@ -337,6 +338,7 @@ export function AppRouter() {
         {/* B2B Authentication and Dashboard Routes */}
         <Route path="/business/login" element={<BusinessLoginPage />} />
         <Route path="/business/register" element={<BusinessRegisterPage />} />
+        <Route path="/business/accept-invite" element={<AcceptInvitePage />} />
         <Route path="/businesses" element={<BusinessLandingPage />} />
         <Route path="/businesses/dashboard" element={<ProtectedBusinessRoute />} />
         <Route path="/businesses/dashboard/:tabSlug" element={<ProtectedBusinessRoute />} />

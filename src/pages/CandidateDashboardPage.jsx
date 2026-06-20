@@ -40,9 +40,9 @@ import { getMyPortfolio } from '../api/portfolioApi.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
 import { getJobs, getCompanies, getCompanyDetail } from '../api/jobApi.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
-import { applyToJob, getMyApplications } from '../api/applicationApi.js';
+import { applyToJob, getMyApplications, withdrawApplication } from '../api/applicationApi.js';
 import { getWallet, topUp, buyPremium } from '../api/walletApi.js';
-import { searchQuests, applyToQuest, getMyQuestApplications } from '../api/questApi.js';
+import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication } from '../api/questApi.js';
 import { supabase } from '../services/supabaseClient.js';
 
 const CATEGORY_MAP = {
@@ -357,6 +357,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [applyModalError, setApplyModalError] = useState('');
   const [applySuccessMsg, setApplySuccessMsg] = useState('');
   const [showPremiumPaywall, setShowPremiumPaywall] = useState(false);
+
+  // Withdraw states
+  const [withdrawingId, setWithdrawingId] = useState(null);
+  const [withdrawError, setWithdrawError] = useState('');
 
   // Wallet & Premium states
   const [wallet, setWallet] = useState(null);
@@ -862,6 +866,34 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       }
     } finally {
       setApplyModalLoading(false);
+    }
+  }
+
+  async function handleWithdrawJob(applicationId) {
+    setWithdrawingId(applicationId);
+    setWithdrawError('');
+    try {
+      await withdrawApplication(applicationId);
+      const data = await getMyApplications();
+      setAppliedJobs(data || []);
+    } catch (err) {
+      setWithdrawError(err.message || 'Rút đơn thất bại.');
+    } finally {
+      setWithdrawingId(null);
+    }
+  }
+
+  async function handleWithdrawQuest(applicationId) {
+    setWithdrawingId(applicationId);
+    setWithdrawError('');
+    try {
+      await withdrawQuestApplication(applicationId);
+      const data = await getMyQuestApplications();
+      setQuestApplications(data || []);
+    } catch (err) {
+      setWithdrawError(err.message || 'Rút đơn thất bại.');
+    } finally {
+      setWithdrawingId(null);
     }
   }
 
@@ -1748,6 +1780,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 ))}
               </div>
 
+              {/* Withdraw error */}
+              {withdrawError && (
+                <div style={{ padding: '10px 14px', background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '10px', color: '#dc2626', fontSize: '0.85rem', fontWeight: '600', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>{withdrawError}</span>
+                  <button onClick={() => setWithdrawError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1.1rem', lineHeight: 1 }}>×</button>
+                </div>
+              )}
+
               {/* Filters */}
               {myAppsTab === 'BUSINESS' ? (
                 <>
@@ -1800,7 +1840,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 </span>
                               </div>
                             </div>
-                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
                               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '8px', background: `${sc}15`, color: sc, fontWeight: '800', fontSize: '0.82rem' }}>
                                 {st === 'SUBMITTED' && <Clock3 size={12} />}
                                 {(st === 'ACCEPTED' || st === 'SHORTLISTED') && <CheckCircle2 size={12} />}
@@ -1808,9 +1848,29 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 {sl}
                               </span>
                               {st === 'REJECTED' && (app.reject_reason || app.rejectionReason) && (
-                                <div style={{ marginTop: '4px', fontSize: '0.76rem', color: '#dc2626', maxWidth: '200px', textAlign: 'right' }}>
+                                <div style={{ fontSize: '0.76rem', color: '#dc2626', maxWidth: '200px', textAlign: 'right', fontWeight: '600' }}>
                                   Lý do: {app.reject_reason || app.rejectionReason}
                                 </div>
+                              )}
+                              {app.rating_score != null && (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', maxWidth: '220px' }}>
+                                  <div style={{ display: 'flex', gap: '2px' }}>
+                                    {[1, 2, 3, 4, 5].map(n => (
+                                      <Star key={n} size={14} fill={n <= app.rating_score ? '#f59e0b' : 'none'} color={n <= app.rating_score ? '#f59e0b' : 'var(--muted)'} />
+                                    ))}
+                                  </div>
+                                  {app.rating_comment && (
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'right', fontStyle: 'italic' }}>"{app.rating_comment}"</div>
+                                  )}
+                                </div>
+                              )}
+                              {['SUBMITTED', 'VIEWED', 'SHORTLISTED'].includes(st) && (
+                                <button
+                                  onClick={() => handleWithdrawJob(app.id)}
+                                  disabled={withdrawingId === app.id}
+                                  style={{ fontSize: '0.76rem', fontWeight: '700', color: '#6b7280', background: 'none', border: '1px solid var(--line)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
+                                  {withdrawingId === app.id ? 'Đang rút...' : 'Rút đơn'}
+                                </button>
                               )}
                             </div>
                           </div>
@@ -1871,12 +1931,39 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 {qa.expReward > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '800', color: '#f59e0b' }}><Zap size={12} />+{qa.expReward} EXP</span>}
                               </div>
                             </div>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '8px', background: `${sc}15`, color: sc, fontWeight: '800', fontSize: '0.82rem', flexShrink: 0 }}>
-                              {qa.status === 'COMPLETED' && <CheckCircle2 size={12} />}
-                              {qa.status === 'REJECTED' && <AlertTriangle size={12} />}
-                              {qa.status === 'SUBMITTED' && <Clock3 size={12} />}
-                              {sl}
-                            </span>
+                            <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '8px', background: `${sc}15`, color: sc, fontWeight: '800', fontSize: '0.82rem' }}>
+                                {qa.status === 'COMPLETED' && <CheckCircle2 size={12} />}
+                                {qa.status === 'REJECTED' && <AlertTriangle size={12} />}
+                                {qa.status === 'SUBMITTED' && <Clock3 size={12} />}
+                                {sl}
+                              </span>
+                              {qa.status === 'REJECTED' && qa.rejectReason && (
+                                <div style={{ fontSize: '0.76rem', color: '#dc2626', maxWidth: '200px', textAlign: 'right', fontWeight: '600' }}>
+                                  Lý do: {qa.rejectReason}
+                                </div>
+                              )}
+                              {qa.ratingScore != null && (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', maxWidth: '220px' }}>
+                                  <div style={{ display: 'flex', gap: '2px' }}>
+                                    {[1, 2, 3, 4, 5].map(n => (
+                                      <Star key={n} size={14} fill={n <= qa.ratingScore ? '#f59e0b' : 'none'} color={n <= qa.ratingScore ? '#f59e0b' : 'var(--muted)'} />
+                                    ))}
+                                  </div>
+                                  {qa.ratingComment && (
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'right', fontStyle: 'italic' }}>"{qa.ratingComment}"</div>
+                                  )}
+                                </div>
+                              )}
+                              {qa.status === 'SUBMITTED' && (
+                                <button
+                                  onClick={() => handleWithdrawQuest(qa.id)}
+                                  disabled={withdrawingId === qa.id}
+                                  style={{ fontSize: '0.76rem', fontWeight: '700', color: '#6b7280', background: 'none', border: '1px solid var(--line)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
+                                  {withdrawingId === qa.id ? 'Đang rút...' : 'Rút đơn'}
+                                </button>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
