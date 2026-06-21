@@ -5,6 +5,7 @@ import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { AuthBrandPanel } from '../components/AuthBrandPanel.jsx';
+import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
 
 const INK = '#1d1320';
 const MUTED = '#6e6470';
@@ -34,16 +35,6 @@ const FIELD = {
   fontSize: '0.98rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit',
 };
 
-
-function statusStyle(type) {
-  const m = {
-    error: { bg: 'rgba(220,38,38,0.06)', border: 'rgba(220,38,38,0.25)', color: '#dc2626' },
-    success: { bg: 'rgba(22,163,74,0.06)', border: 'rgba(22,163,74,0.25)', color: '#16a34a' },
-    warning: { bg: 'rgba(217,119,6,0.06)', border: 'rgba(217,119,6,0.25)', color: '#b45309' },
-    loading: { bg: 'rgba(37,99,235,0.06)', border: 'rgba(37,99,235,0.2)', color: '#2563eb' },
-  };
-  return m[type] || m.loading;
-}
 
 export function CandidateLoginPage() {
   const navigate = useNavigate();
@@ -107,8 +98,6 @@ export function CandidateLoginPage() {
     }
   }
 
-  const st = statusStyle(status.type);
-
   return (
     <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 1.12fr) minmax(0, 0.88fr)', background: WHITE, color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
       <style>{`
@@ -120,7 +109,7 @@ export function CandidateLoginPage() {
 
       {/* LEFT — form */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px, 5vw, 56px)', animation: 'npFormIn 0.6s ease-out 0.08s both' }}>
-        <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '410px' }}>
+        <form onSubmit={handleSubmit} noValidate style={{ width: '100%', maxWidth: '410px' }}>
           <p style={{ fontSize: '0.82rem', fontWeight: '800', letterSpacing: '0.04em', textTransform: 'uppercase', color: RED, margin: '0 0 10px' }}>Đăng nhập ứng viên</p>
           <h2 style={{ fontSize: 'clamp(1.8rem, 3vw, 2.4rem)', fontWeight: '800', letterSpacing: '-0.03em', color: INK, margin: '0 0 8px' }}>Chào mừng trở lại</h2>
           <p style={{ fontSize: '0.98rem', color: MUTED, margin: '0 0 26px' }}>Đăng nhập để tiếp tục với hồ sơ của bạn.</p>
@@ -163,11 +152,12 @@ export function CandidateLoginPage() {
               style={{ background: 'none', border: 'none', color: RED, fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer' }}>Quên mật khẩu?</button>
           </div>
 
-          {status.message ? (
-            <div style={{ display: 'flex', gap: '10px', padding: '12px 16px', borderRadius: '12px', background: st.bg, border: `1px solid ${st.border}`, color: st.color, fontSize: '0.9rem', fontWeight: '600', marginBottom: '18px' }}>
-              {status.message}
-            </div>
-          ) : null}
+          <AuthStatusCard
+            status={status}
+            title={status.type === 'error' ? 'Không thể đăng nhập' : undefined}
+            onClose={() => setStatus({ type: 'idle', message: '' })}
+            style={{ marginBottom: '18px' }}
+          />
 
           <button type="submit" disabled={status.type === 'loading'}
             style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: 'pointer' }}>

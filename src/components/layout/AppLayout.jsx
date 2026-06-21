@@ -8,7 +8,7 @@ export function AppLayout() {
   const isCandidateWorkspace = location.pathname.startsWith('/candidates/dashboard');
   const isWorkspace = isBusinessWorkspace || isAdminWorkspace || isCandidateWorkspace;
   const isLandingPage = ['/', '/candidates', '/businesses'].includes(location.pathname);
-  const isAuthPage = location.pathname.endsWith('/login') || location.pathname.endsWith('/register');
+  const isAuthPage = location.pathname.endsWith('/login') || location.pathname.endsWith('/register') || location.pathname.endsWith('/accept-invite');
 
   return (
     <div className={`app-shell ${isWorkspace ? 'business-workspace-shell' : ''}`}>

@@ -11,6 +11,14 @@ import {
 import { loginCandidate } from '../api/authApi.js';
 import { supabase } from '../services/supabaseClient.js';
 import { AuthBrandPanel } from '../components/AuthBrandPanel.jsx';
+import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
+
+const STATUS_TITLES = {
+  success: 'Đã gửi mã xác thực',
+  error: 'Chưa thể xác thực',
+  warning: 'Cần đợi thêm một chút',
+  loading: 'Đang xử lý',
+};
 
 const INK = '#1d1320';
 const MUTED = '#6e6470';
@@ -60,15 +68,6 @@ function fieldBorder(state) {
   if (state === 'valid') return '#16a34a';
   if (state === 'invalid') return '#dc2626';
   return LINE;
-}
-function statusStyle(type) {
-  const m = {
-    error: { bg: 'rgba(220,38,38,0.06)', border: 'rgba(220,38,38,0.25)', color: '#dc2626' },
-    success: { bg: 'rgba(22,163,74,0.06)', border: 'rgba(22,163,74,0.25)', color: '#16a34a' },
-    warning: { bg: 'rgba(217,119,6,0.06)', border: 'rgba(217,119,6,0.25)', color: '#b45309' },
-    loading: { bg: 'rgba(37,99,235,0.06)', border: 'rgba(37,99,235,0.2)', color: '#2563eb' },
-  };
-  return m[type] || m.loading;
 }
 function isPasswordValid(password) {
   return password.length >= 6 && password.length <= 25 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
@@ -267,8 +266,6 @@ export function CandidateRegisterPage() {
     if (currentStep === 1) moveToOtpStep();
   }
 
-  const st = statusStyle(status.type);
-
   function renderInput(key, placeholder, type, showState) {
     const Icon = registrationFields.find((f) => f.key === key).icon;
     const state = getFieldState(key);
@@ -309,6 +306,10 @@ export function CandidateRegisterPage() {
         @keyframes npBrandInL { from { opacity:0; transform: translateX(-48px);} to { opacity:1; transform:none; } }
         @keyframes npFormIn { from { opacity:0; transform: translateY(22px);} to { opacity:1; transform:none; } }
         @keyframes npFloat { 0%{transform:translateY(-7px)} 100%{transform:translateY(9px)} }
+        @keyframes npSpin { to { transform: rotate(360deg); } }
+        .np-spin { animation: npSpin 0.9s linear infinite; }
+        .np-otp { transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; }
+        .np-otp:focus { border-color: #1d1320 !important; box-shadow: 0 0 0 3px rgba(29,19,32,0.12); }
         @media (max-width: 900px){ .np-auth{ grid-template-columns: 1fr !important; } .np-auth-brand{ display:none !important; } }
       `}</style>
 
@@ -317,7 +318,7 @@ export function CandidateRegisterPage() {
 
       {/* RIGHT — form */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px, 5vw, 56px)', animation: 'npFormIn 0.6s ease-out 0.08s both' }}>
-        <form onSubmit={handlePanelSubmit} style={{ width: '100%', maxWidth: '440px' }}>
+        <form onSubmit={handlePanelSubmit} noValidate style={{ width: '100%', maxWidth: '440px' }}>
 
           {/* Step indicator */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '28px' }}>
@@ -379,9 +380,7 @@ export function CandidateRegisterPage() {
                 </div>
               )}
 
-              {status.message ? (
-                <div style={{ marginTop: '16px', display: 'flex', gap: '10px', padding: '12px 16px', borderRadius: '12px', background: st.bg, border: `1px solid ${st.border}`, color: st.color, fontSize: '0.9rem', fontWeight: '600' }}>{status.message}</div>
-              ) : null}
+              <AuthStatusCard status={status} titles={STATUS_TITLES} onClose={() => setStatus({ type: 'idle', message: '' })} style={{ marginTop: '16px' }} />
 
               <button type="submit" disabled={status.type === 'loading' || otpCooldown > 0}
                 style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: 'pointer', marginTop: '20px' }}>
@@ -402,26 +401,28 @@ export function CandidateRegisterPage() {
               <p style={{ fontSize: '0.96rem', color: MUTED, margin: '0 0 24px' }}>
                 Đã gửi mã đến <strong style={{ color: INK }}>{formData.email || 'email đăng nhập của bạn'}</strong>
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px', marginBottom: '20px' }}>
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <input
-                    key={index}
-                    aria-label={`Số OTP thứ ${index + 1}`}
-                    inputMode="numeric"
-                    maxLength={1}
-                    onChange={(event) => updateOtpDigit(index, event)}
-                    onKeyDown={(event) => handleOtpKeyDown(index, event)}
-                    ref={(el) => { otpInputRefs.current[index] = el; }}
-                    type="text"
-                    value={otpCode[index]?.trim() || ''}
-                    style={{ width: '100%', aspectRatio: '1', textAlign: 'center', fontSize: '1.4rem', fontWeight: '800', color: INK, border: `1.5px solid ${otpCode[index]?.trim() ? INK : LINE}`, borderRadius: '12px', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
-                  />
-                ))}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px', marginBottom: '22px' }}>
+                {Array.from({ length: 6 }).map((_, index) => {
+                  const filled = Boolean(otpCode[index]?.trim());
+                  return (
+                    <input
+                      key={index}
+                      className="np-otp"
+                      aria-label={`Số OTP thứ ${index + 1}`}
+                      inputMode="numeric"
+                      maxLength={1}
+                      onChange={(event) => updateOtpDigit(index, event)}
+                      onKeyDown={(event) => handleOtpKeyDown(index, event)}
+                      ref={(el) => { otpInputRefs.current[index] = el; }}
+                      type="text"
+                      value={otpCode[index]?.trim() || ''}
+                      style={{ width: '100%', height: 'clamp(52px, 4vw, 62px)', textAlign: 'center', fontSize: '1.7rem', fontWeight: '800', color: INK, border: `1.5px solid ${filled ? INK : LINE}`, background: filled ? '#faf7f5' : WHITE, borderRadius: '14px', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                    />
+                  );
+                })}
               </div>
 
-              {status.message ? (
-                <div style={{ display: 'flex', gap: '10px', padding: '12px 16px', borderRadius: '12px', background: st.bg, border: `1px solid ${st.border}`, color: st.color, fontSize: '0.9rem', fontWeight: '600', marginBottom: '18px' }}>{status.message}</div>
-              ) : null}
+              <AuthStatusCard status={status} titles={STATUS_TITLES} onClose={() => setStatus({ type: 'idle', message: '' })} style={{ marginBottom: '18px' }} />
 
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                 <button type="button" disabled={status.type === 'loading' || otpCooldown > 0} onClick={moveToOtpStep}

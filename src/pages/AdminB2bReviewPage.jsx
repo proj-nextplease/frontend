@@ -47,15 +47,12 @@ import {
   CheckCircle,
   Activity,
   Server,
-  Moon,
-  Sun,
   ChevronsLeft,
   ChevronsRight,
   ChevronDown,
   ChevronRight,
 } from 'lucide-react';
 
-const THEME_STORAGE_KEY = 'nextplease:theme';
 const ADMIN_BASE_PATH = '/nextplease-admin-portal/b2b-reviews';
 
 const SIDEBAR_TABS = [
@@ -119,14 +116,6 @@ const VERIF_STATUS_FILTERS = [
   { key: 'REJECTED', label: 'Từ chối' },
 ];
 
-function getInitialTheme() {
-  if (typeof window === 'undefined') return 'light';
-
-  const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
 
 function ProvisionPanel() {
   const [form, setForm] = useState({ name: '', companyType: 'SME', representativeEmail: '' });
@@ -195,7 +184,7 @@ function ProvisionPanel() {
           </div>
         )}
 
-        <button type="submit" className="button primary-button" disabled={status.type === 'loading'} style={{ alignSelf: 'flex-start', background: 'linear-gradient(135deg, #2563eb, #ff7a1a)', borderColor: 'transparent' }}>
+        <button type="submit" className="button primary-button" disabled={status.type === 'loading'} style={{ alignSelf: 'flex-start', background: '#0d1b33', borderColor: 'transparent' }}>
           Cấp quyền & gửi lời mời
         </button>
       </form>
@@ -213,9 +202,7 @@ export function AdminB2bReviewPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [actionStatus, setActionStatus] = useState({ type: 'idle', message: '' });
-  const [theme, setTheme] = useState(getInitialTheme);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const isDarkTheme = theme === 'dark';
 
   /* ─── State for B2B reviews ─── */
   const [pendingB2b, setPendingB2b] = useState([]);
@@ -302,11 +289,11 @@ export function AdminB2bReviewPage() {
     }
   }, []);
 
+  // Admin portal is light-only (Wellfound-flat language).
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    document.documentElement.style.colorScheme = theme;
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
+    document.documentElement.dataset.theme = 'light';
+    document.documentElement.style.colorScheme = 'light';
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -642,10 +629,6 @@ export function AdminB2bReviewPage() {
     } finally {
       navigate('/nextplease-admin-portal/login');
     }
-  }
-
-  function toggleTheme() {
-    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
   }
 
   /* ───────────────────────────────────────────────
@@ -2065,8 +2048,8 @@ export function AdminB2bReviewPage() {
       <aside className="admin-sidebar">
         <div className="admin-sidebar-header">
           <div className="admin-sidebar-brand">
-            <ShieldAlert size={20} style={{ color: '#dc2626' }} />
-            <span className="admin-sidebar-logo">nextplease admin</span>
+            <span className="admin-sidebar-logo">next please<span className="np-dot">:</span></span>
+            <span className="admin-sidebar-tag">Admin</span>
           </div>
           <button
             aria-label={isSidebarCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
@@ -2169,16 +2152,6 @@ export function AdminB2bReviewPage() {
 
         {/* Logout at bottom */}
         <div className="admin-sidebar-footer">
-          <button
-            aria-label={isDarkTheme ? 'Chuyển sang nền sáng' : 'Chuyển sang nền tối'}
-            className="admin-nav-item admin-theme-toggle"
-            onClick={toggleTheme}
-            title={isDarkTheme ? 'Chuyển sang nền sáng' : 'Chuyển sang nền tối'}
-            type="button"
-          >
-            {isDarkTheme ? <Sun size={18} /> : <Moon size={18} />}
-            <span>{isDarkTheme ? 'Sáng' : 'Tối'}</span>
-          </button>
           <button className="admin-nav-item admin-logout-item" onClick={handleLogout} title="Đăng xuất" type="button">
             <LogOut size={18} />
             <span>Đăng xuất</span>
