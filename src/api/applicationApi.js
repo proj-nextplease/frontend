@@ -17,3 +17,11 @@ export async function getMyApplications() {
   }
   return response.data.data;
 }
+
+export async function withdrawApplication(applicationId) {
+  const response = await httpClient.patch(`/me/applications/${applicationId}/withdraw`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Rút đơn thất bại.');
+  }
+  return response.data.data;
+}

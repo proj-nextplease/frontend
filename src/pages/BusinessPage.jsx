@@ -9,13 +9,15 @@ import {
   CheckCircle2,
   Clock,
   ExternalLink,
+  Eye,
   FileText,
   Filter,
   GraduationCap,
   Lock,
+  Pencil,
+  Trash2,
   LogOut,
   MessageSquareText,
-  Moon,
   Plus,
   RefreshCw,
   Search,
@@ -23,7 +25,6 @@ import {
   ShieldCheck,
   Sparkles,
   Star,
-  Sun,
   TrendingUp,
   UserRound,
   UsersRound,
@@ -32,15 +33,30 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from 'lucide-react';
-import { getCurrentUser, getMyCompany, resubmitB2bDocument, updateB2bProfile } from '../api/b2bApi.js';
+import {
+  getCurrentUser,
+  getMyCompany,
+  resubmitB2bDocument,
+  updateB2bProfile,
+  getCompanyMembers,
+  inviteCompanyMember,
+  listCompanyInvitations,
+  revokeCompanyInvitation,
+  changeMemberRole,
+  transferOwnership,
+  removeCompanyMember,
+  resendCompanyInvitation,
+  leaveCompany,
+} from '../api/b2bApi.js';
 import { supabase } from '../services/supabaseClient.js';
-import { JobCreateForm } from '../components/JobCreateForm.jsx';
-import { getOrganizerJobs, getJobDetail, getJobApplications, updateApplicationStatus } from '../api/jobApi.js';
-import { getOrganizerQuests, getQuestApplicants, updateQuestApplicationStatus } from '../api/questApi.js';
-import { Crown, ArrowLeft, Check, Calendar, Award, ChevronRight, ExternalLink as ExtLink } from 'lucide-react';
+import { JobPostForm } from '../components/JobPostForm.jsx';
+import { QuestPostForm } from '../components/QuestPostForm.jsx';
+import { getOrganizerJobs, getOrganizerJobById, closeJob, deleteJob, getJobDetail, getJobApplications, updateApplicationStatus } from '../api/jobApi.js';
+import { getOrganizerQuests, getOrganizerQuestById, closeQuest, deleteQuest, getQuestApplicants, updateQuestApplicationStatus } from '../api/questApi.js';
+import { getRating, createRating, updateRating } from '../api/ratingApi.js';
+import { Crown, ArrowLeft, Check, Calendar, Award, ChevronRight, ExternalLink as ExtLink, Loader2 } from 'lucide-react';
 
 
-const THEME_STORAGE_KEY = 'nextplease:theme';
 const DASHBOARD_BASE_PATH = '/businesses/dashboard';
 
 const ACCOUNT_TAB = { key: 'account', route: 'account', label: 'Thông tin tài khoản', icon: UserRound, lockable: false };
@@ -51,6 +67,7 @@ const SIDEBAR_TABS = [
   { key: 'manage-jobs', route: 'manage-jobs', label: 'Quản lý tin đăng', icon: FileText, lockable: true },
   { key: 'find-talent', route: 'find-talent', label: 'Tìm kiếm Talent', icon: Search, lockable: true },
   { key: 'candidates', route: 'candidates', label: 'Quản lý ứng viên', icon: UsersRound, lockable: true },
+  { key: 'members', route: 'members', label: 'Thành viên & Phân quyền', icon: ShieldCheck, lockable: true },
 ];
 
 const ALL_TABS = [...SIDEBAR_TABS, ACCOUNT_TAB];
@@ -59,15 +76,6 @@ const TAB_BY_ROUTE = ALL_TABS.reduce((acc, tab) => {
   acc[tab.route] = tab.key;
   return acc;
 }, {});
-
-function getInitialTheme() {
-  if (typeof window === 'undefined') return 'light';
-
-  const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
 
 /* ─── CandidatesView ─────────────────────────────────────────────────────── */
 const STATUS_LABEL = { SUBMITTED: 'Đã nộp', APPLIED: 'Đã nộp', VIEWED: 'Đã xem', SHORTLISTED: 'Vào vòng tiếp', ACCEPTED: 'Chấp nhận', APPROVED: 'Chấp nhận', REJECTED: 'Từ chối', WITHDRAWN: 'Rút đơn', COMPLETED: 'Hoàn thành' };
@@ -210,11 +218,11 @@ function CandidatesView() {
                 placeholder="Tìm tên bài đăng..."
                 style={{ width: '100%', padding: '10px 12px 10px 34px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', color: 'var(--ink)', boxSizing: 'border-box', outline: 'none' }} />
             </div>
-            <div style={{ display: 'flex', background: 'var(--surface-soft)', borderRadius: '12px', padding: '3px', gap: '3px' }}>
-              {[['ALL', 'Tất cả'], ['JOB', '🏢 Tuyển dụng'], ['QUEST', '⚡ Quest']].map(([k, l]) => (
+            <div style={{ display: 'flex', background: '#eef1f6', borderRadius: '12px', padding: '3px', gap: '3px' }}>
+              {[{ k: 'ALL', l: 'Tất cả', Ic: null }, { k: 'JOB', l: 'Tuyển dụng', Ic: BriefcaseBusiness }, { k: 'QUEST', l: 'Quest', Ic: Zap }].map(({ k, l, Ic }) => (
                 <button key={k} type="button" onClick={() => setPostingTypeFilter(k)}
-                  style={{ padding: '6px 12px', borderRadius: '9px', border: 0, fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer', background: postingTypeFilter === k ? 'var(--primary)' : 'transparent', color: postingTypeFilter === k ? '#fff' : 'var(--muted)', transition: 'all 0.15s' }}>
-                  {l}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 13px', borderRadius: '9px', border: 0, fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer', background: postingTypeFilter === k ? '#0d1b33' : 'transparent', color: postingTypeFilter === k ? '#fff' : 'var(--p-muted)', transition: 'all 0.15s' }}>
+                  {Ic && <Ic size={14} />}{l}
                 </button>
               ))}
             </div>
@@ -243,10 +251,10 @@ function CandidatesView() {
               const statusColor = { PENDING: '#f59e0b', OPEN: '#16a34a', CLOSED: '#6b7280', COMPLETED: '#7c3aed', CANCELLED: '#dc2626', REJECTED: '#dc2626' }[posting.status] || '#6b7280';
               const deadline = posting.deadline_at || posting.deadlineAt || posting.endsAt || posting.ends_at;
               return (
-                <div key={posting.id} onClick={() => selectPosting(posting)}
-                  style={{ border: '1px solid var(--line)', borderRadius: '16px', padding: '16px 20px', background: 'var(--bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', transition: 'all 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = ac + '50'; }}
-                  onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--line)'; }}
+                <div key={posting.id} onClick={() => selectPosting(posting)} className="np-cand-row"
+                  style={{ border: '1px solid var(--p-line)', borderRadius: '16px', padding: '16px 20px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = ac + '66'; e.currentTarget.style.background = ac + '06'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--p-line)'; e.currentTarget.style.background = '#fff'; }}
                 >
                   <div style={{ width: '46px', height: '46px', borderRadius: '13px', background: `${ac}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: ac, flexShrink: 0, border: `1px solid ${ac}20` }}>
                     {isQ ? <Zap size={22} /> : <BriefcaseBusiness size={22} />}
@@ -328,10 +336,10 @@ function CandidatesView() {
             <Search size={14} style={{ position: 'absolute', left: '11px', top: '10px', color: 'var(--muted)' }} />
             <input type="text" value={applicantSearch} onChange={e => setApplicantSearch(e.target.value)}
               placeholder="Tìm ứng viên..."
-              style={{ width: '100%', padding: '9px 11px 9px 32px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.86rem', color: 'var(--ink)', boxSizing: 'border-box', outline: 'none' }} />
+              style={{ width: '100%', padding: '10px 12px 10px 34px', borderRadius: '10px', border: '1px solid var(--p-line)', background: '#fff', fontSize: '0.86rem', color: 'var(--p-ink)', boxSizing: 'border-box', outline: 'none' }} />
           </div>
           <select value={applicantStatusFilter} onChange={e => setApplicantStatusFilter(e.target.value)}
-            style={{ padding: '9px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.86rem', color: 'var(--ink)', cursor: 'pointer' }}>
+            style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--p-line)', background: '#fff', fontSize: '0.86rem', color: 'var(--p-ink)', cursor: 'pointer' }}>
             <option value="">Tất cả trạng thái</option>
             {Object.entries(STATUS_LABEL).filter(([k]) => !['APPLIED'].includes(k)).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
@@ -339,7 +347,7 @@ function CandidatesView() {
       )}
 
       {/* Two-panel */}
-      <div style={{ display: 'grid', gridTemplateColumns: selectedApplicant ? '1fr 1.15fr' : '1fr', gap: '16px', alignItems: 'start' }}>
+      <div className="np-cand-grid" style={{ display: 'grid', gridTemplateColumns: selectedApplicant ? '1fr 1.15fr' : '1fr 0fr', gap: selectedApplicant ? '16px' : '0', alignItems: 'start' }}>
         {/* Left: applicant cards */}
         <div>
           {applicantsLoading ? (
@@ -352,14 +360,14 @@ function CandidatesView() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {filteredApplicants.map(app => {
+              {filteredApplicants.map((app, idx) => {
                 const isSelected = selectedApplicant?.id === app.id;
                 const sColor = STATUS_COLOR[app.status] || '#6366f1';
                 return (
-                  <div key={app.id} onClick={() => { setSelectedApplicant(app); setShowRejectInput(false); setRejectReason(''); }}
-                    style={{ border: `1.5px solid ${isSelected ? accent : 'var(--line)'}`, borderRadius: '14px', padding: '14px 16px', background: isSelected ? `${accent}06` : 'var(--bg)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.15s' }}
-                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.borderColor = accent + '30'; }}
-                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.borderColor = 'var(--line)'; }}
+                  <div key={app.id} className="np-cand-row" onClick={() => { setSelectedApplicant(app); setShowRejectInput(false); setRejectReason(''); }}
+                    style={{ border: `1.5px solid ${isSelected ? accent : 'var(--p-line)'}`, borderRadius: '14px', padding: '14px 16px', background: isSelected ? `${accent}08` : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', animationDelay: `${Math.min(idx * 0.04, 0.3)}s`, boxShadow: isSelected ? `0 0 0 3px ${accent}1a` : 'none' }}
+                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.borderColor = accent + '55'; }}
+                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.borderColor = 'var(--p-line)'; }}
                   >
                     <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.05rem', color: accent, flexShrink: 0, overflow: 'hidden' }}>
                       {app.avatar_url ? <img src={app.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (getName(app)[0]?.toUpperCase() || 'U')}
@@ -385,18 +393,18 @@ function CandidatesView() {
 
         {/* Right: detail panel */}
         {selectedApplicant && (
-          <div style={{ border: '1px solid var(--line)', borderRadius: '20px', background: 'var(--bg)', position: 'sticky', top: '16px', overflow: 'hidden' }}>
+          <div key={selectedApplicant.id} className="np-cand-detail" style={{ border: '1px solid var(--p-line)', borderRadius: '20px', background: '#fff', position: 'sticky', top: '16px', overflow: 'hidden' }}>
             {/* Panel header */}
-            <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: `${accent}04` }}>
-              <h3 style={{ margin: 0, fontSize: '0.96rem', fontWeight: '800', color: 'var(--ink)' }}>Hồ sơ ứng viên</h3>
-              <button onClick={() => setSelectedApplicant(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: '4px', borderRadius: '6px' }}>
-                <X size={18} />
+            <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid var(--p-line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: `${accent}06` }}>
+              <h3 style={{ margin: 0, fontSize: '0.96rem', fontWeight: '800', color: 'var(--p-ink)' }}>Hồ sơ ứng viên</h3>
+              <button onClick={() => setSelectedApplicant(null)} className="np-icon-btn" style={{ width: '32px', height: '32px' }} aria-label="Đóng">
+                <X size={17} />
               </button>
             </div>
 
             <div style={{ padding: '20px' }}>
               {/* Avatar + name block */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px' }}>
+              <div className="np-di" style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px' }}>
                 <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '1.5rem', color: accent, flexShrink: 0, overflow: 'hidden', border: `2px solid ${accent}30` }}>
                   {selectedApplicant.avatar_url ? <img src={selectedApplicant.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (getName(selectedApplicant)[0]?.toUpperCase() || 'U')}
                 </div>
@@ -405,16 +413,16 @@ function CandidatesView() {
                   {getEmail(selectedApplicant) && <div style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>{getEmail(selectedApplicant)}</div>}
                   {selectedApplicant.headline && <p style={{ margin: '3px 0 0', fontSize: '0.82rem', color: 'var(--muted)', fontStyle: 'italic' }}>{selectedApplicant.headline}</p>}
                   {(selectedApplicant.school) && (
-                    <p style={{ margin: '3px 0 0', fontSize: '0.8rem', color: accent, fontWeight: '700' }}>🎓 {selectedApplicant.school}</p>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: accent, fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '5px' }}><GraduationCap size={14} /> {selectedApplicant.school}</p>
                   )}
                 </div>
               </div>
 
               {/* Stats */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+              <div className="np-di" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '16px' }}>
                 {[
                   { label: 'RS', value: selectedApplicant.reputation_score ?? '—', color: '#2563eb' },
-                  { label: 'Level', value: selectedApplicant.current_level ?? '—', color: '#ff7a1a' },
+                  { label: 'Level', value: selectedApplicant.current_level ?? '—', color: '#7c3aed' },
                   { label: 'EXP', value: selectedApplicant.total_exp ?? '—', color: '#7c3aed' },
                 ].map(stat => (
                   <div key={stat.label} style={{ textAlign: 'center', padding: '10px 6px', background: `${stat.color}08`, border: `1px solid ${stat.color}20`, borderRadius: '12px' }}>
@@ -426,34 +434,35 @@ function CandidatesView() {
 
               {/* Major */}
               {selectedApplicant.major && (
-                <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '10px', display: 'flex', gap: '6px' }}>
+                <div className="np-di" style={{ fontSize: '0.82rem', color: 'var(--p-muted)', marginBottom: '10px', display: 'flex', gap: '6px' }}>
                   <span>Chuyên ngành:</span>
-                  <strong style={{ color: 'var(--ink)' }}>{selectedApplicant.major}</strong>
+                  <strong style={{ color: 'var(--p-ink)' }}>{selectedApplicant.major}</strong>
                 </div>
               )}
 
               {/* Portfolio button */}
               <a
+                className="np-di"
                 href={`/portfolio/view/${selectedApplicant.candidateId || selectedApplicant.candidate_id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', padding: '10px 14px', borderRadius: '12px', border: `1.5px solid ${accent}30`, background: `${accent}06`, color: accent, fontSize: '0.86rem', fontWeight: '800', textDecoration: 'none', marginBottom: '14px', transition: 'all 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.background = `${accent}12`; }}
-                onMouseLeave={e => { e.currentTarget.style.background = `${accent}06`; }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', padding: '11px 14px', borderRadius: '12px', border: `1.5px solid ${accent}40`, background: `${accent}08`, color: accent, fontSize: '0.86rem', fontWeight: '800', textDecoration: 'none', marginBottom: '14px', transition: 'all 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = `${accent}16`; }}
+                onMouseLeave={e => { e.currentTarget.style.background = `${accent}08`; }}
               >
                 <ExtLink size={14} /> Xem Portfolio của ứng viên
               </a>
 
               {/* Cover note */}
               {selectedApplicant.cover_note && (
-                <div style={{ padding: '12px 14px', background: 'var(--surface-soft)', borderRadius: '10px', fontSize: '0.84rem', color: 'var(--ink)', lineHeight: 1.65, marginBottom: '14px', borderLeft: `3px solid ${accent}` }}>
-                  <p style={{ margin: '0 0 4px', fontSize: '0.7rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Thư giới thiệu</p>
+                <div className="np-di" style={{ padding: '12px 14px', background: '#f7f9fc', borderRadius: '10px', fontSize: '0.84rem', color: 'var(--p-ink)', lineHeight: 1.65, marginBottom: '14px', borderLeft: `3px solid ${accent}` }}>
+                  <p style={{ margin: '0 0 4px', fontSize: '0.7rem', fontWeight: '800', color: 'var(--p-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Thư giới thiệu</p>
                   <span style={{ fontStyle: 'italic' }}>"{selectedApplicant.cover_note}"</span>
                 </div>
               )}
 
               {/* Status + applied date */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+              <div className="np-di" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: '700', color: STATUS_COLOR[selectedApplicant.status] || '#6366f1', background: `${STATUS_COLOR[selectedApplicant.status] || '#6366f1'}12`, padding: '4px 12px', borderRadius: '8px' }}>
                   {STATUS_LABEL[selectedApplicant.status] || selectedApplicant.status}
                 </span>
@@ -465,6 +474,7 @@ function CandidatesView() {
               </div>
 
               {/* Actions */}
+              <div className="np-di">
               {selectedApplicant.status !== 'REJECTED' && selectedApplicant.status !== 'WITHDRAWN' && selectedApplicant.status !== 'COMPLETED' ? (
                 showRejectInput ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -482,12 +492,12 @@ function CandidatesView() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {selectedApplicant.status !== 'ACCEPTED' && selectedApplicant.status !== 'APPROVED' && (
                       <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', width: '100%' }} disabled={!!actionLoading}
-                        onClick={() => handleAction(selectedApplicant.id, isQuest ? 'APPROVED' : 'ACCEPTED')}>
+                        onClick={() => handleAction(selectedApplicant.id, 'ACCEPTED')}>
                         <Check size={14} /> Chấp nhận ứng viên
                       </button>
                     )}
-                    {isQuest && selectedApplicant.status === 'APPROVED' && (
-                      <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', background: 'linear-gradient(135deg,#7c3aed,#2563eb)', width: '100%' }} disabled={!!actionLoading}
+                    {isQuest && selectedApplicant.status === 'ACCEPTED' && (
+                      <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', background: '#0d1b33', width: '100%' }} disabled={!!actionLoading}
                         onClick={() => handleAction(selectedApplicant.id, 'COMPLETED')}>
                         <Award size={14} /> Đánh dấu hoàn thành (+EXP)
                       </button>
@@ -499,7 +509,7 @@ function CandidatesView() {
                       </button>
                     )}
                     {!isQuest && selectedApplicant.status === 'ACCEPTED' && (
-                      <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', background: 'linear-gradient(135deg,#7c3aed,#2563eb)', width: '100%' }} disabled={!!actionLoading}
+                      <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', background: '#0d1b33', width: '100%' }} disabled={!!actionLoading}
                         onClick={() => handleAction(selectedApplicant.id, 'COMPLETED')}>
                         <Award size={14} /> Đánh dấu hoàn thành (+EXP)
                       </button>
@@ -509,17 +519,456 @@ function CandidatesView() {
                     </button>
                   </div>
                 )
+              ) : selectedApplicant.status === 'COMPLETED' ? (
+                <RatingPanel
+                  applicationId={isQuest ? null : selectedApplicant.id}
+                  questApplicationId={isQuest ? selectedApplicant.id : null}
+                  accent={accent}
+                />
               ) : (
-                <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--surface-soft)', textAlign: 'center' }}>
-                  <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--muted)', fontStyle: 'italic' }}>
-                    {selectedApplicant.status === 'COMPLETED' ? '✅ Ứng viên đã hoàn thành.' : '❌ Đơn ứng tuyển này đã kết thúc.'}
+                <div style={{ padding: '12px 16px', borderRadius: '10px', background: '#f7f9fc', textAlign: 'center' }}>
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--p-muted)', fontStyle: 'italic' }}>
+                    Đơn ứng tuyển này đã kết thúc.
                   </p>
                 </div>
               )}
+              </div>
             </div>
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function StarPicker({ value, onChange, readOnly = false, size = 26 }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div style={{ display: 'flex', gap: '4px' }}>
+      {[1, 2, 3, 4, 5].map(n => {
+        const filled = (hover || value) >= n;
+        return (
+          <button
+            key={n}
+            type="button"
+            disabled={readOnly}
+            onClick={() => !readOnly && onChange(n)}
+            onMouseEnter={() => !readOnly && setHover(n)}
+            onMouseLeave={() => !readOnly && setHover(0)}
+            style={{ background: 'none', border: 'none', padding: 0, cursor: readOnly ? 'default' : 'pointer', lineHeight: 0 }}
+            aria-label={`${n} sao`}
+          >
+            <Star size={size} fill={filled ? '#f59e0b' : 'none'} color={filled ? '#f59e0b' : 'var(--muted)'} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Khung đánh giá ứng viên cho đơn đã COMPLETED. Tự load đánh giá hiện có. */
+function RatingPanel({ applicationId, questApplicationId, accent }) {
+  const idKey = { applicationId, questApplicationId };
+  const [loading, setLoading] = useState(true);
+  const [rating, setRating] = useState(null); // bản ghi đã có
+  const [editing, setEditing] = useState(false);
+  const [score, setScore] = useState(0);
+  const [comment, setComment] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    getRating(idKey)
+      .then(data => {
+        if (!alive) return;
+        setRating(data);
+        if (data) { setScore(data.score); setComment(data.comment || ''); }
+        else { setEditing(true); }
+      })
+      .catch(() => { if (alive) setEditing(true); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicationId, questApplicationId]);
+
+  async function submit() {
+    if (score < 1) { setError('Vui lòng chọn số sao.'); return; }
+    setBusy(true); setError('');
+    try {
+      if (rating?.id) {
+        await updateRating(rating.id, { score, comment });
+      } else {
+        await createRating({ ...idKey, score, comment });
+      }
+      const fresh = await getRating(idKey);
+      setRating(fresh);
+      setEditing(false);
+    } catch (err) {
+      setError(err.message || 'Không thể lưu đánh giá.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (loading) {
+    return <div style={{ padding: '14px', textAlign: 'center', color: 'var(--muted)', fontSize: '0.84rem' }}>Đang tải đánh giá...</div>;
+  }
+
+  return (
+    <div style={{ padding: '16px', borderRadius: '12px', background: 'var(--surface-soft)', border: `1px solid ${accent}20` }}>
+      <p style={{ margin: '0 0 10px', fontSize: '0.74rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        Đánh giá ứng viên
+      </p>
+
+      {!editing && rating ? (
+        <>
+          <StarPicker value={rating.score} readOnly size={24} />
+          {rating.comment && (
+            <p style={{ margin: '10px 0 0', fontSize: '0.86rem', color: 'var(--ink)', lineHeight: 1.6, fontStyle: 'italic' }}>
+              "{rating.comment}"
+            </p>
+          )}
+          {rating.score === 5 && (
+            <p style={{ margin: '8px 0 0', fontSize: '0.78rem', color: '#16a34a', fontWeight: '700' }}>
+              Ứng viên đã được thưởng 2.000 NP cho đánh giá 5 sao.
+            </p>
+          )}
+          {rating.canEdit ? (
+            <button onClick={() => setEditing(true)}
+              style={{ marginTop: '12px', padding: '7px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.82rem', fontWeight: '700', cursor: 'pointer' }}>
+              Sửa đánh giá
+            </button>
+          ) : (
+            <p style={{ margin: '10px 0 0', fontSize: '0.76rem', color: 'var(--muted)' }}>
+              Đã quá 3 giờ — không thể sửa.
+            </p>
+          )}
+        </>
+      ) : (
+        <>
+          <StarPicker value={score} onChange={setScore} />
+          <textarea
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            rows={3}
+            placeholder="Nhận xét về ứng viên (không bắt buộc)..."
+            style={{ width: '100%', marginTop: '12px', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.86rem', resize: 'vertical', boxSizing: 'border-box', outline: 'none' }}
+          />
+          {score === 5 && (
+            <p style={{ margin: '8px 0 0', fontSize: '0.78rem', color: '#16a34a', fontWeight: '700' }}>
+              Đánh giá 5 sao sẽ thưởng 2.000 NP cho ứng viên.
+            </p>
+          )}
+          {error && <p style={{ margin: '8px 0 0', fontSize: '0.8rem', color: '#dc2626', fontWeight: '600' }}>{error}</p>}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <button onClick={submit} disabled={busy}
+              style={{ flex: 1, padding: '9px', borderRadius: '10px', border: 'none', background: accent, color: '#fff', fontSize: '0.85rem', fontWeight: '800', cursor: 'pointer' }}>
+              {busy ? 'Đang lưu...' : rating ? 'Lưu thay đổi' : 'Gửi đánh giá'}
+            </button>
+            {rating && (
+              <button onClick={() => { setEditing(false); setScore(rating.score); setComment(rating.comment || ''); setError(''); }} disabled={busy}
+                style={{ padding: '9px 16px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.85rem', fontWeight: '700', cursor: 'pointer' }}>
+                Hủy
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const ROLE_LABELS = { OWNER: 'Chủ sở hữu', MANAGER: 'Quản lý', MEMBER: 'Thành viên' };
+
+function MembersView({ company, setToast }) {
+  const [members, setMembers] = useState([]);
+  const [invitations, setInvitations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('MEMBER');
+  const [busy, setBusy] = useState(false);
+  const [confirmTransfer, setConfirmTransfer] = useState(null); // member object pending transfer
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [lastInviteLink, setLastInviteLink] = useState('');
+  const membersNavigate = useNavigate();
+
+  const myRole = company?.myRole || null;
+  const canManage = myRole === 'OWNER' || myRole === 'MANAGER';
+  const isOwner = myRole === 'OWNER';
+
+  async function handleLeave() {
+    setBusy(true);
+    try {
+      await leaveCompany();
+      setToast({ type: 'success', message: 'Bạn đã rời khỏi tổ chức.' });
+      membersNavigate('/businesses');
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'Rời tổ chức thất bại.' });
+      setBusy(false);
+      setConfirmLeave(false);
+    }
+  }
+
+  async function load() {
+    setLoading(true);
+    try {
+      const [m, inv] = await Promise.all([getCompanyMembers(), listCompanyInvitations()]);
+      setMembers(m || []);
+      setInvitations(inv || []);
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'Không thể tải danh sách thành viên.' });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []);
+
+  async function handleInvite(event) {
+    event.preventDefault();
+    if (!inviteEmail.trim()) {
+      setToast({ type: 'error', message: 'Nhập email người được mời.' });
+      return;
+    }
+    setBusy(true);
+    try {
+      const result = await inviteCompanyMember(inviteEmail.trim(), inviteRole);
+      setInviteEmail('');
+      setInviteRole('MEMBER');
+      setLastInviteLink(result?.inviteUrl || '');
+      setToast({
+        type: result?.emailSent ? 'success' : 'error',
+        message: result?.emailSent
+          ? 'Đã gửi lời mời qua email.'
+          : `Đã tạo lời mời nhưng CHƯA gửi được email${result?.emailError ? ` (${result.emailError})` : ''}. Hãy sao chép link mời bên dưới.`,
+      });
+      await load();
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'Gửi lời mời thất bại.' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runAction(fn, successMsg) {
+    setBusy(true);
+    try {
+      await fn();
+      setToast({ type: 'success', message: successMsg });
+      await load();
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'Thao tác thất bại.' });
+    } finally {
+      setBusy(false);
+      setConfirmTransfer(null);
+    }
+  }
+
+  if (loading) {
+    return <div className="partner-placeholder-pane"><p>Đang tải thành viên...</p></div>;
+  }
+
+  const roleTone = (role) =>
+    role === 'OWNER' ? { pill: { background: 'rgba(13,27,51,0.08)', color: '#0d1b33' }, av: '#0d1b33' }
+      : role === 'MANAGER' ? { pill: { background: 'rgba(37,99,235,0.1)', color: '#2563eb' }, av: '#2563eb' }
+        : { pill: { background: '#f1f4f9', color: '#5b6472' }, av: '#94a3b8' };
+  const initials = (m) => (m.displayName || m.email || '?').trim().slice(0, 2).toUpperCase();
+
+  return (
+    <div className="np-dash" style={{ maxWidth: 980 }}>
+      {/* Header */}
+      <div className="np-page-head">
+        <div className="np-page-head-l">
+          <span className="np-page-head-ic"><ShieldCheck size={22} /></span>
+          <div>
+            <p className="np-page-eyebrow">Phân quyền tổ chức</p>
+            <h2 className="np-page-title">Thành viên & Ủy quyền</h2>
+          </div>
+        </div>
+        {myRole && myRole !== 'OWNER' && (
+          <button type="button" className="button secondary-button" disabled={busy} onClick={() => setConfirmLeave(true)} style={{ color: '#dc2626', borderColor: 'rgba(220,38,38,0.3)' }}>
+            <LogOut size={16} /> Rời tổ chức
+          </button>
+        )}
+      </div>
+
+      {/* Invite */}
+      {canManage && (
+        <div className="np-card">
+          <div className="np-section-label"><Send size={16} style={{ color: '#2563eb' }} /> Mời thành viên mới</div>
+          <form onSubmit={handleInvite} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              className="np-mem-field"
+              type="email"
+              placeholder="Email người được mời"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              style={{ flex: '1 1 240px' }}
+            />
+            <select className="np-mem-field" value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} style={{ cursor: 'pointer' }}>
+              <option value="MEMBER">Thành viên</option>
+              {isOwner && <option value="MANAGER">Quản lý</option>}
+            </select>
+            <button type="submit" className="button primary-button" disabled={busy} style={{ background: '#0d1b33', borderColor: 'transparent', minHeight: 46 }}>
+              <Send size={16} /> Mời thành viên
+            </button>
+          </form>
+
+          {lastInviteLink && (
+            <div style={{ marginTop: 14, padding: 13, background: 'var(--p-blue-soft)', border: '1px solid rgba(37,99,235,0.18)', borderRadius: 12, fontSize: '0.82rem' }}>
+              <strong style={{ color: 'var(--p-ink)' }}>Link lời mời</strong>
+              <span style={{ color: 'var(--p-muted)' }}> (gửi thủ công nếu email chưa tới):</span>
+              <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <code style={{ flex: '1 1 280px', wordBreak: 'break-all', background: '#fff', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--p-line)', color: 'var(--p-ink)' }}>{lastInviteLink}</code>
+                <button
+                  type="button"
+                  className="button secondary-button"
+                  style={{ padding: '8px 14px', minHeight: 0 }}
+                  onClick={() => { navigator.clipboard?.writeText(lastInviteLink); setToast({ type: 'success', message: 'Đã sao chép link mời.' }); }}
+                >
+                  Sao chép
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Current members */}
+      <div>
+        <h3 className="np-section-label"><UsersRound size={16} style={{ color: '#2563eb' }} /> Thành viên hiện tại <span className="cnt">({members.length})</span></h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {members.map((m) => {
+            const tone = roleTone(m.nodeRole);
+            return (
+              <div key={m.userId} className="np-member-row">
+                <span className="np-avatar-sm" style={{ background: tone.av }}>{initials(m)}</span>
+                <div className="np-member-main">
+                  <strong>{m.displayName || m.email}</strong>
+                  <div className="sub">{m.email}{m.joinedAt ? ` · Tham gia ${new Date(m.joinedAt).toLocaleDateString('vi-VN')}` : ''}</div>
+                </div>
+                <span className="np-role-pill" style={tone.pill}>
+                  {m.nodeRole === 'OWNER' && <Crown size={13} />}{ROLE_LABELS[m.nodeRole] || m.nodeRole}
+                </span>
+                {isOwner && m.nodeRole !== 'OWNER' && (
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <select
+                      className="np-mem-field"
+                      value={m.nodeRole}
+                      disabled={busy}
+                      onChange={(e) => runAction(() => changeMemberRole(m.userId, e.target.value), 'Đã đổi vai trò.')}
+                      style={{ padding: '8px 10px', fontSize: '0.82rem', cursor: 'pointer' }}
+                    >
+                      <option value="MEMBER">Thành viên</option>
+                      <option value="MANAGER">Quản lý</option>
+                    </select>
+                    <button type="button" className="np-icon-btn" disabled={busy} onClick={() => setConfirmTransfer(m)} title="Chuyển quyền sở hữu">
+                      <Crown size={15} />
+                    </button>
+                    <button type="button" className="np-icon-btn danger" disabled={busy} onClick={() => runAction(() => removeCompanyMember(m.userId), 'Đã gỡ thành viên.')} title="Gỡ khỏi tổ chức">
+                      <X size={15} />
+                    </button>
+                  </div>
+                )}
+                {myRole === 'MANAGER' && m.nodeRole === 'MEMBER' && (
+                  <button type="button" className="np-icon-btn danger" disabled={busy} onClick={() => runAction(() => removeCompanyMember(m.userId), 'Đã gỡ thành viên.')} title="Gỡ khỏi tổ chức">
+                    <X size={15} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Pending invitations */}
+      {canManage && (
+        <div>
+          <h3 className="np-section-label"><Send size={16} style={{ color: '#5b6472' }} /> Lời mời đang chờ <span className="cnt">({invitations.length})</span></h3>
+          {invitations.length === 0 ? (
+            <p style={{ color: 'var(--p-muted)', fontSize: '0.9rem', margin: 0 }}>Chưa có lời mời nào đang chờ.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {invitations.map((inv) => (
+                <div key={inv.id} className="np-member-row pending">
+                  <span className="np-avatar-sm" style={{ background: '#fff', border: '1.5px dashed var(--p-line-strong)', color: 'var(--p-muted)' }}><Send size={17} /></span>
+                  <div className="np-member-main">
+                    <strong>{inv.invitedEmail}</strong>
+                    <div className="sub">Vai trò: {ROLE_LABELS[inv.nodeRole] || inv.nodeRole}</div>
+                  </div>
+                  <button
+                    type="button"
+                    className="button secondary-button"
+                    disabled={busy}
+                    onClick={async () => {
+                      setBusy(true);
+                      try {
+                        const r = await resendCompanyInvitation(inv.id);
+                        setLastInviteLink(r?.inviteUrl || '');
+                        setToast({
+                          type: r?.emailSent ? 'success' : 'error',
+                          message: r?.emailSent
+                            ? 'Đã gửi lại lời mời qua email.'
+                            : `Đã tạo lại link nhưng CHƯA gửi được email${r?.emailError ? ` (${r.emailError})` : ''}. Dùng link bên trên.`,
+                        });
+                        await load();
+                      } catch (err) {
+                        setToast({ type: 'error', message: err.message || 'Gửi lại thất bại.' });
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                    style={{ padding: '8px 14px', minHeight: 0 }}
+                  >
+                    Gửi lại
+                  </button>
+                  <button type="button" className="button secondary-button" disabled={busy} onClick={() => runAction(() => revokeCompanyInvitation(inv.id), 'Đã thu hồi lời mời.')} style={{ padding: '8px 14px', minHeight: 0, color: '#dc2626' }}>
+                    Thu hồi
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {confirmTransfer && (
+        <div className="modal-overlay" onClick={() => setConfirmTransfer(null)}>
+          <div className="modal-card" style={{ maxWidth: 460, width: '90%', padding: 24 }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ marginTop: 0 }}>Chuyển quyền sở hữu</h3>
+            <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
+              Bạn sắp chuyển quyền <strong>Chủ sở hữu</strong> cho <strong>{confirmTransfer.displayName || confirmTransfer.email}</strong>.
+              Bạn sẽ trở thành <strong>Quản lý</strong>. Hành động này không thể tự hoàn tác.
+            </p>
+            <div className="modal-footer" style={{ gap: 12, justifyContent: 'flex-end' }}>
+              <button type="button" className="button secondary-button" onClick={() => setConfirmTransfer(null)}>Hủy</button>
+              <button type="button" className="button primary-button" disabled={busy} onClick={() => runAction(() => transferOwnership(confirmTransfer.userId), 'Đã chuyển quyền sở hữu.')} style={{ background: '#0d1b33', borderColor: 'transparent' }}>
+                Xác nhận chuyển quyền
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmLeave && (
+        <div className="modal-overlay" onClick={() => setConfirmLeave(false)}>
+          <div className="modal-card" style={{ maxWidth: 460, width: '90%', padding: 24 }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ marginTop: 0 }}>Rời khỏi tổ chức</h3>
+            <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
+              Bạn sẽ mất quyền truy cập vào tổ chức này. Tài khoản của bạn vẫn còn, và có thể được mời lại sau. Bạn chắc chứ?
+            </p>
+            <div className="modal-footer" style={{ gap: 12, justifyContent: 'flex-end' }}>
+              <button type="button" className="button secondary-button" onClick={() => setConfirmLeave(false)}>Hủy</button>
+              <button type="button" className="button primary-button" disabled={busy} onClick={handleLeave} style={{ background: '#dc2626', borderColor: 'transparent' }}>
+                Xác nhận rời
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -547,8 +996,8 @@ const mockTalents = [
 ];
 
 const mockStats = [
-  { label: 'Job đang đăng', value: '0', icon: BriefcaseBusiness, color: '#2563eb' },
-  { label: 'Ứng viên phù hợp', value: '142', icon: UsersRound, color: '#ff7a1a' },
+  { label: 'Tin đang đăng', value: '0', icon: BriefcaseBusiness, color: '#2563eb' },
+  { label: 'Ứng viên phù hợp', value: '142', icon: UsersRound, color: '#0d1b33' },
   { label: 'Tỉ lệ phản hồi', value: '—', icon: TrendingUp, color: '#16a34a' },
 ];
 
@@ -851,7 +1300,7 @@ function RejectedView({ company, onRefresh }) {
           )}
 
           <button type="submit" disabled={actionStatus.type === 'loading'} className="button primary-button"
-            style={{ alignSelf: 'flex-start', background: 'linear-gradient(135deg, #2563eb, #ff7a1a)', borderColor: 'transparent' }}>
+            style={{ alignSelf: 'flex-start', background: '#0d1b33', borderColor: 'transparent' }}>
             <Send size={16} />
             {actionStatus.type === 'loading' ? 'Đang gửi...' : 'Gửi lại tài liệu kiểm duyệt'}
           </button>
@@ -863,170 +1312,247 @@ function RejectedView({ company, onRefresh }) {
 
 function ApprovedView({ company, onTabChange }) {
   const companyTypeLabel = getPartnerTypeLabel(company?.companyType);
-  const companyTypeColor = company?.companyType === 'CLUB' ? '#ff7a1a' : '#2563eb';
+  const isClub = company?.companyType === 'CLUB';
+  const accent = isClub ? '#ff7a1a' : '#2563eb';
+  const accentSoft = isClub ? 'rgba(255,122,26,0.1)' : 'rgba(37,99,235,0.1)';
+  const canPost = company?.myRole !== 'MEMBER';
+  const postLabel = isClub ? 'Tạo Quest sự kiện' : 'Đăng tin tuyển dụng';
+
+  const [stats, setStats] = useState(null);
+  const [recent, setRecent] = useState([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setStatsLoading(true);
+      try {
+        const [jobs, quests] = await Promise.all([
+          getOrganizerJobs().catch(() => []),
+          getOrganizerQuests().catch(() => []),
+        ]);
+        const postings = [
+          ...(jobs || []).map((j) => ({ ...j, postType: 'JOB', _count: j.applicantsCount ?? j.applicants_count ?? 0 })),
+          ...(quests || []).map((q) => ({ ...q, postType: 'QUEST', _count: q.applicantCount ?? q.applicantsCount ?? q.applicants_count ?? 0 })),
+        ];
+        const openCount = postings.filter((p) => (p.status || '').toUpperCase() === 'OPEN').length;
+
+        const withApps = postings.filter((p) => (p._count || 0) > 0);
+        const appLists = await Promise.all(
+          withApps.map((p) =>
+            (p.postType === 'QUEST' ? getQuestApplicants(p.id) : getJobApplications(p.id))
+              .then((d) => (d || []).map((a) => ({ ...a, _postTitle: p.title, _postType: p.postType })))
+              .catch(() => [])
+          )
+        );
+        const apps = appLists.flat();
+        const isNewStatus = (s) => ['SUBMITTED', 'APPLIED'].includes(s);
+        const isDiscStatus = (s) => ['SHORTLISTED', 'ACCEPTED', 'APPROVED'].includes(s);
+        const newCount = apps.filter((a) => isNewStatus(a.status)).length;
+        const discCount = apps.filter((a) => isDiscStatus(a.status)).length;
+        const responded = apps.filter((a) => !isNewStatus(a.status)).length;
+        const rate = apps.length ? Math.round((responded / apps.length) * 100) : null;
+        const recentSorted = [...apps]
+          .sort((a, b) => new Date(b.appliedAt || b.applied_at || 0) - new Date(a.appliedAt || a.applied_at || 0))
+          .slice(0, 5);
+
+        if (!alive) return;
+        setStats({ openCount, totalPostings: postings.length, total: apps.length, newCount, discCount, rate });
+        setRecent(recentSorted);
+      } catch {
+        if (alive) { setStats({ openCount: 0, totalPostings: 0, total: 0, newCount: 0, discCount: 0, rate: null }); setRecent([]); }
+      } finally {
+        if (alive) setStatsLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const fmt = (v) => (statsLoading ? '…' : String(v ?? 0));
+
+  const kpis = [
+    { label: isClub ? 'Quest đang mở' : 'Tin đang đăng', value: fmt(stats?.openCount), icon: isClub ? Star : BriefcaseBusiness, color: accent },
+    { label: 'Ứng viên mới', value: fmt(stats?.newCount), icon: UsersRound, color: '#7c3aed' },
+    { label: 'Đang trao đổi', value: fmt(stats?.discCount), icon: MessageSquareText, color: '#0d1b33' },
+    { label: 'Tỉ lệ phản hồi', value: statsLoading ? '…' : (stats?.rate == null ? '—' : `${stats.rate}%`), icon: TrendingUp, color: '#16a34a' },
+  ];
+
+  const quickActions = [
+    { icon: isClub ? Star : BriefcaseBusiness, label: postLabel, desc: isClub ? 'Tuyển event staff, marketer' : 'Mô tả công việc & yêu cầu', color: accent, tab: 'create-job', hide: !canPost },
+    { icon: FileText, label: 'Quản lý tin đăng', desc: 'Theo dõi & chỉnh sửa tin', color: '#0d1b33', tab: 'manage-jobs' },
+    { icon: Search, label: 'Tìm kiếm Talent', desc: 'Lọc theo proof, kỹ năng', color: '#16a34a', tab: 'find-talent' },
+    { icon: MessageSquareText, label: 'Quản lý ứng viên', desc: 'Shortlist & theo dõi', color: '#7c3aed', tab: 'candidates' },
+  ].filter((a) => !a.hide);
+
+  const hasPosted = (stats?.totalPostings ?? 0) > 0;
+  const hasReviewed = (stats?.total ?? 0) > 0;
+  const checklist = [
+    { done: true, title: 'Hồ sơ đã xác thực', desc: 'Tổ chức của bạn đã được duyệt', tab: 'account' },
+    { done: hasPosted, title: isClub ? 'Tạo Quest đầu tiên' : 'Đăng tin đầu tiên', desc: 'Bắt đầu nhận hồ sơ ứng viên', tab: 'create-job', hide: !canPost },
+    { done: false, title: 'Mời đồng đội', desc: 'Thêm thành viên & phân quyền', tab: 'members' },
+    { done: hasReviewed, title: 'Duyệt ứng viên', desc: 'Xem & shortlist hồ sơ nhận được', tab: 'candidates' },
+  ].filter((c) => !c.hide);
+
+  const recName = (a) => a.candidateName || a.candidate_name || a.display_name || 'Ứng viên';
 
   return (
-    <section className="dashboard-page">
-      {/* ── Hero header ── */}
-      <div className="b2b-dashboard-hero">
-        <div className="b2b-hero-left">
-          <div className="b2b-company-avatar">
+    <section className="np-dash">
+      {/* ── Header ── */}
+      <div className="np-dash-head">
+        <div className="np-dash-id">
+          <div className="np-dash-avatar" style={{ background: accent }}>
             {(company?.name || 'B').slice(0, 2).toUpperCase()}
           </div>
-          <div className="b2b-hero-copy">
-            <div className="b2b-hero-badges">
-              <span className="b2b-type-badge" style={{ background: companyTypeColor === '#2563eb' ? 'rgba(37,99,235,0.1)' : 'rgba(255,122,26,0.1)', color: companyTypeColor }}>
-                {company?.companyType === 'CLUB' ? <GraduationCap size={13} /> : <Building size={13} />}
+          <div style={{ minWidth: 0 }}>
+            <div className="np-dash-badges">
+              <span className="np-badge" style={{ background: accentSoft, color: accent }}>
+                {isClub ? <GraduationCap size={13} /> : <Building size={13} />}
                 {companyTypeLabel}
               </span>
-              <span className="b2b-type-badge" style={{ background: 'rgba(22,163,74,0.1)', color: '#16a34a' }}>
+              <span className="np-badge" style={{ background: 'rgba(22,163,74,0.1)', color: '#16a34a' }}>
                 <BadgeCheck size={13} /> Đã xác thực
               </span>
             </div>
             <h1>{company?.name}</h1>
-            <div className="b2b-hero-meta">
-              <span>Đại diện: {company?.representativeName}</span>
-              <span>{company?.representativePhone}</span>
-              {company?.taxCode ? <span>MST: {company.taxCode}</span> : null}
+            <div className="np-dash-meta">
+              <span><UserRound size={14} /> {company?.representativeName || '—'}</span>
+              {company?.representativePhone ? <span><Send size={13} /> {company.representativePhone}</span> : null}
+              {company?.taxCode ? <span><FileText size={13} /> MST: {company.taxCode}</span> : null}
             </div>
           </div>
         </div>
+        {canPost ? (
+          <div className="np-dash-cta">
+            <button className="button primary-button" type="button" onClick={() => onTabChange('create-job')}
+              style={{ background: '#0d1b33', borderColor: 'transparent' }}>
+              <Plus size={17} /> {postLabel}
+            </button>
+            <button className="button secondary-button" type="button" onClick={() => onTabChange('find-talent')}>
+              <Search size={17} /> Tìm Talent
+            </button>
+          </div>
+        ) : null}
       </div>
 
-      {/* ── Stats ── */}
-      <div className="b2b-stats-row">
-        {mockStats.map((s) => {
-          const Icon = s.icon;
+      {/* ── KPI row ── */}
+      <div className="np-kpi-row">
+        {kpis.map((k) => {
+          const Icon = k.icon;
           return (
-            <div key={s.label} className="b2b-stat-card">
-              <div className="b2b-stat-icon" style={{ color: s.color, background: `${s.color}18` }}>
+            <div key={k.label} className="np-kpi">
+              <div className="np-kpi-icon" style={{ color: k.color, background: `${k.color}14` }}>
                 <Icon size={20} />
               </div>
               <div>
-                <strong className="b2b-stat-value">{s.value}</strong>
-                <span className="b2b-stat-label">{s.label}</span>
+                <div className="np-kpi-val">{k.value}</div>
+                <div className="np-kpi-lbl">{k.label}</div>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* ── Quick Actions ── */}
-      <div>
-        <h2 style={{ fontSize: '1.15rem', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Zap size={18} style={{ color: '#ff7a1a' }} /> Thao tác nhanh
-        </h2>
-        <div className="b2b-quick-grid">
-          {[
-            { icon: BriefcaseBusiness, label: 'Đăng Job / Gig', desc: 'Mô tả công việc và yêu cầu RS', color: '#2563eb', soon: false, tab: 'create-job' },
-            { icon: Star, label: 'Tạo Quest sự kiện', desc: 'Tuyển event staff, campus marketer', color: '#ff7a1a', soon: false, tab: 'create-job' },
-            { icon: Search, label: 'Tìm kiếm Talent', desc: 'Lọc theo RS, kỹ năng, trường học', color: '#16a34a', soon: false, tab: 'find-talent' },
-            { icon: MessageSquareText, label: 'Quản lý ứng viên', desc: 'Shortlist & theo dõi tiến trình', color: '#7c3aed', soon: true, tab: 'candidates' },
-          ].map((a) => {
-            const Icon = a.icon;
-            return (
-              <button
-                key={a.label}
-                className={`b2b-quick-card ${a.soon ? 'coming-soon' : ''}`}
-                disabled={a.soon}
-                onClick={() => onTabChange(a.tab)}
-                type="button"
-              >
-                {a.soon && <span className="b2b-coming-badge">Sắp ra mắt</span>}
-                <div className="b2b-quick-icon" style={{ color: a.color, background: `${a.color}14` }}>
-                  <Icon size={22} />
-                </div>
-                <strong className="b2b-quick-label">{a.label}</strong>
-                <p className="b2b-quick-desc">{a.desc}</p>
+      {/* ── Main grid ── */}
+      <div className="np-dash-grid">
+        <div className="np-col">
+          {/* Quick actions */}
+          <div className="np-card">
+            <div className="np-card-head">
+              <Zap size={18} style={{ color: accent }} />
+              <h2>Thao tác nhanh</h2>
+            </div>
+            <div className="np-quick-grid">
+              {quickActions.map((a) => {
+                const Icon = a.icon;
+                return (
+                  <button key={a.label} className="np-quick" type="button" onClick={() => onTabChange(a.tab)}>
+                    <span className="np-quick-ic" style={{ color: a.color, background: `${a.color}14` }}>
+                      <Icon size={19} />
+                    </span>
+                    <span style={{ minWidth: 0 }}>
+                      <b>{a.label}</b>
+                      <small>{a.desc}</small>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Recent activity */}
+          <div className="np-card">
+            <div className="np-card-head">
+              <TrendingUp size={18} style={{ color: accent }} />
+              <h2>Hoạt động gần đây</h2>
+              {!statsLoading && recent.length > 0 ? (
+                <button type="button" className="np-card-tag" style={{ border: 'none', cursor: 'pointer' }} onClick={() => onTabChange('candidates')}>Xem tất cả</button>
+              ) : null}
+            </div>
+            {statsLoading ? (
+              <div className="np-empty">
+                <div className="np-empty-ic"><Loader2 size={24} className="np-spin" /></div>
+                <p style={{ margin: 0 }}>Đang tải hoạt động...</p>
+              </div>
+            ) : recent.length === 0 ? (
+              <div className="np-empty">
+                <div className="np-empty-ic"><UsersRound size={26} /></div>
+                <h3>Chưa có hoạt động</h3>
+                <p>Khi ứng viên nộp hồ sơ hoặc tương tác với tin của bạn, mọi cập nhật sẽ xuất hiện tại đây.</p>
+                {canPost ? (
+                  <button className="button primary-button" type="button" onClick={() => onTabChange('create-job')}
+                    style={{ background: '#0d1b33', borderColor: 'transparent' }}>
+                    <Plus size={16} /> {postLabel}
+                  </button>
+                ) : null}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {recent.map((a) => {
+                  const sColor = STATUS_COLOR[a.status] || '#6366f1';
+                  const when = a.appliedAt || a.applied_at;
+                  return (
+                    <button key={a.id} type="button" onClick={() => onTabChange('candidates')} className="np-act-row">
+                      <span className="np-avatar-sm" style={{ width: 38, height: 38, borderRadius: '50%', background: `${accent}1a`, color: accent, fontSize: '0.82rem' }}>
+                        {(recName(a)[0] || 'U').toUpperCase()}
+                      </span>
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                          <strong style={{ fontSize: '0.88rem', color: 'var(--p-ink)' }}>{recName(a)}</strong>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: sColor, background: `${sColor}15`, padding: '1px 7px', borderRadius: 6 }}>{STATUS_LABEL[a.status] || a.status}</span>
+                        </span>
+                        <span style={{ display: 'block', fontSize: '0.76rem', color: 'var(--p-muted)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {a._postTitle}{when ? ` · ${new Date(when).toLocaleDateString('vi-VN')}` : ''}
+                        </span>
+                      </span>
+                      <ChevronRight size={16} style={{ color: 'var(--p-muted)', flexShrink: 0 }} />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Setup checklist */}
+        <div className="np-card">
+          <div className="np-card-head">
+            <ShieldCheck size={18} style={{ color: '#16a34a' }} />
+            <h2>Hoàn tất thiết lập</h2>
+          </div>
+          <div className="np-checklist">
+            {checklist.map((c, i) => (
+              <button key={c.title} className={`np-check ${c.done ? 'done' : ''}`} type="button" onClick={() => onTabChange(c.tab)}>
+                <span className="np-check-num">
+                  {c.done ? <CheckCircle2 size={16} /> : i + 1}
+                </span>
+                <span className="np-check-txt">
+                  <b>{c.title}</b>
+                  <small>{c.desc}</small>
+                </span>
+                <ChevronsRight size={16} className="np-check-arrow" />
               </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── Two column: Talent + Hiring flow ── */}
-      <div className="two-column">
-        <section className="panel">
-          <div className="panel-title">
-            <UsersRound size={20} style={{ color: '#2563eb' }} />
-            <h2>Talent Shortlist mẫu</h2>
-            <span style={{ marginLeft: 'auto', fontSize: '0.78rem', color: 'var(--muted)', fontWeight: '600', padding: '4px 10px', borderRadius: '999px', background: 'var(--surface-soft)' }}>
-              Demo data
-            </span>
-          </div>
-          <div className="talent-list">
-            {mockTalents.map((t) => (
-              <article className="talent-card" key={t.name}>
-                <span className="avatar-token" style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', color: '#fff' }}>
-                  {t.name.slice(0, 2).toUpperCase()}
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h3 style={{ margin: 0, fontSize: '0.92rem' }}>{t.name}</h3>
-                  <p style={{ margin: '2px 0', fontSize: '0.82rem' }}>{t.role}</p>
-                  <small>{t.proof}</small>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                  <strong style={{ color: '#2563eb', fontSize: '0.95rem' }}>{t.rs} RS</strong>
-                  <span style={{ fontSize: '0.72rem', fontWeight: '700', color: tierColors[t.tier] || '#667085' }}>{t.tier}</span>
-                </div>
-              </article>
             ))}
           </div>
-          <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '16px 0 0', textAlign: 'center' }}>
-            Danh sách talent thực tế sẽ hiển thị sau khi tính năng tìm kiếm được kích hoạt.
-          </p>
-        </section>
-
-        <section className="panel">
-          <div className="panel-title">
-            <ShieldCheck size={20} style={{ color: '#16a34a' }} />
-            <h2>Quy trình tuyển dụng</h2>
-          </div>
-          <div className="step-list">
-            {[
-              { n: 1, text: 'Đăng job, gig, quest hoặc nhu cầu event staffing', color: '#2563eb' },
-              { n: 2, text: 'Lọc ứng viên theo RS threshold, verified skills và lịch rảnh', color: '#ff7a1a' },
-              { n: 3, text: 'Xem portfolio 3D đã xác thực của từng ứng viên', color: '#7c3aed' },
-              { n: 4, text: 'Mời, shortlist và quản lý applications qua dashboard', color: '#16a34a' },
-            ].map((step) => (
-              <article className="timeline-item" key={step.n}>
-                <span style={{ background: `${step.color}18`, color: step.color, width: '32px', height: '32px', borderRadius: '10px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {step.n}
-                </span>
-                <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }}>{step.text}</p>
-              </article>
-            ))}
-          </div>
-          <button className="button primary-button" type="button" onClick={() => onTabChange('create-job')}
-            style={{ marginTop: '20px', width: '100%', background: 'linear-gradient(135deg, #2563eb, #ff7a1a)', borderColor: 'transparent', justifyContent: 'center' }}>
-            <Plus size={18} /> Tạo cơ hội tuyển dụng đầu tiên
-          </button>
-        </section>
-      </div>
-
-      {/* ── How it works ── */}
-      <div className="panel" style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.04) 0%, rgba(255,122,26,0.02) 100%)' }}>
-        <div className="panel-title">
-          <Sparkles size={20} style={{ color: '#ff7a1a' }} />
-          <h2>Tại sao chọn nextplease?</h2>
-        </div>
-        <div className="feature-grid" style={{ marginTop: '20px' }}>
-          {[
-            { icon: ShieldCheck, title: 'Verified Proof', desc: 'Mọi ứng viên đều có minh chứng thực tế đã được xác thực. Không còn CV phóng đại.', color: '#2563eb' },
-            { icon: Filter, title: 'RS Filtering', desc: 'Lọc chính xác theo Reputation Score, tier, kỹ năng và trường học. Backend đảm bảo tin cậy.', color: '#ff7a1a' },
-            { icon: TrendingUp, title: 'Campus Coverage', desc: 'Kết nối chặt chẽ với CLB và sinh viên năng động từ các trường đối tác.', color: '#16a34a' },
-          ].map((f) => {
-            const Icon = f.icon;
-            return (
-              <article className="feature-card" key={f.title}>
-                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: `${f.color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: f.color }}>
-                  <Icon size={20} />
-                </div>
-                <h3 style={{ margin: '14px 0 6px' }}>{f.title}</h3>
-                <p>{f.desc}</p>
-              </article>
-            );
-          })}
         </div>
       </div>
     </section>
@@ -1040,12 +1566,28 @@ function formatVND(value) {
   return parseInt(clean, 10).toLocaleString('vi-VN');
 }
 
-function ManageJobsView({ onTabChange }) {
+function ManageJobsView({ onTabChange, company }) {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+
+  // Edit mode state
+  const [editingJob, setEditingJob] = useState(null); // { postType, data }
+
+  // Delete confirm state
+  const [deletingJob, setDeletingJob] = useState(null); // { id, postType, title }
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  // Close confirm state
+  const [closingJob, setClosingJob] = useState(null); // { id, postType, title }
+  const [closeLoading, setCloseLoading] = useState(false);
+  const [closeError, setCloseError] = useState('');
+
+  // Edit success message
+  const [editSuccessMsg, setEditSuccessMsg] = useState('');
 
   // Detail Modal state
   const [selectedJobId, setSelectedJobId] = useState(null);
@@ -1091,6 +1633,59 @@ function ManageJobsView({ onTabChange }) {
       setDetailError("Không thể tải chi tiết công việc này. Vui lòng thử lại.");
     } finally {
       setLoadingDetail(false);
+    }
+  }
+
+  async function handleEditClick(e, job) {
+    e.stopPropagation();
+    try {
+      let detail;
+      if (job.postType === 'QUEST') {
+        detail = await getOrganizerQuestById(job.id);
+      } else {
+        detail = await getOrganizerJobById(job.id);
+      }
+      setEditingJob({ postType: job.postType, data: detail });
+    } catch (err) {
+      console.error('Không thể tải dữ liệu để sửa:', err);
+    }
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deletingJob) return;
+    setDeleteLoading(true);
+    setDeleteError('');
+    try {
+      if (deletingJob.postType === 'QUEST') {
+        await deleteQuest(deletingJob.id);
+      } else {
+        await deleteJob(deletingJob.id);
+      }
+      setDeletingJob(null);
+      fetchJobs();
+    } catch (err) {
+      setDeleteError(err.message || 'Xoá thất bại.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
+  async function handleCloseConfirm() {
+    if (!closingJob) return;
+    setCloseLoading(true);
+    setCloseError('');
+    try {
+      if (closingJob.postType === 'QUEST') {
+        await closeQuest(closingJob.id);
+      } else {
+        await closeJob(closingJob.id);
+      }
+      setClosingJob(null);
+      fetchJobs();
+    } catch (err) {
+      setCloseError(err.message || 'Đóng thất bại.');
+    } finally {
+      setCloseLoading(false);
     }
   }
 
@@ -1141,8 +1736,79 @@ function ManageJobsView({ onTabChange }) {
     return matchesSearch && matchesStatus;
   });
 
+  // If editing, show the form instead of the list
+  if (editingJob) {
+    const wasOpen = (editingJob.data?.status || '').toUpperCase() === 'OPEN';
+    const editProps = {
+      initialData: editingJob.data,
+      onSuccess: () => {
+        setEditingJob(null);
+        fetchJobs();
+        if (wasOpen) setEditSuccessMsg('Đã gửi lại để Admin duyệt.');
+      },
+      onCancel: () => setEditingJob(null),
+    };
+    return editingJob.postType === 'QUEST'
+      ? <QuestPostForm {...editProps} />
+      : <JobPostForm {...editProps} />;
+  }
+
   return (
     <section className="dashboard-page">
+      {/* Edit success banner */}
+      {editSuccessMsg && (
+        <div style={{ background: '#dcfce7', border: '1px solid #86efac', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          <span style={{ color: '#15803d', fontWeight: '600', fontSize: '0.9rem' }}>✅ {editSuccessMsg}</span>
+          <button onClick={() => setEditSuccessMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#15803d', fontSize: '1.1rem', lineHeight: 1 }}>×</button>
+        </div>
+      )}
+
+      {/* Close confirm modal */}
+      {closingJob && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '90%', maxWidth: '420px', background: 'var(--card-bg-strong, #fff)', borderRadius: '20px', padding: '28px', boxShadow: '0 10px 40px rgba(0,0,0,0.15)' }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', color: 'var(--ink)' }}>Xác nhận đóng tin</h3>
+            <p style={{ margin: '0 0 20px', fontSize: '0.9rem', color: 'var(--muted)' }}>
+              Bạn có chắc muốn đóng <strong style={{ color: 'var(--ink)' }}>&ldquo;{closingJob.title}&rdquo;</strong>? Ứng viên sẽ không thể nộp thêm sau khi đóng.
+            </p>
+            {closeError && <p style={{ color: '#dc2626', fontSize: '0.85rem', fontWeight: '600', margin: '0 0 12px' }}>{closeError}</p>}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={handleCloseConfirm} disabled={closeLoading} className="button"
+                style={{ flex: 1, padding: '10px', background: '#d97706', color: '#fff', borderColor: 'transparent', borderRadius: '12px', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                {closeLoading ? 'Đang đóng...' : <><Lock size={16} /> Đóng tin</>}
+              </button>
+              <button onClick={() => { setClosingJob(null); setCloseError(''); }} disabled={closeLoading} className="button secondary-button"
+                style={{ flex: 1, padding: '10px', borderRadius: '12px', fontWeight: '700' }}>
+                Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirm modal */}
+      {deletingJob && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '90%', maxWidth: '420px', background: 'var(--card-bg-strong, #fff)', borderRadius: '20px', padding: '28px', boxShadow: '0 10px 40px rgba(0,0,0,0.15)' }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', color: 'var(--ink)' }}>Xác nhận xoá</h3>
+            <p style={{ margin: '0 0 20px', fontSize: '0.9rem', color: 'var(--muted)' }}>
+              Bạn có chắc muốn xoá <strong style={{ color: 'var(--ink)' }}>&ldquo;{deletingJob.title}&rdquo;</strong>? Hành động này không thể hoàn tác.
+            </p>
+            {deleteError && <p style={{ color: '#dc2626', fontSize: '0.85rem', fontWeight: '600', margin: '0 0 12px' }}>{deleteError}</p>}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={handleDeleteConfirm} disabled={deleteLoading} className="button"
+                style={{ flex: 1, padding: '10px', background: '#dc2626', color: '#fff', borderColor: 'transparent', borderRadius: '12px', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                {deleteLoading ? 'Đang xoá...' : <><Trash2 size={16} /> Xoá</>}
+              </button>
+              <button onClick={() => { setDeletingJob(null); setDeleteError(''); }} disabled={deleteLoading} className="button secondary-button"
+                style={{ flex: 1, padding: '10px', borderRadius: '12px', fontWeight: '700' }}>
+                Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 1. Dashboard Metric Row */}
       {!loading && !error && jobs.length > 0 && (
         <div className="b2b-stats-row" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', marginBottom: '28px' }}>
@@ -1167,7 +1833,7 @@ function ManageJobsView({ onTabChange }) {
           </div>
 
           <div className="b2b-stat-card">
-            <div className="b2b-stat-icon" style={{ color: '#ff7a1a', background: 'rgba(255, 122, 26, 0.08)' }}>
+            <div className="b2b-stat-icon" style={{ color: '#0d1b33', background: 'rgba(13, 27, 51, 0.08)' }}>
               <Clock size={20} />
             </div>
             <div>
@@ -1198,7 +1864,7 @@ function ManageJobsView({ onTabChange }) {
           <button
             onClick={() => onTabChange('create-job')}
             className="button primary-button"
-            style={{ padding: '10px 18px', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '6px', background: 'linear-gradient(135deg, #2563eb, #ff7a1a)', borderColor: 'transparent' }}
+            style={{ padding: '10px 18px', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '6px', background: '#0d1b33', borderColor: 'transparent' }}
           >
             <Plus size={16} /> Đăng tin mới
           </button>
@@ -1299,7 +1965,7 @@ function ManageJobsView({ onTabChange }) {
               <button
                 onClick={() => onTabChange('create-job')}
                 className="button primary-button"
-                style={{ padding: '10px 20px', background: 'linear-gradient(135deg, #2563eb, #ff7a1a)', borderColor: 'transparent' }}
+                style={{ padding: '10px 20px', background: '#0d1b33', borderColor: 'transparent' }}
               >
                 Tạo tin đăng đầu tiên
               </button>
@@ -1459,31 +2125,50 @@ function ManageJobsView({ onTabChange }) {
                         </div>
                       );
                     })()}
+
+                    {/* Rejection reason (admin) */}
+                    {statusLower === 'rejected' && (job.rejectionReason || job.rejection_reason) && (
+                      <div style={{ display: 'flex', gap: '9px', alignItems: 'flex-start', padding: '11px 13px', borderRadius: '12px', background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.22)', marginBottom: '4px' }}>
+                        <AlertTriangle size={15} style={{ color: '#dc2626', flexShrink: 0, marginTop: '1px' }} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: '0.72rem', fontWeight: '800', color: '#dc2626', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '2px' }}>Lý do từ chối</div>
+                          <p style={{ margin: 0, fontSize: '0.82rem', lineHeight: 1.5, color: 'var(--p-ink)' }}>{job.rejectionReason || job.rejection_reason}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Footer/Stats Block */}
-                  <div style={{
-                    borderTop: '1px solid var(--line)',
-                    paddingTop: '12px',
-                    marginTop: '12px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <UsersRound size={15} style={{ color: '#2563eb' }} />
-                      <strong style={{ fontSize: '0.86rem', color: 'var(--ink)' }}>
-                        {job.applicantsCount || 0} ứng viên
-                      </strong>
+                  <div style={{ borderTop: '1px solid var(--line)', paddingTop: '12px', marginTop: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <UsersRound size={15} style={{ color: '#2563eb' }} />
+                        <strong style={{ fontSize: '0.86rem', color: 'var(--ink)' }}>
+                          {job.applicantsCount || job.applicantCount || 0} ứng viên
+                        </strong>
+                      </div>
+                      <span style={{ fontSize: '0.78rem', color: '#2563eb', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Eye size={14} /> Xem chi tiết
+                      </span>
                     </div>
-                    <span style={{
-                      fontSize: '0.78rem',
-                      color: '#2563eb',
-                      fontWeight: '800',
-                      textDecoration: 'underline'
-                    }}>
-                      Xem chi tiết
-                    </span>
+                    {/* Edit / Close / Delete action row */}
+                    <div style={{ display: 'flex', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
+                      <button onClick={(e) => handleEditClick(e, job)}
+                        style={{ flex: 1, padding: '8px 0', borderRadius: '10px', border: '1px solid var(--p-line)', background: '#fff', color: 'var(--p-ink)', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                        <Pencil size={15} /> Sửa
+                      </button>
+                      {(job.status || '').toUpperCase() === 'OPEN' ? (
+                        <button onClick={(e) => { e.stopPropagation(); setClosingJob({ id: job.id, postType: job.postType, title: job.title }); setCloseError(''); }}
+                          style={{ flex: 1, padding: '8px 0', borderRadius: '10px', border: '1px solid rgba(217,119,6,0.4)', background: 'rgba(217,119,6,0.06)', color: '#d97706', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                          <Lock size={15} /> Đóng
+                        </button>
+                      ) : (
+                        <button onClick={(e) => { e.stopPropagation(); setDeletingJob({ id: job.id, postType: job.postType, title: job.title }); setDeleteError(''); }}
+                          style={{ flex: 1, padding: '8px 0', borderRadius: '10px', border: '1px solid rgba(220,38,38,0.3)', background: 'rgba(220,38,38,0.04)', color: '#dc2626', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                          <Trash2 size={15} /> Xoá
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -1627,7 +2312,7 @@ function ManageJobsView({ onTabChange }) {
                     </div>
                     <div>
                       <span style={{ fontSize: '0.78rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Hạn nộp hồ sơ:</span>
-                      <strong style={{ fontSize: '0.88rem', fontWeight: '700', color: '#ff7a1a' }}>
+                      <strong style={{ fontSize: '0.88rem', fontWeight: '700', color: '#0d1b33' }}>
                         {selectedJobDetail.deadlineAt ? new Date(selectedJobDetail.deadlineAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Không giới hạn'}
                       </strong>
                     </div>
@@ -1661,6 +2346,17 @@ function ManageJobsView({ onTabChange }) {
                        selectedJobDetail.status?.toLowerCase() === 'rejected' ? 'Từ chối' : 'Đã đóng'}
                     </span>
                   </div>
+
+                  {/* Rejection reason (admin) */}
+                  {selectedJobDetail.status?.toLowerCase() === 'rejected' && (selectedJobDetail.rejectionReason || selectedJobDetail.rejection_reason) && (
+                    <div style={{ display: 'flex', gap: '11px', alignItems: 'flex-start', padding: '14px 16px', borderRadius: '14px', background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.25)', marginBottom: '24px' }}>
+                      <AlertTriangle size={18} style={{ color: '#dc2626', flexShrink: 0, marginTop: '1px' }} />
+                      <div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: '800', color: '#dc2626', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '3px' }}>Lý do bị từ chối</div>
+                        <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.6, color: 'var(--ink)' }}>{selectedJobDetail.rejectionReason || selectedJobDetail.rejection_reason}</p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Required Skills Section */}
                   {selectedJobDetail.skills && selectedJobDetail.skills.length > 0 && (
@@ -1851,11 +2547,11 @@ function AccountDetailView({ account, company, onRefresh }) {
         <section className="panel partner-account-panel">
           <div className="panel-title" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Building size={20} style={{ color: '#ff7a1a' }} />
+              <Building size={20} style={{ color: '#2563eb' }} />
               <h2>Hồ sơ đối tác</h2>
             </div>
             {isEditing && (
-              <span style={{ fontSize: '0.85rem', color: '#ff7a1a', fontWeight: 'bold' }}>
+              <span style={{ fontSize: '0.85rem', color: '#b45309', fontWeight: 'bold' }}>
                 * Sau khi lưu, hồ sơ sẽ được gửi lại cho Admin xét duyệt
               </span>
             )}
@@ -1990,7 +2686,7 @@ function AccountDetailView({ account, company, onRefresh }) {
               )}
 
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button type="submit" disabled={actionStatus.type === 'loading'} className="button primary-button" style={{ background: 'linear-gradient(135deg, #2563eb, #ff7a1a)', borderColor: 'transparent' }}>
+                <button type="submit" disabled={actionStatus.type === 'loading'} className="button primary-button" style={{ background: '#0d1b33', borderColor: 'transparent' }}>
                   Lưu thay đổi
                 </button>
                 <button type="button" onClick={handleCancel} className="button secondary-button">
@@ -2040,15 +2736,15 @@ export function BusinessPage() {
   const [account, setAccount] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [noOrg, setNoOrg] = useState(false);
   const [toast, setToast] = useState({ type: 'idle', message: '' });
-  const [theme, setTheme] = useState(getInitialTheme);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const isSupabaseConfigured = Boolean(supabase);
   const activeTab = TAB_BY_ROUTE[tabSlug] || 'dashboard';
-  const isDarkTheme = theme === 'dark';
 
   async function fetchCompanyData() {
     setError(null);
+    setNoOrg(false);
     if (!isSupabaseConfigured) {
       setAccount({
         appUserId: 'demo-app-user',
@@ -2086,6 +2782,9 @@ export function BusinessPage() {
       const status = err.response?.status;
       if (status === 401 || status === 403) {
         navigate('/business/login');
+      } else if (status === 404) {
+        // Authenticated, but the account no longer belongs to any organization.
+        setNoOrg(true);
       } else {
         setError(err.response?.data?.message || err.message || 'Không thể tải thông tin đối tác.');
       }
@@ -2104,20 +2803,16 @@ export function BusinessPage() {
     navigate(getTabPath(tabKey));
   }
 
-  function toggleTheme() {
-    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
-  }
-
   useEffect(() => {
     fetchCompanyData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Partner dashboard is light-only (Wellfound-flat language).
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    document.documentElement.style.colorScheme = theme;
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
+    document.documentElement.dataset.theme = 'light';
+    document.documentElement.style.colorScheme = 'light';
+  }, []);
 
   useEffect(() => {
     if (tabSlug && !TAB_BY_ROUTE[tabSlug]) {
@@ -2145,6 +2840,27 @@ export function BusinessPage() {
     );
   }
 
+  /* Account no longer belongs to any organization (removed / left / ownership transferred away) */
+  if (noOrg) {
+    return (
+      <section style={{ maxWidth: '560px', margin: '60px auto', padding: '0 16px', textAlign: 'center' }}>
+        <div className="panel" style={{ padding: '40px', borderRadius: '20px', border: '1px solid rgba(37,99,235,0.2)' }}>
+          <Lock size={40} style={{ color: '#2563eb', marginBottom: '16px' }} />
+          <h2 style={{ marginBottom: '12px' }}>Bạn không còn thuộc tổ chức nào</h2>
+          <p style={{ color: 'var(--muted)', marginBottom: '24px', lineHeight: 1.6 }}>
+            Tài khoản của bạn hiện không có quyền truy cập tổ chức Doanh nghiệp/CLB nào
+            (có thể bạn đã rời tổ chức hoặc bị gỡ quyền). Nếu cho rằng đây là nhầm lẫn,
+            hãy liên hệ Chủ sở hữu/Quản lý của tổ chức để được mời lại.
+          </p>
+          <button className="button primary-button" onClick={handleLogout}
+            style={{ background: '#0d1b33', borderColor: 'transparent' }}>
+            <LogOut size={16} /> Đăng xuất
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   /* Error */
   if (error) {
     return (
@@ -2154,7 +2870,7 @@ export function BusinessPage() {
           <h2 style={{ marginBottom: '12px' }}>Không thể tải dữ liệu</h2>
           <p style={{ color: 'var(--muted)', marginBottom: '24px' }}>{error}</p>
           <button className="button primary-button" onClick={fetchCompanyData}
-            style={{ background: 'linear-gradient(135deg, #2563eb, #ff7a1a)', borderColor: 'transparent' }}>
+            style={{ background: '#0d1b33', borderColor: 'transparent' }}>
             <RefreshCw size={16} /> Thử lại
           </button>
         </div>
@@ -2163,7 +2879,6 @@ export function BusinessPage() {
   }
 
   const companyTypeLabel = getPartnerTypeLabel(company?.companyType);
-  const companyTypeColor = company?.companyType === 'CLUB' ? '#ff7a1a' : '#2563eb';
 
   function renderContent() {
     if (activeTab === 'account') {
@@ -2182,19 +2897,20 @@ export function BusinessPage() {
       case 'dashboard':
         return <ApprovedView company={company} onTabChange={handleTabChange} />;
       case 'create-job':
-        return (
-          <JobCreateForm
-            companyType={company?.companyType}
-            onSuccess={() => handleTabChange('dashboard')}
-            onCancel={() => handleTabChange('dashboard')}
-          />
-        );
+        if (company?.myRole === 'MEMBER') {
+          return (
+            <TabPlaceholderView
+              icon={Lock}
+              title="Không có quyền đăng tin"
+              desc="Với vai trò Thành viên, bạn có thể xem tin đăng và duyệt ứng viên, nhưng không thể tạo tin mới. Hãy liên hệ Chủ sở hữu hoặc Quản lý của tổ chức."
+            />
+          );
+        }
+        return company?.companyType === 'CLUB'
+          ? <QuestPostForm onSuccess={() => handleTabChange('manage-jobs')} onCancel={() => handleTabChange('manage-jobs')} />
+          : <JobPostForm onSuccess={() => handleTabChange('manage-jobs')} onCancel={() => handleTabChange('manage-jobs')} />;
       case 'manage-jobs':
-        return (
-          <ManageJobsView
-            onTabChange={handleTabChange}
-          />
-        );
+        return <ManageJobsView onTabChange={handleTabChange} company={company} />;
       case 'find-talent':
         return (
           <TabPlaceholderView
@@ -2205,6 +2921,8 @@ export function BusinessPage() {
         );
       case 'candidates':
         return <CandidatesView />;
+      case 'members':
+        return <MembersView company={company} setToast={setToast} />;
       default:
         return <ApprovedView company={company} onTabChange={handleTabChange} />;
     }
@@ -2216,8 +2934,8 @@ export function BusinessPage() {
       <aside className="partner-sidebar">
         <div className="partner-sidebar-header">
           <div className="partner-sidebar-brand">
-            <Building size={20} style={{ color: companyTypeColor }} />
-            <span className="partner-sidebar-logo">nextplease partner</span>
+            <span className="partner-sidebar-logo">next please<span className="np-dot">:</span></span>
+            <span className="partner-sidebar-tag">Partner</span>
           </div>
           <button
             aria-label={isSidebarCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
@@ -2232,7 +2950,7 @@ export function BusinessPage() {
 
         {/* Profile Card */}
         <div className="partner-sidebar-profile">
-          <div className="partner-profile-avatar" style={{ background: company?.companyType === 'CLUB' ? 'linear-gradient(135deg, #ff7a1a, #f59e0b)' : 'linear-gradient(135deg, #2563eb, #3b82f6)' }}>
+          <div className="partner-profile-avatar" style={{ background: company?.companyType === 'CLUB' ? '#ff7a1a' : '#0d1b33' }}>
             {(company?.name || 'P').slice(0, 2).toUpperCase()}
           </div>
           <div className="partner-profile-info">
@@ -2254,7 +2972,9 @@ export function BusinessPage() {
 
         {/* Navigation Menu */}
         <nav className="partner-nav-menu">
-          {SIDEBAR_TABS.map((tab) => {
+          {SIDEBAR_TABS
+            .filter((tab) => !(tab.key === 'create-job' && company?.myRole === 'MEMBER'))
+            .map((tab) => {
             const Icon = tab.icon;
             const isLocked = company?.verificationStatus !== 'APPROVED' && tab.lockable;
             const isActive = !isLocked && activeTab === tab.key;
@@ -2283,16 +3003,6 @@ export function BusinessPage() {
 
         {/* Logout at bottom */}
         <div className="partner-sidebar-footer">
-          <button
-            aria-label={isDarkTheme ? 'Chuyển sang nền sáng' : 'Chuyển sang nền tối'}
-            className="partner-nav-item partner-theme-toggle"
-            onClick={toggleTheme}
-            title={isDarkTheme ? 'Chuyển sang nền sáng' : 'Chuyển sang nền tối'}
-            type="button"
-          >
-            {isDarkTheme ? <Sun size={18} /> : <Moon size={18} />}
-            <span>{isDarkTheme ? 'Sáng' : 'Tối'}</span>
-          </button>
           <button
             className={`partner-nav-item ${activeTab === ACCOUNT_TAB.key ? 'active' : ''} ${activeTab === ACCOUNT_TAB.key && company?.companyType === 'CLUB' ? 'club-active' : ''}`}
             onClick={() => handleTabChange(ACCOUNT_TAB.key)}

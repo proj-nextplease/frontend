@@ -1,38 +1,31 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  AlertCircle,
-  ArrowRight,
-  Eye,
-  EyeOff,
-  LockKeyhole,
-  Mail,
-  ShieldCheck,
-  Sparkles,
-  BriefcaseBusiness,
-} from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
 import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
+import { BusinessAuthPanel } from '../components/BusinessAuthPanel.jsx';
+import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
+
+const INK = '#101828';
+const MUTED = '#5b6472';
+const BLUE = '#2563eb';
+const NAVY = '#0d1b33';
+const LINE = '#e3e8ef';
+const WHITE = '#ffffff';
+
+const FIELD = {
+  width: '100%', padding: '14px 14px 14px 44px', borderRadius: '10px',
+  border: `1.5px solid ${LINE}`, background: WHITE, color: INK,
+  fontSize: '0.98rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit',
+};
 
 export function BusinessLoginPage() {
   const navigate = useNavigate();
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [rememberPassword, setRememberPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState('email');
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const isSupabaseConfigured = Boolean(supabase);
-
-  function handlePointerMove(event) {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    event.currentTarget.style.setProperty('--cursor-x', `${event.clientX - bounds.left}px`);
-    event.currentTarget.style.setProperty('--cursor-y', `${event.clientY - bounds.top}px`);
-    event.currentTarget.style.setProperty('--cursor-opacity', '1');
-  }
-
-  function handlePointerLeave(event) {
-    event.currentTarget.style.setProperty('--cursor-opacity', '0');
-  }
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -48,16 +41,17 @@ export function BusinessLoginPage() {
       return;
     }
 
+    const pendingInvite = sessionStorage.getItem('nextplease:pending_invite');
+
     if (!isSupabaseConfigured) {
       setStatus({ type: 'success', message: 'Đăng nhập mô phỏng thành công. Đang mở dashboard...' });
-      navigate('/businesses/dashboard');
+      navigate(pendingInvite ? `/business/accept-invite?token=${pendingInvite}` : '/businesses/dashboard');
       return;
     }
 
     try {
       const response = await loginCandidate(loginData.email, loginData.password);
 
-      // Save access token to sessionStorage as fallback for httpClient
       if (response.accessToken) {
         sessionStorage.setItem('nextplease:access_token', response.accessToken);
       }
@@ -67,15 +61,15 @@ export function BusinessLoginPage() {
           access_token: response.accessToken,
           refresh_token: response.refreshToken,
         });
-
         if (error) {
           console.warn('Supabase setSession warning (non-blocking):', error.message);
         }
       }
 
-      // Check user roles, redirect admin to admin reviews, else to businesses dashboard
       if (response.user?.roles?.includes('admin')) {
         navigate('/nextplease-admin-portal/b2b-reviews');
+      } else if (pendingInvite) {
+        navigate(`/business/accept-invite?token=${pendingInvite}`);
       } else {
         navigate('/businesses/dashboard');
       }
@@ -89,111 +83,70 @@ export function BusinessLoginPage() {
   }
 
   return (
-    <section
-      className="candidate-login-page interactive-stage"
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-    >
-      <div className="cursor-spotlight" aria-hidden="true" />
+    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 0.95fr)', background: WHITE, color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
+      <style>{`
+        @keyframes npBrandInR { from { opacity:0; transform: translateX(48px);} to { opacity:1; transform:none; } }
+        @keyframes npFormIn { from { opacity:0; transform: translateY(22px);} to { opacity:1; transform:none; } }
+        @keyframes npSpin { to { transform: rotate(360deg); } }
+        .np-spin { animation: npSpin 0.8s linear infinite; }
+        .np-bizf:focus { border-color:${NAVY} !important; box-shadow:0 0 0 3px rgba(13,27,51,0.1); }
+        @media (max-width: 900px){ .np-auth{ grid-template-columns: 1fr !important; } .np-auth-brand{ display:none !important; } }
+      `}</style>
 
-      <section className="candidate-login-shell">
-        <div className="candidate-login-copy" style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(255,122,26,0.05) 100%)' }}>
-          <Link className="portfolio-back-link" to="/businesses">
-            Quay về trang đối tác
-          </Link>
-          <h1 style={{ background: 'linear-gradient(to right, #2563eb, #ff7a1a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Kết nối với thế hệ tài năng thực tế.
-          </h1>
-          
-          <div className="candidate-login-highlights">
-            <span>
-              <BriefcaseBusiness size={18} />
-              Quản trị tuyển dụng
-            </span>
-            <span>
-              <ShieldCheck size={18} />
-              Verified proof
-            </span>
-            <span>
-              <Sparkles size={18} />
-              Quest & Job Hub
-            </span>
-          </div>
-        </div>
+      {/* LEFT — form */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px, 5vw, 56px)', animation: 'npFormIn 0.6s ease-out 0.08s both' }}>
+        <form onSubmit={handleSubmit} noValidate style={{ width: '100%', maxWidth: '420px' }}>
+          <p style={{ fontSize: '0.78rem', fontWeight: '800', letterSpacing: '0.06em', textTransform: 'uppercase', color: BLUE, margin: '0 0 10px' }}>Cổng đối tác · Recruiter Portal</p>
+          <h2 style={{ fontSize: 'clamp(1.8rem, 3vw, 2.3rem)', fontWeight: '800', letterSpacing: '-0.03em', color: INK, margin: '0 0 8px' }}>Đăng nhập đối tác</h2>
+          <p style={{ fontSize: '0.98rem', color: MUTED, margin: '0 0 28px' }}>Truy cập trang quản trị tuyển dụng của tổ chức bạn.</p>
 
-        <form className="candidate-login-panel" onSubmit={handleSubmit}>
-          <div className="register-form-header">
-            <Sparkles size={22} style={{ color: '#ff7a1a' }} />
-            <div>
-              <p className="eyebrow">Recruiter & Organizer Portal</p>
-              <h2>Đăng nhập đối tác</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '16px' }}>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex' }}><Mail size={18} /></span>
+              <input className="np-bizf" name="email" type="email" value={loginData.email} onChange={updateField} placeholder="Email đăng nhập" style={FIELD} />
             </div>
-          </div>
-
-          <div className="register-form-grid">
-            <label className={focusedField === 'email' ? 'active' : ''}>
-              <Mail size={18} />
-              <input
-                name="email"
-                onChange={updateField}
-                onFocus={() => setFocusedField('email')}
-                placeholder="Email đăng nhập"
-                type="email"
-                value={loginData.email}
-              />
-            </label>
-            <label className={focusedField === 'password' ? 'active' : ''}>
-              <LockKeyhole size={18} />
-              <input
-                name="password"
-                onChange={updateField}
-                onFocus={() => setFocusedField('password')}
-                placeholder="Mật khẩu"
-                type={showPassword ? 'text' : 'password'}
-                value={loginData.password}
-              />
-              <button
-                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                className="password-visibility-button"
-                onClick={() => setShowPassword((current) => !current)}
-                type="button"
-              >
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex' }}><LockKeyhole size={18} /></span>
+              <input className="np-bizf" name="password" type={showPassword ? 'text' : 'password'} value={loginData.password} onChange={updateField} placeholder="Mật khẩu" style={{ ...FIELD, paddingRight: '44px' }} />
+              <button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} onClick={() => setShowPassword((c) => !c)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: MUTED, cursor: 'pointer', display: 'flex' }}>
                 {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
               </button>
-            </label>
-          </div>
-
-          <div className="candidate-login-options">
-            <label className="remember-password-option">
-              <input
-                checked={rememberPassword}
-                onChange={(event) => setRememberPassword(event.target.checked)}
-                type="checkbox"
-              />
-              <span>Ghi nhớ đăng nhập</span>
-            </label>
-          </div>
-
-          {status.message ? (
-            <div className={`register-status ${status.type}`}>
-              <AlertCircle size={18} />
-              <p>{status.message}</p>
             </div>
-          ) : null}
-
-          <div className="register-action-row">
-            <button className="button primary-button" disabled={status.type === 'loading'} type="submit" style={{ background: 'linear-gradient(135deg, #2563eb, #ff7a1a)', borderColor: 'transparent' }}>
-              Vào trang đối tác
-              <ArrowRight size={18} />
-            </button>
           </div>
 
-          <div className="candidate-register-prompt">
-            <span>Bạn chưa có tài khoản đối tác?</span>
-            <Link to="/business/register" style={{ color: '#ff7a1a' }}>Hãy bắt đầu đăng ký ngay</Link>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', color: MUTED, cursor: 'pointer' }}>
+              <input type="checkbox" checked={rememberPassword} onChange={(e) => setRememberPassword(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: BLUE, cursor: 'pointer' }} />
+              Ghi nhớ đăng nhập
+            </label>
+            <button type="button" onClick={() => setStatus({ type: 'warning', message: 'Vui lòng liên hệ quản trị viên để khôi phục mật khẩu tài khoản tổ chức.' })}
+              style={{ background: 'none', border: 'none', color: BLUE, fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer' }}>Quên mật khẩu?</button>
           </div>
+
+          <AuthStatusCard
+            status={status}
+            title={status.type === 'error' ? 'Không thể đăng nhập' : undefined}
+            onClose={() => setStatus({ type: 'idle', message: '' })}
+            style={{ marginBottom: '18px' }}
+          />
+
+          <button type="submit" disabled={status.type === 'loading'}
+            style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '10px', background: NAVY, color: WHITE, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: status.type === 'loading' ? 'default' : 'pointer', opacity: status.type === 'loading' ? 0.7 : 1 }}>
+            {status.type === 'loading' ? 'Đang đăng nhập...' : 'Vào trang đối tác'} <ArrowRight size={18} />
+          </button>
+
+          <div style={{ marginTop: '22px', padding: '14px 16px', borderRadius: '12px', background: '#f3f6fb', border: `1px solid ${LINE}`, fontSize: '0.84rem', lineHeight: 1.55, color: MUTED }}>
+            <strong style={{ color: INK }}>Được mời vào tổ chức?</strong> Hãy đăng nhập tại đây để tham gia — không cần đăng ký mới.
+          </div>
+
+          <p style={{ textAlign: 'center', fontSize: '0.92rem', color: MUTED, margin: '20px 0 0' }}>
+            Chưa có tài khoản đối tác? <Link to="/business/register" style={{ color: BLUE, fontWeight: '700', textDecoration: 'none' }}>Đăng ký ngay</Link>
+          </p>
         </form>
-      </section>
-    </section>
+      </div>
+
+      {/* RIGHT — brand panel */}
+      <BusinessAuthPanel animation="npBrandInR" />
+    </div>
   );
 }

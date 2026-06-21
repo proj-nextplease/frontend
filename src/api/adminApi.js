@@ -58,6 +58,14 @@ export async function updateUserStatus(userId, status, reason = '') {
   return response.data.data;
 }
 
+export async function deleteUserAccount(userId) {
+  const response = await httpClient.delete(`/admin/dashboard/users/${userId}`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Xóa tài khoản người dùng thất bại.');
+  }
+  return response.data.data;
+}
+
 export async function getActiveFraudFlags() {
   const response = await httpClient.get('/admin/dashboard/fraud-flags');
   if (!response.data?.success) {

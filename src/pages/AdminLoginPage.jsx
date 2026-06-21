@@ -1,44 +1,88 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import {
-  AlertCircle,
-  ArrowRight,
-  Eye,
-  EyeOff,
-  LockKeyhole,
-  Mail,
-  ShieldCheck,
-  Sparkles,
-} from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
+import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
+
+const INK = '#101828';
+const MUTED = '#5b6472';
+const NAVY = '#0d1b33';
+const NAVY2 = '#13284c';
+const RED = '#ef4444';
+const LINE = '#e3e8ef';
+const WHITE = '#ffffff';
+
+const FIELD = {
+  width: '100%', padding: '14px 14px 14px 44px', borderRadius: '10px',
+  border: `1.5px solid ${LINE}`, background: WHITE, color: INK,
+  fontSize: '0.98rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit',
+};
+
+const adminFeatures = [
+  'Duyệt hồ sơ Doanh nghiệp & CLB',
+  'Kiểm duyệt tin tuyển dụng & Quest',
+  'Quản lý hàng đợi xác thực minh chứng',
+  'Giám sát & vận hành toàn hệ thống',
+];
+
+function AdminBrandPanel() {
+  return (
+    <div className="np-auth-brand" style={{ position: 'relative', overflow: 'hidden', background: `radial-gradient(120% 90% at 80% 0%, ${NAVY2} 0%, ${NAVY} 55%)`, color: '#eaf0fb', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '100%', animation: 'npBrandInR 0.7s cubic-bezier(0.22,1,0.36,1) both' }}>
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px)`, backgroundSize: '46px 46px', opacity: 0.3, maskImage: 'radial-gradient(120% 80% at 50% 20%, #000 30%, transparent 75%)', WebkitMaskImage: 'radial-gradient(120% 80% at 50% 20%, #000 30%, transparent 75%)', zIndex: 0 }} />
+      <div aria-hidden="true" style={{ position: 'absolute', top: '-12%', right: '-10%', width: '360px', height: '360px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(239,68,68,0.26), transparent 68%)', zIndex: 0 }} />
+
+      {/* chrome */}
+      <div style={{ position: 'absolute', top: 'clamp(34px, 4vw, 52px)', left: 'clamp(36px, 3.5vw, 54px)', zIndex: 3, display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'baseline' }}>
+          <span style={{ fontSize: '1.4rem', fontWeight: '800', letterSpacing: '-0.03em', color: '#fff' }}>next please</span>
+          <span style={{ fontSize: '1.4rem', fontWeight: '800', color: RED }}>:</span>
+        </span>
+        <span style={{ fontSize: '0.66rem', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', color: RED, border: `1px solid rgba(239,68,68,0.5)`, borderRadius: '6px', padding: '3px 7px' }}>Admin</span>
+      </div>
+
+      {/* center */}
+      <div style={{ position: 'relative', zIndex: 2, padding: '0 clamp(40px, 4vw, 64px)', maxWidth: '520px' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '52px', height: '52px', borderRadius: '15px', background: 'rgba(239,68,68,0.16)', color: RED, border: '1px solid rgba(239,68,68,0.4)', marginBottom: '20px' }}>
+          <ShieldAlert size={26} />
+        </span>
+        <p style={{ fontSize: '0.78rem', fontWeight: '800', letterSpacing: '0.1em', textTransform: 'uppercase', color: RED, margin: '0 0 14px' }}>Cổng vận hành nội bộ</p>
+        <h1 style={{ fontSize: 'clamp(1.7rem, 2.6vw, 2.4rem)', fontWeight: '800', lineHeight: 1.18, letterSpacing: '-0.025em', color: '#fff', margin: '0 0 28px' }}>
+          Trung tâm quản trị <span style={{ color: RED }}>next please</span>.
+        </h1>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          {adminFeatures.map((f) => (
+            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '13px' }}>
+              <span style={{ flexShrink: 0, width: '24px', height: '24px', borderRadius: '7px', background: 'rgba(239,68,68,0.16)', color: RED, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(239,68,68,0.4)' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 12l4 4 8-8" stroke={RED} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </span>
+              <span style={{ fontSize: '0.98rem', fontWeight: '600', color: '#eaf0fb' }}>{f}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function AdminLoginPage() {
   const navigate = useNavigate();
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState('email');
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const isSupabaseConfigured = Boolean(supabase);
 
-  // If already logged in as admin, bypass and go to reviews directly
   const [alreadyAdmin, setAlreadyAdmin] = useState(false);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     async function checkCurrentSession() {
-      // Clean up old localStorage bypass
       if (localStorage.getItem('nextplease:admin-bypass')) {
         localStorage.removeItem('nextplease:admin-bypass');
       }
-
-      // Dev bypass check via sessionStorage
       if (sessionStorage.getItem('nextplease:admin-bypass') === 'true') {
-        if (isMounted) {
-          setAlreadyAdmin(true);
-          setChecking(false);
-        }
+        if (isMounted) { setAlreadyAdmin(true); setChecking(false); }
         return;
       }
       if (!isSupabaseConfigured) {
@@ -59,31 +103,18 @@ export function AdminLoginPage() {
           }
         }
       } catch (err) {
-        console.error("Lỗi khi kiểm tra admin session:", err);
+        console.error('Lỗi khi kiểm tra admin session:', err);
       } finally {
-        if (isMounted) {
-          setChecking(false);
-        }
+        if (isMounted) setChecking(false);
       }
     }
     checkCurrentSession();
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [isSupabaseConfigured]);
 
   if (checking) {
     return (
-      <div className="route-loading" style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '60vh',
-        fontSize: '1.25rem',
-        fontWeight: '600',
-        color: 'var(--muted)',
-        background: 'var(--bg)',
-      }}>
+      <div className="route-loading" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', fontSize: '1rem', fontWeight: '600', color: MUTED }}>
         Đang kiểm tra phiên làm việc...
       </div>
     );
@@ -91,17 +122,6 @@ export function AdminLoginPage() {
 
   if (alreadyAdmin) {
     return <Navigate to="/nextplease-admin-portal/b2b-reviews" replace />;
-  }
-
-  function handlePointerMove(event) {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    event.currentTarget.style.setProperty('--cursor-x', `${event.clientX - bounds.left}px`);
-    event.currentTarget.style.setProperty('--cursor-y', `${event.clientY - bounds.top}px`);
-    event.currentTarget.style.setProperty('--cursor-opacity', '1');
-  }
-
-  function handlePointerLeave(event) {
-    event.currentTarget.style.setProperty('--cursor-opacity', '0');
   }
 
   function updateField(event) {
@@ -127,30 +147,21 @@ export function AdminLoginPage() {
 
     try {
       const response = await loginCandidate(loginData.email, loginData.password);
-
-      // Verify role
       const roles = response.user?.roles || [];
       if (!roles.includes('admin')) {
         setStatus({ type: 'error', message: 'Tài khoản này không có quyền truy cập trang quản trị.' });
         return;
       }
-
-      // Save access token to sessionStorage for httpClient
       if (response.accessToken) {
         sessionStorage.setItem('nextplease:access_token', response.accessToken);
       }
-
       if (supabase && response.accessToken && response.refreshToken) {
         const { error } = await supabase.auth.setSession({
           access_token: response.accessToken,
           refresh_token: response.refreshToken,
         });
-
-        if (error) {
-          console.warn('Supabase setSession warning (non-blocking):', error.message);
-        }
+        if (error) console.warn('Supabase setSession warning (non-blocking):', error.message);
       }
-
       navigate('/nextplease-admin-portal/b2b-reviews');
     } catch (error) {
       sessionStorage.removeItem('nextplease:access_token');
@@ -162,110 +173,51 @@ export function AdminLoginPage() {
   }
 
   return (
-    <section
-      className="candidate-login-page interactive-stage admin-login-container"
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-    >
-      <div className="cursor-spotlight" aria-hidden="true" />
+    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 0.95fr)', background: WHITE, color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
+      <style>{`
+        @keyframes npBrandInR { from { opacity:0; transform: translateX(48px);} to { opacity:1; transform:none; } }
+        @keyframes npFormIn { from { opacity:0; transform: translateY(22px);} to { opacity:1; transform:none; } }
+        @keyframes npSpin { to { transform: rotate(360deg); } }
+        .np-spin { animation: npSpin 0.8s linear infinite; }
+        .np-adminf:focus { border-color:${NAVY} !important; box-shadow:0 0 0 3px rgba(239,68,68,0.14); }
+        @media (max-width: 900px){ .np-auth{ grid-template-columns: 1fr !important; } .np-auth-brand{ display:none !important; } }
+      `}</style>
 
-      <section className="candidate-login-shell">
-        <div className="candidate-login-copy" style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.08) 0%, rgba(15,23,42,0.05) 100%)' }}>
-          <h1 style={{ background: 'linear-gradient(to right, #dc2626, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            NextPlease Portal Administration.
-          </h1>
-          <p>
-            Cổng quản trị bảo mật dành riêng cho Đội ngũ vận hành hệ thống nextplease. 
-            Vui lòng sử dụng thông tin đăng nhập do quản trị hệ thống cấp.
-          </p>
-          
-          <div className="candidate-login-highlights">
-            <span>
-              <ShieldCheck size={18} style={{ color: '#dc2626' }} />
-              Xác thực cấp cao
-            </span>
-            <span>
-              <Sparkles size={18} style={{ color: '#f97316' }} />
-              Quyền hạn vận hành
-            </span>
-          </div>
-        </div>
+      {/* LEFT — form */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px, 5vw, 56px)', animation: 'npFormIn 0.6s ease-out 0.08s both' }}>
+        <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '420px' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '46px', height: '46px', borderRadius: '13px', background: 'rgba(220,38,38,0.1)', color: '#dc2626', marginBottom: '18px' }}>
+            <ShieldCheck size={24} />
+          </span>
+          <p style={{ fontSize: '0.78rem', fontWeight: '800', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#dc2626', margin: '0 0 10px' }}>System Administration Portal</p>
+          <h2 style={{ fontSize: 'clamp(1.8rem, 3vw, 2.3rem)', fontWeight: '800', letterSpacing: '-0.03em', color: INK, margin: '0 0 8px' }}>Đăng nhập Admin</h2>
+          <p style={{ fontSize: '0.98rem', color: MUTED, margin: '0 0 28px' }}>Cổng quản trị bảo mật — dùng thông tin do hệ thống cấp.</p>
 
-        <form className="candidate-login-panel" onSubmit={handleSubmit}>
-          <div className="register-form-header">
-            <ShieldCheck size={26} style={{ color: '#dc2626' }} />
-            <div>
-              <p className="eyebrow" style={{ color: '#dc2626' }}>System Administration Portal</p>
-              <h2>Đăng nhập Admin</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '18px' }}>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex' }}><Mail size={18} /></span>
+              <input className="np-adminf" name="email" type="email" value={loginData.email} onChange={updateField} placeholder="Email admin" style={FIELD} />
             </div>
-          </div>
-
-          <div className="register-divider" style={{ margin: '16px 0 24px' }}>
-            <span>Nhập thông tin xác thực quản trị viên</span>
-          </div>
-
-          <div className="register-form-grid" style={{ gap: '16px' }}>
-            <label className={focusedField === 'email' ? 'active' : ''} style={{ border: focusedField === 'email' ? '1px solid #dc2626' : '1px solid var(--border)' }}>
-              <Mail size={18} style={{ color: focusedField === 'email' ? '#dc2626' : 'var(--primary)' }} />
-              <input
-                name="email"
-                required
-                onChange={updateField}
-                onFocus={() => setFocusedField('email')}
-                onBlur={() => setFocusedField('')}
-                placeholder="Email admin"
-                type="email"
-                value={loginData.email}
-              />
-            </label>
-            <label className={focusedField === 'password' ? 'active' : ''} style={{ border: focusedField === 'password' ? '1px solid #dc2626' : '1px solid var(--border)' }}>
-              <LockKeyhole size={18} style={{ color: focusedField === 'password' ? '#dc2626' : 'var(--primary)' }} />
-              <input
-                name="password"
-                required
-                onChange={updateField}
-                onFocus={() => setFocusedField('password')}
-                onBlur={() => setFocusedField('')}
-                placeholder="Mật khẩu bảo mật"
-                type={showPassword ? 'text' : 'password'}
-                value={loginData.password}
-              />
-              <button
-                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                className="password-visibility-button"
-                onClick={() => setShowPassword((current) => !current)}
-                type="button"
-              >
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex' }}><LockKeyhole size={18} /></span>
+              <input className="np-adminf" name="password" type={showPassword ? 'text' : 'password'} value={loginData.password} onChange={updateField} placeholder="Mật khẩu bảo mật" style={{ ...FIELD, paddingRight: '44px' }} />
+              <button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} onClick={() => setShowPassword((c) => !c)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: MUTED, cursor: 'pointer', display: 'flex' }}>
                 {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
               </button>
-            </label>
-          </div>
-
-          {status.message ? (
-            <div className={`register-status ${status.type}`} style={{ marginTop: '20px' }}>
-              <AlertCircle size={18} />
-              <p>{status.message}</p>
             </div>
-          ) : null}
-
-          <div className="register-action-row" style={{ marginTop: '28px' }}>
-            <button 
-              className="button primary-button" 
-              disabled={status.type === 'loading'} 
-              type="submit" 
-              style={{ 
-                background: 'linear-gradient(135deg, #dc2626, #f97316)', 
-                borderColor: 'transparent',
-                width: '100%',
-                justifyContent: 'center'
-              }}
-            >
-              Vào cổng quản trị
-              <ArrowRight size={18} />
-            </button>
           </div>
+
+          <AuthStatusCard status={status} title={status.type === 'error' ? 'Không thể đăng nhập' : undefined} onClose={() => setStatus({ type: 'idle', message: '' })} style={{ marginBottom: '18px' }} />
+
+          <button type="submit" disabled={status.type === 'loading'}
+            style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '10px', background: NAVY, color: WHITE, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: status.type === 'loading' ? 'default' : 'pointer', opacity: status.type === 'loading' ? 0.7 : 1 }}>
+            {status.type === 'loading' ? 'Đang đăng nhập...' : 'Vào cổng quản trị'} <ArrowRight size={18} />
+          </button>
         </form>
-      </section>
-    </section>
+      </div>
+
+      {/* RIGHT — brand panel */}
+      <AdminBrandPanel />
+    </div>
   );
 }

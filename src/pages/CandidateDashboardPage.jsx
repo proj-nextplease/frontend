@@ -20,8 +20,6 @@ import {
   Zap,
   LogOut,
   RefreshCw,
-  Moon,
-  Sun,
   Building,
   AlertTriangle,
   MapPin,
@@ -40,9 +38,9 @@ import { getMyPortfolio } from '../api/portfolioApi.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
 import { getJobs, getCompanies, getCompanyDetail } from '../api/jobApi.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
-import { applyToJob, getMyApplications } from '../api/applicationApi.js';
+import { applyToJob, getMyApplications, withdrawApplication } from '../api/applicationApi.js';
 import { getWallet, topUp, buyPremium } from '../api/walletApi.js';
-import { searchQuests, applyToQuest, getMyQuestApplications } from '../api/questApi.js';
+import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication } from '../api/questApi.js';
 import { supabase } from '../services/supabaseClient.js';
 
 const CATEGORY_MAP = {
@@ -285,15 +283,15 @@ function CandidateProfilePreview({ portfolio, candidateRs, currentLevel, current
 
       {/* Avatar + name + headline + school */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg,#2563eb,#ff7a1a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '1.05rem', color: '#fff', flexShrink: 0 }}>
+        <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#e5533f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.05rem', color: '#fff', flexShrink: 0 }}>
           {portfolio?.name ? portfolio.name.slice(0, 2).toUpperCase() : 'UV'}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <strong style={{ fontSize: '0.94rem', display: 'block', color: 'var(--ink)' }}>{portfolio?.name || 'Ứng viên'}</strong>
           {portfolio?.headline && <span style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'block' }}>{portfolio.headline}</span>}
           {portfolio?.school && (
-            <span style={{ fontSize: '0.76rem', color: '#2563eb', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-              🎓 {portfolio.school}
+            <span style={{ fontSize: '0.76rem', color: '#e5533f', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+              <BadgeCheck size={13} /> {portfolio.school}
             </span>
           )}
         </div>
@@ -301,7 +299,7 @@ function CandidateProfilePreview({ portfolio, candidateRs, currentLevel, current
 
       {/* Stats */}
       <div style={{ display: 'flex', gap: '8px' }}>
-        {[{ label: 'RS', val: rs, color: '#2563eb' }, { label: 'Level', val: currentLevel, color: '#ff7a1a' }, { label: 'EXP', val: currentExp, color: '#7c3aed' }].map(s => (
+        {[{ label: 'RS', val: rs, color: '#e5533f' }, { label: 'Level', val: currentLevel, color: '#d97706' }, { label: 'EXP', val: currentExp, color: '#7c3aed' }].map(s => (
           <div key={s.label} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', background: `${s.color}08`, borderRadius: '10px', border: `1px solid ${s.color}20` }}>
             <strong style={{ fontSize: '0.9rem', color: s.color, display: 'block' }}>{s.val}</strong>
             <span style={{ fontSize: '0.68rem', color: 'var(--muted)', fontWeight: '700' }}>{s.label}</span>
@@ -338,10 +336,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [myAppsClubSearch, setMyAppsClubSearch] = useState('');
   const [myAppsClubStatusFilter, setMyAppsClubStatusFilter] = useState('');
 
-  // Theme support
-  const [isDarkTheme, setIsDarkTheme] = useState(() => {
-    return document.documentElement.getAttribute('data-theme') === 'dark';
-  });
+  // Candidate dashboard is light-only (warm flat language).
+  useEffect(() => {
+    document.documentElement.dataset.theme = 'light';
+    document.documentElement.style.colorScheme = 'light';
+  }, []);
 
   // Sidebar collapse state
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
@@ -357,6 +356,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [applyModalError, setApplyModalError] = useState('');
   const [applySuccessMsg, setApplySuccessMsg] = useState('');
   const [showPremiumPaywall, setShowPremiumPaywall] = useState(false);
+
+  // Withdraw states
+  const [withdrawingId, setWithdrawingId] = useState(null);
+  const [withdrawError, setWithdrawError] = useState('');
 
   // Wallet & Premium states
   const [wallet, setWallet] = useState(null);
@@ -461,11 +464,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       if (['OVERVIEW', 'OPPORTUNITIES', 'QUESTS', 'ROADMAP', 'CREDENTIALS', 'ORGANIZATIONS', 'MY_APPLICATIONS'].includes(upperTab)) {
         setActiveView(upperTab);
         setSelectedOrg(null);
-
-        if (upperTab === 'OPPORTUNITIES' || upperTab === 'QUESTS') {
-          setIsSidebarCollapsed(true);
-          localStorage.setItem('nextplease:candidate-sidebar-collapsed', 'true');
-        }
       } else if (tabSlug.startsWith('org-')) {
         setActiveView('ORGANIZATION_DETAIL');
       } else {
@@ -745,7 +743,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         premiumUntil: result.premiumUntil,
       } : prev);
       setShowPremiumPaywall(false);
-      setApplySuccessMsg('🎉 Premium Pass đã được kích hoạt! Bạn có thể ứng tuyển các cơ hội Premium ngay bây giờ.');
+      setApplySuccessMsg('Premium Pass đã được kích hoạt! Bạn có thể ứng tuyển các cơ hội Premium ngay bây giờ.');
       setTimeout(() => setApplySuccessMsg(''), 7000);
     } catch (err) {
       if (err.errorCode === 'INSUFFICIENT_NP') {
@@ -820,13 +818,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     navigate(`/candidates/dashboard/opportunities?${searchParams.toString()}`, { replace: true });
   };
 
-  function toggleTheme() {
-    const nextTheme = isDarkTheme ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', nextTheme);
-    localStorage.setItem('nextplease:theme', nextTheme);
-    setIsDarkTheme(!isDarkTheme);
-  }
-
   async function handleLogout() {
     if (supabase) {
       await supabase.auth.signOut().catch(() => {});
@@ -862,6 +853,34 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       }
     } finally {
       setApplyModalLoading(false);
+    }
+  }
+
+  async function handleWithdrawJob(applicationId) {
+    setWithdrawingId(applicationId);
+    setWithdrawError('');
+    try {
+      await withdrawApplication(applicationId);
+      const data = await getMyApplications();
+      setAppliedJobs(data || []);
+    } catch (err) {
+      setWithdrawError(err.message || 'Rút đơn thất bại.');
+    } finally {
+      setWithdrawingId(null);
+    }
+  }
+
+  async function handleWithdrawQuest(applicationId) {
+    setWithdrawingId(applicationId);
+    setWithdrawError('');
+    try {
+      await withdrawQuestApplication(applicationId);
+      const data = await getMyQuestApplications();
+      setQuestApplications(data || []);
+    } catch (err) {
+      setWithdrawError(err.message || 'Rút đơn thất bại.');
+    } finally {
+      setWithdrawingId(null);
     }
   }
 
@@ -944,8 +963,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         <div className="candidate-portal-sidebar-top">
           <div className="candidate-portal-brand">
             <div className="candidate-portal-brand-inner">
-              <Sparkles size={20} />
-              <span className="candidate-portal-brand-logo">nextplease hub</span>
+              <span className="candidate-portal-brand-logo">next please<span className="np-dot">:</span></span>
+              <span className="candidate-portal-brand-tag">Hub</span>
             </div>
             <button
               aria-label={isSidebarCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
@@ -1130,17 +1149,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           )}
 
           <button
-            className="theme-switch-btn"
-            onClick={toggleTheme}
-            type="button"
-            title={isDarkTheme ? 'Đổi sang Giao diện Sáng' : 'Đổi sang Giao diện Tối'}
-            style={{ justifyContent: isSidebarCollapsed ? 'center' : 'flex-start' }}
-          >
-            {isDarkTheme ? <Sun size={18} /> : <Moon size={18} />}
-            {!isSidebarCollapsed && <span>{isDarkTheme ? 'Giao diện Sáng' : 'Giao diện Tối'}</span>}
-          </button>
-
-          <button
             className="candidate-portal-nav-item"
             onClick={handleLogout}
             style={{ color: '#ef4444', marginTop: '4px', justifyContent: isSidebarCollapsed ? 'center' : 'flex-start' }}
@@ -1174,17 +1182,18 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             <div style={{ flexGrow: 1 }}>{applySuccessMsg}</div>
             <button
               onClick={() => setApplySuccessMsg('')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--success)', fontWeight: 'bold' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--success)', display: 'flex' }}
               type="button"
+              aria-label="Đóng"
             >
-              ✕
+              <X size={16} />
             </button>
           </div>
         )}
 
         {/* 1. OVERVIEW VIEW */}
         {activeView === 'OVERVIEW' && (
-          <div>
+          <div className="np-view">
             <header className="candidate-overview-header">
               <div className="candidate-overview-title">
                 <span style={{
@@ -1335,7 +1344,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             </div>
 
             {/* Metrics cards grid */}
-            <section className="candidate-metrics-grid">
+            <section className="candidate-metrics-grid np-stagger">
               <div className="candidate-metric-box" style={{ cursor: 'pointer' }} onClick={() => setShowTopUpModal(true)} title="Nhấn để nạp NP">
                 <div className="candidate-metric-icon">
                   <WalletCards size={22} />
@@ -1386,31 +1395,32 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 2. OPPORTUNITIES VIEW */}
         {activeView === 'OPPORTUNITIES' && (
-          <section style={{ border: '1px solid var(--line)', background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(15px)', borderRadius: '28px', padding: '24px' }}>
+          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: '#fff', borderRadius: '20px', padding: '24px' }}>
             {/* Header */}
             <div style={{ marginBottom: '20px' }}>
-              <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em', margin: '0 0 4px' }}>Opportunity board</p>
-              <h2 style={{ margin: '0', fontSize: '1.75rem', fontWeight: '900', color: 'var(--ink)' }}>Bảng cơ hội phát triển sự nghiệp</h2>
+              <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '800', color: 'var(--c-red)', letterSpacing: '0.06em', margin: '0 0 6px' }}>Bảng cơ hội</p>
+              <h2 style={{ margin: '0', fontSize: '1.6rem', fontWeight: '800', letterSpacing: '-0.03em', color: 'var(--c-ink)' }}>Cơ hội phát triển sự nghiệp</h2>
             </div>
 
             {/* Search bar */}
             <div style={{ position: 'relative', marginBottom: '20px' }}>
-              <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: 'var(--muted)' }} />
+              <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: 'var(--c-muted)' }} />
               <input type="text" value={filterSearch}
                 onChange={e => { setFilterSearch(e.target.value); updateSearchUrl('q', e.target.value); }}
                 placeholder="Tìm vị trí tuyển dụng, kỹ năng, hoặc tên công ty..."
-                style={{ width: '100%', padding: '13px 40px 13px 46px', borderRadius: '14px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none' }}
+                className="np-candf"
+                style={{ width: '100%', padding: '13px 40px 13px 46px', borderRadius: '12px', border: '1.5px solid var(--c-line)', background: '#fff', color: 'var(--c-ink)', fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }}
               />
               {filterSearch && (
                 <button type="button" onClick={() => { setFilterSearch(''); updateSearchUrl('q', ''); }}
-                  style={{ position: 'absolute', right: '14px', top: '13px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1rem', padding: '2px' }}>✕</button>
+                  style={{ position: 'absolute', right: '14px', top: '13px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', padding: '2px', display: 'flex' }} aria-label="Xóa tìm kiếm"><X size={16} /></button>
               )}
             </div>
 
             {/* 2-col layout: filter sidebar + list */}
-            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '20px', alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '230px 1fr', gap: '20px', alignItems: 'start' }}>
               {/* LEFT FILTER PANEL */}
-              <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--line)', borderRadius: '18px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '20px' }}>
+              <div style={{ background: '#faf7f5', border: '1px solid var(--c-line)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <strong style={{ fontSize: '0.84rem', fontWeight: '900', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '6px' }}><SlidersHorizontal size={14} /> Bộ lọc</strong>
                   {(filterCategory || filterSpecialty || filterJobType || filterIsRemote || filterCanApply) && (
@@ -1496,7 +1506,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--muted)' }}>Điều chỉnh bộ lọc để tìm thêm kết quả.</p></div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div className="np-stagger" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {filteredJobs.map(job => {
                       const isLocked = candidateRs < job.minReqRs;
                       const alreadyApplied = appliedJobs.some(a => (a.job_id || a.jobId) === job.id);
@@ -1504,13 +1514,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       const typeLabel = JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType;
                       const typeExp = JOB_TYPES.find(t => t.value === job.jobType)?.exp;
                       return (
-                        <article key={job.id} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '18px', border: '1px solid var(--line)', background: 'var(--bg)', transition: 'box-shadow 0.2s, border-color 0.2s' }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(37,99,235,0.08)'; }}
+                        <article key={job.id} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '18px', border: '1px solid var(--line)', background: '#fff', transition: 'box-shadow 0.2s, border-color 0.2s' }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--c-red)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(229,83,63,0.08)'; }}
                           onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.boxShadow = 'none'; }}
                         >
                           {/* Logo */}
-                          <div style={{ width: '56px', height: '56px', borderRadius: '14px', border: '1px solid var(--line)', background: 'var(--surface-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                            {job.companyLogo ? <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={22} style={{ color: 'var(--muted)' }} />}
+                          <div style={{ width: '56px', height: '56px', borderRadius: '14px', border: '1px solid var(--c-line)', background: '#faf7f5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                            {job.companyLogo ? <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={22} style={{ color: 'var(--c-muted)' }} />}
                           </div>
 
                           {/* Middle content */}
@@ -1534,7 +1544,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                               {(job.deadlineAt) && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={12} />HSD: {new Date(job.deadlineAt).toLocaleDateString('vi-VN')}</span>}
                             </div>
                             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                              {typeLabel && <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '3px 9px', borderRadius: '6px', background: 'rgba(37,99,235,0.08)', color: '#2563eb' }}>{typeLabel}</span>}
+                              {typeLabel && <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '3px 9px', borderRadius: '6px', background: 'rgba(229,83,63,0.08)', color: '#e5533f' }}>{typeLabel}</span>}
                               {job.isRemote && <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '3px 9px', borderRadius: '6px', background: 'rgba(139,92,246,0.08)', color: '#8b5cf6' }}>Remote</span>}
                               {job.skills?.slice(0, 2).map((s, i) => <span key={i} style={{ fontSize: '0.75rem', fontWeight: '600', padding: '3px 9px', borderRadius: '6px', background: 'var(--surface-soft)', border: '1px solid var(--line)', color: 'var(--ink)' }}>{s.skillName}</span>)}
                               {job.skills?.length > 2 && <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: '600' }}>+{job.skills.length - 2}</span>}
@@ -1549,11 +1559,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
                               <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer"
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '7px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', textDecoration: 'none' }}>
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--c-line)', background: '#fff', color: 'var(--c-ink)', textDecoration: 'none' }}>
                                 Xem chi tiết
                               </a>
                               <button type="button" disabled={isLocked || alreadyApplied} onClick={() => handleApplyJob(job)}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (isLocked || alreadyApplied) ? 'var(--surface-soft)' : 'var(--primary)', color: (isLocked || alreadyApplied) ? 'var(--muted)' : '#fff', cursor: (isLocked || alreadyApplied) ? 'not-allowed' : 'pointer' }}>
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (isLocked || alreadyApplied) ? '#f3ede9' : 'var(--c-red)', color: (isLocked || alreadyApplied) ? 'var(--c-muted)' : '#fff', cursor: (isLocked || alreadyApplied) ? 'not-allowed' : 'pointer' }}>
                                 {alreadyApplied ? <><Check size={12} /> Đã ứng tuyển</> : isLocked ? <><LockKeyhole size={12} /> Cần RS</> : 'Ứng tuyển'}
                               </button>
                             </div>
@@ -1570,33 +1580,34 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 2b. QUEST BOARD — dedicated QUESTS tab */}
         {activeView === 'QUESTS' && (
-          <section style={{ border: '1px solid var(--line)', background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(15px)', borderRadius: '28px', padding: '24px' }}>
+          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: '#fff', borderRadius: '20px', padding: '24px' }}>
             {questApplySuccess && <div className="alert-banner success" style={{ marginBottom: '16px' }}>{questApplySuccess}</div>}
 
             {/* Header */}
             <div style={{ marginBottom: '20px' }}>
-              <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em', margin: '0 0 4px' }}>Quest CLB</p>
-              <h2 style={{ margin: '0', fontSize: '1.75rem', fontWeight: '900', color: 'var(--ink)' }}>Bảng Quest & Chiến dịch</h2>
+              <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '800', color: 'var(--c-red)', letterSpacing: '0.06em', margin: '0 0 6px' }}>Quest CLB</p>
+              <h2 style={{ margin: '0', fontSize: '1.6rem', fontWeight: '800', letterSpacing: '-0.03em', color: 'var(--c-ink)' }}>Bảng Quest & Chiến dịch</h2>
             </div>
 
             {/* Search bar */}
             <div style={{ position: 'relative', marginBottom: '20px' }}>
-              <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: 'var(--muted)' }} />
+              <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: 'var(--c-muted)' }} />
               <input type="text" value={questSearchFilter} onChange={e => setQuestSearchFilter(e.target.value)}
                 placeholder="Tìm tên Quest, CLB, hoặc mô tả..."
-                style={{ width: '100%', padding: '13px 40px 13px 46px', borderRadius: '14px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none' }} />
+                className="np-candf"
+                style={{ width: '100%', padding: '13px 40px 13px 46px', borderRadius: '12px', border: '1.5px solid var(--c-line)', background: '#fff', color: 'var(--c-ink)', fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }} />
               {questSearchFilter && (
                 <button type="button" onClick={() => setQuestSearchFilter('')}
-                  style={{ position: 'absolute', right: '14px', top: '13px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1rem', padding: '2px' }}>✕</button>
+                  style={{ position: 'absolute', right: '14px', top: '13px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', padding: '2px', display: 'flex' }} aria-label="Xóa tìm kiếm"><X size={16} /></button>
               )}
             </div>
 
             {/* 2-col layout */}
-            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '20px', alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '230px 1fr', gap: '20px', alignItems: 'start' }}>
               {/* LEFT FILTER PANEL */}
-              <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--line)', borderRadius: '18px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '20px' }}>
+              <div style={{ background: '#faf7f5', border: '1px solid var(--c-line)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <strong style={{ fontSize: '0.84rem', fontWeight: '900', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '6px' }}><SlidersHorizontal size={14} /> Bộ lọc</strong>
+                  <strong style={{ fontSize: '0.84rem', fontWeight: '800', color: 'var(--c-ink)', display: 'flex', alignItems: 'center', gap: '6px' }}><SlidersHorizontal size={14} /> Bộ lọc</strong>
                   {questCategoryFilter && (
                     <button type="button" onClick={() => setQuestCategoryFilter('')}
                       style={{ fontSize: '0.74rem', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', padding: 0 }}>Xóa</button>
@@ -1637,16 +1648,16 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     <p style={{ margin: 0, color: 'var(--muted)', fontWeight: '600' }}>Chưa có Quest nào đang mở. Quay lại sau nhé!</p>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div className="np-stagger" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div style={{ fontSize: '0.88rem', color: 'var(--muted)', fontWeight: '700', marginBottom: '2px' }}>
                       Tìm thấy <strong style={{ color: 'var(--ink)' }}>{questsList.length}</strong> Quest
                     </div>
-                    {questsList.map(quest => {
+                    {questsList.map((quest) => {
                       const isLocked = candidateRs < (quest.minReqRs || 0);
                       const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
                       const categoryMeta = { SMALL_EVENT: { label: 'Sự kiện nhỏ', color: '#8b5cf6' }, SCHOOL_CAMPAIGN: { label: 'Chiến dịch trường', color: '#0ea5e9' }, COMPANY_PROJECT: { label: 'Dự án DN', color: '#f59e0b' }, SHORT_INTERNSHIP: { label: 'Thực tập ngắn', color: '#10b981' }, FREELANCE_GIG: { label: 'Freelance', color: '#ec4899' } }[quest.category] || { label: quest.category, color: 'var(--primary)' };
                       return (
-                        <article key={quest.id} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '18px', border: '1px solid var(--line)', background: 'var(--bg)', borderLeftWidth: '4px', borderLeftColor: categoryMeta.color, transition: 'box-shadow 0.2s, border-color 0.2s', opacity: isLocked ? 0.75 : 1 }}
+                        <article key={quest.id} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '18px', border: '1px solid var(--c-line)', background: '#fff', borderLeftWidth: '4px', borderLeftColor: categoryMeta.color, transition: 'box-shadow 0.2s, border-color 0.2s', opacity: isLocked ? 0.75 : 1 }}
                           onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 4px 20px ${categoryMeta.color}20`; }}
                           onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
                         >
@@ -1681,12 +1692,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
                               <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer"
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '7px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', textDecoration: 'none' }}>
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--c-line)', background: '#fff', color: 'var(--c-ink)', textDecoration: 'none' }}>
                                 Xem chi tiết
                               </a>
                               <button type="button" disabled={isLocked || alreadyApplied}
                                 onClick={() => { setSelectedQuestForApply(quest); setQuestCoverNote(''); setQuestApplyError(''); setShowQuestApplyModal(true); }}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: alreadyApplied ? 'var(--surface-soft)' : isLocked ? 'var(--surface-soft)' : categoryMeta.color, color: (alreadyApplied || isLocked) ? 'var(--muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (alreadyApplied || isLocked) ? '#f3ede9' : categoryMeta.color, color: (alreadyApplied || isLocked) ? 'var(--c-muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
                                 {alreadyApplied ? <><Check size={12} /> Đã đăng ký</> : isLocked ? <><LockKeyhole size={12} /> Cần RS</> : <><Zap size={12} /> Tham gia</>}
                               </button>
                             </div>
@@ -1721,32 +1732,40 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           });
 
           return (
-            <section style={{ border: '1px solid var(--line)', background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(15px)', borderRadius: '28px', padding: '28px' }}>
+            <section className="np-view" style={{ border: '1px solid var(--c-line)', background: '#fff', borderRadius: '20px', padding: '28px' }}>
               {/* Header */}
               <div style={{ marginBottom: '24px' }}>
-                <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em', margin: '0 0 4px' }}>My Applications</p>
-                <h2 style={{ margin: '0', fontSize: '1.75rem', fontWeight: '900', color: 'var(--ink)' }}>Theo dõi hồ sơ ứng tuyển</h2>
+                <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '800', color: 'var(--c-red)', letterSpacing: '0.06em', margin: '0 0 6px' }}>Theo dõi ứng tuyển</p>
+                <h2 style={{ margin: '0', fontSize: '1.6rem', fontWeight: '800', letterSpacing: '-0.03em', color: 'var(--c-ink)' }}>Hồ sơ ứng tuyển của bạn</h2>
               </div>
 
               {/* Sub-tabs */}
-              <div style={{ display: 'flex', background: 'var(--surface-soft)', padding: '4px', borderRadius: '14px', gap: '4px', marginBottom: '24px', width: 'fit-content' }}>
+              <div style={{ display: 'flex', background: '#faf7f5', border: '1px solid var(--c-line)', padding: '4px', borderRadius: '12px', gap: '4px', marginBottom: '24px', width: 'fit-content' }}>
                 {[
-                  { key: 'BUSINESS', label: '🏢 Doanh nghiệp', count: appliedJobs.length },
-                  { key: 'CLUB', label: '⚡ CLB / Quest', count: questApplications.length },
+                  { key: 'BUSINESS', icon: <Building size={15} />, label: 'Doanh nghiệp', count: appliedJobs.length },
+                  { key: 'CLUB', icon: <Zap size={15} />, label: 'CLB / Quest', count: questApplications.length },
                 ].map(tab => (
                   <button
                     key={tab.key}
                     type="button"
                     onClick={() => setMyAppsTab(tab.key)}
-                    style={{ padding: '8px 18px', borderRadius: '10px', border: 0, fontWeight: '800', fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', background: myAppsTab === tab.key ? 'var(--primary)' : 'transparent', color: myAppsTab === tab.key ? '#fff' : 'var(--muted)' }}
+                    style={{ padding: '9px 18px', borderRadius: '9px', border: 0, fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', background: myAppsTab === tab.key ? 'var(--c-red)' : 'transparent', color: myAppsTab === tab.key ? '#fff' : 'var(--c-muted)' }}
                   >
-                    {tab.label}
-                    <span style={{ fontSize: '0.72rem', fontWeight: '900', background: myAppsTab === tab.key ? 'rgba(255,255,255,0.25)' : 'var(--line)', color: myAppsTab === tab.key ? '#fff' : 'var(--muted)', borderRadius: '20px', padding: '1px 7px' }}>
+                    {tab.icon}{tab.label}
+                    <span style={{ fontSize: '0.72rem', fontWeight: '800', background: myAppsTab === tab.key ? 'rgba(255,255,255,0.25)' : 'var(--c-line)', color: myAppsTab === tab.key ? '#fff' : 'var(--c-muted)', borderRadius: '20px', padding: '1px 7px' }}>
                       {tab.count}
                     </span>
                   </button>
                 ))}
               </div>
+
+              {/* Withdraw error */}
+              {withdrawError && (
+                <div style={{ padding: '10px 14px', background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '10px', color: '#dc2626', fontSize: '0.85rem', fontWeight: '600', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>{withdrawError}</span>
+                  <button onClick={() => setWithdrawError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1.1rem', lineHeight: 1 }}>×</button>
+                </div>
+              )}
 
               {/* Filters */}
               {myAppsTab === 'BUSINESS' ? (
@@ -1780,7 +1799,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       </p>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div className="np-stagger" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {filteredBizApps.map((app, idx) => {
                         const st = app.status || 'SUBMITTED';
                         const sc = JOB_STATUS_COLOR[st] || '#6b7280';
@@ -1800,7 +1819,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 </span>
                               </div>
                             </div>
-                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
                               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '8px', background: `${sc}15`, color: sc, fontWeight: '800', fontSize: '0.82rem' }}>
                                 {st === 'SUBMITTED' && <Clock3 size={12} />}
                                 {(st === 'ACCEPTED' || st === 'SHORTLISTED') && <CheckCircle2 size={12} />}
@@ -1808,9 +1827,29 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 {sl}
                               </span>
                               {st === 'REJECTED' && (app.reject_reason || app.rejectionReason) && (
-                                <div style={{ marginTop: '4px', fontSize: '0.76rem', color: '#dc2626', maxWidth: '200px', textAlign: 'right' }}>
+                                <div style={{ fontSize: '0.76rem', color: '#dc2626', maxWidth: '200px', textAlign: 'right', fontWeight: '600' }}>
                                   Lý do: {app.reject_reason || app.rejectionReason}
                                 </div>
+                              )}
+                              {app.rating_score != null && (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', maxWidth: '220px' }}>
+                                  <div style={{ display: 'flex', gap: '2px' }}>
+                                    {[1, 2, 3, 4, 5].map(n => (
+                                      <Star key={n} size={14} fill={n <= app.rating_score ? '#f59e0b' : 'none'} color={n <= app.rating_score ? '#f59e0b' : 'var(--muted)'} />
+                                    ))}
+                                  </div>
+                                  {app.rating_comment && (
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'right', fontStyle: 'italic' }}>"{app.rating_comment}"</div>
+                                  )}
+                                </div>
+                              )}
+                              {['SUBMITTED', 'VIEWED', 'SHORTLISTED'].includes(st) && (
+                                <button
+                                  onClick={() => handleWithdrawJob(app.id)}
+                                  disabled={withdrawingId === app.id}
+                                  style={{ fontSize: '0.76rem', fontWeight: '700', color: '#6b7280', background: 'none', border: '1px solid var(--line)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
+                                  {withdrawingId === app.id ? 'Đang rút...' : 'Rút đơn'}
+                                </button>
                               )}
                             </div>
                           </div>
@@ -1852,7 +1891,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       </p>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div className="np-stagger" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {filteredClubApps.map((qa, idx) => {
                         const QUEST_SC = { SUBMITTED: '#d97706', ACCEPTED: '#16a34a', REJECTED: '#dc2626', COMPLETED: '#2563eb', WITHDRAWN: '#6b7280' };
                         const QUEST_SL = { SUBMITTED: 'Đã nộp', ACCEPTED: 'Chấp thuận', REJECTED: 'Từ chối', COMPLETED: 'Hoàn thành', WITHDRAWN: 'Rút đơn' };
@@ -1871,12 +1910,39 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 {qa.expReward > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '800', color: '#f59e0b' }}><Zap size={12} />+{qa.expReward} EXP</span>}
                               </div>
                             </div>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '8px', background: `${sc}15`, color: sc, fontWeight: '800', fontSize: '0.82rem', flexShrink: 0 }}>
-                              {qa.status === 'COMPLETED' && <CheckCircle2 size={12} />}
-                              {qa.status === 'REJECTED' && <AlertTriangle size={12} />}
-                              {qa.status === 'SUBMITTED' && <Clock3 size={12} />}
-                              {sl}
-                            </span>
+                            <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '8px', background: `${sc}15`, color: sc, fontWeight: '800', fontSize: '0.82rem' }}>
+                                {qa.status === 'COMPLETED' && <CheckCircle2 size={12} />}
+                                {qa.status === 'REJECTED' && <AlertTriangle size={12} />}
+                                {qa.status === 'SUBMITTED' && <Clock3 size={12} />}
+                                {sl}
+                              </span>
+                              {qa.status === 'REJECTED' && qa.rejectReason && (
+                                <div style={{ fontSize: '0.76rem', color: '#dc2626', maxWidth: '200px', textAlign: 'right', fontWeight: '600' }}>
+                                  Lý do: {qa.rejectReason}
+                                </div>
+                              )}
+                              {qa.ratingScore != null && (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', maxWidth: '220px' }}>
+                                  <div style={{ display: 'flex', gap: '2px' }}>
+                                    {[1, 2, 3, 4, 5].map(n => (
+                                      <Star key={n} size={14} fill={n <= qa.ratingScore ? '#f59e0b' : 'none'} color={n <= qa.ratingScore ? '#f59e0b' : 'var(--muted)'} />
+                                    ))}
+                                  </div>
+                                  {qa.ratingComment && (
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'right', fontStyle: 'italic' }}>"{qa.ratingComment}"</div>
+                                  )}
+                                </div>
+                              )}
+                              {qa.status === 'SUBMITTED' && (
+                                <button
+                                  onClick={() => handleWithdrawQuest(qa.id)}
+                                  disabled={withdrawingId === qa.id}
+                                  style={{ fontSize: '0.76rem', fontWeight: '700', color: '#6b7280', background: 'none', border: '1px solid var(--line)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
+                                  {withdrawingId === qa.id ? 'Đang rút...' : 'Rút đơn'}
+                                </button>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
@@ -1890,7 +1956,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 3. ORGANIZATIONS VIEW (DIRECTORY) */}
         {activeView === 'ORGANIZATIONS' && (
-          <section style={{ border: '1px solid var(--line)', background: 'rgba(255, 255, 255, 0.55)', backdropFilter: 'blur(15px)', borderRadius: '28px', padding: '24px' }}>
+          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: '#fff', borderRadius: '20px', padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <div>
                 <p className="eyebrow" style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em', margin: 0 }}>Partners Directory</p>
@@ -1978,11 +2044,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     border: 'none',
                     cursor: 'pointer',
                     color: 'var(--muted)',
-                    fontSize: '1.1rem'
+                    display: 'flex'
                   }}
                   type="button"
+                  aria-label="Xóa tìm kiếm"
                 >
-                  ✕
+                  <X size={16} />
                 </button>
               )}
             </div>
@@ -2300,7 +2367,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 4. ROADMAP VIEW */}
         {activeView === 'ROADMAP' && (
-          <section className="candidate-profile-summary" style={{ border: '1px solid var(--line)', background: 'rgba(255, 255, 255, 0.55)', backdropFilter: 'blur(15px)', borderRadius: '28px' }}>
+          <section className="candidate-profile-summary np-view" style={{ border: '1px solid var(--c-line)', background: '#fff', borderRadius: '20px' }}>
             <div className="candidate-panel-heading">
               <div>
                 <p className="eyebrow" style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em' }}>Talent Roadmap</p>
@@ -2338,7 +2405,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 5. CREDENTIALS & STATUS VIEW */}
         {activeView === 'CREDENTIALS' && (
-          <div className="candidate-credentials-workspace">
+          <div className="candidate-credentials-workspace np-view">
 
             {/* Certifications & Diplomas Grid (My Credentials) */}
             <section className="credentials-list-section">
@@ -2365,18 +2432,18 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.82rem' }}>Hãy truy cập Chỉnh sửa Portfolio để tải lên văn bằng chứng chỉ, giúp nâng điểm Reputation Score của bạn.</p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+                <div className="np-stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
                   {portfolio.credentials.filter(c => c.name?.trim()).map((cred) => (
                     <article key={cred.id} style={{
-                      border: '1px solid var(--line)',
+                      border: '1px solid var(--c-line)',
                       borderRadius: '16px',
                       padding: '16px',
-                      background: 'var(--bg)',
+                      background: '#fff',
                       display: 'flex',
                       gap: '12px',
                       alignItems: 'flex-start'
                     }}>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(37, 99, 235, 0.08)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--c-red-soft)', color: 'var(--c-red)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <Award size={18} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
