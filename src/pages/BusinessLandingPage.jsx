@@ -38,7 +38,7 @@ const partners = [
   { id: 'vng', name: 'VNG', color: '#F4731C' },
   { id: 'shopee', name: 'Shopee', slug: 'shopee' },
   { id: 'momo', name: 'MoMo', color: '#A50064' },
-  { id: 'grab', name: 'Grab', slug: 'grab' },
+  { id: 'grab', name: 'Grab', slug: 'grab' }, 
   { id: 'tiki', name: 'Tiki', color: '#1A94FF' },
   { id: 'zalo', name: 'Zalo', slug: 'zalo' },
   { id: 'viettel', name: 'Viettel', color: '#EE0033' },
