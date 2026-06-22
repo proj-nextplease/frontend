@@ -1,7 +1,7 @@
 import { httpClient } from './httpClient.js';
 
-export async function applyToJob(jobId, coverNote = '') {
-  const response = await httpClient.post(`/jobs/${jobId}/apply`, { coverNote });
+export async function applyToJob(jobId, coverNote = '', answers = null) {
+  const response = await httpClient.post(`/jobs/${jobId}/apply`, { coverNote, answers });
   if (!response.data?.success) {
     const err = new Error(response.data?.message || 'Ứng tuyển thất bại.');
     err.errorCode = response.data?.errorCode || null;

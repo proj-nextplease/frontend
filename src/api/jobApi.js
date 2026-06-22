@@ -97,3 +97,19 @@ export async function updateApplicationStatus(applicationId, status, rejectReaso
   }
   return response.data.data;
 }
+
+export async function getOrgPipeline() {
+  const response = await httpClient.get('/organizer/pipeline');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải quy trình.');
+  }
+  return response.data.data || [];
+}
+
+export async function saveOrgPipeline(stages) {
+  const response = await httpClient.put('/organizer/pipeline', stages);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Lưu quy trình thất bại.');
+  }
+  return response.data.data;
+}

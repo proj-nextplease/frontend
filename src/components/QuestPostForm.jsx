@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { createQuest, updateQuest } from '../api/questApi.js';
+import { useState, useEffect } from 'react';
+import { MessageSquarePlus, Plus, Trash2, GripVertical } from 'lucide-react';
+import { createQuest, updateQuest, getQuestExpConfig } from '../api/questApi.js';
 import { PremiumDateTimePicker } from './PremiumDateTimePicker.jsx';
 import { QUEST_CATEGORIES, toLocalISOString } from './postingConstants.js';
 
@@ -52,6 +53,27 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
 
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const [errors, setErrors] = useState({});
+  const [customFields, setCustomFields] = useState(
+    initialData?.formFields
+      ? initialData.formFields.map((f) => ({ label: f.label, fieldType: f.fieldType || 'TEXT', options: f.options || '', required: !!f.required }))
+      : [],
+  );
+
+  const [expMap, setExpMap] = useState({});
+  useEffect(() => { getQuestExpConfig().then(setExpMap).catch(() => setExpMap({})); }, []);
+  const expOf = (cat) => expMap[cat] ?? QUEST_CATEGORIES.find((c) => c.value === cat)?.exp ?? 0;
+
+  const [dragIdx, setDragIdx] = useState(null);
+  function addCustomField() { setCustomFields((p) => [...p, { label: '', fieldType: 'TEXT', options: '', required: false }]); }
+  function updateCustomField(i, patch) { setCustomFields((p) => p.map((f, idx) => (idx === i ? { ...f, ...patch } : f))); }
+  function removeCustomField(i) { setCustomFields((p) => p.filter((_, idx) => idx !== i)); }
+  function reorderCustomField(to) {
+    setCustomFields((prev) => {
+      if (dragIdx === null || dragIdx === to) return prev;
+      const a = [...prev]; const [m] = a.splice(dragIdx, 1); a.splice(to, 0, m); return a;
+    });
+    setDragIdx(null);
+  }
 
   function set(name, value) {
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -97,6 +119,9 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
       minReqRs: parseInt(form.minReqRs) || 0,
       capacity: form.capacity ? parseInt(form.capacity) : null,
       endsAt: deadline,
+      formFields: customFields
+        .filter((f) => f.label.trim())
+        .map((f) => ({ label: f.label.trim(), fieldType: f.fieldType, options: f.fieldType === 'SELECT' ? f.options : null, required: f.required })),
     };
 
     try {
@@ -145,12 +170,12 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
               <select name="questCategory" value={form.questCategory} onChange={handleChange}
                 style={{ ...FIELD_STYLE, height: '46px' }}>
                 {QUEST_CATEGORIES.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label} — +{o.exp} EXP</option>
+                  <option key={o.value} value={o.value}>{o.label} — +{expOf(o.value)} EXP</option>
                 ))}
               </select>
               {currentCat && (
                 <span style={{ fontSize: '0.78rem', color: 'var(--muted)', fontWeight: '600' }}>
-                  Ứng viên nhận +{currentCat.exp} EXP khi Admin xác nhận hoàn thành.
+                  Ứng viên nhận +{expOf(form.questCategory)} EXP khi Admin xác nhận hoàn thành.
                 </span>
               )}
             </div>
@@ -199,6 +224,74 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
               style={{ ...errStyle(errors.description), resize: 'vertical' }} />
             {errors.description && <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: '600' }}>{errors.description}</span>}
           </div>
+        </div>
+
+        {/* Custom application questions */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
+              <span style={{ width: '40px', height: '40px', borderRadius: '11px', background: 'rgba(255,122,26,0.12)', color: '#ff7a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <MessageSquarePlus size={20} />
+              </span>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: 'var(--ink)' }}>Câu hỏi thêm cho ứng viên</h3>
+                <p style={{ margin: '2px 0 0', fontSize: '0.82rem', color: 'var(--muted)' }}>Ứng viên sẽ trả lời khi đăng ký Quest. Để trống nếu không cần.</p>
+              </div>
+            </div>
+            <button type="button" onClick={addCustomField}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 15px', borderRadius: '10px', border: 'none', background: '#ff7a1a', color: '#fff', fontWeight: '700', fontSize: '0.84rem', cursor: 'pointer', flexShrink: 0 }}>
+              <Plus size={16} /> Thêm câu hỏi
+            </button>
+          </div>
+
+          {customFields.length === 0 ? (
+            <div style={{ padding: '28px 20px', border: '1.5px dashed var(--line)', borderRadius: '14px', textAlign: 'center', background: 'var(--surface-soft, #f7f9fc)' }}>
+              <MessageSquarePlus size={26} style={{ color: 'var(--muted)', marginBottom: '8px' }} />
+              <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--muted)', fontWeight: '600' }}>Chưa có câu hỏi nào</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {customFields.map((f, idx) => (
+                <div key={idx}
+                  onDragOver={(e) => e.preventDefault()} onDrop={() => reorderCustomField(idx)}
+                  style={{ padding: '14px 16px', border: `1px solid ${dragIdx === idx ? '#ff7a1a' : 'var(--line)'}`, borderRadius: '14px', background: 'var(--card-bg-strong, #fff)', opacity: dragIdx === idx ? 0.6 : 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span draggable onDragStart={() => setDragIdx(idx)} onDragEnd={() => setDragIdx(null)} title="Kéo để sắp xếp"
+                      style={{ display: 'flex', alignItems: 'center', color: 'var(--muted)', cursor: 'grab', flexShrink: 0 }}>
+                      <GripVertical size={16} />
+                    </span>
+                    <span style={{ width: '26px', height: '26px', borderRadius: '8px', background: 'rgba(255,122,26,0.12)', color: '#ff7a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.8rem', flexShrink: 0 }}>{idx + 1}</span>
+                    <input value={f.label} onChange={(e) => updateCustomField(idx, { label: e.target.value })}
+                      placeholder="Nhập câu hỏi (vd: Bạn rảnh những buổi nào?)"
+                      style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', fontSize: '0.9rem', fontWeight: '600', background: 'var(--bg)' }} />
+                    <button type="button" onClick={() => removeCustomField(idx)} title="Xoá câu hỏi"
+                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '9px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--muted)', cursor: 'pointer', flexShrink: 0 }}>
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '10px', paddingLeft: '36px' }}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--muted)', fontWeight: '600' }}>Kiểu trả lời:</span>
+                    <select value={f.fieldType} onChange={(e) => updateCustomField(idx, { fieldType: e.target.value })}
+                      style={{ padding: '8px 10px', borderRadius: '9px', border: '1px solid var(--line)', fontSize: '0.83rem', cursor: 'pointer', background: 'var(--bg)' }}>
+                      <option value="TEXT">Văn bản ngắn</option>
+                      <option value="TEXTAREA">Văn bản dài</option>
+                      <option value="SELECT">Chọn 1 đáp án</option>
+                    </select>
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '0.83rem', color: 'var(--ink)', fontWeight: '600', cursor: 'pointer', padding: '7px 12px', borderRadius: '9px', border: `1px solid ${f.required ? 'rgba(255,122,26,0.4)' : 'var(--line)'}`, background: f.required ? 'rgba(255,122,26,0.08)' : 'var(--bg)' }}>
+                      <input type="checkbox" checked={f.required} onChange={(e) => updateCustomField(idx, { required: e.target.checked })} style={{ accentColor: '#ff7a1a', cursor: 'pointer' }} /> Bắt buộc
+                    </label>
+                  </div>
+                  {f.fieldType === 'SELECT' && (
+                    <div style={{ marginTop: '10px', paddingLeft: '36px' }}>
+                      <input value={f.options} onChange={(e) => updateCustomField(idx, { options: e.target.value })}
+                        placeholder="Các lựa chọn, cách nhau bằng dấu phẩy (vd: Sáng, Chiều, Tối)"
+                        style={{ width: '100%', padding: '9px 12px', borderRadius: '9px', border: '1px solid var(--line)', fontSize: '0.85rem', background: 'var(--bg)', boxSizing: 'border-box' }} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <StatusBanner status={status} />

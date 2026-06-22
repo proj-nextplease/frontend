@@ -19,6 +19,8 @@ import {
   deleteUserAccount,
   getActiveFraudFlags,
   resolveFraudFlag,
+  getSystemConfigs,
+  updateSystemConfig,
 } from '../api/adminApi.js';
 import { getJobDetail } from '../api/jobApi.js';
 import { getVerificationQueue, approveCredential, rejectCredential } from '../api/credentialApi.js';
@@ -47,6 +49,8 @@ import {
   CheckCircle,
   Activity,
   Server,
+  Settings,
+  Save,
   ChevronsLeft,
   ChevronsRight,
   ChevronDown,
@@ -76,6 +80,7 @@ const SIDEBAR_TABS = [
   },
   { key: 'FRAUD_FLAGS', route: 'fraud-flags', label: 'Cờ gian lận', icon: ShieldAlert },
   { key: 'AUDIT_LOGS', route: 'audit-logs', label: 'Ghi nhận hệ thống', icon: Activity },
+  { key: 'SYSTEM_CONFIG', route: 'system-config', label: 'Cấu hình hệ thống', icon: Settings },
 ];
 
 const ROUTE_TO_TAB = SIDEBAR_TABS.reduce((acc, tab) => {
@@ -116,6 +121,109 @@ const VERIF_STATUS_FILTERS = [
   { key: 'REJECTED', label: 'Từ chối' },
 ];
 
+
+function SystemConfigPanel() {
+  const [configs, setConfigs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [drafts, setDrafts] = useState({});      // key -> string value being edited
+  const [savingKey, setSavingKey] = useState(null);
+  const [savedKey, setSavedKey] = useState(null);
+
+  async function load() {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getSystemConfigs();
+      setConfigs(data);
+      const d = {};
+      data.forEach((c) => { d[c.key] = String(c.valueInt ?? c.valueText ?? ''); });
+      setDrafts(d);
+    } catch (err) {
+      setError(err.message || 'Không thể tải cấu hình.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function save(key) {
+    setSavingKey(key);
+    setSavedKey(null);
+    try {
+      const res = await updateSystemConfig(key, parseInt(drafts[key], 10));
+      setConfigs((prev) => prev.map((c) => c.key === key ? { ...c, valueInt: res.value } : c));
+      setSavedKey(key);
+      setTimeout(() => setSavedKey(null), 2500);
+    } catch (err) {
+      setError(err.message || 'Lưu thất bại.');
+    } finally {
+      setSavingKey(null);
+    }
+  }
+
+  if (loading) {
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}><div className="b2b-loader" style={{ borderTopColor: '#2563eb' }} /></div>;
+  }
+
+  const groups = configs.reduce((acc, c) => { (acc[c.group] = acc[c.group] || []).push(c); return acc; }, {});
+  const GROUP_LABEL = { pricing: 'Giá & Ví', scoring: 'Điểm số', general: 'Chung', features: 'Tính năng' };
+
+  return (
+    <div style={{ display: 'grid', gap: '22px', maxWidth: '760px' }}>
+      {error && (
+        <div style={{ display: 'flex', gap: '10px', padding: '12px 16px', borderRadius: '12px', background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.25)', color: '#dc2626', fontWeight: '600', fontSize: '0.88rem' }}>
+          <AlertTriangle size={18} /> {error}
+        </div>
+      )}
+      {Object.entries(groups).map(([group, items]) => (
+        <div key={group} className="admin-stat-card" style={{ display: 'block', padding: '20px 22px' }}>
+          <h3 style={{ margin: '0 0 8px', fontSize: '0.95rem', fontWeight: '800', color: 'var(--p-ink, #101828)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Settings size={16} style={{ color: '#2563eb' }} /> {GROUP_LABEL[group] || group}
+            <span style={{ marginLeft: 'auto', fontSize: '0.72rem', fontWeight: '700', color: 'var(--p-muted, #5b6472)', background: '#f1f4f9', padding: '2px 9px', borderRadius: '999px' }}>{items.length} mục</span>
+          </h3>
+          <div>
+            {items.map((c, ix) => {
+              const changed = String(c.valueInt ?? '') !== String(drafts[c.key] ?? '');
+              const unit = c.key.includes('vnd') ? 'VND' : c.key.includes('np') ? 'NP'
+                : c.key.startsWith('rs_') ? 'RS' : c.key.startsWith('exp_') ? 'EXP' : '';
+              return (
+                <div key={c.key} style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', padding: '14px 4px', borderTop: ix === 0 ? 'none' : '1px solid var(--p-line, #e3e8ef)' }}>
+                  <div style={{ flex: 1, minWidth: '220px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--p-ink, #101828)' }}>{c.label || c.key}</span>
+                      <code style={{ fontSize: '0.68rem', color: 'var(--p-muted, #5b6472)', background: '#f1f4f9', padding: '2px 7px', borderRadius: '6px' }}>{c.key}</code>
+                    </div>
+                    {c.description && <div style={{ fontSize: '0.8rem', color: 'var(--p-muted, #5b6472)', marginTop: '4px', lineHeight: 1.45 }}>{c.description}</div>}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <input
+                        type="number" min="0"
+                        value={drafts[c.key] ?? ''}
+                        onChange={(e) => setDrafts((p) => ({ ...p, [c.key]: e.target.value }))}
+                        style={{ width: '150px', padding: `10px ${unit ? '46px' : '12px'} 10px 12px`, borderRadius: '10px', border: `1.5px solid ${changed ? '#0d1b33' : 'var(--p-line, #e3e8ef)'}`, fontSize: '0.95rem', fontWeight: '700', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', color: 'var(--p-ink, #101828)' }}
+                      />
+                      {unit && <span style={{ position: 'absolute', right: '12px', fontSize: '0.74rem', fontWeight: '700', color: 'var(--p-muted, #5b6472)', pointerEvents: 'none' }}>{unit}</span>}
+                    </div>
+                    <button type="button" disabled={!changed || savingKey === c.key} onClick={() => save(c.key)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: '10px', border: 'none', fontWeight: '700', fontSize: '0.85rem',
+                        background: savedKey === c.key ? '#16a34a' : (changed ? '#0d1b33' : '#eef1f6'),
+                        color: (savedKey === c.key || changed) ? '#fff' : 'var(--p-muted, #5b6472)',
+                        cursor: (changed && savingKey !== c.key) ? 'pointer' : 'default', transition: 'background 0.15s' }}>
+                      {savedKey === c.key ? <><CheckCircle size={15} /> Đã lưu</> : savingKey === c.key ? '...' : <><Save size={15} /> Lưu</>}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function ProvisionPanel() {
   const [form, setForm] = useState({ name: '', companyType: 'SME', representativeEmail: '' });
@@ -2187,6 +2295,7 @@ export function AdminB2bReviewPage() {
                 {activeTab === 'VERIF_QUEUE' && verifSubTab === 'manage' && 'Quản lý toàn bộ minh chứng theo từng ứng viên và lọc theo trạng thái xử lý.'}
                 {activeTab === 'FRAUD_FLAGS' && 'Danh sách cờ gian lận đang hoạt động, chờ xử lý.'}
                 {activeTab === 'AUDIT_LOGS' && 'Lịch sử nhật ký hoạt động hệ thống chi tiết.'}
+                {activeTab === 'SYSTEM_CONFIG' && 'Tinh chỉnh giá Premium, mức nạp tối thiểu, thưởng điểm... áp dụng cho sự kiện mới.'}
               </p>
             </div>
             
@@ -2217,6 +2326,7 @@ export function AdminB2bReviewPage() {
               {activeTab === 'VERIF_QUEUE' && renderVerifQueue()}
               {activeTab === 'FRAUD_FLAGS' && renderFraudFlags()}
               {activeTab === 'AUDIT_LOGS' && renderAuditLogs()}
+              {activeTab === 'SYSTEM_CONFIG' && <SystemConfigPanel />}
             </div>
           )}
         </div>

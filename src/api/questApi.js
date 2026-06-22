@@ -11,8 +11,8 @@ export async function searchQuests(keyword = '', category = '') {
   return response.data.data || [];
 }
 
-export async function applyToQuest(questId, coverNote = '') {
-  const response = await httpClient.post(`/quests/${questId}/apply`, { coverNote });
+export async function applyToQuest(questId, coverNote = '', answers = null) {
+  const response = await httpClient.post(`/quests/${questId}/apply`, { coverNote, answers });
   if (!response.data?.success) {
     const err = new Error(response.data?.message || 'Ứng tuyển Quest thất bại.');
     err.errorCode = response.data?.errorCode || null;
@@ -92,4 +92,12 @@ export async function updateQuestApplicationStatus(applicationId, status, reject
     throw new Error(response.data?.message || 'Cập nhật trạng thái thất bại.');
   }
   return response.data.data;
+}
+
+export async function getQuestExpConfig() {
+  const response = await httpClient.get('/quests/exp-config');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải cấu hình EXP.');
+  }
+  return response.data.data || {};
 }
