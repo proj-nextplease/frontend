@@ -32,6 +32,7 @@ import {
   X,
   ChevronsLeft,
   ChevronsRight,
+  GripVertical,
 } from 'lucide-react';
 import {
   getCurrentUser,
@@ -51,7 +52,7 @@ import {
 import { supabase } from '../services/supabaseClient.js';
 import { JobPostForm } from '../components/JobPostForm.jsx';
 import { QuestPostForm } from '../components/QuestPostForm.jsx';
-import { getOrganizerJobs, getOrganizerJobById, closeJob, deleteJob, getJobDetail, getJobApplications, updateApplicationStatus } from '../api/jobApi.js';
+import { getOrganizerJobs, getOrganizerJobById, closeJob, deleteJob, getJobDetail, getJobApplications, updateApplicationStatus, getOrgPipeline, saveOrgPipeline } from '../api/jobApi.js';
 import { getOrganizerQuests, getOrganizerQuestById, closeQuest, deleteQuest, getQuestApplicants, updateQuestApplicationStatus } from '../api/questApi.js';
 import { getRating, createRating, updateRating } from '../api/ratingApi.js';
 import { Crown, ArrowLeft, Check, Calendar, Award, ChevronRight, ExternalLink as ExtLink, Loader2 } from 'lucide-react';
@@ -68,6 +69,7 @@ const SIDEBAR_TABS = [
   { key: 'find-talent', route: 'find-talent', label: 'Tìm kiếm Talent', icon: Search, lockable: true },
   { key: 'candidates', route: 'candidates', label: 'Quản lý ứng viên', icon: UsersRound, lockable: true },
   { key: 'members', route: 'members', label: 'Thành viên & Phân quyền', icon: ShieldCheck, lockable: true },
+  { key: 'pipeline', route: 'pipeline', label: 'Quy trình tuyển dụng', icon: Filter, lockable: true },
 ];
 
 const ALL_TABS = [...SIDEBAR_TABS, ACCOUNT_TAB];
@@ -99,6 +101,13 @@ function CandidatesView() {
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
   const [actionMsg, setActionMsg] = useState({ type: 'idle', text: '' });
+
+  // Custom pipeline (labels/colors/visibility over canonical statuses)
+  const [pipeline, setPipeline] = useState([]);
+  useEffect(() => { getOrgPipeline().then(setPipeline).catch(() => setPipeline([])); }, []);
+  const pipeMap = pipeline.reduce((acc, s) => { acc[s.status] = s; return acc; }, {});
+  const labelOf = (status) => pipeMap[status]?.label || STATUS_LABEL[status] || status;
+  const colorOf = (status) => pipeMap[status]?.color || STATUS_COLOR[status] || '#6366f1';
 
   function loadPostings() {
     setPostingsLoading(true);
@@ -341,7 +350,7 @@ function CandidatesView() {
           <select value={applicantStatusFilter} onChange={e => setApplicantStatusFilter(e.target.value)}
             style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--p-line)', background: '#fff', fontSize: '0.86rem', color: 'var(--p-ink)', cursor: 'pointer' }}>
             <option value="">Tất cả trạng thái</option>
-            {Object.entries(STATUS_LABEL).filter(([k]) => !['APPLIED'].includes(k)).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            {(pipeline.length ? pipeline.filter(s => !s.hidden).map(s => [s.status, s.label]) : Object.entries(STATUS_LABEL).filter(([k]) => !['APPLIED'].includes(k))).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </div>
       )}
@@ -362,7 +371,7 @@ function CandidatesView() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {filteredApplicants.map((app, idx) => {
                 const isSelected = selectedApplicant?.id === app.id;
-                const sColor = STATUS_COLOR[app.status] || '#6366f1';
+                const sColor = colorOf(app.status);
                 return (
                   <div key={app.id} className="np-cand-row" onClick={() => { setSelectedApplicant(app); setShowRejectInput(false); setRejectReason(''); }}
                     style={{ border: `1.5px solid ${isSelected ? accent : 'var(--p-line)'}`, borderRadius: '14px', padding: '14px 16px', background: isSelected ? `${accent}08` : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', animationDelay: `${Math.min(idx * 0.04, 0.3)}s`, boxShadow: isSelected ? `0 0 0 3px ${accent}1a` : 'none' }}
@@ -375,7 +384,7 @@ function CandidatesView() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '3px', flexWrap: 'wrap' }}>
                         <strong style={{ fontSize: '0.92rem', color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getName(app)}</strong>
-                        <span style={{ fontSize: '0.7rem', fontWeight: '700', color: sColor, background: `${sColor}15`, padding: '1px 7px', borderRadius: '6px', flexShrink: 0 }}>{STATUS_LABEL[app.status] || app.status}</span>
+                        <span style={{ fontSize: '0.7rem', fontWeight: '700', color: sColor, background: `${sColor}15`, padding: '1px 7px', borderRadius: '6px', flexShrink: 0 }}>{labelOf(app.status)}</span>
                       </div>
                       <div style={{ display: 'flex', gap: '10px', fontSize: '0.78rem', color: 'var(--muted)', flexWrap: 'wrap' }}>
                         <span>RS: <strong style={{ color: 'var(--ink)' }}>{app.reputation_score ?? '—'}</strong></span>
@@ -461,10 +470,30 @@ function CandidatesView() {
                 </div>
               )}
 
+              {/* Custom application answers */}
+              {(() => {
+                let answers = [];
+                try { answers = JSON.parse(selectedApplicant.custom_answers || '[]'); } catch { answers = []; }
+                if (!Array.isArray(answers) || answers.length === 0) return null;
+                return (
+                  <div className="np-di" style={{ marginBottom: '14px' }}>
+                    <p style={{ margin: '0 0 8px', fontSize: '0.7rem', fontWeight: '800', color: 'var(--p-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Trả lời câu hỏi</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {answers.map((a, i) => (
+                        <div key={i} style={{ padding: '10px 12px', background: '#f7f9fc', borderRadius: '10px', border: '1px solid var(--p-line)' }}>
+                          <div style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--p-muted)', marginBottom: '2px' }}>{a.label}</div>
+                          <div style={{ fontSize: '0.86rem', color: 'var(--p-ink)', lineHeight: 1.5 }}>{a.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Status + applied date */}
               <div className="np-di" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: STATUS_COLOR[selectedApplicant.status] || '#6366f1', background: `${STATUS_COLOR[selectedApplicant.status] || '#6366f1'}12`, padding: '4px 12px', borderRadius: '8px' }}>
-                  {STATUS_LABEL[selectedApplicant.status] || selectedApplicant.status}
+                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: colorOf(selectedApplicant.status), background: `${colorOf(selectedApplicant.status)}12`, padding: '4px 12px', borderRadius: '8px' }}>
+                  {labelOf(selectedApplicant.status)}
                 </span>
                 {(selectedApplicant.appliedAt || selectedApplicant.applied_at) && (
                   <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
@@ -681,6 +710,88 @@ function RatingPanel({ applicationId, questApplicationId, accent }) {
 }
 
 const ROLE_LABELS = { OWNER: 'Chủ sở hữu', MANAGER: 'Quản lý', MEMBER: 'Thành viên' };
+
+function PipelineSettingsView({ setToast }) {
+  const [stages, setStages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [dragIdx, setDragIdx] = useState(null);
+
+  useEffect(() => {
+    getOrgPipeline()
+      .then((data) => setStages(data || []))
+      .catch(() => setToast({ type: 'error', message: 'Không tải được quy trình.' }))
+      .finally(() => setLoading(false));
+  }, [setToast]);
+
+  function patch(i, p) { setStages((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...p } : s))); }
+  function reorder(to) {
+    setStages((prev) => {
+      if (dragIdx === null || dragIdx === to) return prev;
+      const a = [...prev]; const [m] = a.splice(dragIdx, 1); a.splice(to, 0, m); return a;
+    });
+    setDragIdx(null);
+  }
+
+  async function save() {
+    setSaving(true);
+    try {
+      const saved = await saveOrgPipeline(stages);
+      setStages(saved);
+      setToast({ type: 'success', message: 'Đã lưu quy trình tuyển dụng.' });
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'Lưu thất bại.' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) return <div className="partner-placeholder-pane"><p>Đang tải quy trình...</p></div>;
+
+  return (
+    <div className="np-dash" style={{ maxWidth: 760 }}>
+      <div className="np-page-head">
+        <div className="np-page-head-l">
+          <span className="np-page-head-ic"><Filter size={22} /></span>
+          <div>
+            <p className="np-page-eyebrow">Tùy biến quy trình</p>
+            <h2 className="np-page-title">Quy trình tuyển dụng</h2>
+          </div>
+        </div>
+        <button type="button" className="button primary-button" disabled={saving} onClick={save}
+          style={{ background: '#0d1b33', borderColor: 'transparent' }}>
+          {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+        </button>
+      </div>
+
+      <div className="np-card">
+        <p style={{ margin: '0 0 16px', fontSize: '0.86rem', color: 'var(--p-muted)', lineHeight: 1.55 }}>
+          Đổi <strong>tên</strong>, <strong>màu</strong> hoặc <strong>ẩn</strong> các bước duyệt ứng viên cho phù hợp tổ chức. Đây chỉ là cách hiển thị — logic tính điểm vẫn giữ nguyên.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {stages.map((s, i) => (
+            <div key={s.status}
+              onDragOver={(e) => e.preventDefault()} onDrop={() => reorder(i)}
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', border: `1px solid ${dragIdx === i ? '#0d1b33' : 'var(--p-line)'}`, borderRadius: '12px', background: '#fff', flexWrap: 'wrap', opacity: dragIdx === i ? 0.5 : (s.hidden ? 0.55 : 1) }}>
+              <span draggable onDragStart={() => setDragIdx(i)} onDragEnd={() => setDragIdx(null)} title="Kéo để đổi thứ tự"
+                style={{ display: 'flex', alignItems: 'center', color: 'var(--p-muted)', cursor: 'grab', flexShrink: 0 }}>
+                <GripVertical size={16} />
+              </span>
+              <input type="color" value={s.color || '#6366f1'} onChange={(e) => patch(i, { color: e.target.value })}
+                title="Màu" style={{ width: '34px', height: '34px', border: '1px solid var(--p-line)', borderRadius: '8px', background: 'none', cursor: 'pointer', flexShrink: 0 }} />
+              <input value={s.label} onChange={(e) => patch(i, { label: e.target.value })}
+                style={{ flex: 1, minWidth: 160, padding: '9px 12px', borderRadius: '9px', border: '1px solid var(--p-line)', fontSize: '0.9rem', fontWeight: 600, color: 'var(--p-ink)' }} />
+              <span style={{ fontSize: '0.72rem', color: 'var(--p-muted)', fontFamily: 'monospace' }}>{s.status}</span>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--p-muted)', fontWeight: 600, cursor: 'pointer' }}>
+                <input type="checkbox" checked={!!s.hidden} onChange={(e) => patch(i, { hidden: e.target.checked })} style={{ accentColor: '#0d1b33', cursor: 'pointer' }} /> Ẩn
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function MembersView({ company, setToast }) {
   const [members, setMembers] = useState([]);
@@ -2923,6 +3034,8 @@ export function BusinessPage() {
         return <CandidatesView />;
       case 'members':
         return <MembersView company={company} setToast={setToast} />;
+      case 'pipeline':
+        return <PipelineSettingsView setToast={setToast} />;
       default:
         return <ApprovedView company={company} onTabChange={handleTabChange} />;
     }

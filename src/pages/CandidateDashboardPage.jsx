@@ -36,7 +36,7 @@ import {
 } from 'lucide-react';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
-import { getJobs, getCompanies, getCompanyDetail } from '../api/jobApi.js';
+import { getJobs, getCompanies, getCompanyDetail, getJobDetail } from '../api/jobApi.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
 import { applyToJob, getMyApplications, withdrawApplication } from '../api/applicationApi.js';
 import { getWallet, topUp, buyPremium } from '../api/walletApi.js';
@@ -352,6 +352,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [applicationsLoading, setApplicationsLoading] = useState(true);
   const [selectedJobForApply, setSelectedJobForApply] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [applyFormFields, setApplyFormFields] = useState([]);
+  const [applyAnswers, setApplyAnswers] = useState({});
   const [applyModalLoading, setApplyModalLoading] = useState(false);
   const [applyModalError, setApplyModalError] = useState('');
   const [applySuccessMsg, setApplySuccessMsg] = useState('');
@@ -384,6 +386,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [showQuestApplyModal, setShowQuestApplyModal] = useState(false);
   const [selectedQuestForApply, setSelectedQuestForApply] = useState(null);
   const [questCoverNote, setQuestCoverNote] = useState('');
+  const [questAnswers, setQuestAnswers] = useState({});
 
   // Credential submission states
   const [credentialSubmissions, setCredentialSubmissions] = useState([]);
@@ -677,10 +680,16 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   async function handleApplyToQuest() {
     if (!selectedQuestForApply) return;
+    const qFields = selectedQuestForApply.formFields || [];
+    const missing = qFields.find((f) => f.required && !(questAnswers[f.id] || '').trim());
+    if (missing) { setQuestApplyError(`Vui lòng trả lời: ${missing.label}`); return; }
     setQuestApplyError('');
     setQuestApplyLoading(true);
     try {
-      await applyToQuest(selectedQuestForApply.id, questCoverNote);
+      const answers = qFields.length
+        ? Object.fromEntries(qFields.map((f) => [f.id, (questAnswers[f.id] || '').trim()]).filter(([, v]) => v))
+        : null;
+      await applyToQuest(selectedQuestForApply.id, questCoverNote, answers);
       setQuestApplications(prev => [...prev, {
         questId: selectedQuestForApply.id,
         questTitle: selectedQuestForApply.title,
@@ -828,15 +837,30 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   function handleApplyJob(job) {
     setSelectedJobForApply(job);
     setApplyModalError('');
+    setApplyFormFields([]);
+    setApplyAnswers({});
     setShowApplyModal(true);
+    // Load custom questions (if any) for this job
+    getJobDetail(job.id || job.jobId)
+      .then((detail) => setApplyFormFields(detail?.formFields || []))
+      .catch(() => setApplyFormFields([]));
   }
 
   async function confirmApplyJob() {
     if (!selectedJobForApply || applyModalLoading) return;
+    // Validate required custom questions client-side
+    const missing = applyFormFields.find((f) => f.required && !(applyAnswers[f.id] || '').trim());
+    if (missing) {
+      setApplyModalError(`Vui lòng trả lời: ${missing.label}`);
+      return;
+    }
     setApplyModalError('');
     setApplyModalLoading(true);
     try {
-      await applyToJob(selectedJobForApply.id || selectedJobForApply.jobId);
+      const answers = applyFormFields.length
+        ? Object.fromEntries(applyFormFields.map((f) => [f.id, (applyAnswers[f.id] || '').trim()]).filter(([, v]) => v))
+        : null;
+      await applyToJob(selectedJobForApply.id || selectedJobForApply.jobId, '', answers);
       // Reload real applications list
       const data = await getMyApplications();
       setAppliedJobs(data || []);
@@ -1696,7 +1720,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 Xem chi tiết
                               </a>
                               <button type="button" disabled={isLocked || alreadyApplied}
-                                onClick={() => { setSelectedQuestForApply(quest); setQuestCoverNote(''); setQuestApplyError(''); setShowQuestApplyModal(true); }}
+                                onClick={() => { setSelectedQuestForApply(quest); setQuestCoverNote(''); setQuestAnswers({}); setQuestApplyError(''); setShowQuestApplyModal(true); }}
                                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (alreadyApplied || isLocked) ? '#f3ede9' : categoryMeta.color, color: (alreadyApplied || isLocked) ? 'var(--c-muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
                                 {alreadyApplied ? <><Check size={12} /> Đã đăng ký</> : isLocked ? <><LockKeyhole size={12} /> Cần RS</> : <><Zap size={12} /> Tham gia</>}
                               </button>
@@ -2677,6 +2701,33 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 />
               </div>
 
+              {/* Custom questions from organizer */}
+              {(selectedQuestForApply.formFields || []).length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: '800', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Câu hỏi từ ban tổ chức</span>
+                  {selectedQuestForApply.formFields.map((f) => (
+                    <div key={f.id} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ink)' }}>
+                        {f.label} {f.required && <span style={{ color: '#dc2626' }}>*</span>}
+                      </label>
+                      {f.fieldType === 'TEXTAREA' ? (
+                        <textarea rows={3} value={questAnswers[f.id] || ''} onChange={(e) => setQuestAnswers((p) => ({ ...p, [f.id]: e.target.value }))}
+                          style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem', fontFamily: 'inherit', resize: 'vertical' }} />
+                      ) : f.fieldType === 'SELECT' ? (
+                        <select value={questAnswers[f.id] || ''} onChange={(e) => setQuestAnswers((p) => ({ ...p, [f.id]: e.target.value }))}
+                          style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem', cursor: 'pointer' }}>
+                          <option value="">— Chọn —</option>
+                          {(f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      ) : (
+                        <input value={questAnswers[f.id] || ''} onChange={(e) => setQuestAnswers((p) => ({ ...p, [f.id]: e.target.value }))}
+                          style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem' }} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {questApplyError && (
                 <div className="alert-banner error">
                   <AlertTriangle size={15} style={{ flexShrink: 0 }} />
@@ -2718,6 +2769,33 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
               {/* Candidate profile preview */}
               <CandidateProfilePreview portfolio={portfolio} candidateRs={candidateRs} currentLevel={currentLevel} currentExp={currentExp} />
+
+              {/* Custom questions from employer */}
+              {applyFormFields.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: '800', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Câu hỏi từ nhà tuyển dụng</span>
+                  {applyFormFields.map((f) => (
+                    <div key={f.id} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ink)' }}>
+                        {f.label} {f.required && <span style={{ color: '#dc2626' }}>*</span>}
+                      </label>
+                      {f.fieldType === 'TEXTAREA' ? (
+                        <textarea rows={3} value={applyAnswers[f.id] || ''} onChange={(e) => setApplyAnswers((p) => ({ ...p, [f.id]: e.target.value }))}
+                          style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', fontFamily: 'inherit', resize: 'vertical' }} />
+                      ) : f.fieldType === 'SELECT' ? (
+                        <select value={applyAnswers[f.id] || ''} onChange={(e) => setApplyAnswers((p) => ({ ...p, [f.id]: e.target.value }))}
+                          style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', cursor: 'pointer' }}>
+                          <option value="">— Chọn —</option>
+                          {(f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      ) : (
+                        <input value={applyAnswers[f.id] || ''} onChange={(e) => setApplyAnswers((p) => ({ ...p, [f.id]: e.target.value }))}
+                          style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem' }} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {applyModalError && (
                 <div className="alert-banner error">

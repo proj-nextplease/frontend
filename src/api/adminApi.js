@@ -66,6 +66,22 @@ export async function deleteUserAccount(userId) {
   return response.data.data;
 }
 
+export async function getSystemConfigs() {
+  const response = await httpClient.get('/admin/system-config');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải cấu hình hệ thống.');
+  }
+  return response.data.data || [];
+}
+
+export async function updateSystemConfig(key, value) {
+  const response = await httpClient.patch(`/admin/system-config/${key}`, { value });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Cập nhật cấu hình thất bại.');
+  }
+  return response.data.data;
+}
+
 export async function getActiveFraudFlags() {
   const response = await httpClient.get('/admin/dashboard/fraud-flags');
   if (!response.data?.success) {

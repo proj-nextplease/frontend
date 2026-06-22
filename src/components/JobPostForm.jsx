@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BriefcaseBusiness } from 'lucide-react';
+import { BriefcaseBusiness, MessageSquarePlus, Plus, Trash2, GripVertical } from 'lucide-react';
 import { createJob, updateJob, getSkills } from '../api/jobApi.js';
 import { PremiumDateTimePicker } from './PremiumDateTimePicker.jsx';
 import {
@@ -71,8 +71,34 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
       : [],
   );
   const [skillsSearch, setSkillsSearch] = useState('');
+  const [customFields, setCustomFields] = useState(
+    initialData?.formFields
+      ? initialData.formFields.map((f) => ({ label: f.label, fieldType: f.fieldType || 'TEXT', options: f.options || '', required: !!f.required }))
+      : [],
+  );
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const [errors, setErrors] = useState({});
+
+  const [dragIdx, setDragIdx] = useState(null);
+  function addCustomField() {
+    setCustomFields((prev) => [...prev, { label: '', fieldType: 'TEXT', options: '', required: false }]);
+  }
+  function updateCustomField(idx, patch) {
+    setCustomFields((prev) => prev.map((f, i) => (i === idx ? { ...f, ...patch } : f)));
+  }
+  function removeCustomField(idx) {
+    setCustomFields((prev) => prev.filter((_, i) => i !== idx));
+  }
+  function reorderCustomField(to) {
+    setCustomFields((prev) => {
+      if (dragIdx === null || dragIdx === to) return prev;
+      const a = [...prev];
+      const [moved] = a.splice(dragIdx, 1);
+      a.splice(to, 0, moved);
+      return a;
+    });
+    setDragIdx(null);
+  }
 
   useEffect(() => {
     getSkills().then((s) => setAvailableSkills(s || [])).catch(() => {});
@@ -174,6 +200,9 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
       capacity: form.capacity ? parseInt(form.capacity) : null,
       deadlineAt: deadline,
       skills: selectedSkills,
+      formFields: customFields
+        .filter((f) => f.label.trim())
+        .map((f) => ({ label: f.label.trim(), fieldType: f.fieldType, options: f.fieldType === 'SELECT' ? f.options : null, required: f.required })),
     };
 
     try {
@@ -396,6 +425,82 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
               {errors.description && <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: '600' }}>{errors.description}</span>}
             </div>
           </div>
+        </div>
+
+        {/* Custom application questions */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
+              <span style={{ width: '40px', height: '40px', borderRadius: '11px', background: 'rgba(37,99,235,0.1)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <MessageSquarePlus size={20} />
+              </span>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: 'var(--ink)' }}>Câu hỏi thêm cho ứng viên</h3>
+                <p style={{ margin: '2px 0 0', fontSize: '0.82rem', color: 'var(--muted)' }}>Ứng viên sẽ trả lời khi bấm Ứng tuyển. Để trống nếu không cần.</p>
+              </div>
+            </div>
+            <button type="button" onClick={addCustomField}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 15px', borderRadius: '10px', border: 'none', background: '#0d1b33', color: '#fff', fontWeight: '700', fontSize: '0.84rem', cursor: 'pointer', flexShrink: 0 }}>
+              <Plus size={16} /> Thêm câu hỏi
+            </button>
+          </div>
+
+          {customFields.length === 0 ? (
+            <div style={{ padding: '28px 20px', border: '1.5px dashed var(--line)', borderRadius: '14px', textAlign: 'center', background: 'var(--surface-soft, #f7f9fc)' }}>
+              <MessageSquarePlus size={26} style={{ color: 'var(--muted)', marginBottom: '8px' }} />
+              <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--muted)', fontWeight: '600' }}>Chưa có câu hỏi nào</p>
+              <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--muted)' }}>Vd: &ldquo;Link portfolio của bạn?&rdquo;, &ldquo;Vì sao bạn phù hợp?&rdquo;</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {customFields.map((f, idx) => (
+                <div key={idx}
+                  onDragOver={(e) => e.preventDefault()} onDrop={() => reorderCustomField(idx)}
+                  style={{ padding: '14px 16px', border: `1px solid ${dragIdx === idx ? '#2563eb' : 'var(--line)'}`, borderRadius: '14px', background: 'var(--card-bg-strong, #fff)', opacity: dragIdx === idx ? 0.6 : 1 }}>
+                  {/* Row 1: drag + number + label + delete */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span draggable onDragStart={() => setDragIdx(idx)} onDragEnd={() => setDragIdx(null)} title="Kéo để sắp xếp"
+                      style={{ display: 'flex', alignItems: 'center', color: 'var(--muted)', cursor: 'grab', flexShrink: 0 }}>
+                      <GripVertical size={16} />
+                    </span>
+                    <span style={{ width: '26px', height: '26px', borderRadius: '8px', background: 'rgba(37,99,235,0.1)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.8rem', flexShrink: 0 }}>{idx + 1}</span>
+                    <input value={f.label} onChange={(e) => updateCustomField(idx, { label: e.target.value })}
+                      placeholder="Nhập câu hỏi (vd: Link portfolio của bạn?)"
+                      style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', fontSize: '0.9rem', fontWeight: '600', background: 'var(--bg)' }} />
+                    <button type="button" onClick={() => removeCustomField(idx)} title="Xoá câu hỏi"
+                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '9px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--muted)', cursor: 'pointer', flexShrink: 0 }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.borderColor = 'rgba(220,38,38,0.4)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--muted)'; e.currentTarget.style.borderColor = 'var(--line)'; }}>
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  {/* Row 2: type + required */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '10px', paddingLeft: '36px' }}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--muted)', fontWeight: '600' }}>Kiểu trả lời:</span>
+                    <select value={f.fieldType} onChange={(e) => updateCustomField(idx, { fieldType: e.target.value })}
+                      style={{ padding: '8px 10px', borderRadius: '9px', border: '1px solid var(--line)', fontSize: '0.83rem', cursor: 'pointer', background: 'var(--bg)' }}>
+                      <option value="TEXT">Văn bản ngắn</option>
+                      <option value="TEXTAREA">Văn bản dài</option>
+                      <option value="SELECT">Chọn 1 đáp án</option>
+                    </select>
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '0.83rem', color: 'var(--ink)', fontWeight: '600', cursor: 'pointer', padding: '7px 12px', borderRadius: '9px', border: `1px solid ${f.required ? 'rgba(37,99,235,0.4)' : 'var(--line)'}`, background: f.required ? 'rgba(37,99,235,0.06)' : 'var(--bg)' }}>
+                      <input type="checkbox" checked={f.required} onChange={(e) => updateCustomField(idx, { required: e.target.checked })} style={{ accentColor: '#2563eb', cursor: 'pointer' }} /> Bắt buộc
+                    </label>
+                  </div>
+
+                  {/* Row 3: options for SELECT */}
+                  {f.fieldType === 'SELECT' && (
+                    <div style={{ marginTop: '10px', paddingLeft: '36px' }}>
+                      <input value={f.options} onChange={(e) => updateCustomField(idx, { options: e.target.value })}
+                        placeholder="Các lựa chọn, cách nhau bằng dấu phẩy (vd: Có, Không, Tùy)"
+                        style={{ width: '100%', padding: '9px 12px', borderRadius: '9px', border: '1px solid var(--line)', fontSize: '0.85rem', background: 'var(--bg)', boxSizing: 'border-box' }} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <StatusBanner status={status} />
