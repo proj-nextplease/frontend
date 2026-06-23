@@ -1873,7 +1873,7 @@ function ManageJobsView({ onTabChange, company }) {
       {/* Edit success banner */}
       {editSuccessMsg && (
         <div style={{ background: '#dcfce7', border: '1px solid #86efac', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-          <span style={{ color: '#15803d', fontWeight: '600', fontSize: '0.9rem' }}>✅ {editSuccessMsg}</span>
+          <span style={{ color: '#15803d', fontWeight: '600', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} /> {editSuccessMsg}</span>
           <button onClick={() => setEditSuccessMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#15803d', fontSize: '1.1rem', lineHeight: 1 }}>×</button>
         </div>
       )}

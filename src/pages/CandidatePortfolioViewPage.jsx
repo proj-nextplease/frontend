@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Award, BriefcaseBusiness, FileUp, ShieldCheck, Sparkles, ArrowLeft } from 'lucide-react';
+import { Award, BriefcaseBusiness, FileUp, ShieldCheck, Sparkles, ArrowLeft, GraduationCap } from 'lucide-react';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
 import { getPublicProfile } from '../api/portfolioApi.js';
 
@@ -68,7 +68,7 @@ export function CandidatePortfolioViewPage() {
             <h1>{profile.name || 'Ứng viên'}</h1>
             <p>{profile.headline || ''}</p>
             <div className="preview-meta">
-              {profile.school && <span>🎓 {profile.school}</span>}
+              {profile.school && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><GraduationCap size={13} /> {profile.school}</span>}
               {profile.location && <span>📍 {profile.location}</span>}
             </div>
           </div>

@@ -35,6 +35,7 @@ import {
   ExternalLink,
   FileText,
   GraduationCap,
+  Award,
   LogOut,
   Mail,
   Phone,
@@ -2114,8 +2115,8 @@ export function AdminB2bReviewPage() {
                             {isClub ? 'CLB sinh viên' : item.companyType}
                           </span>
                           {item.schoolName && (
-                            <span className="admin-type-badge" style={{ background: 'rgba(102,112,133,0.1)', color: 'var(--muted)' }}>
-                              🎓 {item.schoolName}
+                            <span className="admin-type-badge" style={{ background: 'rgba(102,112,133,0.1)', color: 'var(--muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <GraduationCap size={12} /> {item.schoolName}
                             </span>
                           )}
                           <span className="admin-type-badge" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>
@@ -2792,7 +2793,7 @@ export function AdminB2bReviewPage() {
                       <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Thù lao / Phụ cấp:</span>
                       <strong style={{ color: 'var(--muted)' }}>Không có</strong>
                       <span style={{ fontSize: '0.76rem', color: '#ff7a1a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                        🏅 Điểm EXP: +{selectedJobDetail.expReward || 100} EXP khi hoàn thành
+                        <Award size={13} /> Điểm EXP: +{selectedJobDetail.expReward || 100} EXP khi hoàn thành
                       </span>
                     </div>
                   ) : (
