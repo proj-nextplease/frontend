@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient.js';
+import { NotificationBell } from '../components/NotificationBell.jsx';
 import {
   getPendingB2bRegistrations,
   approveB2bRegistration,
@@ -2223,6 +2224,7 @@ export function AdminB2bReviewPage() {
   ─────────────────────────────────────────────── */
   return (
     <div className={`admin-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <NotificationBell accent="#dc2626" />
       {/* ── Sidebar ── */}
       <aside className="admin-sidebar">
         <div className="admin-sidebar-header">

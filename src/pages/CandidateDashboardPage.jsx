@@ -40,6 +40,7 @@ import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
 import { getJobs, getCompanies, getCompanyDetail, getJobDetail } from '../api/jobApi.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
 import { applyToJob, getMyApplications, withdrawApplication } from '../api/applicationApi.js';
+import { NotificationBell } from '../components/NotificationBell.jsx';
 import { getWallet, topUp, buyPremium } from '../api/walletApi.js';
 import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication } from '../api/questApi.js';
 import { supabase } from '../services/supabaseClient.js';
@@ -1071,6 +1072,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   return (
     <div className={`candidate-portal-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <NotificationBell accent="#e5533f" />
       {/* ─── Sidebar Navigation ─── */}
       <aside className="candidate-portal-sidebar">
         <div className="candidate-portal-sidebar-top">
