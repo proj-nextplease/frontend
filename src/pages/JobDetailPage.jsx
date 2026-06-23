@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import {
   MapPin, Clock, Building, Shield, Zap, Award, LockKeyhole,
   ArrowLeft, Users, Calendar, Briefcase, CheckCircle2, Star,
+  ClipboardList, GraduationCap, FolderOpen,
 } from 'lucide-react';
 import { getJobDetail } from '../api/jobApi.js';
 import { applyToJob } from '../api/applicationApi.js';
@@ -84,7 +85,7 @@ export function JobDetailPage() {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg, #f8fafc)' }}>
         <div style={{ textAlign: 'center', color: 'var(--muted, #64748b)' }}>
-          <div style={{ width: '40px', height: '40px', border: '3px solid #e2e8f0', borderTopColor: '#2563eb', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+          <div style={{ width: '40px', height: '40px', border: '3px solid var(--line, #e2e8f0)', borderTopColor: '#2563eb', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
           Đang tải...
         </div>
       </div>
@@ -411,8 +412,9 @@ export function JobDetailPage() {
             onClick={e => e.stopPropagation()}
             style={{ background: 'var(--card-bg, #fff)', borderRadius: '20px', padding: '28px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}
           >
-            <h2 style={{ margin: '0 0 20px', fontSize: '1.15rem', fontWeight: '800', color: 'var(--ink, #1e293b)' }}>
-              {isQuest ? '⚡ Xác nhận tham gia Quest' : '📋 Xác nhận ứng tuyển'}
+            <h2 style={{ margin: '0 0 20px', fontSize: '1.15rem', fontWeight: '800', color: 'var(--ink, #1e293b)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {isQuest ? <Zap size={18} color={accent} /> : <ClipboardList size={18} color={accent} />}
+              {isQuest ? 'Xác nhận tham gia Quest' : 'Xác nhận ứng tuyển'}
             </h2>
 
             {/* Profile preview */}
@@ -426,7 +428,7 @@ export function JobDetailPage() {
                   <div>
                     <strong style={{ display: 'block', fontSize: '0.92rem', color: 'var(--ink, #1e293b)' }}>{portfolio.name}</strong>
                     {portfolio.headline && <span style={{ fontSize: '0.78rem', color: 'var(--muted, #64748b)' }}>{portfolio.headline}</span>}
-                    {portfolio.school && <span style={{ fontSize: '0.76rem', color: accent, fontWeight: '700', display: 'block' }}>🎓 {portfolio.school}</span>}
+                    {portfolio.school && <span style={{ fontSize: '0.76rem', color: accent, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}><GraduationCap size={13} /> {portfolio.school}</span>}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -443,7 +445,7 @@ export function JobDetailPage() {
                   rel="noopener noreferrer"
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 14px', borderRadius: '10px', border: `1px solid ${accent}30`, background: `${accent}08`, color: accent, fontSize: '0.84rem', fontWeight: '700', textDecoration: 'none' }}
                 >
-                  🗂 Xem lại Portfolio của bạn
+                  <FolderOpen size={15} /> Xem lại Portfolio của bạn
                 </a>
               </div>
             )}
