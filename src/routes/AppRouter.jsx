@@ -1,16 +1,13 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { AppLayout } from '../components/layout/AppLayout.jsx';
-import { AdminPage } from '../pages/AdminPage.jsx';
 import { BusinessPage } from '../pages/BusinessPage.jsx';
 import { CandidateDashboardPage } from '../pages/CandidateDashboardPage.jsx';
 import { CandidateLandingPage } from '../pages/CandidateLandingPage.jsx';
 import { CandidateLoginPage } from '../pages/CandidateLoginPage.jsx';
 import { CandidateRegisterPage } from '../pages/CandidateRegisterPage.jsx';
 import { HomePage } from '../pages/HomePage.jsx';
-import { LoginPage } from '../pages/LoginPage.jsx';
 import { NotFoundPage } from '../pages/NotFoundPage.jsx';
-import { UserPage } from '../pages/UserPage.jsx';
 import { supabase } from '../services/supabaseClient.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { BusinessLoginPage } from '../pages/BusinessLoginPage.jsx';
@@ -365,9 +362,6 @@ export function AppRouter() {
             </Suspense>
           }
         />
-        <Route path="/users" element={<UserPage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/login" element={<LoginPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
