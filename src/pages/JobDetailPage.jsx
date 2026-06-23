@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import {
   MapPin, Clock, Building, Shield, Zap, Award, LockKeyhole,
   ArrowLeft, Users, Calendar, Briefcase, CheckCircle2, Star,
-  ClipboardList, GraduationCap, FolderOpen,
+  ClipboardList, GraduationCap, FolderOpen, AlertTriangle,
 } from 'lucide-react';
 import { getJobDetail } from '../api/jobApi.js';
 import { applyToJob } from '../api/applicationApi.js';
@@ -404,73 +404,68 @@ export function JobDetailPage() {
 
       {/* ── Apply Modal ── */}
       {showApplyModal && (
-        <div
-          onClick={() => setShowApplyModal(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{ background: 'var(--card-bg, #fff)', borderRadius: '20px', padding: '28px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}
-          >
-            <h2 style={{ margin: '0 0 20px', fontSize: '1.15rem', fontWeight: '800', color: 'var(--ink, #1e293b)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {isQuest ? <Zap size={18} color={accent} /> : <ClipboardList size={18} color={accent} />}
-              {isQuest ? 'Xác nhận tham gia Quest' : 'Xác nhận ứng tuyển'}
-            </h2>
+        <div className="glass-modal-overlay" onClick={() => setShowApplyModal(false)}>
+          <div className="glass-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div className="glass-modal-header" style={{ borderTop: `3px solid ${accent}`, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit' }}>
+              <span style={{ display: 'inline-flex', width: '34px', height: '34px', borderRadius: '10px', alignItems: 'center', justifyContent: 'center', background: `${accent}14`, color: accent }}>
+                {isQuest ? <Zap size={19} /> : <ClipboardList size={19} />}
+              </span>
+              <h2>{isQuest ? 'Xác nhận tham gia Quest' : 'Xác nhận ứng tuyển'}</h2>
+            </div>
 
-            {/* Profile preview */}
-            {portfolio && (
-              <div style={{ border: '1px solid var(--line, #e2e8f0)', borderRadius: '14px', padding: '14px 16px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', color: 'var(--muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Hồ sơ của bạn</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: `linear-gradient(135deg, ${accent}, #1d4ed8)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', color: '#fff', fontSize: '1rem', flexShrink: 0 }}>
-                    {portfolio.name ? portfolio.name.slice(0, 2).toUpperCase() : 'UV'}
-                  </div>
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.92rem', color: 'var(--ink, #1e293b)' }}>{portfolio.name}</strong>
-                    {portfolio.headline && <span style={{ fontSize: '0.78rem', color: 'var(--muted, #64748b)' }}>{portfolio.headline}</span>}
-                    {portfolio.school && <span style={{ fontSize: '0.76rem', color: accent, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}><GraduationCap size={13} /> {portfolio.school}</span>}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {[{ l: 'RS', v: portfolio.reputationScore, c: '#2563eb' }, { l: 'Level', v: portfolio.currentLevel, c: '#ff7a1a' }, { l: 'EXP', v: portfolio.totalExp, c: '#7c3aed' }].map(s => (
-                    <div key={s.l} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', background: `${s.c}08`, borderRadius: '10px', border: `1px solid ${s.c}20` }}>
-                      <strong style={{ fontSize: '0.88rem', color: s.c, display: 'block' }}>{s.v}</strong>
-                      <span style={{ fontSize: '0.68rem', color: 'var(--muted, #64748b)', fontWeight: '700' }}>{s.l}</span>
+            <div className="glass-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Profile preview */}
+              {portfolio && (
+                <div style={{ border: '1px solid var(--line)', borderRadius: '14px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Hồ sơ của bạn</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: `linear-gradient(135deg, ${accent}, #1d4ed8)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', color: '#fff', fontSize: '1rem', flexShrink: 0 }}>
+                      {portfolio.name ? portfolio.name.slice(0, 2).toUpperCase() : 'UV'}
                     </div>
-                  ))}
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '0.92rem', color: 'var(--ink)' }}>{portfolio.name}</strong>
+                      {portfolio.headline && <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{portfolio.headline}</span>}
+                      {portfolio.school && <span style={{ fontSize: '0.76rem', color: accent, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}><GraduationCap size={13} /> {portfolio.school}</span>}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {[{ l: 'RS', v: portfolio.reputationScore, c: '#2563eb' }, { l: 'Level', v: portfolio.currentLevel, c: '#ff7a1a' }, { l: 'EXP', v: portfolio.totalExp, c: '#7c3aed' }].map(s => (
+                      <div key={s.l} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', background: `${s.c}08`, borderRadius: '10px', border: `1px solid ${s.c}20` }}>
+                        <strong style={{ fontSize: '0.88rem', color: s.c, display: 'block' }}>{s.v}</strong>
+                        <span style={{ fontSize: '0.68rem', color: 'var(--muted)', fontWeight: '700' }}>{s.l}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <a href="/portfolio/edit" target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 14px', borderRadius: '10px', border: `1px solid ${accent}30`, background: `${accent}08`, color: accent, fontSize: '0.84rem', fontWeight: '700', textDecoration: 'none' }}>
+                    <FolderOpen size={15} /> Xem lại Portfolio của bạn
+                  </a>
                 </div>
-                <a
-                  href="/portfolio/edit"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 14px', borderRadius: '10px', border: `1px solid ${accent}30`, background: `${accent}08`, color: accent, fontSize: '0.84rem', fontWeight: '700', textDecoration: 'none' }}
-                >
-                  <FolderOpen size={15} /> Xem lại Portfolio của bạn
-                </a>
+              )}
+
+              {/* Cover note */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.86rem', fontWeight: '700', color: 'var(--ink)' }}>Giới thiệu bản thân (tùy chọn)</label>
+                <textarea
+                  value={coverNote}
+                  onChange={e => setCoverNote(e.target.value)}
+                  placeholder="Chia sẻ lý do bạn muốn ứng tuyển vị trí này..."
+                  rows={3}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem', color: 'var(--ink)', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+                />
               </div>
-            )}
 
-            {/* Cover note */}
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.86rem', fontWeight: '700', color: 'var(--ink, #1e293b)' }}>Giới thiệu bản thân (tùy chọn)</label>
-            <textarea
-              value={coverNote}
-              onChange={e => setCoverNote(e.target.value)}
-              placeholder="Chia sẻ lý do bạn muốn ứng tuyển vị trí này..."
-              rows={3}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line, #e2e8f0)', background: 'var(--surface-soft, #f8fafc)', fontSize: '0.88rem', color: 'var(--ink, #1e293b)', resize: 'vertical', outline: 'none', boxSizing: 'border-box', marginBottom: '16px' }}
-            />
+              {applyError && (
+                <div className="alert-banner error">
+                  <AlertTriangle size={15} style={{ flexShrink: 0 }} />
+                  {applyError}
+                </div>
+              )}
+            </div>
 
-            {applyError && (
-              <div style={{ padding: '10px 14px', borderRadius: '10px', background: 'rgba(220,38,38,0.08)', color: '#dc2626', fontSize: '0.84rem', fontWeight: '700', marginBottom: '14px' }}>
-                {applyError}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setShowApplyModal(false)} disabled={applyLoading} style={{ flex: 1, padding: '11px', borderRadius: '12px', border: '1px solid var(--line, #e2e8f0)', background: 'var(--bg, #f8fafc)', cursor: 'pointer', fontWeight: '700', fontSize: '0.88rem' }}>
-                Hủy bỏ
-              </button>
-              <button onClick={handleApply} disabled={applyLoading} style={{ flex: 2, padding: '11px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${accent}, ${isQuest ? '#e55a00' : '#1d4ed8'})`, color: '#fff', fontWeight: '800', fontSize: '0.88rem', cursor: 'pointer', boxShadow: `0 4px 14px ${accent}40` }}>
+            <div className="glass-modal-footer">
+              <button className="button secondary-button" onClick={() => setShowApplyModal(false)} type="button" disabled={applyLoading}>Hủy bỏ</button>
+              <button className="button primary-button" onClick={handleApply} type="button" disabled={applyLoading}>
                 {applyLoading ? 'Đang nộp...' : (isQuest ? 'Xác nhận tham gia' : 'Xác nhận nộp đơn')}
               </button>
             </div>

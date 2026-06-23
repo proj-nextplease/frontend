@@ -9,10 +9,15 @@ export function AppLayout() {
   const isWorkspace = isBusinessWorkspace || isAdminWorkspace || isCandidateWorkspace;
   const isLandingPage = ['/', '/candidates', '/businesses'].includes(location.pathname);
   const isAuthPage = location.pathname.endsWith('/login') || location.pathname.endsWith('/register') || location.pathname.endsWith('/accept-invite');
+  // Standalone detail tabs render their own hero + "Đóng tab" control, so the
+  // global header would be redundant. These are opened in a new browser tab.
+  const isStandaloneTab = location.pathname.startsWith('/jobs/')
+    || location.pathname.startsWith('/quests/')
+    || location.pathname.startsWith('/portfolio/view/');
 
   return (
     <div className={`app-shell ${isWorkspace ? 'business-workspace-shell' : ''}`}>
-      {!isWorkspace && !isLandingPage && !isAuthPage && <Header />}
+      {!isWorkspace && !isLandingPage && !isAuthPage && !isStandaloneTab && <Header />}
       <main className="app-main">
         <Outlet />
       </main>
