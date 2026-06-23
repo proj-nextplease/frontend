@@ -53,6 +53,7 @@ import { supabase } from '../services/supabaseClient.js';
 import { JobPostForm } from '../components/JobPostForm.jsx';
 import { QuestPostForm } from '../components/QuestPostForm.jsx';
 import { getOrganizerJobs, getOrganizerJobById, closeJob, deleteJob, getJobDetail, getJobApplications, updateApplicationStatus, getOrgPipeline, saveOrgPipeline } from '../api/jobApi.js';
+import { NotificationBell } from '../components/NotificationBell.jsx';
 import { getOrganizerQuests, getOrganizerQuestById, closeQuest, deleteQuest, getQuestApplicants, updateQuestApplicationStatus } from '../api/questApi.js';
 import { getRating, createRating, updateRating } from '../api/ratingApi.js';
 import { Crown, ArrowLeft, Check, Calendar, Award, ChevronRight, ExternalLink as ExtLink, Loader2 } from 'lucide-react';
@@ -3082,6 +3083,7 @@ export function BusinessPage() {
 
   return (
     <div className={`partner-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <NotificationBell accent="#2563eb" />
       {/* ── Sidebar ── */}
       <aside className="partner-sidebar">
         <div className="partner-sidebar-header">
