@@ -7391,6 +7391,27 @@ img {
   .np-cand-grid { transition: none; }
 }
 
+/* ── Drag-and-drop reorder (low-code lists) ── */
+.np-drag {
+  transition: transform 0.16s ease, box-shadow 0.18s ease, border-color 0.16s ease, opacity 0.16s ease, background 0.16s ease;
+  will-change: transform;
+}
+.np-drag.is-dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16);
+}
+.np-drag.is-over {
+  box-shadow: 0 -3px 0 -1px var(--np-drag-accent, #2563eb), 0 6px 18px rgba(15, 23, 42, 0.08);
+  transform: translateY(2px);
+}
+.np-drag-handle { cursor: grab; touch-action: none; transition: color 0.15s ease; }
+.np-drag-handle:active { cursor: grabbing; }
+.np-drag:hover .np-drag-handle { color: var(--np-drag-accent, #2563eb); }
+@media (prefers-reduced-motion: reduce) {
+  .np-drag, .np-drag.is-dragging, .np-drag.is-over { transition: none; transform: none; }
+}
+
 @media (max-width: 1100px) {
   .np-kpi-row { grid-template-columns: repeat(2, 1fr); }
   .np-dash-grid { grid-template-columns: 1fr; }

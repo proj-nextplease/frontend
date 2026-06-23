@@ -33,6 +33,7 @@ import {
   X,
   SlidersHorizontal,
   Users,
+  ImagePlus,
 } from 'lucide-react';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
@@ -322,6 +323,77 @@ function CandidateProfilePreview({ portfolio, candidateRs, currentLevel, current
   );
 }
 
+// Shared apply/join modal shell — unifies the candidate Job-apply and Quest-apply
+// flows so both look and behave identically. Caller passes the differing bits
+// (icon, title, accent, info card content, submit label) as props.
+function ApplyModal({
+  icon, title, accent = 'var(--primary)', infoCard, profileProps,
+  coverNote, setCoverNote, coverLabel, coverPlaceholder,
+  fields = [], answers, setAnswers, fieldsTitle,
+  error, loading, onClose, onSubmit, submitLabel,
+}) {
+  const Icon = icon;
+  const fieldStyle = { padding: '11px 13px', borderRadius: '11px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem', color: 'var(--ink)', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', width: '100%' };
+  return (
+    <div className="glass-modal-overlay" onClick={onClose}>
+      <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+        <div className="glass-modal-header" style={{ borderTop: `3px solid ${accent}`, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit' }}>
+          <span style={{ display: 'inline-flex', width: '34px', height: '34px', borderRadius: '10px', alignItems: 'center', justifyContent: 'center', background: `${accent}14`, color: accent }}>
+            <Icon size={19} />
+          </span>
+          <h2>{title}</h2>
+        </div>
+        <div className="glass-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {infoCard}
+          <CandidateProfilePreview {...profileProps} />
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.84rem', fontWeight: '700', color: 'var(--ink)' }}>{coverLabel}</label>
+            <textarea value={coverNote} onChange={(e) => setCoverNote(e.target.value)} placeholder={coverPlaceholder} rows={3}
+              style={{ ...fieldStyle, resize: 'vertical' }} />
+          </div>
+
+          {fields.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '13px' }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: '800', color: accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{fieldsTitle}</span>
+              {fields.map((f) => (
+                <div key={f.id} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ink)' }}>
+                    {f.label} {f.required && <span style={{ color: '#dc2626' }}>*</span>}
+                  </label>
+                  {f.fieldType === 'TEXTAREA' ? (
+                    <textarea rows={3} value={answers[f.id] || ''} onChange={(e) => setAnswers((p) => ({ ...p, [f.id]: e.target.value }))} style={{ ...fieldStyle, resize: 'vertical' }} />
+                  ) : f.fieldType === 'SELECT' ? (
+                    <select value={answers[f.id] || ''} onChange={(e) => setAnswers((p) => ({ ...p, [f.id]: e.target.value }))} style={{ ...fieldStyle, cursor: 'pointer' }}>
+                      <option value="">— Chọn —</option>
+                      {(f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  ) : (
+                    <input value={answers[f.id] || ''} onChange={(e) => setAnswers((p) => ({ ...p, [f.id]: e.target.value }))} style={fieldStyle} />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {error && (
+            <div className="alert-banner error">
+              <AlertTriangle size={15} style={{ flexShrink: 0 }} />
+              {error}
+            </div>
+          )}
+        </div>
+        <div className="glass-modal-footer">
+          <button className="button secondary-button" onClick={onClose} type="button" disabled={loading}>Hủy bỏ</button>
+          <button className="button primary-button" onClick={onSubmit} type="button" disabled={loading}>
+            {loading ? 'Đang nộp...' : submitLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CandidateDashboardPage({ initialPortfolio }) {
   const navigate = useNavigate();
   const { tabSlug } = useParams();
@@ -354,6 +426,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applyFormFields, setApplyFormFields] = useState([]);
   const [applyAnswers, setApplyAnswers] = useState({});
+  const [jobCoverNote, setJobCoverNote] = useState('');
   const [applyModalLoading, setApplyModalLoading] = useState(false);
   const [applyModalError, setApplyModalError] = useState('');
   const [applySuccessMsg, setApplySuccessMsg] = useState('');
@@ -378,6 +451,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [questsList, setQuestsList] = useState([]);
   const [questsLoading, setQuestsLoading] = useState(false);
   const [questApplications, setQuestApplications] = useState([]);
+  const [viewingApp, setViewingApp] = useState(null); // { app, isQuest } for the "Xem chi tiết" tracking modal
   const [questApplyLoading, setQuestApplyLoading] = useState(false);
   const [questApplyError, setQuestApplyError] = useState('');
   const [questApplySuccess, setQuestApplySuccess] = useState('');
@@ -394,8 +468,22 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [showCredentialForm, setShowCredentialForm] = useState(false);
   const [credentialForm, setCredentialForm] = useState({
     projectName: '', position: '', category: 'CLUB_SMALL', roleLevel: 'MEMBER',
-    description: '', proofLink: '', startedAt: '', endedAt: '',
+    description: '', proofLink: '', proofImages: [], startedAt: '', endedAt: '',
   });
+
+  function handleProofImageUpload(e) {
+    const files = Array.from(e.target.files || []);
+    files.forEach((file) => {
+      if (file.size > 2 * 1024 * 1024) { setCredentialFormError('Mỗi ảnh minh chứng phải dưới 2MB.'); return; }
+      const reader = new FileReader();
+      reader.onload = () => setCredentialForm((f) => ({ ...f, proofImages: [...(f.proofImages || []), reader.result].slice(0, 6) }));
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  }
+  function removeProofImage(idx) {
+    setCredentialForm((f) => ({ ...f, proofImages: f.proofImages.filter((_, i) => i !== idx) }));
+  }
   const [credentialFormLoading, setCredentialFormLoading] = useState(false);
   const [credentialFormError, setCredentialFormError] = useState('');
   const [credentialFormSuccess, setCredentialFormSuccess] = useState('');
@@ -790,7 +878,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     try {
       await submitCredential(credentialForm);
       setCredentialFormSuccess('Nộp minh chứng thành công! Hệ thống sẽ xem xét và phản hồi trong 1-3 ngày làm việc.');
-      setCredentialForm({ projectName: '', position: '', category: 'CLUB_SMALL', roleLevel: 'MEMBER', description: '', proofLink: '', startedAt: '', endedAt: '' });
+      setCredentialForm({ projectName: '', position: '', category: 'CLUB_SMALL', roleLevel: 'MEMBER', description: '', proofLink: '', proofImages: [], startedAt: '', endedAt: '' });
       setShowCredentialForm(false);
       const data = await getMyCredentialSubmissions();
       setCredentialSubmissions(data || []);
@@ -839,6 +927,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     setApplyModalError('');
     setApplyFormFields([]);
     setApplyAnswers({});
+    setJobCoverNote('');
     setShowApplyModal(true);
     // Load custom questions (if any) for this job
     getJobDetail(job.id || job.jobId)
@@ -860,7 +949,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       const answers = applyFormFields.length
         ? Object.fromEntries(applyFormFields.map((f) => [f.id, (applyAnswers[f.id] || '').trim()]).filter(([, v]) => v))
         : null;
-      await applyToJob(selectedJobForApply.id || selectedJobForApply.jobId, '', answers);
+      await applyToJob(selectedJobForApply.id || selectedJobForApply.jobId, jobCoverNote.trim(), answers);
       // Reload real applications list
       const data = await getMyApplications();
       setAppliedJobs(data || []);
@@ -1867,14 +1956,21 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                   )}
                                 </div>
                               )}
-                              {['SUBMITTED', 'VIEWED', 'SHORTLISTED'].includes(st) && (
+                              <div style={{ display: 'flex', gap: '6px' }}>
                                 <button
-                                  onClick={() => handleWithdrawJob(app.id)}
-                                  disabled={withdrawingId === app.id}
-                                  style={{ fontSize: '0.76rem', fontWeight: '700', color: '#6b7280', background: 'none', border: '1px solid var(--line)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
-                                  {withdrawingId === app.id ? 'Đang rút...' : 'Rút đơn'}
+                                  onClick={() => setViewingApp({ app, isQuest: false })}
+                                  style={{ fontSize: '0.76rem', fontWeight: '700', color: '#2563eb', background: 'none', border: '1px solid rgba(37,99,235,0.35)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
+                                  Xem chi tiết
                                 </button>
-                              )}
+                                {['SUBMITTED', 'VIEWED', 'SHORTLISTED'].includes(st) && (
+                                  <button
+                                    onClick={() => handleWithdrawJob(app.id)}
+                                    disabled={withdrawingId === app.id}
+                                    style={{ fontSize: '0.76rem', fontWeight: '700', color: '#6b7280', background: 'none', border: '1px solid var(--line)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
+                                    {withdrawingId === app.id ? 'Đang rút...' : 'Rút đơn'}
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
@@ -1958,14 +2054,21 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                   )}
                                 </div>
                               )}
-                              {qa.status === 'SUBMITTED' && (
+                              <div style={{ display: 'flex', gap: '6px' }}>
                                 <button
-                                  onClick={() => handleWithdrawQuest(qa.id)}
-                                  disabled={withdrawingId === qa.id}
-                                  style={{ fontSize: '0.76rem', fontWeight: '700', color: '#6b7280', background: 'none', border: '1px solid var(--line)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
-                                  {withdrawingId === qa.id ? 'Đang rút...' : 'Rút đơn'}
+                                  onClick={() => setViewingApp({ app: qa, isQuest: true })}
+                                  style={{ fontSize: '0.76rem', fontWeight: '700', color: '#f59e0b', background: 'none', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
+                                  Xem chi tiết
                                 </button>
-                              )}
+                                {qa.status === 'SUBMITTED' && (
+                                  <button
+                                    onClick={() => handleWithdrawQuest(qa.id)}
+                                    disabled={withdrawingId === qa.id}
+                                    style={{ fontSize: '0.76rem', fontWeight: '700', color: '#6b7280', background: 'none', border: '1px solid var(--line)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
+                                    {withdrawingId === qa.id ? 'Đang rút...' : 'Rút đơn'}
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
@@ -2586,6 +2689,26 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       <input className="form-input" placeholder="https://drive.google.com/... hoặc link Facebook event" value={credentialForm.proofLink} onChange={e => setCredentialForm(f => ({ ...f, proofLink: e.target.value }))} />
                     </div>
                     <div className="form-full">
+                      <label className="form-label">Ảnh minh chứng (giấy xác nhận, ảnh hoạt động — tối đa 6 ảnh, &lt;2MB)</label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                        {(credentialForm.proofImages || []).map((img, i) => (
+                          <div key={i} style={{ position: 'relative', width: '92px', height: '92px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--line)' }}>
+                            <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <button type="button" onClick={() => removeProofImage(i)} aria-label="Gỡ ảnh"
+                              style={{ position: 'absolute', top: '4px', right: '4px', width: '22px', height: '22px', borderRadius: '50%', border: 'none', background: 'rgba(220,38,38,0.92)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <X size={13} />
+                            </button>
+                          </div>
+                        ))}
+                        {(credentialForm.proofImages || []).length < 6 && (
+                          <label style={{ width: '92px', height: '92px', borderRadius: '12px', border: '1.5px dashed var(--line)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer', color: 'var(--muted)', fontSize: '0.72rem', fontWeight: '600', textAlign: 'center' }}>
+                            <ImagePlus size={20} /> Tải ảnh
+                            <input type="file" accept="image/*" multiple onChange={handleProofImageUpload} style={{ display: 'none' }} />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                    <div className="form-full">
                       <label className="form-label">Mô tả thêm (không bắt buộc)</label>
                       <textarea className="form-input" placeholder="Mô tả ngắn về đóng góp của bạn trong hoạt động này..." value={credentialForm.description} onChange={e => setCredentialForm(f => ({ ...f, description: e.target.value }))} rows={3} style={{ resize: 'vertical' }} />
                     </div>
@@ -2669,152 +2792,140 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       {/* ─── Quest Apply Modal ─── */}
       {/* ─── Quest Apply Confirmation Modal ─── */}
       {showQuestApplyModal && selectedQuestForApply && (
-        <div className="glass-modal-overlay" onClick={() => setShowQuestApplyModal(false)}>
-          <div className="glass-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
-            <div className="glass-modal-header">
-              <Zap size={20} color="var(--primary)" />
-              <h2>Tham gia Quest</h2>
-            </div>
-            <div className="glass-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Quest info */}
-              <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--line)', borderRadius: '14px', padding: '14px 16px' }}>
-                <h3 style={{ margin: '0 0 4px', fontSize: '1rem', color: 'var(--ink)', fontWeight: '800' }}>{selectedQuestForApply.title}</h3>
-                <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '8px' }}>{selectedQuestForApply.companyName}</div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '3px 8px', borderRadius: '6px' }}>+{selectedQuestForApply.expReward} EXP</span>
-                  {selectedQuestForApply.npReward > 0 && <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '3px 8px', borderRadius: '6px' }}>+{selectedQuestForApply.npReward} NP</span>}
-                </div>
+        <ApplyModal
+          icon={Zap}
+          title="Tham gia Quest"
+          accent="#f59e0b"
+          profileProps={{ portfolio, candidateRs, currentLevel, currentExp }}
+          coverNote={questCoverNote}
+          setCoverNote={setQuestCoverNote}
+          coverLabel="Giới thiệu bản thân (tùy chọn)"
+          coverPlaceholder="Hãy chia sẻ tại sao bạn muốn tham gia Quest này..."
+          fields={selectedQuestForApply.formFields || []}
+          answers={questAnswers}
+          setAnswers={setQuestAnswers}
+          fieldsTitle="Câu hỏi từ ban tổ chức"
+          error={questApplyError}
+          loading={questApplyLoading}
+          submitLabel="Xác nhận tham gia"
+          onClose={() => { setShowQuestApplyModal(false); setQuestApplyError(''); }}
+          onSubmit={handleApplyToQuest}
+          infoCard={(
+            <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--line)', borderRadius: '14px', padding: '14px 16px' }}>
+              <h3 style={{ margin: '0 0 4px', fontSize: '1rem', color: 'var(--ink)', fontWeight: '800' }}>{selectedQuestForApply.title}</h3>
+              <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '10px' }}>{selectedQuestForApply.companyName}</div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '3px 8px', borderRadius: '6px' }}>+{selectedQuestForApply.expReward} EXP</span>
+                {selectedQuestForApply.npReward > 0 && <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#10b981', background: 'rgba(16,185,129,0.1)', padding: '3px 8px', borderRadius: '6px' }}>+{selectedQuestForApply.npReward} NP</span>}
               </div>
-
-              {/* Candidate profile preview */}
-              <CandidateProfilePreview portfolio={portfolio} candidateRs={candidateRs} currentLevel={currentLevel} currentExp={currentExp} />
-
-              {/* Cover note */}
-              <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.86rem', fontWeight: '700', color: 'var(--ink)' }}>Giới thiệu bản thân (tùy chọn)</label>
-                <textarea
-                  value={questCoverNote}
-                  onChange={e => setQuestCoverNote(e.target.value)}
-                  placeholder="Hãy chia sẻ tại sao bạn muốn tham gia Quest này..."
-                  rows={3}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem', color: 'var(--ink)', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              {/* Custom questions from organizer */}
-              {(selectedQuestForApply.formFields || []).length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: '800', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Câu hỏi từ ban tổ chức</span>
-                  {selectedQuestForApply.formFields.map((f) => (
-                    <div key={f.id} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                      <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ink)' }}>
-                        {f.label} {f.required && <span style={{ color: '#dc2626' }}>*</span>}
-                      </label>
-                      {f.fieldType === 'TEXTAREA' ? (
-                        <textarea rows={3} value={questAnswers[f.id] || ''} onChange={(e) => setQuestAnswers((p) => ({ ...p, [f.id]: e.target.value }))}
-                          style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem', fontFamily: 'inherit', resize: 'vertical' }} />
-                      ) : f.fieldType === 'SELECT' ? (
-                        <select value={questAnswers[f.id] || ''} onChange={(e) => setQuestAnswers((p) => ({ ...p, [f.id]: e.target.value }))}
-                          style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem', cursor: 'pointer' }}>
-                          <option value="">— Chọn —</option>
-                          {(f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
-                        </select>
-                      ) : (
-                        <input value={questAnswers[f.id] || ''} onChange={(e) => setQuestAnswers((p) => ({ ...p, [f.id]: e.target.value }))}
-                          style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem' }} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {questApplyError && (
-                <div className="alert-banner error">
-                  <AlertTriangle size={15} style={{ flexShrink: 0 }} />
-                  {questApplyError}
-                </div>
-              )}
             </div>
-            <div className="glass-modal-footer">
-              <button className="button secondary-button" onClick={() => { setShowQuestApplyModal(false); setQuestApplyError(''); }} type="button" disabled={questApplyLoading}>Hủy bỏ</button>
-              <button className="button primary-button" onClick={handleApplyToQuest} type="button" disabled={questApplyLoading}>
-                {questApplyLoading ? 'Đang nộp...' : 'Xác nhận tham gia'}
-              </button>
-            </div>
-          </div>
-        </div>
+          )}
+        />
       )}
 
       {/* ─── Job Apply Confirmation Glass Modal ─── */}
       {showApplyModal && selectedJobForApply && (
-        <div className="glass-modal-overlay" onClick={() => setShowApplyModal(false)}>
-          <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
-            <div className="glass-modal-header">
-              <Sparkles size={20} color="var(--primary)" />
-              <h2>Xác nhận ứng tuyển</h2>
+        <ApplyModal
+          icon={Sparkles}
+          title="Xác nhận ứng tuyển"
+          accent="#2563eb"
+          profileProps={{ portfolio, candidateRs, currentLevel, currentExp }}
+          coverNote={jobCoverNote}
+          setCoverNote={setJobCoverNote}
+          coverLabel="Thư giới thiệu (tùy chọn)"
+          coverPlaceholder="Hãy chia sẻ vì sao bạn phù hợp với vị trí này..."
+          fields={applyFormFields}
+          answers={applyAnswers}
+          setAnswers={setApplyAnswers}
+          fieldsTitle="Câu hỏi từ nhà tuyển dụng"
+          error={applyModalError}
+          loading={applyModalLoading}
+          submitLabel="Xác nhận nộp đơn"
+          onClose={() => { setShowApplyModal(false); setApplyModalError(''); }}
+          onSubmit={confirmApplyJob}
+          infoCard={(
+            <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--line)', borderRadius: '14px', padding: '14px 16px' }}>
+              <h3 style={{ margin: '0 0 6px', fontSize: '1rem', color: 'var(--ink)', fontWeight: '800' }}>{selectedJobForApply.title}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--muted)', fontSize: '0.84rem', marginBottom: '10px' }}>
+                <Building size={13} />
+                <span>{selectedJobForApply.companyName || selectedJobForApply.company_name || 'Đối tác'}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', fontSize: '0.82rem', color: 'var(--muted)', borderTop: '1px solid var(--line)', paddingTop: '10px', flexWrap: 'wrap' }}>
+                <span>Thù lao: <strong style={{ color: '#16a34a' }}>{selectedJobForApply.compensation > 0 ? `${Number(selectedJobForApply.compensation).toLocaleString()} VND` : 'Thỏa thuận'}</strong></span>
+                <span>Yêu cầu RS: <strong style={{ color: '#2563eb' }}>{(selectedJobForApply.minReqRs || selectedJobForApply.min_req_rs || 0) > 0 ? `${selectedJobForApply.minReqRs || selectedJobForApply.min_req_rs} RS` : 'Không có'}</strong></span>
+              </div>
             </div>
-            <div className="glass-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Job info */}
-              <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--line)', borderRadius: '14px', padding: '14px 16px' }}>
-                <h3 style={{ margin: '0 0 6px', fontSize: '1rem', color: 'var(--ink)', fontWeight: '800' }}>{selectedJobForApply.title}</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--muted)', fontSize: '0.84rem', marginBottom: '8px' }}>
-                  <Building size={13} />
-                  <span>{selectedJobForApply.companyName || selectedJobForApply.company_name || 'Đối tác'}</span>
+          )}
+        />
+      )}
+
+      {/* ─── Application detail (tracking) Modal ─── */}
+      {viewingApp && (() => {
+        const { app, isQuest } = viewingApp;
+        const accent = isQuest ? '#f59e0b' : '#2563eb';
+        const title = isQuest ? app.questTitle : (app.job_title || app.title);
+        const company = isQuest ? app.companyName : (app.company_name || app.companyName);
+        const coverNote = app.cover_note || app.coverNote || '';
+        const postId = isQuest ? app.questId : (app.job_id || app.jobId);
+        const postHref = isQuest ? `/quests/${postId}` : `/jobs/${postId}`;
+        let answers = [];
+        try { answers = JSON.parse(app.custom_answers || app.customAnswers || '[]'); } catch { answers = []; }
+        if (!Array.isArray(answers)) answers = [];
+        return (
+          <div className="glass-modal-overlay" onClick={() => setViewingApp(null)}>
+            <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+              <div className="glass-modal-header" style={{ borderTop: `3px solid ${accent}`, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit' }}>
+                <span style={{ display: 'inline-flex', width: '34px', height: '34px', borderRadius: '10px', alignItems: 'center', justifyContent: 'center', background: `${accent}14`, color: accent }}>
+                  {isQuest ? <Zap size={19} /> : <Building size={19} />}
+                </span>
+                <h2>Chi tiết ứng tuyển</h2>
+              </div>
+              <div className="glass-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ background: 'var(--surface-soft)', border: '1px solid var(--line)', borderRadius: '14px', padding: '14px 16px' }}>
+                  <h3 style={{ margin: '0 0 4px', fontSize: '1rem', color: 'var(--ink)', fontWeight: '800' }}>{title}</h3>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+                    <Building size={13} /> {company || 'Đối tác'}
+                  </div>
+                  {postId && (
+                    <a href={postHref} target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: '700', color: accent, textDecoration: 'none', padding: '7px 12px', borderRadius: '9px', border: `1px solid ${accent}40`, background: `${accent}08` }}>
+                      <ExternalLink size={14} /> Mở trang chi tiết tin đăng
+                    </a>
+                  )}
                 </div>
-                <div style={{ display: 'flex', gap: '12px', fontSize: '0.82rem', color: 'var(--muted)', borderTop: '1px solid var(--line)', paddingTop: '10px', flexWrap: 'wrap' }}>
-                  <span>Thù lao: <strong style={{ color: '#16a34a' }}>{selectedJobForApply.compensation > 0 ? `${Number(selectedJobForApply.compensation).toLocaleString()} VND` : 'Thỏa thuận'}</strong></span>
-                  <span>Yêu cầu RS: <strong style={{ color: '#2563eb' }}>{(selectedJobForApply.minReqRs || selectedJobForApply.min_req_rs || 0) > 0 ? `${selectedJobForApply.minReqRs || selectedJobForApply.min_req_rs} RS` : 'Không có'}</strong></span>
+
+                <CandidateProfilePreview portfolio={portfolio} candidateRs={candidateRs} currentLevel={currentLevel} currentExp={currentExp} />
+
+                <div>
+                  <p style={{ margin: '0 0 6px', fontSize: '0.72rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Thư giới thiệu</p>
+                  {coverNote.trim()
+                    ? <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--ink)', lineHeight: 1.6, whiteSpace: 'pre-wrap', padding: '12px 14px', background: 'var(--surface-soft)', borderRadius: '12px', border: '1px solid var(--line)' }}>{coverNote}</p>
+                    : <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--muted)', fontStyle: 'italic' }}>Không có thư giới thiệu.</p>}
+                </div>
+
+                <div>
+                  <p style={{ margin: '0 0 6px', fontSize: '0.72rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Câu trả lời của bạn</p>
+                  {answers.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {answers.map((a, i) => (
+                        <div key={i} style={{ padding: '11px 14px', background: 'var(--surface-soft)', borderRadius: '12px', border: '1px solid var(--line)' }}>
+                          <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--muted)', marginBottom: '3px' }}>{a.label}</div>
+                          <div style={{ fontSize: '0.9rem', color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>{a.value || '—'}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--muted)', fontStyle: 'italic' }}>Tin này không có câu hỏi thêm.</p>
+                  )}
                 </div>
               </div>
-
-              {/* Candidate profile preview */}
-              <CandidateProfilePreview portfolio={portfolio} candidateRs={candidateRs} currentLevel={currentLevel} currentExp={currentExp} />
-
-              {/* Custom questions from employer */}
-              {applyFormFields.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: '800', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Câu hỏi từ nhà tuyển dụng</span>
-                  {applyFormFields.map((f) => (
-                    <div key={f.id} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                      <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ink)' }}>
-                        {f.label} {f.required && <span style={{ color: '#dc2626' }}>*</span>}
-                      </label>
-                      {f.fieldType === 'TEXTAREA' ? (
-                        <textarea rows={3} value={applyAnswers[f.id] || ''} onChange={(e) => setApplyAnswers((p) => ({ ...p, [f.id]: e.target.value }))}
-                          style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', fontFamily: 'inherit', resize: 'vertical' }} />
-                      ) : f.fieldType === 'SELECT' ? (
-                        <select value={applyAnswers[f.id] || ''} onChange={(e) => setApplyAnswers((p) => ({ ...p, [f.id]: e.target.value }))}
-                          style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', cursor: 'pointer' }}>
-                          <option value="">— Chọn —</option>
-                          {(f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
-                        </select>
-                      ) : (
-                        <input value={applyAnswers[f.id] || ''} onChange={(e) => setApplyAnswers((p) => ({ ...p, [f.id]: e.target.value }))}
-                          style={{ padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem' }} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {applyModalError && (
-                <div className="alert-banner error">
-                  <AlertTriangle size={15} style={{ flexShrink: 0 }} />
-                  {applyModalError}
-                </div>
-              )}
-            </div>
-            <div className="glass-modal-footer">
-              <button className="button secondary-button" onClick={() => { setShowApplyModal(false); setApplyModalError(''); }} type="button" style={{ padding: '10px 16px', borderRadius: '12px' }} disabled={applyModalLoading}>
-                Hủy bỏ
-              </button>
-              <button className="button primary-button" onClick={confirmApplyJob} type="button" style={{ padding: '10px 18px', borderRadius: '12px' }} disabled={applyModalLoading}>
-                {applyModalLoading ? 'Đang nộp...' : 'Xác nhận nộp đơn'}
-              </button>
+              <div className="glass-modal-footer">
+                <button className="button secondary-button" onClick={() => setViewingApp(null)} type="button">Đóng</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ─── Top-Up NP Modal ─── */}
       {showTopUpModal && (

@@ -8,6 +8,7 @@ import { getJobDetail } from '../api/jobApi.js';
 import { applyToJob } from '../api/applicationApi.js';
 import { applyToQuest } from '../api/questApi.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
+import { parseBanner } from '../components/postingConstants.js';
 
 const JOB_TYPE_LABELS = {
   INTERNSHIP: 'Thực tập sinh',
@@ -118,8 +119,22 @@ export function JobDetailPage() {
         position: 'relative',
         overflow: 'hidden',
       }}>
+        {/* Custom banner image as the hero backdrop; falls back to the gradient above */}
+        {job.bannerUrl ? (
+          <>
+            {(() => {
+              const b = parseBanner(job.bannerPos);
+              return (
+                <img src={job.bannerUrl} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${b.x}% ${b.y}%`, transform: `scale(${b.z})`, transformOrigin: `${b.x}% ${b.y}%`, opacity: 0.55, zIndex: 0 }} />
+              );
+            })()}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.78) 100%)', zIndex: 0 }} />
+          </>
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: `radial-gradient(circle at 18% 20%, ${accent}30, transparent 42%), radial-gradient(circle at 85% 90%, ${accent}20, transparent 40%)`, zIndex: 0 }} />
+        )}
         {/* Back button */}
-        <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 24px' }}>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: '860px', margin: '0 auto', padding: '0 24px' }}>
           <button
             onClick={() => window.close()}
             style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '600', marginBottom: '24px', padding: 0 }}
@@ -128,7 +143,7 @@ export function JobDetailPage() {
           </button>
         </div>
 
-        <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 24px 40px' }}>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: '860px', margin: '0 auto', padding: '0 24px 40px' }}>
           <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
             {/* Company logo */}
             <div style={{ width: '72px', height: '72px', borderRadius: '16px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
@@ -153,6 +168,26 @@ export function JobDetailPage() {
                 <Building size={14} />
                 <span>{job.companyName || 'Đối tác'}</span>
               </div>
+
+              {/* Quick meta pills */}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '16px' }}>
+                {(() => {
+                  const pill = (icon, text) => (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.13)', border: '1px solid rgba(255,255,255,0.18)', padding: '6px 12px', borderRadius: '999px', backdropFilter: 'blur(6px)' }}>{icon}{text}</span>
+                  );
+                  const dl = (job.deadlineAt || job.endsAt) ? new Date(job.deadlineAt || job.endsAt) : null;
+                  return (
+                    <>
+                      {(job.location || job.isRemote) && pill(<MapPin size={13} />, job.isRemote ? 'Remote' : job.location)}
+                      {job.capacity ? pill(<Users size={13} />, `${job.capacity} chỉ tiêu`) : null}
+                      {dl && pill(<Calendar size={13} />, `${isQuest ? 'Kết thúc' : 'Hạn nộp'}: ${dl.toLocaleDateString('vi-VN')}`)}
+                      {isQuest
+                        ? (job.expReward > 0 && pill(<Zap size={13} />, `+${job.expReward} EXP`))
+                        : pill(<Award size={13} />, job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận')}
+                    </>
+                  );
+                })()}
+              </div>
             </div>
           </div>
         </div>
@@ -165,8 +200,8 @@ export function JobDetailPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
           {/* Overview chips */}
-          <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '24px' }}>
-            <h2 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink, #1e293b)' }}>Tổng quan</h2>
+          <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '24px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
+            <h2 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink, #1e293b)', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: `3px solid ${accent}`, paddingLeft: '12px' }}>Tổng quan</h2>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
               {(job.location || job.isRemote) && (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '20px', border: '1px solid var(--line, #e2e8f0)', fontSize: '0.84rem', color: 'var(--ink, #1e293b)', fontWeight: '600' }}>
@@ -205,8 +240,8 @@ export function JobDetailPage() {
 
           {/* Skills */}
           {job.skills && job.skills.length > 0 && (
-            <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '24px' }}>
-              <h2 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink, #1e293b)' }}>Kỹ năng yêu cầu</h2>
+            <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '24px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
+              <h2 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink, #1e293b)', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: `3px solid ${accent}`, paddingLeft: '12px' }}>Kỹ năng yêu cầu</h2>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {job.skills.map((s, i) => (
                   <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '10px', border: `1px solid ${accent}30`, background: `${accent}08`, fontSize: '0.84rem', fontWeight: '700', color: accent }}>
@@ -219,8 +254,8 @@ export function JobDetailPage() {
           )}
 
           {/* Requirements */}
-          <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '24px' }}>
-            <h2 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink, #1e293b)' }}>Yêu cầu ứng tuyển</h2>
+          <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '24px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
+            <h2 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink, #1e293b)', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: `3px solid ${accent}`, paddingLeft: '12px' }}>Yêu cầu ứng tuyển</h2>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <div style={{ padding: '14px 20px', borderRadius: '14px', border: `1.5px solid ${isLocked ? '#dc2626' : accent}30`, background: `${isLocked ? '#dc2626' : accent}06` }}>
                 <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>MIN REP SCORE</div>
@@ -239,13 +274,44 @@ export function JobDetailPage() {
               )}
             </div>
           </div>
+
+          {/* Custom application questions */}
+          {job.formFields && job.formFields.length > 0 && (
+            <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '24px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
+              <h2 style={{ margin: '0 0 6px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink, #1e293b)', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: `3px solid ${accent}`, paddingLeft: '12px' }}>Câu hỏi khi ứng tuyển</h2>
+              <p style={{ margin: '0 0 16px 15px', fontSize: '0.84rem', color: 'var(--muted, #64748b)' }}>Bạn sẽ trả lời những câu hỏi này khi bấm {isQuest ? 'Tham gia' : 'Ứng tuyển'}.</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {job.formFields.map((f, idx) => {
+                  const typeLabel = f.fieldType === 'TEXTAREA' ? 'Văn bản dài' : f.fieldType === 'SELECT' ? 'Chọn 1 đáp án' : 'Văn bản ngắn';
+                  const opts = f.fieldType === 'SELECT' ? (f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean) : [];
+                  return (
+                    <div key={f.id || idx} style={{ padding: '12px 14px', borderRadius: '12px', border: '1px solid var(--line, #e2e8f0)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.74rem', fontWeight: '800', color: accent }}>{idx + 1}.</span>
+                        <strong style={{ fontSize: '0.9rem', color: 'var(--ink, #1e293b)' }}>{f.label}</strong>
+                        {f.required && <span style={{ fontSize: '0.68rem', fontWeight: '800', color: '#dc2626', background: 'rgba(220,38,38,0.08)', padding: '2px 7px', borderRadius: '999px' }}>Bắt buộc</span>}
+                        <span style={{ fontSize: '0.68rem', fontWeight: '700', color: 'var(--muted, #64748b)', border: '1px solid var(--line, #e2e8f0)', padding: '2px 7px', borderRadius: '999px' }}>{typeLabel}</span>
+                      </div>
+                      {opts.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '7px' }}>
+                          {opts.map((o, i) => (
+                            <span key={i} style={{ fontSize: '0.74rem', fontWeight: '600', color: 'var(--ink, #1e293b)', background: 'var(--bg, #f8fafc)', border: '1px solid var(--line, #e2e8f0)', padding: '2px 8px', borderRadius: '6px' }}>{o}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* RIGHT sidebar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '24px' }}>
 
           {/* Compensation / Reward */}
-          <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '22px' }}>
+          <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '22px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
             <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
               {isQuest ? 'Phần thưởng' : 'Thù lao'}
             </div>
@@ -292,12 +358,14 @@ export function JobDetailPage() {
               <button
                 onClick={() => { setShowApplyModal(true); setApplyError(''); }}
                 disabled={isLocked}
+                onMouseEnter={(e) => { if (!isLocked) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${accent}55`; } }}
+                onMouseLeave={(e) => { if (!isLocked) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = `0 4px 16px ${accent}40`; } }}
                 style={{
                   width: '100%', padding: '13px', borderRadius: '12px', border: 'none',
                   background: isLocked ? 'var(--muted, #94a3b8)' : `linear-gradient(135deg, ${accent}, ${isQuest ? '#e55a00' : '#1d4ed8'})`,
                   color: '#fff', fontSize: '0.96rem', fontWeight: '800', cursor: isLocked ? 'not-allowed' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  boxShadow: isLocked ? 'none' : `0 4px 16px ${accent}40`,
+                  boxShadow: isLocked ? 'none' : `0 4px 16px ${accent}40`, transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                 }}
               >
                 {isLocked ? <><LockKeyhole size={15} /> Chưa đủ RS</> : (isQuest ? <><Zap size={15} /> Tham gia Quest</> : <><Briefcase size={15} /> Ứng tuyển ngay</>)}
@@ -313,7 +381,7 @@ export function JobDetailPage() {
           </div>
 
           {/* Organizer info */}
-          <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '22px' }}>
+          <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '22px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
             <h3 style={{ margin: '0 0 14px', fontSize: '0.92rem', fontWeight: '800', color: 'var(--ink, #1e293b)' }}>Thông tin tổ chức</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
               <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: `${accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>

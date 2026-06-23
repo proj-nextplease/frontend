@@ -39,6 +39,7 @@ import {
   Phone,
   RefreshCw,
   Search,
+  Image as ImageIcon,
   ShieldAlert,
   ShieldCheck,
   User,
@@ -54,6 +55,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 
@@ -168,7 +170,7 @@ function SystemConfigPanel() {
   }
 
   const groups = configs.reduce((acc, c) => { (acc[c.group] = acc[c.group] || []).push(c); return acc; }, {});
-  const GROUP_LABEL = { pricing: 'Giá & Ví', scoring: 'Điểm số', general: 'Chung', features: 'Tính năng' };
+  const GROUP_LABEL = { pricing: 'Giá & Ví', scoring: 'Điểm số', limits: 'Giới hạn', general: 'Chung', features: 'Tính năng' };
 
   return (
     <div style={{ display: 'grid', gap: '22px', maxWidth: '760px' }}>
@@ -359,6 +361,7 @@ export function AdminB2bReviewPage() {
   const [verifRejectReason, setVerifRejectReason] = useState('');
   const [verifStatusFilter, setVerifStatusFilter] = useState('ALL');
   const [selectedVerifGroup, setSelectedVerifGroup] = useState(null);
+  const [verifLightbox, setVerifLightbox] = useState(null);
   const [auditLogTab, setAuditLogTab] = useState('ALL');
   const [expandedActors, setExpandedActors] = useState({});
 
@@ -1483,11 +1486,46 @@ export function AdminB2bReviewPage() {
                           <span>{item.created_at ? new Date(item.created_at).toLocaleDateString('vi-VN') : '—'}</span>
                         </div>
                         {item.description && <p className="admin-subitem-desc">{item.description}</p>}
-                        {item.proof_link && (
-                          <a href={item.proof_link} target="_blank" rel="noopener noreferrer" className="proof-card-proof-link">
-                            <ExternalLink size={12} /> Mở minh chứng
-                          </a>
-                        )}
+                        {(() => {
+                          let imgs = [];
+                          try { imgs = JSON.parse(item.proof_images || '[]'); } catch { imgs = []; }
+                          if (!Array.isArray(imgs)) imgs = [];
+                          const hasProof = imgs.length > 0 || !!item.proof_link;
+                          return (
+                            <>
+                              {imgs.length > 0 && (
+                                <div style={{ margin: '10px 0' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', fontWeight: 700, color: 'var(--muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                    <ImageIcon size={12} /> Ảnh minh chứng ({imgs.length})
+                                  </div>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    {imgs.map((src, i) => (
+                                      <button key={i} type="button" onClick={() => setVerifLightbox({ images: imgs, index: i })} title="Bấm để phóng to"
+                                        style={{ position: 'relative', width: '84px', height: '84px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--p-line, #e3e8ef)', padding: 0, cursor: 'zoom-in', background: '#0d1b33' }}>
+                                        <img src={src} alt={`Minh chứng ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(13,27,51,0.45)', color: '#fff', opacity: 0, transition: 'opacity 0.15s' }}
+                                          onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; }}
+                                          onMouseLeave={(e) => { e.currentTarget.style.opacity = 0; }}>
+                                          <Search size={18} />
+                                        </span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {item.proof_link && (
+                                <a href={item.proof_link} target="_blank" rel="noopener noreferrer" className="proof-card-proof-link">
+                                  <ExternalLink size={12} /> Mở link minh chứng
+                                </a>
+                              )}
+                              {!hasProof && (
+                                <span style={{ fontSize: '0.78rem', color: '#dc2626', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <AlertTriangle size={12} /> Chưa có minh chứng đính kèm
+                                </span>
+                              )}
+                            </>
+                          );
+                        })()}
                         <span className="verif-reward-badge">+{EXP_REWARDS[item.category] || 100} EXP · +{item.role_level === 'LEADER' ? 10 : 5} RS</span>
                       </div>
                       <span className={`proof-status-badge ${status.toLowerCase()}`}>
@@ -1529,6 +1567,39 @@ export function AdminB2bReviewPage() {
             </div>
           </div>
         )}
+
+        {verifLightbox && (() => {
+          const { images, index } = verifLightbox;
+          const go = (delta) => setVerifLightbox((c) => ({ ...c, index: (c.index + delta + images.length) % images.length }));
+          return (
+            <div onClick={() => setVerifLightbox(null)}
+              style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(8,12,24,0.88)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
+              <button type="button" onClick={() => setVerifLightbox(null)} aria-label="Đóng"
+                style={{ position: 'absolute', top: '20px', right: '24px', width: '42px', height: '42px', borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.14)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={22} />
+              </button>
+              {images.length > 1 && (
+                <>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Ảnh trước"
+                    style={{ position: 'absolute', left: '24px', width: '46px', height: '46px', borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.14)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Ảnh sau"
+                    style={{ position: 'absolute', right: '24px', width: '46px', height: '46px', borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.14)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ChevronRight size={24} />
+                  </button>
+                </>
+              )}
+              <img src={images[index]} alt={`Minh chứng ${index + 1}`} onClick={(e) => e.stopPropagation()}
+                style={{ maxWidth: '90vw', maxHeight: '84vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }} />
+              {images.length > 1 && (
+                <span style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', color: '#fff', fontSize: '0.86rem', fontWeight: 700, background: 'rgba(255,255,255,0.12)', padding: '5px 14px', borderRadius: '999px' }}>
+                  {index + 1} / {images.length}
+                </span>
+              )}
+            </div>
+          );
+        })()}
       </div>
     );
   }
@@ -2763,6 +2834,38 @@ export function AdminB2bReviewPage() {
                           </span>
                         </span>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom application questions */}
+                {selectedJobDetail.formFields && selectedJobDetail.formFields.length > 0 && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ margin: '0 0 8px', fontSize: '0.86rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Câu hỏi thêm cho ứng viên ({selectedJobDetail.formFields.length})
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {selectedJobDetail.formFields.map((f, idx) => {
+                        const typeLabel = f.fieldType === 'TEXTAREA' ? 'Văn bản dài' : f.fieldType === 'SELECT' ? 'Chọn 1 đáp án' : 'Văn bản ngắn';
+                        const opts = f.fieldType === 'SELECT' ? (f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean) : [];
+                        return (
+                          <div key={f.id || idx} style={{ padding: '10px 12px', borderRadius: '10px', background: 'var(--surface-soft)', border: '1px solid var(--line)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#2563eb' }}>{idx + 1}.</span>
+                              <strong style={{ fontSize: '0.85rem' }}>{f.label}</strong>
+                              {f.required && <span style={{ fontSize: '0.66rem', fontWeight: '800', color: '#dc2626', background: 'rgba(220,38,38,0.08)', padding: '2px 7px', borderRadius: '999px' }}>Bắt buộc</span>}
+                              <span style={{ fontSize: '0.66rem', fontWeight: '700', color: 'var(--muted)', background: 'var(--bg)', border: '1px solid var(--line)', padding: '2px 7px', borderRadius: '999px' }}>{typeLabel}</span>
+                            </div>
+                            {opts.length > 0 && (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '6px' }}>
+                                {opts.map((o, i) => (
+                                  <span key={i} style={{ fontSize: '0.72rem', fontWeight: '600', background: 'var(--bg)', border: '1px solid var(--line)', padding: '2px 8px', borderRadius: '6px' }}>{o}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

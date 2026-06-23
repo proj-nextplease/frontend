@@ -95,3 +95,22 @@ export const STATUS_LABEL = {
   REJECTED: { text: 'Bị từ chối', color: '#dc2626', bg: 'rgba(220,38,38,0.08)' },
   DRAFT: { text: 'Nháp', color: '#6b7280', bg: 'rgba(107,114,128,0.08)' },
 };
+
+// Banner transform helpers. The banner_pos string encodes pan + zoom as
+// "x% y% zoom" (zoom omitted when 1) so it fits the existing varchar column and
+// renders identically in the editor and on the public detail page.
+export function parseBanner(str) {
+  const t = (str || '50% 50%').split(/\s+/);
+  return {
+    x: Math.max(0, Math.min(100, parseInt(t[0], 10) || 50)),
+    y: Math.max(0, Math.min(100, parseInt(t[1], 10) || 50)),
+    z: Math.max(1, Math.min(3, parseFloat(t[2]) || 1)),
+  };
+}
+
+export function serializeBanner(x, y, z) {
+  const rx = Math.round(x);
+  const ry = Math.round(y);
+  const rz = Math.round(z * 100) / 100;
+  return rz !== 1 ? `${rx}% ${ry}% ${rz}` : `${rx}% ${ry}%`;
+}
