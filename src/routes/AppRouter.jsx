@@ -123,8 +123,10 @@ function ProtectedDashboardRoute() {
     return <Navigate to="/candidate/login" replace />;
   }
 
-  // User has session. Check if onboarding is completed
-  if (portfolio && !portfolio.onboardingCompleted) {
+  // User has session. Gate on onboarding: a brand-new account (e.g. first social
+  // login) has no portfolio yet, or one with onboardingCompleted=false — both must
+  // finish the portfolio first. Only a completed portfolio may reach the dashboard.
+  if (!portfolio || !portfolio.onboardingCompleted) {
     return <Navigate to="/portfolio" replace />;
   }
 

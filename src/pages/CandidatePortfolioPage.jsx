@@ -76,6 +76,7 @@ const defaultExperiences = [
     detail: '',
     startDate: '',
     endDate: '',
+    proofImages: [],
   },
 ];
 
@@ -548,8 +549,41 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         detail: '',
         startDate: '',
         endDate: '',
+        proofImages: [],
       },
     ]);
+  }
+
+  // Proof images for an experience: base64, <2MB each, max 6 — these feed the
+  // admin "Hàng chờ xác thực" queue once the portfolio is saved.
+  function handleExperienceProofUpload(id, event) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    markDirty();
+    files.forEach((file) => {
+      if (file.size > 2 * 1024 * 1024) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        setExperiences((current) =>
+          current.map((exp) =>
+            exp.id === id
+              ? { ...exp, proofImages: [...(exp.proofImages || []), reader.result].slice(0, 6) }
+              : exp,
+          ),
+        );
+      };
+      reader.readAsDataURL(file);
+    });
+    event.target.value = '';
+  }
+
+  function removeExperienceProof(id, idx) {
+    markDirty();
+    setExperiences((current) =>
+      current.map((exp) =>
+        exp.id === id ? { ...exp, proofImages: (exp.proofImages || []).filter((_, i) => i !== idx) } : exp,
+      ),
+    );
   }
 
   function removeExperience(id) {
@@ -1254,6 +1288,30 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                       {errors[`experience_${experience.id}_detail`]}
                     </span>
                   )}
+                </label>
+
+                {/* Proof images — sent to admin verification queue on save */}
+                <label className="full-field">
+                  Minh chứng (ảnh, tối đa 6 · ≤ 2MB mỗi ảnh)
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '6px' }}>
+                    {(experience.proofImages || []).map((img, i) => (
+                      <div key={i} style={{ position: 'relative', width: '88px', height: '88px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--c-line, #ece6e2)' }}>
+                        <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <button type="button" onClick={() => removeExperienceProof(experience.id, i)}
+                          aria-label="Xoá ảnh"
+                          style={{ position: 'absolute', top: '4px', right: '4px', width: '22px', height: '22px', borderRadius: '50%', border: 'none', background: 'rgba(220,38,38,0.92)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, fontSize: '0.78rem', fontWeight: 800 }}>×</button>
+                      </div>
+                    ))}
+                    {(experience.proofImages || []).length < 6 && (
+                      <label style={{ width: '88px', height: '88px', borderRadius: '12px', border: '1.5px dashed var(--c-line, #d6cfca)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer', color: 'var(--c-red, #e5533f)', fontSize: '0.74rem', fontWeight: 700, background: 'rgba(229,83,63,0.04)' }}>
+                        <FileUp size={18} /> Tải ảnh
+                        <input type="file" accept="image/*" multiple onChange={(e) => handleExperienceProofUpload(experience.id, e)} style={{ display: 'none' }} />
+                      </label>
+                    )}
+                  </div>
+                  <span style={{ fontSize: '0.76rem', color: 'var(--c-muted, #8a7f78)', marginTop: '6px', display: 'block' }}>
+                    Ảnh minh chứng giúp Admin xác thực kinh nghiệm này trong "Hàng chờ xác thực".
+                  </span>
                 </label>
               </article>
             ))}

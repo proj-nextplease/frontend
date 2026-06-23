@@ -716,6 +716,7 @@ function PipelineSettingsView({ setToast }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dragIdx, setDragIdx] = useState(null);
+  const [overIdx, setOverIdx] = useState(null);
 
   useEffect(() => {
     getOrgPipeline()
@@ -731,6 +732,7 @@ function PipelineSettingsView({ setToast }) {
       const a = [...prev]; const [m] = a.splice(dragIdx, 1); a.splice(to, 0, m); return a;
     });
     setDragIdx(null);
+    setOverIdx(null);
   }
 
   async function save() {
@@ -771,10 +773,11 @@ function PipelineSettingsView({ setToast }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {stages.map((s, i) => (
             <div key={s.status}
-              onDragOver={(e) => e.preventDefault()} onDrop={() => reorder(i)}
-              style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', border: `1px solid ${dragIdx === i ? '#0d1b33' : 'var(--p-line)'}`, borderRadius: '12px', background: '#fff', flexWrap: 'wrap', opacity: dragIdx === i ? 0.5 : (s.hidden ? 0.55 : 1) }}>
-              <span draggable onDragStart={() => setDragIdx(i)} onDragEnd={() => setDragIdx(null)} title="Kéo để đổi thứ tự"
-                style={{ display: 'flex', alignItems: 'center', color: 'var(--p-muted)', cursor: 'grab', flexShrink: 0 }}>
+              className={`np-drag ${dragIdx === i ? 'is-dragging' : ''} ${overIdx === i && dragIdx !== i ? 'is-over' : ''}`}
+              onDragOver={(e) => e.preventDefault()} onDragEnter={() => setOverIdx(i)} onDrop={() => reorder(i)}
+              style={{ '--np-drag-accent': '#0d1b33', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', border: '1px solid var(--p-line)', borderRadius: '12px', background: '#fff', flexWrap: 'wrap', opacity: (dragIdx !== i && s.hidden) ? 0.55 : 1 }}>
+              <span className="np-drag-handle" draggable onDragStart={() => setDragIdx(i)} onDragEnd={() => { setDragIdx(null); setOverIdx(null); }} title="Kéo để đổi thứ tự"
+                style={{ display: 'flex', alignItems: 'center', color: 'var(--p-muted)', flexShrink: 0 }}>
                 <GripVertical size={16} />
               </span>
               <input type="color" value={s.color || '#6366f1'} onChange={(e) => patch(i, { color: e.target.value })}
@@ -2408,9 +2411,13 @@ function ManageJobsView({ onTabChange, company }) {
                       <strong style={{ fontSize: '0.88rem', fontWeight: '700' }}>{selectedJobDetail.isRemote ? 'Làm việc từ xa (Remote)' : (selectedJobDetail.location || 'Chưa cập nhật')}</strong>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Thù lao / Phụ cấp:</span>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>
+                        {(selectedJobDetail.postType === 'QUEST' || selectedJobDetail.isQuest) ? 'Phần thưởng:' : 'Thù lao / Phụ cấp:'}
+                      </span>
                       <strong style={{ fontSize: '0.88rem', fontWeight: '700', color: '#16a34a' }}>
-                        {selectedJobDetail.compensation ? `${formatVND(selectedJobDetail.compensation)} VND` : 'Thỏa thuận'}
+                        {(selectedJobDetail.postType === 'QUEST' || selectedJobDetail.isQuest)
+                          ? `+${selectedJobDetail.expReward || 0} EXP${selectedJobDetail.npReward ? ` · +${selectedJobDetail.npReward} NP` : ''}`
+                          : (selectedJobDetail.compensation ? `${formatVND(selectedJobDetail.compensation)} VND` : 'Thỏa thuận')}
                       </strong>
                     </div>
                     <div>
@@ -2493,6 +2500,38 @@ function ManageJobsView({ onTabChange, company }) {
                             </span>
                           </span>
                         ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Custom application questions */}
+                  {selectedJobDetail.formFields && selectedJobDetail.formFields.length > 0 && (
+                    <div style={{ marginBottom: '24px' }}>
+                      <h4 style={{ margin: '0 0 10px', fontSize: '0.9rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        Câu hỏi thêm cho ứng viên ({selectedJobDetail.formFields.length})
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {selectedJobDetail.formFields.map((f, idx) => {
+                          const typeLabel = f.fieldType === 'TEXTAREA' ? 'Văn bản dài' : f.fieldType === 'SELECT' ? 'Chọn 1 đáp án' : 'Văn bản ngắn';
+                          const opts = f.fieldType === 'SELECT' ? (f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean) : [];
+                          return (
+                            <div key={f.id || idx} style={{ padding: '12px 14px', borderRadius: '12px', background: 'var(--surface-soft)', border: '1px solid var(--line)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#2563eb' }}>{idx + 1}.</span>
+                                <strong style={{ fontSize: '0.88rem', color: 'var(--ink)' }}>{f.label}</strong>
+                                {f.required && <span style={{ fontSize: '0.68rem', fontWeight: '800', color: '#dc2626', background: 'rgba(220,38,38,0.08)', padding: '2px 7px', borderRadius: '999px' }}>Bắt buộc</span>}
+                                <span style={{ fontSize: '0.68rem', fontWeight: '700', color: 'var(--muted)', background: 'var(--bg)', border: '1px solid var(--line)', padding: '2px 7px', borderRadius: '999px' }}>{typeLabel}</span>
+                              </div>
+                              {opts.length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '7px' }}>
+                                  {opts.map((o, i) => (
+                                    <span key={i} style={{ fontSize: '0.74rem', fontWeight: '600', color: 'var(--ink)', background: 'var(--bg)', border: '1px solid var(--line)', padding: '2px 8px', borderRadius: '6px' }}>{o}</span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { BriefcaseBusiness, MessageSquarePlus, Plus, Trash2, GripVertical } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { BriefcaseBusiness, MessageSquarePlus, Plus, Minus, Trash2, GripVertical, ImagePlus, AlertTriangle, Move } from 'lucide-react';
 import { createJob, updateJob, getSkills } from '../api/jobApi.js';
 import { PremiumDateTimePicker } from './PremiumDateTimePicker.jsx';
 import {
   CATEGORY_MAP, JOB_TYPES, SKILL_LEVELS,
-  formatVND, toLocalISOString,
+  formatVND, toLocalISOString, parseBanner, serializeBanner,
 } from './postingConstants.js';
 
 const FIELD_STYLE = {
@@ -62,7 +62,56 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
     isRemote: initialData?.isRemote ?? false,
     capacity: initialData?.capacity ? String(initialData.capacity) : '',
     deadlineAt: initialData?.deadlineAt ?? '',
+    bannerUrl: initialData?.bannerUrl ?? '',
+    bannerPos: initialData?.bannerPos ?? '50% 50%',
   });
+
+  function handleBannerUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { setStatus({ type: 'error', message: 'Ảnh banner phải dưới 2MB.' }); return; }
+    const reader = new FileReader();
+    reader.onload = () => setForm((c) => ({ ...c, bannerUrl: reader.result }));
+    reader.readAsDataURL(file);
+  }
+
+  // Banner editor: drag to pan (both axes), wheel / buttons to zoom. The whole
+  // transform (pan x%, y% + zoom) is encoded into bannerPos as "x% y% zoom".
+  const bannerDragRef = useRef(null);
+  const banner = parseBanner(form.bannerPos);
+  function applyBanner(x, y, z) {
+    setForm((c) => ({ ...c, bannerPos: serializeBanner(x, y, z) }));
+  }
+  function onBannerPointerDown(e) {
+    if (!form.bannerUrl) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const b = parseBanner(form.bannerPos);
+    bannerDragRef.current = { startX: e.clientX, startY: e.clientY, px: b.x, py: b.y, z: b.z, w: rect.width, h: rect.height };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  }
+  function onBannerPointerMove(e) {
+    const d = bannerDragRef.current;
+    if (!d) return;
+    const clamp = (n) => Math.max(0, Math.min(100, n));
+    // Divide by zoom so panning feels 1:1 with the cursor at any zoom level.
+    const nx = clamp(d.px - ((e.clientX - d.startX) / d.w) * 100 / d.z);
+    const ny = clamp(d.py - ((e.clientY - d.startY) / d.h) * 100 / d.z);
+    applyBanner(nx, ny, d.z);
+  }
+  function onBannerPointerUp(e) {
+    bannerDragRef.current = null;
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+  }
+  function onBannerWheel(e) {
+    if (!form.bannerUrl) return;
+    const b = parseBanner(form.bannerPos);
+    const nz = Math.max(1, Math.min(3, b.z + (e.deltaY < 0 ? 0.12 : -0.12)));
+    applyBanner(b.x, b.y, nz);
+  }
+  function zoomBanner(delta) {
+    const b = parseBanner(form.bannerPos);
+    applyBanner(b.x, b.y, Math.max(1, Math.min(3, b.z + delta)));
+  }
 
   const [availableSkills, setAvailableSkills] = useState([]);
   const [selectedSkills, setSelectedSkills] = useState(
@@ -80,6 +129,7 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
   const [errors, setErrors] = useState({});
 
   const [dragIdx, setDragIdx] = useState(null);
+  const [overIdx, setOverIdx] = useState(null);
   function addCustomField() {
     setCustomFields((prev) => [...prev, { label: '', fieldType: 'TEXT', options: '', required: false }]);
   }
@@ -98,6 +148,7 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
       return a;
     });
     setDragIdx(null);
+    setOverIdx(null);
   }
 
   useEffect(() => {
@@ -126,7 +177,7 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
-    if (name === 'compensation') {
+    if (name === 'compensation' || name === 'capacity') {
       set(name, value.replace(/\D/g, ''));
     } else {
       set(name, type === 'checkbox' ? checked : value);
@@ -174,6 +225,15 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
     if (form.deadlineAt && new Date(form.deadlineAt) < new Date(Date.now() + 3600_000)) {
       e.deadlineAt = 'Hạn nộp phải lớn hơn hiện tại ít nhất 1 giờ.';
     }
+    // Custom questions: no empty question may be submitted; SELECT needs ≥2 options.
+    customFields.forEach((f, idx) => {
+      if (!f.label.trim()) {
+        e[`cf_${idx}`] = 'Câu hỏi chưa có nội dung — nhập nội dung hoặc xoá câu hỏi này.';
+      } else if (f.fieldType === 'SELECT') {
+        const opts = (f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean);
+        if (opts.length < 2) e[`cf_${idx}`] = 'Kiểu "Chọn 1 đáp án" cần ít nhất 2 lựa chọn (cách nhau bằng dấu phẩy).';
+      }
+    });
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -199,6 +259,8 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
       isRemote: form.isRemote,
       capacity: form.capacity ? parseInt(form.capacity) : null,
       deadlineAt: deadline,
+      bannerUrl: form.bannerUrl || null,
+      bannerPos: form.bannerUrl ? (form.bannerPos || '50% 50%') : null,
       skills: selectedSkills,
       formFields: customFields
         .filter((f) => f.label.trim())
@@ -242,6 +304,49 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+        {/* Banner */}
+        <div>
+          <label style={{ fontSize: '0.86rem', fontWeight: '700', color: 'var(--muted)', display: 'block', marginBottom: '8px' }}>Ảnh banner cho tin đăng (tùy chọn)</label>
+          <div
+            onPointerDown={onBannerPointerDown} onPointerMove={onBannerPointerMove} onPointerUp={onBannerPointerUp} onPointerCancel={onBannerPointerUp} onWheel={onBannerWheel}
+            style={{ position: 'relative', width: '100%', aspectRatio: '4 / 1', borderRadius: '16px', overflow: 'hidden', border: `1.5px ${form.bannerUrl ? 'solid' : 'dashed'} var(--line)`, background: form.bannerUrl ? '#0d1b33' : 'linear-gradient(135deg, #2563eb12, #ff7a1a12)', cursor: form.bannerUrl ? 'move' : 'default', touchAction: 'none', userSelect: 'none' }}>
+            {form.bannerUrl && (
+              <img src={form.bannerUrl} alt="" draggable={false}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${banner.x}% ${banner.y}%`, transform: `scale(${banner.z})`, transformOrigin: `${banner.x}% ${banner.y}%`, pointerEvents: 'none' }} />
+            )}
+            {!form.bannerUrl && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', color: 'var(--muted)' }}>
+                <BriefcaseBusiness size={26} />
+                <span style={{ fontSize: '0.84rem', fontWeight: '600' }}>Chưa có banner — sẽ dùng ảnh mặc định của hệ thống</span>
+              </div>
+            )}
+            {form.bannerUrl && (
+              <div style={{ position: 'absolute', left: '12px', top: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 11px', borderRadius: '999px', background: 'rgba(13,27,51,0.7)', color: '#fff', fontWeight: '700', fontSize: '0.76rem', backdropFilter: 'blur(4px)', pointerEvents: 'none' }}>
+                <Move size={13} /> Kéo để di chuyển · cuộn chuột để zoom
+              </div>
+            )}
+            {form.bannerUrl && (
+              <div onPointerDown={(e) => e.stopPropagation()} style={{ position: 'absolute', left: '12px', bottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(13,27,51,0.7)', borderRadius: '999px', padding: '4px', backdropFilter: 'blur(4px)' }}>
+                <button type="button" onClick={() => zoomBanner(-0.25)} title="Thu nhỏ" style={{ width: '28px', height: '28px', borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.15)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Minus size={15} /></button>
+                <span style={{ color: '#fff', fontSize: '0.76rem', fontWeight: '800', minWidth: '34px', textAlign: 'center' }}>{Math.round(banner.z * 100)}%</span>
+                <button type="button" onClick={() => zoomBanner(0.25)} title="Phóng to" style={{ width: '28px', height: '28px', borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.15)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={15} /></button>
+              </div>
+            )}
+            <div onPointerDown={(e) => e.stopPropagation()} style={{ position: 'absolute', right: '12px', bottom: '12px', display: 'flex', gap: '8px' }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '9px', background: 'rgba(13,27,51,0.85)', color: '#fff', fontWeight: '700', fontSize: '0.82rem', cursor: 'pointer', backdropFilter: 'blur(4px)' }}>
+                <ImagePlus size={15} /> {form.bannerUrl ? 'Đổi ảnh' : 'Tải ảnh lên'}
+                <input type="file" accept="image/*" onChange={handleBannerUpload} style={{ display: 'none' }} />
+              </label>
+              {form.bannerUrl && (
+                <button type="button" onClick={() => setForm((c) => ({ ...c, bannerUrl: '', bannerPos: '50% 50%' }))}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 12px', borderRadius: '9px', background: 'rgba(220,38,38,0.9)', color: '#fff', fontWeight: '700', fontSize: '0.82rem', border: 'none', cursor: 'pointer' }}>
+                  <Trash2 size={15} /> Gỡ
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* Section 1 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -320,7 +425,7 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '0.86rem', fontWeight: '700', color: 'var(--muted)' }}>Số lượng tuyển</label>
-              <input type="number" name="capacity" value={form.capacity} onChange={handleChange}
+              <input type="text" inputMode="numeric" name="capacity" value={form.capacity} onChange={handleChange}
                 style={errStyle(errors.capacity)} placeholder="Để trống nếu không giới hạn" />
               {errors.capacity && <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: '600' }}>{errors.capacity}</span>}
             </div>
@@ -422,7 +527,20 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
               <textarea name="description" value={form.description} onChange={handleChange} rows={8}
                 placeholder="Mô tả công việc, quyền lợi, yêu cầu ứng tuyển..."
                 style={{ ...errStyle(errors.description), resize: 'vertical' }} />
-              {errors.description && <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: '600' }}>{errors.description}</span>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                {errors.description
+                  ? <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: '600' }}>{errors.description}</span>
+                  : <span />}
+                {(() => {
+                  const len = form.description.trim().length;
+                  const ok = len >= 30;
+                  return (
+                    <span style={{ fontSize: '0.78rem', fontWeight: '700', color: ok ? '#16a34a' : 'var(--muted)' }}>
+                      {len} ký tự{ok ? '' : ` · cần thêm ${30 - len}`}
+                    </span>
+                  );
+                })()}
+              </div>
             </div>
           </div>
         </div>
@@ -455,18 +573,19 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {customFields.map((f, idx) => (
                 <div key={idx}
-                  onDragOver={(e) => e.preventDefault()} onDrop={() => reorderCustomField(idx)}
-                  style={{ padding: '14px 16px', border: `1px solid ${dragIdx === idx ? '#2563eb' : 'var(--line)'}`, borderRadius: '14px', background: 'var(--card-bg-strong, #fff)', opacity: dragIdx === idx ? 0.6 : 1 }}>
+                  className={`np-drag ${dragIdx === idx ? 'is-dragging' : ''} ${overIdx === idx && dragIdx !== idx ? 'is-over' : ''}`}
+                  onDragOver={(e) => e.preventDefault()} onDragEnter={() => setOverIdx(idx)} onDrop={() => reorderCustomField(idx)}
+                  style={{ '--np-drag-accent': '#2563eb', padding: '14px 16px', border: '1px solid var(--line)', borderRadius: '14px', background: 'var(--card-bg-strong, #fff)' }}>
                   {/* Row 1: drag + number + label + delete */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span draggable onDragStart={() => setDragIdx(idx)} onDragEnd={() => setDragIdx(null)} title="Kéo để sắp xếp"
-                      style={{ display: 'flex', alignItems: 'center', color: 'var(--muted)', cursor: 'grab', flexShrink: 0 }}>
+                    <span className="np-drag-handle" draggable onDragStart={() => setDragIdx(idx)} onDragEnd={() => { setDragIdx(null); setOverIdx(null); }} title="Kéo để sắp xếp"
+                      style={{ display: 'flex', alignItems: 'center', color: 'var(--muted)', flexShrink: 0 }}>
                       <GripVertical size={16} />
                     </span>
                     <span style={{ width: '26px', height: '26px', borderRadius: '8px', background: 'rgba(37,99,235,0.1)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.8rem', flexShrink: 0 }}>{idx + 1}</span>
                     <input value={f.label} onChange={(e) => updateCustomField(idx, { label: e.target.value })}
                       placeholder="Nhập câu hỏi (vd: Link portfolio của bạn?)"
-                      style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', fontSize: '0.9rem', fontWeight: '600', background: 'var(--bg)' }} />
+                      style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${errors[`cf_${idx}`] && !f.label.trim() ? '#dc2626' : 'var(--line)'}`, fontSize: '0.9rem', fontWeight: '600', background: 'var(--bg)' }} />
                     <button type="button" onClick={() => removeCustomField(idx)} title="Xoá câu hỏi"
                       style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '9px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--muted)', cursor: 'pointer', flexShrink: 0 }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.borderColor = 'rgba(220,38,38,0.4)'; }}
@@ -490,12 +609,31 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
                   </div>
 
                   {/* Row 3: options for SELECT */}
-                  {f.fieldType === 'SELECT' && (
-                    <div style={{ marginTop: '10px', paddingLeft: '36px' }}>
-                      <input value={f.options} onChange={(e) => updateCustomField(idx, { options: e.target.value })}
-                        placeholder="Các lựa chọn, cách nhau bằng dấu phẩy (vd: Có, Không, Tùy)"
-                        style={{ width: '100%', padding: '9px 12px', borderRadius: '9px', border: '1px solid var(--line)', fontSize: '0.85rem', background: 'var(--bg)', boxSizing: 'border-box' }} />
-                    </div>
+                  {f.fieldType === 'SELECT' && (() => {
+                    const opts = (f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean);
+                    return (
+                      <div style={{ marginTop: '10px', paddingLeft: '36px' }}>
+                        <input value={f.options} onChange={(e) => updateCustomField(idx, { options: e.target.value })}
+                          placeholder="Nhập các lựa chọn, cách nhau bằng dấu phẩy (vd: Có, Không, Tùy)"
+                          style={{ width: '100%', padding: '9px 12px', borderRadius: '9px', border: `1px solid ${errors[`cf_${idx}`] ? '#dc2626' : 'var(--line)'}`, fontSize: '0.85rem', background: 'var(--bg)', boxSizing: 'border-box' }} />
+                        {opts.length > 0 ? (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.74rem', color: 'var(--muted)', fontWeight: '700' }}>{opts.length} lựa chọn:</span>
+                            {opts.map((o, i) => (
+                              <span key={i} style={{ fontSize: '0.78rem', fontWeight: '700', color: '#2563eb', background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.2)', padding: '3px 9px', borderRadius: '999px' }}>{o}</span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p style={{ margin: '6px 0 0', fontSize: '0.76rem', color: 'var(--muted)' }}>Mỗi lựa chọn cách nhau bằng dấu phẩy. Ứng viên sẽ chọn 1 trong các lựa chọn này từ danh sách thả xuống.</p>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {errors[`cf_${idx}`] && (
+                    <p style={{ margin: '10px 0 0', paddingLeft: '36px', fontSize: '0.8rem', color: '#dc2626', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <AlertTriangle size={13} /> {errors[`cf_${idx}`]}
+                    </p>
                   )}
                 </div>
               ))}
