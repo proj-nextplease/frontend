@@ -3,10 +3,9 @@ import { Award, BriefcaseBusiness, FileUp, ShieldCheck, Sparkles } from 'lucide-
 import {
   PortfolioAvatar3D,
   PORTFOLIO_PREVIEW_STORAGE_PREFIX,
-  EXPERIENCE_CATEGORY_OPTIONS,
-  EXPERIENCE_ROLE_LEVEL_OPTIONS,
 } from './CandidatePortfolioPage.jsx';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
+import { EXPERIENCE_CATEGORY_OPTIONS, EXPERIENCE_ROLE_LEVEL_OPTIONS } from '../constants/experience.js';
 
 const CATEGORY_LABEL = Object.fromEntries(
   EXPERIENCE_CATEGORY_OPTIONS.map((o) => [o.value, o.label.replace(/ \(\+.*$/, '')]),

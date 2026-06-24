@@ -18,9 +18,16 @@ import {
 } from 'lucide-react';
 import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
+import { EXPERIENCE_CATEGORY_OPTIONS, EXPERIENCE_ROLE_LEVEL_OPTIONS } from '../constants/experience.js';
 import { supabase } from '../services/supabaseClient.js';
 
 export const PORTFOLIO_PREVIEW_STORAGE_PREFIX = 'nextplease:portfolio-preview:';
+
+/** Return a shallow copy of `obj` without the given keys (used to drop heavy
+ * base64 blobs before persisting a localStorage draft). */
+function stripKeys(obj, keys) {
+  return Object.fromEntries(Object.entries(obj).filter(([key]) => !keys.includes(key)));
+}
 
 /**
  * Merge the server's experiences with a locally-saved draft.
@@ -132,22 +139,6 @@ const accessoryOptions = [
 const poseOptions = [
   { label: 'Tự tin', value: 'confident' },
   { label: 'Chào cơ hội', value: 'wave' },
-];
-
-// Activity categories & role levels — kept in sync with the dashboard
-// "Nộp minh chứng" form so a Portfolio experience and a proof-of-work
-// submission describe the same thing with the same fields.
-export const EXPERIENCE_CATEGORY_OPTIONS = [
-  { value: 'CLUB_SMALL', label: 'Sự kiện CLB / Khoa (+100 EXP)' },
-  { value: 'SCHOOL_CAMPAIGN', label: 'Chiến dịch cấp Trường (+300 EXP)' },
-  { value: 'COMPANY_PROJECT', label: 'Dự án Doanh nghiệp (+500 EXP)' },
-  { value: 'SHORT_INTERNSHIP', label: 'Thực tập ngắn hạn (+500 EXP)' },
-  { value: 'FREELANCE_GIG', label: 'Công việc tự do (+500 EXP)' },
-];
-
-export const EXPERIENCE_ROLE_LEVEL_OPTIONS = [
-  { value: 'MEMBER', label: 'Thành viên (+5 RS khi duyệt)' },
-  { value: 'LEADER', label: 'Trưởng nhóm / Ban (+10 RS khi duyệt)' },
 ];
 
 const defaultExperiences = [
@@ -507,8 +498,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
 
     const draft = {
       profile,
-      experiences: experiences.map(({ proofImages, ...rest }) => rest),
-      credentials: credentials.map(({ fileData, fileType, ...rest }) => rest),
+      experiences: experiences.map((exp) => stripKeys(exp, ['proofImages'])),
+      credentials: credentials.map((cred) => stripKeys(cred, ['fileData', 'fileType'])),
       avatar,
       savedAt: Date.now(),
     };
