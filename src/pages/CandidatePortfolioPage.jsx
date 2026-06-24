@@ -13,11 +13,84 @@ import {
   UserRound,
   Trash2,
   AlertTriangle,
+  ChevronDown,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
+import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
+import { EXPERIENCE_CATEGORY_OPTIONS, EXPERIENCE_ROLE_LEVEL_OPTIONS } from '../constants/experience.js';
 import { supabase } from '../services/supabaseClient.js';
 
 export const PORTFOLIO_PREVIEW_STORAGE_PREFIX = 'nextplease:portfolio-preview:';
+
+/** Return a shallow copy of `obj` without the given keys (used to drop heavy
+ * base64 blobs before persisting a localStorage draft). */
+function stripKeys(obj, keys) {
+  return Object.fromEntries(Object.entries(obj).filter(([key]) => !keys.includes(key)));
+}
+
+/**
+ * Merge the server's experiences with a locally-saved draft.
+ *
+ * The server copy is the source of truth for *which rows exist* — it includes
+ * proof-of-work submissions made outside the Portfolio editor (the dashboard
+ * "Nộp minh chứng" form). The draft only carries the user's unsaved edits. So:
+ *   - keep every server row; if the draft has a newer version of it (same id),
+ *     use the draft's edited content;
+ *   - append draft rows that have no server match (newly added, not saved yet).
+ * This prevents a stale draft from dropping server rows, which on save would
+ * make the backend delete them as orphaned PENDING experiences.
+ */
+function mergeExperiences(serverExperiences, draftExperiences) {
+  if (!Array.isArray(draftExperiences)) return serverExperiences;
+
+  const draftById = new Map();
+  for (const exp of draftExperiences) {
+    if (exp?.id != null) draftById.set(String(exp.id), exp);
+  }
+
+  const serverIds = new Set((serverExperiences || []).map((exp) => String(exp.id)));
+
+  const merged = (serverExperiences || []).map((exp) => {
+    const draftVersion = draftById.get(String(exp.id));
+    return draftVersion ? { ...exp, ...draftVersion } : exp;
+  });
+
+  // Draft rows not present on the server yet (newly added in the editor).
+  for (const exp of draftExperiences) {
+    if (exp?.id == null || !serverIds.has(String(exp.id))) {
+      merged.push(exp);
+    }
+  }
+
+  return merged;
+}
+
+/**
+ * Merge server credentials with a draft. The draft carries the user's unsaved
+ * text edits but — to stay under the localStorage quota — no longer holds the
+ * base64 file bytes (fileData/fileType). So we layer the draft's edits on top of
+ * the server row but keep the server's fileData/fileType, otherwise an uploaded
+ * certificate would become unviewable after a reload that loads from a draft.
+ */
+function mergeCredentials(serverCredentials, draftCredentials) {
+  if (!Array.isArray(draftCredentials)) return serverCredentials;
+
+  const serverById = new Map();
+  for (const cred of serverCredentials || []) {
+    if (cred?.id != null) serverById.set(String(cred.id), cred);
+  }
+
+  return draftCredentials.map((cred) => {
+    const serverVersion = cred?.id != null ? serverById.get(String(cred.id)) : null;
+    if (!serverVersion) return cred;
+    return {
+      ...cred,
+      fileData: cred.fileData || serverVersion.fileData || '',
+      fileType: cred.fileType || serverVersion.fileType || '',
+    };
+  });
+}
 
 const avatarStyles = {
   female: {
@@ -74,6 +147,9 @@ const defaultExperiences = [
     title: '',
     organization: '',
     detail: '',
+    category: 'CLUB_SMALL',
+    roleLevel: 'MEMBER',
+    proofLink: '',
     startDate: '',
     endDate: '',
     proofImages: [],
@@ -95,6 +171,8 @@ const defaultCredentials = [
     issuer: '',
     issuedAt: '',
     fileName: '',
+    fileData: '',
+    fileType: '',
   },
 ];
 
@@ -323,6 +401,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [filePreview, setFilePreview] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
@@ -362,11 +441,13 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                 }
                 setProfile(draft.profile);
               }
-              if (draft.experiences) {
-                setExperiences(draft.experiences);
-              }
+              // Merge experiences with the server copy so that rows the draft
+              // never saw — e.g. proof-of-work submissions made via the dashboard
+              // "Nộp minh chứng" form — are not dropped on the next save (which
+              // would let the backend delete them as orphaned PENDING rows).
+              setExperiences(mergeExperiences(data.experiences || [], draft.experiences));
               if (draft.credentials) {
-                setCredentials(draft.credentials);
+                setCredentials(mergeCredentials(data.credentials || [], draft.credentials));
               }
               if (draft.avatar) {
                 setAvatar(draft.avatar);
@@ -407,18 +488,34 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     loadPortfolio();
   }, [navigate, isEditing]);
 
-  // Auto-save form state to localStorage as a draft whenever it changes and is dirty
+  // Auto-save form state to localStorage as a draft whenever it changes and is dirty.
+  // Base64 images/files are stripped first: they can be several MB and would blow
+  // past the ~5MB localStorage quota (which previously threw QuotaExceededError and
+  // crashed the page). The draft only needs to preserve unsaved *text* edits — the
+  // actual image/file bytes live on the server once the portfolio is saved.
   useEffect(() => {
     if (isLoading || !isDraftDirty) return;
 
     const draft = {
       profile,
-      experiences,
-      credentials,
+      experiences: experiences.map((exp) => stripKeys(exp, ['proofImages'])),
+      credentials: credentials.map((cred) => stripKeys(cred, ['fileData', 'fileType'])),
       avatar,
-      savedAt: Date.now()
+      savedAt: Date.now(),
     };
-    localStorage.setItem('nextplease:portfolio-draft', JSON.stringify(draft));
+
+    try {
+      localStorage.setItem('nextplease:portfolio-draft', JSON.stringify(draft));
+    } catch (err) {
+      // Quota exceeded or storage unavailable — drop the draft rather than crash.
+      // Worst case the user loses local autosave of unsaved edits, not their data.
+      console.warn('Không thể lưu bản nháp portfolio vào localStorage:', err);
+      try {
+        localStorage.removeItem('nextplease:portfolio-draft');
+      } catch {
+        /* ignore */
+      }
+    }
   }, [profile, experiences, credentials, avatar, isLoading, isDraftDirty]);
 
   async function handleSavePortfolio() {
@@ -547,6 +644,9 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         title: '',
         organization: '',
         detail: '',
+        category: 'CLUB_SMALL',
+        roleLevel: 'MEMBER',
+        proofLink: '',
         startDate: '',
         endDate: '',
         proofImages: [],
@@ -632,7 +732,31 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       delete next[`credential_${id}_fileName`];
       return next;
     });
-    updateCredential(id, 'fileName', file?.name || '');
+
+    if (!file) {
+      markDirty();
+      setCredentials((current) =>
+        current.map((credential) =>
+          credential.id === id
+            ? { ...credential, fileName: '', fileData: '', fileType: '' }
+            : credential,
+        ),
+      );
+      return;
+    }
+
+    markDirty();
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCredentials((current) =>
+        current.map((credential) =>
+          credential.id === id
+            ? { ...credential, fileName: file.name, fileData: reader.result, fileType: file.type }
+            : credential,
+        ),
+      );
+    };
+    reader.readAsDataURL(file);
   }
 
   function handleIssuedAtChange(id, rawValue) {
@@ -667,6 +791,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         issuer: '',
         issuedAt: '',
         fileName: '',
+        fileData: '',
+        fileType: '',
       },
     ]);
   }
@@ -797,10 +923,29 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       createdAt: new Date().toISOString(),
     };
 
-    localStorage.setItem(
-      `${PORTFOLIO_PREVIEW_STORAGE_PREFIX}${previewId}`,
-      JSON.stringify(previewPayload),
-    );
+    // Each preview holds full base64 images, so stale entries from earlier clicks
+    // pile up and eventually blow the localStorage quota. Clear old previews first.
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(PORTFOLIO_PREVIEW_STORAGE_PREFIX)) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+
+    try {
+      localStorage.setItem(
+        `${PORTFOLIO_PREVIEW_STORAGE_PREFIX}${previewId}`,
+        JSON.stringify(previewPayload),
+      );
+    } catch (err) {
+      console.warn('Không thể tạo bản xem trước:', err);
+      setErrorMsg('Bản preview quá lớn (quá nhiều ảnh đính kèm) nên không thể mở. Hãy giảm bớt ảnh minh chứng rồi thử lại.');
+      return;
+    }
     window.open(`/portfolio/preview?draft=${previewId}`, '_blank', 'noopener,noreferrer');
   }
 
@@ -1237,6 +1382,50 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                     </span>
                   )}
                 </label>
+                <label className="select-field">
+                  <span className="select-field-label">
+                    <Award size={14} /> Cấp bậc vai trò
+                  </span>
+                  <div className="select-shell">
+                    <select
+                      value={experience.roleLevel || 'MEMBER'}
+                      onChange={(event) => updateExperience(experience.id, 'roleLevel', event.target.value)}
+                    >
+                      {EXPERIENCE_ROLE_LEVEL_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} className="select-chevron" />
+                  </div>
+                </label>
+                <label className="select-field">
+                  <span className="select-field-label">
+                    <Sparkles size={14} /> Loại hình hoạt động
+                  </span>
+                  <div className="select-shell">
+                    <select
+                      value={experience.category || 'CLUB_SMALL'}
+                      onChange={(event) => updateExperience(experience.id, 'category', event.target.value)}
+                    >
+                      {EXPERIENCE_CATEGORY_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} className="select-chevron" />
+                  </div>
+                </label>
+                <label className="full-field proof-link-field">
+                  <span className="select-field-label">
+                    <LinkIcon size={14} /> Link minh chứng
+                    <em>không bắt buộc</em>
+                  </span>
+                  <input
+                    onChange={(event) => updateExperience(experience.id, 'proofLink', event.target.value)}
+                    placeholder="https://drive.google.com/... hoặc link Facebook event"
+                    value={experience.proofLink || ''}
+                  />
+                  <small className="field-hint">Dán link Google Drive, fanpage sự kiện, hoặc ảnh chứng nhận để Admin xác thực nhanh hơn.</small>
+                </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <label>
                     Thời gian bắt đầu
@@ -1518,7 +1707,29 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                     experiences.filter(exp => exp.title.trim() || exp.organization.trim()).map((exp, index) => (
                       <div className="confirm-list-item" key={exp.id || index}>
                         <strong>{exp.title}</strong> tại <em>{exp.organization}</em> {exp.startDate || exp.endDate ? `(${exp.startDate || '?'}${exp.endDate ? ` - ${exp.endDate}` : ''})` : ''}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                          {EXPERIENCE_CATEGORY_OPTIONS.find(o => o.value === exp.category) && (
+                            <span className="confirm-tag">{EXPERIENCE_CATEGORY_OPTIONS.find(o => o.value === exp.category).label.replace(/ \(\+.*$/, '')}</span>
+                          )}
+                          {EXPERIENCE_ROLE_LEVEL_OPTIONS.find(o => o.value === exp.roleLevel) && (
+                            <span className="confirm-tag">{EXPERIENCE_ROLE_LEVEL_OPTIONS.find(o => o.value === exp.roleLevel).label.replace(/ \(\+.*$/, '')}</span>
+                          )}
+                        </div>
                         {exp.detail && <p style={{ margin: '6px 0 0', fontSize: '0.9rem', color: 'var(--ink-muted)' }}>{exp.detail}</p>}
+                        {exp.proofLink && (
+                          <a href={exp.proofLink} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px', fontSize: '0.82rem', color: 'var(--primary)' }}>
+                            <FileUp size={13} /> Link minh chứng
+                          </a>
+                        )}
+                        {(exp.proofImages || []).length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                            {exp.proofImages.map((img, i) => (
+                              <button key={i} type="button" onClick={() => setFilePreview({ src: img, fileName: `Minh chứng ${i + 1}` })} style={{ display: 'block', padding: 0, width: '72px', height: '72px', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--c-line, #ece6e2)', cursor: 'pointer', background: 'none' }}>
+                                <img src={img} alt="Ảnh minh chứng" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))
                   ) : (
@@ -1533,9 +1744,20 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                       <div className="confirm-list-item" key={cred.id || index}>
                         <strong>{cred.name}</strong> cấp bởi <em>{cred.issuer}</em> {cred.issuedAt ? `(${cred.issuedAt})` : ''}
                         {cred.fileName && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '0.85rem', color: 'var(--primary)' }}>
-                            <BadgeCheck size={14} /> File: {cred.fileName}
-                          </div>
+                          cred.fileData ? (
+                            <button type="button" onClick={() => setFilePreview({ src: cred.fileData, fileName: cred.fileName })} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '0.85rem', color: 'var(--primary)', textDecoration: 'underline', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                              <BadgeCheck size={14} /> Xem file: {cred.fileName}
+                            </button>
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '0.85rem', color: 'var(--primary)' }}>
+                              <BadgeCheck size={14} /> File: {cred.fileName}
+                            </div>
+                          )
+                        )}
+                        {cred.fileData && /^data:image\//.test(cred.fileData) && (
+                          <button type="button" onClick={() => setFilePreview({ src: cred.fileData, fileName: cred.fileName })} style={{ display: 'block', width: '120px', marginTop: '8px', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--c-line, #ece6e2)', padding: 0, cursor: 'pointer', background: 'none' }}>
+                            <img src={cred.fileData} alt={cred.fileName} style={{ width: '100%', display: 'block' }} />
+                          </button>
                         )}
                       </div>
                     ))
@@ -1649,6 +1871,14 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             </div>
           </div>
         </div>
+      )}
+
+      {filePreview && (
+        <FilePreviewModal
+          src={filePreview.src}
+          fileName={filePreview.fileName}
+          onClose={() => setFilePreview(null)}
+        />
       )}
     </section>
   );

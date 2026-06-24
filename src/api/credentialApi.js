@@ -24,6 +24,14 @@ export async function getVerificationQueue() {
   return response.data.data;
 }
 
+export async function getAllVerificationSubmissions() {
+  const response = await httpClient.get('/admin/dashboard/verification-queue/all');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải danh sách minh chứng.');
+  }
+  return response.data.data;
+}
+
 export async function approveCredential(id, note) {
   const params = note ? { note } : {};
   const response = await httpClient.post(`/admin/dashboard/verification-queue/${id}/approve`, null, { params });

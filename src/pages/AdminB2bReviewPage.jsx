@@ -24,7 +24,7 @@ import {
   updateSystemConfig,
 } from '../api/adminApi.js';
 import { getJobDetail } from '../api/jobApi.js';
-import { getVerificationQueue, approveCredential, rejectCredential } from '../api/credentialApi.js';
+import { getAllVerificationSubmissions, approveCredential, rejectCredential } from '../api/credentialApi.js';
 import {
   AlertCircle,
   AlertTriangle,
@@ -415,7 +415,7 @@ export function AdminB2bReviewPage() {
         const [b2bData, jobsData, verifData] = await Promise.all([
           getPendingB2bRegistrations(),
           getAdminJobs(),
-          getVerificationQueue(),
+          getAllVerificationSubmissions(),
         ]);
         if (!isMounted) return;
         setPendingB2b(b2bData || []);
@@ -506,7 +506,7 @@ export function AdminB2bReviewPage() {
         setLogs(data || []);
       } else if (tabKey === 'VERIF_QUEUE') {
         setVerifLoading(true);
-        const data = await getVerificationQueue();
+        const data = await getAllVerificationSubmissions();
         setVerifQueue(data || []);
         setVerifLoading(false);
       } else if (tabKey === 'FRAUD_FLAGS') {
@@ -1294,7 +1294,7 @@ export function AdminB2bReviewPage() {
       setVerifActionLoading(id + '_approve');
       try {
         await approveCredential(id, '');
-        const data = await getVerificationQueue();
+        const data = await getAllVerificationSubmissions();
         setVerifQueue(data || []);
         setSelectedVerifGroup(null);
         setActionStatus({ type: 'success', message: 'Đã phê duyệt — EXP và RS đã được cộng cho ứng viên.' });
@@ -1311,7 +1311,7 @@ export function AdminB2bReviewPage() {
       setVerifActionLoading(id + '_reject');
       try {
         await rejectCredential(id, verifRejectReason);
-        const data = await getVerificationQueue();
+        const data = await getAllVerificationSubmissions();
         setVerifQueue(data || []);
         setSelectedVerifGroup(null);
         setVerifRejectingId(null);
@@ -1325,10 +1325,10 @@ export function AdminB2bReviewPage() {
       }
     };
 
-    const pendingCount = verifQueue.filter((item) => ((item.status || 'PENDING').toUpperCase()) === 'PENDING').length;
+    const pendingCount = verifQueue.filter((item) => ((item.verification_status || item.status || 'PENDING').toUpperCase()) === 'PENDING').length;
     const isPendingView = verifSubTab === 'pending';
     const displayedCredentials = verifQueue.filter((item) => {
-      const status = (item.status || 'PENDING').toUpperCase();
+      const status = (item.verification_status || item.status || 'PENDING').toUpperCase();
       if (isPendingView) return status === 'PENDING';
       return verifStatusFilter === 'ALL' || status === verifStatusFilter;
     });
@@ -1412,7 +1412,7 @@ export function AdminB2bReviewPage() {
         ) : (
           <div className="admin-square-grid">
             {candidateGroups.map((group) => {
-              const pendingInGroup = group.credentials.filter((item) => ((item.status || 'PENDING').toUpperCase()) === 'PENDING').length;
+              const pendingInGroup = group.credentials.filter((item) => ((item.verification_status || item.status || 'PENDING').toUpperCase()) === 'PENDING').length;
               return (
                 <button
                   key={group.key}
@@ -1473,7 +1473,7 @@ export function AdminB2bReviewPage() {
 
               <div className="admin-group-modal-grid">
                 {selectedVerifGroup.credentials.map((item) => {
-                  const status = (item.status || 'PENDING').toUpperCase();
+                  const status = (item.verification_status || item.status || 'PENDING').toUpperCase();
                   return (
                     <article key={item.id} className="admin-group-job-card credential">
                       <div className="admin-post-icon credential">
@@ -2265,7 +2265,7 @@ export function AdminB2bReviewPage() {
             const hasSubItems = tab.subItems && tab.subItems.length > 0;
             const isExpanded = isActive && hasSubItems;
             const pendingJobsCount = jobs.filter((j) => (j.status || '').toLowerCase() === 'pending').length;
-            const pendingVerifCount = verifQueue.filter((item) => ((item.status || 'PENDING').toUpperCase()) === 'PENDING').length;
+            const pendingVerifCount = verifQueue.filter((item) => ((item.verification_status || item.status || 'PENDING').toUpperCase()) === 'PENDING').length;
             const badgeValue =
               tab.key === 'B2B_REVIEWS'
                 ? pendingB2b.length
