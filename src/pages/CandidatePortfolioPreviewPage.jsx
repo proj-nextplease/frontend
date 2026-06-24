@@ -1,9 +1,19 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Award, BriefcaseBusiness, FileUp, ShieldCheck, Sparkles } from 'lucide-react';
 import {
   PortfolioAvatar3D,
   PORTFOLIO_PREVIEW_STORAGE_PREFIX,
+  EXPERIENCE_CATEGORY_OPTIONS,
+  EXPERIENCE_ROLE_LEVEL_OPTIONS,
 } from './CandidatePortfolioPage.jsx';
+import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
+
+const CATEGORY_LABEL = Object.fromEntries(
+  EXPERIENCE_CATEGORY_OPTIONS.map((o) => [o.value, o.label.replace(/ \(\+.*$/, '')]),
+);
+const ROLE_LABEL = Object.fromEntries(
+  EXPERIENCE_ROLE_LEVEL_OPTIONS.map((o) => [o.value, o.label.replace(/ \(\+.*$/, '')]),
+);
 
 function readPortfolioDraft() {
   const params = new URLSearchParams(window.location.search);
@@ -28,6 +38,7 @@ export function CandidatePortfolioPreviewPage() {
     .split(',')
     .map((skill) => skill.trim())
     .filter(Boolean);
+  const [preview, setPreview] = useState(null);
 
   if (!draft) {
     return (
@@ -93,10 +104,39 @@ export function CandidatePortfolioPreviewPage() {
                     {(experience.startDate || experience.endDate) && ` (${experience.startDate || '?'}${experience.endDate ? ` - ${experience.endDate}` : ''})`}
                   </span>
                   <h3>{experience.title || 'Vai trò / vị trí'}</h3>
+                  {(experience.category || experience.roleLevel) && (
+                    <div className="experience-tag-row">
+                      {experience.category && CATEGORY_LABEL[experience.category] && (
+                        <span className="experience-tag category">{CATEGORY_LABEL[experience.category]}</span>
+                      )}
+                      {experience.roleLevel && ROLE_LABEL[experience.roleLevel] && (
+                        <span className="experience-tag role">{ROLE_LABEL[experience.roleLevel]}</span>
+                      )}
+                    </div>
+                  )}
                   <p>
                     {experience.detail ||
                       'Mô tả kinh nghiệm, kết quả và bằng chứng xác thực sẽ hiển thị tại đây.'}
                   </p>
+                  {experience.proofLink && (
+                    <a className="experience-proof-link" href={experience.proofLink} target="_blank" rel="noopener noreferrer">
+                      <FileUp size={14} /> Link minh chứng
+                    </a>
+                  )}
+                  {(experience.proofImages || []).length > 0 && (
+                    <div className="experience-proof-grid">
+                      {experience.proofImages.map((img, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setPreview({ src: img, fileName: `Minh chứng ${i + 1}` })}
+                          className="experience-proof-thumb"
+                        >
+                          <img src={img} alt="Ảnh minh chứng kinh nghiệm" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </article>
               ))}
             </div>
@@ -113,16 +153,43 @@ export function CandidatePortfolioPreviewPage() {
                   <span>{credential.issuer || 'Đơn vị cấp'}</span>
                   <h3>{credential.name || 'Tên bằng cấp / chứng chỉ'}</h3>
                   <p>{credential.issuedAt || 'Thời gian cấp'}</p>
-                  <div className={credential.fileName ? 'credential-file-pill' : 'credential-file-pill muted'}>
-                    <FileUp size={15} />
-                    {credential.fileName || 'Chưa có file đính kèm'}
-                  </div>
+                  {credential.fileName && credential.fileData ? (
+                    <button
+                      type="button"
+                      onClick={() => setPreview({ src: credential.fileData, fileName: credential.fileName })}
+                      className="credential-file-pill is-link"
+                    >
+                      <FileUp size={15} />
+                      Xem file: {credential.fileName}
+                    </button>
+                  ) : (
+                    <div className={credential.fileName ? 'credential-file-pill' : 'credential-file-pill muted'}>
+                      <FileUp size={15} />
+                      {credential.fileName || 'Chưa có file đính kèm'}
+                    </div>
+                  )}
+                  {credential.fileData && /^data:image\//.test(credential.fileData) && (
+                    <button
+                      type="button"
+                      onClick={() => setPreview({ src: credential.fileData, fileName: credential.fileName })}
+                      className="credential-file-preview"
+                    >
+                      <img src={credential.fileData} alt={credential.fileName} />
+                    </button>
+                  )}
                 </article>
               ))}
             </div>
           </section>
         </main>
       </div>
+      {preview && (
+        <FilePreviewModal
+          src={preview.src}
+          fileName={preview.fileName}
+          onClose={() => setPreview(null)}
+        />
+      )}
     </section>
   );
 }
