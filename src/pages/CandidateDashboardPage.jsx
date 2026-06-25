@@ -212,68 +212,7 @@ function getCompanyGradient(name) {
   return gradients[hash % gradients.length];
 }
 
-const defaultMockOrganizations = [
-  {
-    id: 'org-1',
-    name: 'FPT Software',
-    type: 'BUSINESS',
-    companyType: 'SME',
-    description: 'Tập đoàn công nghệ hàng đầu Việt Nam, cung cấp dịch vụ xuất khẩu phần mềm, tích hợp hệ thống và giải pháp số toàn cầu.',
-    logoColor: 'linear-gradient(135deg, #f97316, #ea580c)',
-    location: 'Hà Nội & TP. Hồ Chí Minh',
-    industry: 'Công nghệ thông tin',
-    website: 'https://fptsoftware.com',
-    verified: true
-  },
-  {
-    id: 'org-2',
-    name: 'VNG Corporation',
-    type: 'BUSINESS',
-    companyType: 'STARTUP',
-    description: 'Công ty công nghệ kỳ lân hàng đầu tại Việt Nam, sở hữu hệ sinh thái Zing, Zalo, ZaloPay và phát hành trò chơi trực tuyến hàng đầu.',
-    logoColor: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-    location: 'TP. Hồ Chí Minh',
-    industry: 'Giải trí & Nội dung số',
-    website: 'https://vng.com.vn',
-    verified: true
-  },
-  {
-    id: 'org-3',
-    name: 'Viettel Group',
-    type: 'BUSINESS',
-    companyType: 'SME',
-    description: 'Tập đoàn Công nghiệp - Viễn thông Quân đội, cung cấp hạ tầng số, viễn thông và dịch vụ tài chính số hàng đầu khu vực.',
-    logoColor: 'linear-gradient(135deg, #dc2626, #991b1b)',
-    location: 'Hà Nội',
-    industry: 'Viễn thông & Công nghiệp quốc phòng',
-    website: 'https://viettel.com.vn',
-    verified: true
-  },
-  {
-    id: 'org-4',
-    name: 'UEH Marketing Club',
-    type: 'CLUB',
-    companyType: 'CLUB',
-    description: 'Câu lạc bộ học thuật chuyên sâu về Marketing thuộc Trường Đại học Kinh tế TP. Hồ Chí Minh, tổ chức các cuộc thi lớn như Bản lĩnh Marketer.',
-    logoColor: 'linear-gradient(135deg, #ec4899, #db2777)',
-    location: 'UEH TP. Hồ Chí Minh',
-    industry: 'Marketing & Sự kiện sinh viên',
-    website: 'https://uehmclub.org',
-    verified: true
-  },
-  {
-    id: 'org-5',
-    name: 'FPT University Developer Club',
-    type: 'CLUB',
-    companyType: 'CLUB',
-    description: 'Cộng đồng lập trình viên sinh viên tại Đại học FPT, chuyên kết nối học thuật, nghiên cứu công nghệ mới và tổ chức Hackathon.',
-    logoColor: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-    location: 'Đại học FPT Q9, TP. HCM',
-    industry: 'Lập trình & Kỹ thuật phần mềm',
-    website: 'https://fudc.dev',
-    verified: true
-  }
-];
+const defaultMockOrganizations = [];
 
 /* ─── Apply modal: candidate profile snapshot ─────────────────────────────── */
 function CandidateProfilePreview({ portfolio, candidateRs, currentLevel, currentExp }) {

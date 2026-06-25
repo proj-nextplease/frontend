@@ -1218,7 +1218,7 @@ function handleViewDocument(docUrl) {
 /* ───────────────────────────────────────────────
    Sub-components
 ─────────────────────────────────────────────── */
-function PendingView({ company, onRefresh }) {
+function PendingView({ company, onRefresh, onTabChange }) {
   const steps = [
     { label: 'Đã đăng ký', done: true },
     { label: 'Đang xét duyệt', active: true },
@@ -1227,6 +1227,61 @@ function PendingView({ company, onRefresh }) {
 
   return (
     <section className="dashboard-page" style={{ maxWidth: '860px', margin: '32px auto', padding: '0 16px' }}>
+      {/* Profile Incomplete Prominent Warning for Invited Partners */}
+      {(!company.representativeName || !company.taxCode || !company.representativePhone) && (
+        <div style={{
+          background: 'rgba(239, 68, 68, 0.06)',
+          border: '1.5px dashed #ef4444',
+          borderRadius: '20px',
+          padding: '24px',
+          marginBottom: '28px',
+          boxShadow: '0 4px 12px rgba(239, 68, 68, 0.05)'
+        }}>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+            <div style={{
+              background: '#ef4444',
+              borderRadius: '12px',
+              padding: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              flexShrink: 0
+            }}>
+              <AlertTriangle size={24} />
+            </div>
+            <div>
+              <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: '850', color: '#b91c1c' }}>Hồ sơ đối tác chưa hoàn thiện</h3>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: '#7f1d1d', lineHeight: 1.6, fontWeight: '500', marginBottom: '14px' }}>
+                Tài khoản của bạn được tạo qua lời mời từ Admin nhưng chưa được điền thông tin doanh nghiệp/tổ chức. 
+                Vui lòng nhấp vào nút dưới đây để cập nhật đầy đủ thông tin (Mã số thuế, Người đại diện, SĐT và tải lên Giấy phép hoạt động/xác thực) để gửi Admin phê duyệt.
+              </p>
+              <button
+                type="button"
+                onClick={() => onTabChange && onTabChange('account')}
+                style={{
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '10px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.86rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
+                  transition: 'background 0.2s'
+                }}
+              >
+                <UserRound size={16} /> Cập nhật thông tin hồ sơ ngay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Status banner */}
       <div className="b2b-status-banner pending">
         <div className="b2b-status-icon">
@@ -2568,6 +2623,7 @@ function ManageJobsView({ onTabChange, company }) {
 
 function AccountDetailView({ account, company, onRefresh }) {
   const [isEditing, setIsEditing] = useState(false);
+  const [agreeProvideTaxInfo, setAgreeProvideTaxInfo] = useState(Boolean(company?.taxCode));
   const [formData, setFormData] = useState({
     companyName: company?.name || '',
     companyType: company?.companyType || 'ENTERPRISE',
@@ -2595,6 +2651,7 @@ function AccountDetailView({ account, company, onRefresh }) {
         description: company.description || '',
         documentUrl: company.documentUrl || '',
       });
+      setAgreeProvideTaxInfo(Boolean(company.taxCode));
     }
   }, [company]);
 
@@ -2603,7 +2660,12 @@ function AccountDetailView({ account, company, onRefresh }) {
 
   function handleInputChange(e) {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'representativePhone') {
+      const cleaned = value.replace(/\D/g, '').slice(0, 11);
+      setFormData((prev) => ({ ...prev, [name]: cleaned }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   }
 
   function handleFileChange(e) {
@@ -2639,11 +2701,26 @@ function AccountDetailView({ account, company, onRefresh }) {
       setActionStatus({ type: 'error', message: 'Số điện thoại không được để trống.' });
       return;
     }
+    if (!/^[0-9]{10,11}$/.test(formData.representativePhone)) {
+      setActionStatus({ type: 'error', message: 'Số điện thoại liên hệ phải chứa từ 10 đến 11 chữ số.' });
+      return;
+    }
+    if (agreeProvideTaxInfo && !formData.taxCode.trim()) {
+      setActionStatus({ type: 'error', message: 'Vui lòng nhập Mã số thuế khi đã đồng ý cung cấp.' });
+      return;
+    }
+    if (!formData.description.trim() || formData.description.trim().length < 30) {
+      setActionStatus({ type: 'error', message: 'Mô tả tổ chức không được để trống và phải có tối thiểu 30 ký tự.' });
+      return;
+    }
 
     setActionStatus({ type: 'loading', message: 'Đang cập nhật hồ sơ...' });
 
     try {
-      await updateB2bProfile(formData);
+      await updateB2bProfile({
+        ...formData,
+        taxCode: agreeProvideTaxInfo ? formData.taxCode.trim() : null
+      });
       setActionStatus({ type: 'success', message: 'Cập nhật hồ sơ đối tác thành công! Hồ sơ đang chờ duyệt.' });
       setTimeout(() => {
         setIsEditing(false);
@@ -2671,46 +2748,56 @@ function AccountDetailView({ account, company, onRefresh }) {
       description: company?.description || '',
       documentUrl: company?.documentUrl || '',
     });
+    setAgreeProvideTaxInfo(Boolean(company?.taxCode));
   }
 
   return (
-    <section className="dashboard-page partner-account-page">
-      <div className="partner-account-hero">
-        <div className="b2b-company-avatar">
-          {(company?.name || account?.email || 'P').slice(0, 2).toUpperCase()}
-        </div>
-        <div className="partner-account-hero-copy">
-          <span className="b2b-type-badge" style={verificationTone}>
-            <BadgeCheck size={13} />
-            {getVerificationLabel(company?.verificationStatus)}
-          </span>
-          <h1>{company?.name || 'Thông tin đối tác'}</h1>
-          <p>{account?.email || 'Email tài khoản sẽ hiển thị sau khi đồng bộ đăng nhập.'}</p>
+    <section className="dashboard-page partner-account-page" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="partner-account-hero" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+          <div className="b2b-company-avatar" style={{ boxShadow: '0 4px 12px rgba(13,27,51,0.1)' }}>
+            {(company?.name || account?.email || 'P').slice(0, 2).toUpperCase()}
+          </div>
+          <div className="partner-account-hero-copy">
+            <span className="b2b-type-badge" style={{ ...verificationTone, display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 8px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+              <BadgeCheck size={14} />
+              {getVerificationLabel(company?.verificationStatus)}
+            </span>
+            <h1 style={{ margin: '8px 0 2px', fontSize: '1.75rem', fontWeight: '800', color: '#0d1b33' }}>{company?.name || 'Thông tin đối tác'}</h1>
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{account?.email || 'Email tài khoản sẽ hiển thị sau khi đồng bộ đăng nhập.'}</p>
+          </div>
         </div>
         {!isEditing && (
-          <button className="button secondary-button" onClick={() => setIsEditing(true)} type="button">
-            Chỉnh sửa hồ sơ
-          </button>
+          company?.myRole === 'OWNER' ? (
+            <button className="button primary-button" onClick={() => setIsEditing(true)} type="button" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '12px', background: '#0d1b33', color: '#fff', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>
+              <Pencil size={15} /> Chỉnh sửa hồ sơ
+            </button>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: '#64748b', background: '#f1f5f9', padding: '8px 14px', borderRadius: '12px', border: '1px solid #e2e8f0', fontWeight: '600' }}>
+              <Lock size={14} style={{ color: '#f59e0b' }} />
+              <span>Chỉ Chủ sở hữu được sửa</span>
+            </div>
+          )
         )}
       </div>
 
-      <div className="partner-account-grid" style={{ gridTemplateColumns: '1fr', marginTop: '24px' }}>
-        <section className="panel partner-account-panel">
-          <div className="panel-title" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Building size={20} style={{ color: '#2563eb' }} />
-              <h2>Hồ sơ đối tác</h2>
+      <div className="partner-account-grid" style={{ gridTemplateColumns: '1fr', marginTop: '0px' }}>
+        <section className="panel partner-account-panel" style={{ padding: '28px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)', border: '1px solid var(--line)' }}>
+          <div className="panel-title" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--line)', paddingBottom: '16px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Building size={22} style={{ color: '#2563eb' }} />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '750', margin: 0 }}>Hồ sơ đối tác</h2>
             </div>
             {isEditing && (
-              <span style={{ fontSize: '0.85rem', color: '#b45309', fontWeight: 'bold' }}>
+              <span style={{ fontSize: '0.85rem', color: '#d97706', fontWeight: 'bold', background: '#fef3c7', padding: '4px 10px', borderRadius: '8px', border: '1px solid #fde68a' }}>
                 * Sau khi lưu, hồ sơ sẽ được gửi lại cho Admin xét duyệt
               </span>
             )}
           </div>
 
           {isEditing ? (
-            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Tên tổ chức *</label>
                   <input
@@ -2731,7 +2818,7 @@ function AccountDetailView({ account, company, onRefresh }) {
                     value={formData.companyType}
                     onChange={handleInputChange}
                     className="input-field"
-                    style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', height: '42px' }}
+                    style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', height: '42px', cursor: 'pointer' }}
                     required
                   >
                     <option value="CLUB">CLB Sinh Viên</option>
@@ -2745,14 +2832,41 @@ function AccountDetailView({ account, company, onRefresh }) {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Mã số thuế</label>
-                  <input
-                    type="text"
-                    name="taxCode"
-                    value={formData.taxCode}
-                    onChange={handleInputChange}
-                    className="input-field"
-                    style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)' }}
-                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <input
+                      type="text"
+                      name="taxCode"
+                      placeholder={agreeProvideTaxInfo ? "Nhập mã số thuế" : "Cần tích đồng ý bên dưới để điền"}
+                      value={formData.taxCode}
+                      disabled={!agreeProvideTaxInfo}
+                      onChange={handleInputChange}
+                      className="input-field"
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: '10px',
+                        border: '1px solid var(--line)',
+                        background: agreeProvideTaxInfo ? 'var(--bg)' : '#f8fafc',
+                        color: 'var(--ink)',
+                        cursor: agreeProvideTaxInfo ? 'text' : 'not-allowed',
+                        opacity: agreeProvideTaxInfo ? 1 : 0.6
+                      }}
+                    />
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.82rem', userSelect: 'none', color: 'var(--muted)', width: 'fit-content' }}>
+                      <input
+                        type="checkbox"
+                        checked={agreeProvideTaxInfo}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setAgreeProvideTaxInfo(checked);
+                          if (!checked) {
+                            setFormData((prev) => ({ ...prev, taxCode: '' }));
+                          }
+                        }}
+                        style={{ width: '15px', height: '15px', accentColor: '#2563eb', cursor: 'pointer' }}
+                      />
+                      <span>Đồng ý cung cấp thông tin MST</span>
+                    </label>
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -2773,6 +2887,7 @@ function AccountDetailView({ account, company, onRefresh }) {
                   <input
                     type="text"
                     name="representativePhone"
+                    placeholder="Chỉ nhập số, từ 10-11 ký tự"
                     value={formData.representativePhone}
                     onChange={handleInputChange}
                     className="input-field"
@@ -2786,6 +2901,7 @@ function AccountDetailView({ account, company, onRefresh }) {
                   <input
                     type="url"
                     name="websiteUrl"
+                    placeholder="https://example.com"
                     value={formData.websiteUrl}
                     onChange={handleInputChange}
                     className="input-field"
@@ -2798,6 +2914,7 @@ function AccountDetailView({ account, company, onRefresh }) {
                   <input
                     type="url"
                     name="fanpageUrl"
+                    placeholder="https://facebook.com/..."
                     value={formData.fanpageUrl}
                     onChange={handleInputChange}
                     className="input-field"
@@ -2807,7 +2924,7 @@ function AccountDetailView({ account, company, onRefresh }) {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Tài liệu xác minh</label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 14px', border: '1px dashed var(--line)', borderRadius: '10px', background: 'var(--bg)', cursor: 'pointer', height: '42px', boxSizing: 'border-box' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 14px', border: '1px dashed var(--line)', borderRadius: '10px', background: 'var(--bg)', cursor: 'pointer', height: '42px', boxSizing: 'border-box', transition: 'border-color 0.2s' }}>
                     <FileText size={18} style={{ color: '#2563eb' }} />
                     <span style={{ fontSize: '0.88rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>
                       {uploadedFile ? uploadedFile.name : (formData.documentUrl ? 'Đã tải lên tài liệu' : 'Chọn tệp ảnh hoặc PDF')}
@@ -2817,30 +2934,37 @@ function AccountDetailView({ account, company, onRefresh }) {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Mô tả tổ chức</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Mô tả tổ chức *</label>
+                  <span style={{ fontSize: '0.82rem', color: (formData.description?.length || 0) < 30 ? '#dc2626' : '#16a34a', fontWeight: 'bold' }}>
+                    {(formData.description?.length || 0)} / tối thiểu 30 ký tự
+                  </span>
+                </div>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
                   rows={4}
+                  placeholder="Nhập thông tin chi tiết về tổ chức của bạn (tối thiểu 30 ký tự)..."
                   className="input-field"
-                  style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', resize: 'vertical' }}
+                  style={{ padding: '12px 14px', borderRadius: '10px', border: (formData.description?.length || 0) < 30 ? '1px solid #fca5a5' : '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', resize: 'vertical' }}
+                  required
                 />
               </div>
 
               {actionStatus.message && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', borderRadius: '8px', background: actionStatus.type === 'success' ? 'rgba(22,163,74,0.1)' : (actionStatus.type === 'error' ? 'rgba(220,38,38,0.1)' : 'rgba(37,99,235,0.1)'), color: actionStatus.type === 'success' ? '#16a34a' : (actionStatus.type === 'error' ? '#dc2626' : '#2563eb') }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', borderRadius: '8px', background: actionStatus.type === 'success' ? 'rgba(22,163,74,0.1)' : (actionStatus.type === 'error' ? 'rgba(220,38,38,0.1)' : 'rgba(37,99,235,0.06)'), color: actionStatus.type === 'success' ? '#16a34a' : (actionStatus.type === 'error' ? '#dc2626' : '#2563eb'), fontWeight: '500' }}>
                   {actionStatus.type === 'success' ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
                   <p style={{ margin: 0, fontSize: '0.9rem' }}>{actionStatus.message}</p>
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button type="submit" disabled={actionStatus.type === 'loading'} className="button primary-button" style={{ background: '#0d1b33', borderColor: 'transparent' }}>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                <button type="submit" disabled={actionStatus.type === 'loading'} className="button primary-button" style={{ background: '#0d1b33', borderColor: 'transparent', borderRadius: '12px', padding: '12px 24px', fontWeight: '600' }}>
                   Lưu thay đổi
                 </button>
-                <button type="button" onClick={handleCancel} className="button secondary-button">
+                <button type="button" onClick={handleCancel} className="button secondary-button" style={{ borderRadius: '12px', padding: '12px 24px' }}>
                   Hủy bỏ
                 </button>
               </div>
@@ -2849,15 +2973,30 @@ function AccountDetailView({ account, company, onRefresh }) {
             <div className="partner-account-detail-grid">
               <DetailItem label="Tên tổ chức" value={company?.name} />
               <DetailItem label="Loại đối tác" value={companyTypeLabel} />
-              <DetailItem label="Mã số thuế" value={company?.taxCode} />
+              <DetailItem
+                label="Mã số thuế"
+                value={company?.taxCode || <span style={{ color: '#94a3b8', fontStyle: 'italic', fontWeight: '500' }}>Chưa cung cấp</span>}
+              />
               <DetailItem label="Người đại diện" value={company?.representativeName} />
               <DetailItem label="Số điện thoại" value={company?.representativePhone} />
               <DetailItem label="Website" value={company?.websiteUrl} href={company?.websiteUrl} />
               <DetailItem label="Fanpage" value={company?.fanpageUrl} href={company?.fanpageUrl} />
               <DetailItem
                 label="Tài liệu xác minh"
-                value={company?.documentUrl ? 'Xem tài liệu' : ''}
-                onClick={company?.documentUrl ? () => handleViewDocument(company.documentUrl) : null}
+                value={
+                  company?.documentUrl ? (
+                    company?.myRole === 'OWNER' ? (
+                      'Xem tài liệu'
+                    ) : (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#64748b', fontWeight: '600' }}>
+                        <Lock size={13} style={{ color: '#f59e0b' }} /> Đã tải lên (Chỉ Chủ sở hữu được xem)
+                      </span>
+                    )
+                  ) : (
+                    <span style={{ color: '#94a3b8', fontStyle: 'italic', fontWeight: '500' }}>Chưa cập nhật</span>
+                  )
+                }
+                onClick={company?.documentUrl && company?.myRole === 'OWNER' ? () => handleViewDocument(company.documentUrl) : null}
               />
             </div>
           )}
@@ -2865,12 +3004,12 @@ function AccountDetailView({ account, company, onRefresh }) {
       </div>
 
       {!isEditing && company?.description ? (
-        <section className="panel partner-account-panel" style={{ marginTop: '24px' }}>
-          <div className="panel-title">
-            <FileText size={20} style={{ color: '#16a34a' }} />
-            <h2>Mô tả tổ chức</h2>
+        <section className="panel partner-account-panel" style={{ padding: '28px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)', border: '1px solid var(--line)' }}>
+          <div className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--line)', paddingBottom: '16px', marginBottom: '16px' }}>
+            <FileText size={22} style={{ color: '#16a34a' }} />
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '750', margin: 0 }}>Mô tả tổ chức</h2>
           </div>
-          <p className="partner-account-description">{company.description}</p>
+          <p className="partner-account-description" style={{ fontSize: '0.95rem', color: '#475569', whiteSpace: 'pre-wrap' }}>{company.description}</p>
         </section>
       ) : null}
     </section>
@@ -3037,7 +3176,7 @@ export function BusinessPage() {
     }
 
     if (company?.verificationStatus === 'PENDING') {
-      return <PendingView company={company} onRefresh={fetchCompanyData} />;
+      return <PendingView company={company} onRefresh={fetchCompanyData} onTabChange={handleTabChange} />;
     }
     if (company?.verificationStatus === 'REJECTED') {
       return <RejectedView company={company} onRefresh={fetchCompanyData} />;
