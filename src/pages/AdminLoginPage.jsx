@@ -155,6 +155,9 @@ export function AdminLoginPage() {
       if (response.accessToken) {
         sessionStorage.setItem('nextplease:access_token', response.accessToken);
       }
+      if (response.user) {
+        sessionStorage.setItem('nextplease:current_user', JSON.stringify(response.user));
+      }
       if (supabase && response.accessToken && response.refreshToken) {
         const { error } = await supabase.auth.setSession({
           access_token: response.accessToken,

@@ -100,3 +100,28 @@ export async function resolveFraudFlag(flagId, resolution = 'RESOLVED') {
   return response.data.data;
 }
 
+export async function claimReview(itemType, itemId) {
+  const response = await httpClient.post('/admin/reviews/claim', { itemType, itemId });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Nhận duyệt thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function unclaimReview(itemType, itemId) {
+  const response = await httpClient.post('/admin/reviews/unclaim', { itemType, itemId });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Nhả việc thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function updateReviewNotes(itemType, itemId, notes) {
+  const response = await httpClient.post('/admin/reviews/notes', { itemType, itemId, notes });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Cập nhật ghi chú thất bại.');
+  }
+  return response.data.data;
+}
+
+
