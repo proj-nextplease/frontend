@@ -29,10 +29,36 @@ httpClient.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Extract BE error message from 4xx/5xx responses
+// Extract BE error message from 4xx/5xx responses.
+// On 401, attempt a single Supabase session refresh before giving up.
 httpClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Only retry once, and only for 401 (Unauthorized)
+    if (error.response?.status === 401 && !originalRequest._retried) {
+      originalRequest._retried = true;
+
+      // Try refreshing the Supabase session to get a new access token
+      if (supabase) {
+        try {
+          const { data, error: refreshError } = await supabase.auth.refreshSession();
+          if (!refreshError && data.session?.access_token) {
+            const newToken = data.session.access_token;
+            sessionStorage.setItem('nextplease:access_token', newToken);
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            return httpClient(originalRequest);
+          }
+        } catch {
+          // refresh failed – fall through to reject
+        }
+      }
+
+      // Refresh failed or Supabase not configured – clear stale auth
+      sessionStorage.removeItem('nextplease:access_token');
+    }
+
     const beMessage = error.response?.data?.message;
     if (beMessage) {
       error.message = beMessage;

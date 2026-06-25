@@ -231,6 +231,9 @@ export function CandidateRegisterPage() {
       try {
         const loginData = await loginCandidate(formData.email, formData.password);
         if (loginData && loginData.accessToken) {
+          // Persist token in sessionStorage so httpClient interceptor picks it up
+          // immediately – avoids race with Supabase SDK session refresh.
+          sessionStorage.setItem('nextplease:access_token', loginData.accessToken);
           await supabase.auth.setSession({ access_token: loginData.accessToken, refresh_token: loginData.refreshToken });
         }
       } catch (loginError) {
