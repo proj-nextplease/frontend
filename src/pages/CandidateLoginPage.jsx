@@ -77,6 +77,11 @@ export function CandidateLoginPage() {
     }
     try {
       const response = await loginCandidate(loginData.email, loginData.password);
+      // Persist token in sessionStorage so httpClient interceptor picks it up
+      // immediately – avoids race with Supabase SDK session refresh.
+      if (response.accessToken) {
+        sessionStorage.setItem('nextplease:access_token', response.accessToken);
+      }
       const { error } = await supabase.auth.setSession({
         access_token: response.accessToken,
         refresh_token: response.refreshToken,
