@@ -499,7 +499,16 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [selectedOrg, setSelectedOrg] = useState(null); // Detailed view object
   const [selectedOrgJobs, setSelectedOrgJobs] = useState([]);
   const [selectedOrgJobsLoading, setSelectedOrgJobsLoading] = useState(false);
+  const [selectedOrgQuests, setSelectedOrgQuests] = useState([]);
+  const [selectedOrgQuestsLoading, setSelectedOrgQuestsLoading] = useState(false);
   const [selectedOrgDetailLoading, setSelectedOrgDetailLoading] = useState(false);
+  const [selectedOrgTab, setSelectedOrgTab] = useState('JOBS');
+
+  useEffect(() => {
+    if (selectedOrg) {
+      setSelectedOrgTab(selectedOrg.type === 'CLUB' ? 'QUESTS' : 'JOBS');
+    }
+  }, [selectedOrg]);
 
   // Job List and filtering states
   const [jobsList, setJobsList] = useState([]);
@@ -575,6 +584,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       async function loadOrgDetailAndJobs() {
         setSelectedOrgDetailLoading(true);
         setSelectedOrgJobsLoading(true);
+        setSelectedOrgQuestsLoading(true);
+        setSelectedOrgJobs([]);
+        setSelectedOrgQuests([]);
         
         // Find in allOrganizations first as cached/instant placeholder
         const cached = allOrganizations.find(c => String(c.id) === orgId);
@@ -585,6 +597,18 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             if (prev.some(t => String(t.id) === orgId)) return prev;
             return [...prev, cached];
           });
+        }
+        
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orgId);
+        if (!isUuid) {
+          if (isMounted) {
+            setSelectedOrgDetailLoading(false);
+            setSelectedOrgJobsLoading(false);
+            setSelectedOrgQuestsLoading(false);
+            setSelectedOrgJobs([]);
+            setSelectedOrgQuests([]);
+          }
+          return;
         }
         
         try {
@@ -627,6 +651,19 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         } finally {
           if (isMounted) {
             setSelectedOrgJobsLoading(false);
+          }
+        }
+
+        try {
+          const quests = await searchQuests('', '', orgId);
+          if (isMounted) {
+            setSelectedOrgQuests(quests || []);
+          }
+        } catch (err) {
+          console.error("Lỗi khi tải quest của đối tác từ DB:", err);
+        } finally {
+          if (isMounted) {
+            setSelectedOrgQuestsLoading(false);
           }
         }
       }
@@ -2401,92 +2438,166 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       {selectedOrg.representativeName || 'Chưa cập nhật'}
                     </strong>
                   </div>
-
-                  <div style={{ padding: '14px', borderRadius: '12px', background: 'var(--surface-soft)', border: '1px solid var(--line)' }}>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', fontWeight: 'bold', textTransform: 'uppercase' }}>SĐT Liên hệ</span>
-                    <strong style={{ fontSize: '0.88rem', color: 'var(--ink)', display: 'block', marginTop: '3px' }}>
-                      {selectedOrg.representativePhone || 'Chưa cập nhật'}
-                    </strong>
-                  </div>
-
-                  {selectedOrg.website && (
-                    <div style={{ padding: '14px', borderRadius: '12px', background: 'var(--surface-soft)', border: '1px solid var(--line)' }}>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', fontWeight: 'bold', textTransform: 'uppercase' }}>Website liên kết</span>
-                      <a href={selectedOrg.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.88rem', color: 'var(--primary)', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '3px', textDecoration: 'none' }}>
-                        {selectedOrg.website.replace('https://', '').replace('http://', '')} <ExternalLink size={12} />
-                      </a>
-                    </div>
-                  )}
-                </div>
-
-                {/* Description */}
-                <div style={{ marginBottom: '30px' }}>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '850', color: 'var(--ink)', borderBottom: '1px solid var(--line)', paddingBottom: '8px', margin: '0 0 12px' }}>
-                    Giới thiệu đối tác
-                  </h3>
-                  <p style={{ color: 'var(--muted)', lineHeight: 1.7, margin: 0, fontSize: '0.94rem', whiteSpace: 'pre-line' }}>
-                    {selectedOrg.description || 'Đối tác hiện chưa cập nhật mô tả chi tiết hồ sơ.'}
-                  </p>
                 </div>
 
                 {/* Openings/Quests by this Org loaded dynamically from DB */}
                 <div style={{ borderTop: '1px solid var(--line)', paddingTop: '24px' }}>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: '850', color: 'var(--ink)', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <BriefcaseBusiness size={20} color="var(--primary)" />
-                    Tin tuyển dụng & Quest của đối tác ({selectedOrgJobs.length})
+                    Bài đăng của đối tác ({selectedOrgJobs.length + selectedOrgQuests.length})
                   </h3>
 
-                  {selectedOrgJobsLoading ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: '8px', background: 'var(--surface-soft)', borderRadius: '16px', border: '1px solid var(--line)' }}>
-                      <RefreshCw className="animate-spin" size={20} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
-                      <p style={{ fontSize: '0.85rem', color: 'var(--muted)', fontWeight: '600' }}>Đang nạp các quest của đối tác...</p>
-                    </div>
-                  ) : selectedOrgJobs.length === 0 ? (
-                    <div style={{ padding: '30px 20px', textAlign: 'center', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
-                      <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>Đối tác hiện chưa có bài đăng quest hay tin tuyển dụng nào trên hệ thống.</p>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-                      {selectedOrgJobs.map((job) => {
-                        const isLocked = candidateRs < job.minReqRs;
-                        const tone = getCategoryTone(job.category);
-                        const compText = job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận';
-                        return (
-                          <article className={`candidate-quest-item ${tone}`} key={job.id} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderLeftWidth: '5px', padding: '18px', height: '100%', margin: 0 }}>
-                            <div>
-                              <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                                <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', padding: '3px 6px' }}>
-                                  {JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType}
-                                </span>
-                                {job.isRemote && (
-                                  <span style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', padding: '3px 6px' }}>
-                                    Remote
+                  {/* Tab Selector */}
+                  <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid var(--line)', paddingBottom: '10px', marginBottom: '20px' }}>
+                    <button
+                      onClick={() => setSelectedOrgTab('JOBS')}
+                      style={{
+                        background: 'none',
+                        border: 0,
+                        borderBottom: selectedOrgTab === 'JOBS' ? '3px solid var(--primary)' : 'none',
+                        color: selectedOrgTab === 'JOBS' ? 'var(--primary)' : 'var(--muted)',
+                        fontWeight: 'bold',
+                        fontSize: '0.92rem',
+                        padding: '6px 12px',
+                        cursor: 'pointer'
+                      }}
+                      type="button"
+                    >
+                      Tin tuyển dụng ({selectedOrgJobs.length})
+                    </button>
+                    <button
+                      onClick={() => setSelectedOrgTab('QUESTS')}
+                      style={{
+                        background: 'none',
+                        border: 0,
+                        borderBottom: selectedOrgTab === 'QUESTS' ? '3px solid var(--primary)' : 'none',
+                        color: selectedOrgTab === 'QUESTS' ? 'var(--primary)' : 'var(--muted)',
+                        fontWeight: 'bold',
+                        fontSize: '0.92rem',
+                        padding: '6px 12px',
+                        cursor: 'pointer'
+                      }}
+                      type="button"
+                    >
+                      Quest & Hoạt động ({selectedOrgQuests.length})
+                    </button>
+                  </div>
+
+                  {selectedOrgTab === 'JOBS' ? (
+                    selectedOrgJobsLoading ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: '8px', background: 'var(--surface-soft)', borderRadius: '16px', border: '1px solid var(--line)' }}>
+                        <RefreshCw className="animate-spin" size={20} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
+                        <p style={{ fontSize: '0.85rem', color: 'var(--muted)', fontWeight: '600' }}>Đang nạp tin tuyển dụng...</p>
+                      </div>
+                    ) : selectedOrgJobs.length === 0 ? (
+                      <div style={{ padding: '30px 20px', textAlign: 'center', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
+                        <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>Đối tác hiện chưa có tin tuyển dụng nào.</p>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+                        {selectedOrgJobs.map((job) => {
+                          const isLocked = candidateRs < job.minReqRs;
+                          const tone = getCategoryTone(job.category);
+                          const compText = job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận';
+                          return (
+                            <article className={`candidate-quest-item ${tone}`} key={job.id} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderLeftWidth: '5px', padding: '18px', height: '100%', margin: 0 }}>
+                              <div>
+                                <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                                  <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '850', padding: '3px 6px' }}>
+                                    {JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType}
                                   </span>
-                                )}
+                                  {job.isRemote && (
+                                    <span style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', padding: '3px 6px' }}>
+                                      Remote
+                                    </span>
+                                  )}
+                                </div>
+                                <h4 style={{ margin: '0 0 6px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)' }}>{job.title}</h4>
+                                <p style={{ fontSize: '0.84rem', color: 'var(--muted)', margin: '6px 0 12px', lineHeight: 1.45 }}>
+                                  {job.description?.length > 110 ? `${job.description.slice(0, 110)}...` : job.description}
+                                </p>
                               </div>
-                              <h4 style={{ margin: '0 0 6px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)' }}>{job.title}</h4>
-                              <p style={{ fontSize: '0.84rem', color: 'var(--muted)', margin: '6px 0 12px', lineHeight: 1.45 }}>
-                                {job.description?.length > 110 ? `${job.description.slice(0, 110)}...` : job.description}
-                              </p>
-                            </div>
-                            <div style={{ marginTop: '10px', borderTop: '1px solid var(--line)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem' }}>
-                                <span style={{ color: 'var(--muted)' }}>Lương: <strong style={{ color: 'var(--primary)' }}>{compText}</strong></span>
-                                <span style={{ color: 'var(--muted)' }}>Yêu cầu RS: <strong style={{ color: isLocked ? '#ef4444' : 'var(--ink)' }}>{job.minReqRs > 0 ? `${job.minReqRs} RS` : 'Không'}</strong></span>
+                              <div style={{ marginTop: '10px', borderTop: '1px solid var(--line)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem' }}>
+                                  <span style={{ color: 'var(--muted)' }}>Lương: <strong style={{ color: 'var(--primary)' }}>{compText}</strong></span>
+                                  <span style={{ color: 'var(--muted)' }}>Yêu cầu RS: <strong style={{ color: isLocked ? '#ef4444' : 'var(--ink)' }}>{job.minReqRs > 0 ? `${job.minReqRs} RS` : 'Không'}</strong></span>
+                                </div>
+                                <button
+                                  disabled={isLocked}
+                                  onClick={() => handleApplyJob(job)}
+                                  style={{ width: '100%', padding: '8px 12px', fontSize: '0.8rem', fontWeight: 'bold' }}
+                                  type="button"
+                                >
+                                  {isLocked ? 'Cần thêm RS' : 'Ứng tuyển'}
+                                </button>
                               </div>
-                              <button
-                                disabled={isLocked}
-                                onClick={() => handleApplyJob(job)}
-                                style={{ width: '100%', padding: '8px 12px', fontSize: '0.8rem', fontWeight: 'bold' }}
-                                type="button"
-                              >
-                                {isLocked ? 'Cần thêm RS' : 'Ứng tuyển'}
-                              </button>
-                            </div>
-                          </article>
-                        );
-                      })}
-                    </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    )
+                  ) : (
+                    selectedOrgQuestsLoading ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: '8px', background: 'var(--surface-soft)', borderRadius: '16px', border: '1px solid var(--line)' }}>
+                        <RefreshCw className="animate-spin" size={20} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
+                        <p style={{ fontSize: '0.85rem', color: 'var(--muted)', fontWeight: '600' }}>Đang nạp các Quest...</p>
+                      </div>
+                    ) : selectedOrgQuests.length === 0 ? (
+                      <div style={{ padding: '30px 20px', textAlign: 'center', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
+                        <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>Đối tác hiện chưa có Quest nào.</p>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+                        {selectedOrgQuests.map((quest) => {
+                          const isLocked = candidateRs < (quest.minReqRs || 0);
+                          const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
+                          const categoryMeta = {
+                            SMALL_EVENT: { label: 'Sự kiện nhỏ', color: '#8b5cf6' },
+                            SCHOOL_CAMPAIGN: { label: 'Chiến dịch trường', color: '#0ea5e9' },
+                            COMPANY_PROJECT: { label: 'Dự án DN', color: '#f59e0b' },
+                            SHORT_INTERNSHIP: { label: 'Thực tập ngắn', color: '#10b981' },
+                            FREELANCE_GIG: { label: 'Freelance', color: '#ec4899' }
+                          }[quest.category] || { label: quest.category, color: 'var(--primary)' };
+                          return (
+                            <article className={`candidate-quest-item`} key={quest.id} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderLeftWidth: '5px', borderLeftColor: categoryMeta.color, padding: '18px', height: '100%', margin: 0 }}>
+                              <div>
+                                <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                  <span style={{ background: `${categoryMeta.color}15`, color: categoryMeta.color, borderRadius: '4px', fontSize: '0.7rem', fontWeight: '850', padding: '3px 6px' }}>
+                                    {categoryMeta.label}
+                                  </span>
+                                  {alreadyApplied && (
+                                    <span style={{ background: 'rgba(22, 163, 74, 0.1)', color: '#16a34a', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', padding: '3px 6px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                      <Check size={10} /> Đăng ký
+                                    </span>
+                                  )}
+                                </div>
+                                <h4 style={{ margin: '0 0 6px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)' }}>{quest.title}</h4>
+                                <p style={{ fontSize: '0.84rem', color: 'var(--muted)', margin: '6px 0 12px', lineHeight: 1.45 }}>
+                                  {quest.description?.length > 110 ? `${quest.description.slice(0, 110)}...` : quest.description}
+                                </p>
+                              </div>
+                              <div style={{ marginTop: '10px', borderTop: '1px solid var(--line)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem' }}>
+                                  <span style={{ color: 'var(--muted)' }}>Phần thưởng: <strong style={{ color: '#f59e0b' }}>+{quest.expReward} EXP</strong></span>
+                                  <span style={{ color: 'var(--muted)' }}>Yêu cầu RS: <strong style={{ color: isLocked ? '#ef4444' : 'var(--ink)' }}>{quest.minReqRs > 0 ? `${quest.minReqRs} RS` : 'Không'}</strong></span>
+                                </div>
+                                <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
+                                  <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer"
+                                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--c-line)', background: '#fff', color: 'var(--c-ink)', textDecoration: 'none' }}>
+                                    Chi tiết
+                                  </a>
+                                  <button type="button" disabled={isLocked || alreadyApplied}
+                                    onClick={() => { setSelectedQuestForApply(quest); setQuestCoverNote(''); setQuestAnswers({}); setQuestApplyError(''); setShowQuestApplyModal(true); }}
+                                    style={{ flex: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (alreadyApplied || isLocked) ? '#f3ede9' : categoryMeta.color, color: (alreadyApplied || isLocked) ? 'var(--c-muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
+                                    {alreadyApplied ? 'Đã đăng ký' : isLocked ? 'Cần RS' : 'Tham gia'}
+                                  </button>
+                                </div>
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    )
                   )}
                 </div>
               </div>

@@ -1,9 +1,10 @@
 import { httpClient } from './httpClient.js';
 
-export async function searchQuests(keyword = '', category = '') {
+export async function searchQuests(keyword = '', category = '', companyId = '') {
   const params = {};
   if (keyword) params.keyword = keyword;
   if (category) params.category = category;
+  if (companyId) params.companyId = companyId;
   const response = await httpClient.get('/quests', { params });
   if (!response.data?.success) {
     throw new Error(response.data?.message || 'Không thể tải danh sách Quest.');
