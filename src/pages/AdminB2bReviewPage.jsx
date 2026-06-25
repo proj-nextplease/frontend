@@ -22,6 +22,9 @@ import {
   resolveFraudFlag,
   getSystemConfigs,
   updateSystemConfig,
+  claimReview,
+  unclaimReview,
+  updateReviewNotes,
 } from '../api/adminApi.js';
 import { getJobDetail } from '../api/jobApi.js';
 import { getAllVerificationSubmissions, approveCredential, rejectCredential } from '../api/credentialApi.js';
@@ -311,6 +314,7 @@ export function AdminB2bReviewPage() {
   const [jobsSubTab, setJobsSubTab] = useState('new');
   const [verifSubTab, setVerifSubTab] = useState('pending');
   const [adminEmail, setAdminEmail] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [actionStatus, setActionStatus] = useState({ type: 'idle', message: '' });
@@ -373,6 +377,7 @@ export function AdminB2bReviewPage() {
 
   /* ─── State for User Moderation ─── */
   const [userModerateLoading, setUserModerateLoading] = useState(false);
+  const [notesDrafts, setNotesDrafts] = useState({});
 
   /* ─── State for Custom Confirmation Modal ─── */
   const [confirmModal, setConfirmModal] = useState({
@@ -384,7 +389,7 @@ export function AdminB2bReviewPage() {
     onConfirm: null,
   });
 
-  /* Parse admin email from token on mount */
+  /* Parse admin email and load user info from token/session on mount */
   useEffect(() => {
     const token = sessionStorage.getItem('nextplease:access_token');
     if (token) {
@@ -398,6 +403,24 @@ export function AdminB2bReviewPage() {
         }
       } catch (err) {
         console.warn('Cannot parse admin token email:', err);
+      }
+    }
+    if (sessionStorage.getItem('nextplease:admin-bypass') === 'true') {
+      setCurrentUser({
+        id: '00000000-0000-0000-0000-000000000000',
+        email: 'admin@nextplease.vn',
+        displayName: 'Quản trị viên Hệ thống',
+        roles: ['admin']
+      });
+      setAdminEmail('admin@nextplease.vn');
+    } else {
+      const storedUser = sessionStorage.getItem('nextplease:current_user');
+      if (storedUser) {
+        try {
+          setCurrentUser(JSON.parse(storedUser));
+        } catch (err) {
+          console.warn('Cannot parse stored user info:', err);
+        }
       }
     }
   }, []);
@@ -627,6 +650,41 @@ export function AdminB2bReviewPage() {
     }
     setFilteredLogs(result);
   }, [logs, auditLogTab, searchLogQuery]);
+
+  /* ─── Admin Review Collaboration Handlers ─── */
+  async function handleClaim(itemType, itemId) {
+    setActionStatus({ type: 'loading', message: 'Đang nhận việc...' });
+    try {
+      await claimReview(itemType, itemId);
+      setActionStatus({ type: 'success', message: 'Đã nhận duyệt thành công!' });
+      fetchTabData(activeTab);
+    } catch (err) {
+      setActionStatus({ type: 'error', message: err.message || 'Nhận duyệt thất bại.' });
+    }
+  }
+
+  async function handleUnclaim(itemType, itemId) {
+    setActionStatus({ type: 'loading', message: 'Đang nhả việc...' });
+    try {
+      await unclaimReview(itemType, itemId);
+      setActionStatus({ type: 'success', message: 'Đã nhả việc về hàng chờ chung.' });
+      fetchTabData(activeTab);
+    } catch (err) {
+      setActionStatus({ type: 'error', message: err.message || 'Nhả việc thất bại.' });
+    }
+  }
+
+  async function handleSaveNotes(itemType, itemId) {
+    const notes = notesDrafts[itemId] ?? '';
+    setActionStatus({ type: 'loading', message: 'Đang lưu ghi chú...' });
+    try {
+      await updateReviewNotes(itemType, itemId, notes);
+      setActionStatus({ type: 'success', message: 'Đã cập nhật ghi chú nội bộ thành công!' });
+      fetchTabData(activeTab);
+    } catch (err) {
+      setActionStatus({ type: 'error', message: err.message || 'Lưu ghi chú thất bại.' });
+    }
+  }
 
   /* ─── B2B Review Handler Actions ─── */
   function openApproveConfirmation(companyId, companyName) {
@@ -1474,6 +1532,11 @@ export function AdminB2bReviewPage() {
               <div className="admin-group-modal-grid">
                 {selectedVerifGroup.credentials.map((item) => {
                   const status = (item.verification_status || item.status || 'PENDING').toUpperCase();
+                  const isClaimedByMe = currentUser && item.claimedByAdminId === currentUser.id;
+                  const isClaimedByOther = item.claimedByAdminId && item.claimedByAdminId !== currentUser?.id;
+                  const isUnclaimed = !item.claimedByAdminId;
+                  const notesValue = notesDrafts[item.id] !== undefined ? notesDrafts[item.id] : (item.internalNotes || '');
+
                   return (
                     <article key={item.id} className="admin-group-job-card credential">
                       <div className="admin-post-icon credential">
@@ -1529,15 +1592,88 @@ export function AdminB2bReviewPage() {
                           );
                         })()}
                         <span className="verif-reward-badge">+{EXP_REWARDS[item.category] || 100} EXP · +{item.role_level === 'LEADER' ? 10 : 5} RS</span>
+
+                        {/* Internal Notes */}
+                        <div className="admin-card-notes" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--line, #e2e8f0)', width: '100%' }}>
+                          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--p-ink, #0d1b33)', marginBottom: '8px' }}>
+                            📓 Ghi chú nội bộ (Chỉ Admin nhìn thấy)
+                          </label>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <textarea
+                              value={notesValue}
+                              onChange={(e) => setNotesDrafts(prev => ({ ...prev, [item.id]: e.target.value }))}
+                              disabled={isClaimedByOther}
+                              placeholder={isClaimedByOther ? "Đang bị khóa bởi admin khác..." : "Nhập ghi chú nội bộ cho minh chứng này..."}
+                              style={{
+                                flex: 1,
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                border: '1.5px solid var(--p-line, #cbd5e1)',
+                                fontSize: '0.85rem',
+                                minHeight: '50px',
+                                resize: 'vertical',
+                                outline: 'none',
+                                fontFamily: 'inherit',
+                                background: isClaimedByOther ? '#f9fafb' : '#fff'
+                              }}
+                            />
+                            {!isClaimedByOther && (
+                              <button
+                                type="button"
+                                className="button secondary-button"
+                                onClick={() => handleSaveNotes('EXPERIENCE', item.id)}
+                                disabled={actionStatus.type === 'loading'}
+                                style={{ height: 'auto', alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                              >
+                                Lưu
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
                       <span className={`proof-status-badge ${status.toLowerCase()}`}>
                         {status === 'APPROVED' ? 'Đã duyệt' : status === 'REJECTED' ? 'Từ chối' : 'Chờ xác thực'}
                       </span>
 
                       {status === 'PENDING' && (
-                        <div className="admin-group-job-actions">
+                        <div className="admin-group-job-actions" style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'stretch', width: '100%', marginTop: '12px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            {isUnclaimed && (
+                              <button
+                                type="button"
+                                className="button secondary-button"
+                                style={{ background: '#f3f4f6', borderColor: '#d1d5db', color: '#1f2937', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                                onClick={() => handleClaim('EXPERIENCE', item.id)}
+                                disabled={actionStatus.type === 'loading'}
+                              >
+                                <Clock size={14} /> Nhận việc (Claim)
+                              </button>
+                            )}
+                            {isClaimedByMe && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span className="admin-type-badge" style={{ background: '#dcfce7', color: '#15803d', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <CheckCircle2 size={12} /> Bạn đang duyệt
+                                </span>
+                                <button
+                                  type="button"
+                                  className="button secondary-button"
+                                  style={{ padding: '4px 8px', fontSize: '0.75rem', height: 'auto', background: '#fee2e2', color: '#991b1b', border: 'none', cursor: 'pointer' }}
+                                  onClick={() => handleUnclaim('EXPERIENCE', item.id)}
+                                  disabled={actionStatus.type === 'loading'}
+                                >
+                                  Nhả việc
+                                </button>
+                              </div>
+                            )}
+                            {isClaimedByOther && (
+                              <span className="admin-type-badge" style={{ background: '#fef3c7', color: '#b45309', fontWeight: 'bold' }}>
+                                🔒 Đang duyệt bởi: {item.claimedByAdminName || 'Admin khác'}
+                              </span>
+                            )}
+                          </div>
+
                           {verifRejectingId === item.id ? (
-                            <div className="verif-reject-inline">
+                            <div className="verif-reject-inline" style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                               <input
                                 className="form-input"
                                 placeholder="Nhập lý do từ chối..."
@@ -1545,20 +1681,20 @@ export function AdminB2bReviewPage() {
                                 onChange={e => setVerifRejectReason(e.target.value)}
                                 style={{ flex: 1, fontSize: '0.86rem' }}
                               />
-                              <button className="button danger-button" disabled={verifActionLoading === item.id + '_reject' || !verifRejectReason.trim()} onClick={() => handleReject(item.id)}>
+                              <button className="button danger-button" disabled={verifActionLoading === item.id + '_reject' || !verifRejectReason.trim() || !isClaimedByMe} onClick={() => handleReject(item.id)}>
                                 {verifActionLoading === item.id + '_reject' ? 'Đang xử lý...' : 'Xác nhận'}
                               </button>
                               <button className="button secondary-button" onClick={() => { setVerifRejectingId(null); setVerifRejectReason(''); }}>Hủy</button>
                             </div>
                           ) : (
-                            <>
-                              <button className="button primary-button" disabled={verifActionLoading === item.id + '_approve'} onClick={() => handleApprove(item.id)}>
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
+                              <button className="button primary-button" disabled={verifActionLoading === item.id + '_approve' || !isClaimedByMe} onClick={() => handleApprove(item.id)}>
                                 {verifActionLoading === item.id + '_approve' ? 'Đang duyệt...' : 'Phê duyệt'}
                               </button>
-                              <button className="button danger-button" onClick={() => { setVerifRejectingId(item.id); setVerifRejectReason(''); }}>
+                              <button className="button danger-button" disabled={!isClaimedByMe} onClick={() => { setVerifRejectingId(item.id); setVerifRejectReason(''); }}>
                                 Từ chối
                               </button>
-                            </>
+                            </div>
                           )}
                         </div>
                       )}
@@ -2093,6 +2229,10 @@ export function AdminB2bReviewPage() {
                 const isClub = item.companyType === 'CLUB';
                 const accentColor = isClub ? '#ff7a1a' : '#2563eb';
                 const submittedDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : '—';
+                const isClaimedByMe = currentUser && item.claimedByAdminId === currentUser.id;
+                const isClaimedByOther = item.claimedByAdminId && item.claimedByAdminId !== currentUser?.id;
+                const isUnclaimed = !item.claimedByAdminId;
+                const notesValue = notesDrafts[item.id] !== undefined ? notesDrafts[item.id] : (item.internalNotes || '');
 
                 return (
                   <article
@@ -2136,21 +2276,56 @@ export function AdminB2bReviewPage() {
                         )}
                       </div>
 
-                      <div className="admin-card-actions">
-                        <button
-                          className="button primary-button admin-approve-btn"
-                          onClick={() => openApproveConfirmation(item.id, item.name)}
-                          disabled={actionStatus.type === 'loading'}
-                        >
-                          <Check size={16} /> Phê duyệt
-                        </button>
-                        <button
-                          className="button secondary-button admin-reject-btn"
-                          onClick={() => setRejectingItem(item)}
-                          disabled={actionStatus.type === 'loading'}
-                        >
-                          <X size={16} /> Từ chối
-                        </button>
+                      <div className="admin-card-actions" style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                        {isUnclaimed && (
+                          <button
+                            type="button"
+                            className="button secondary-button"
+                            style={{ background: '#f3f4f6', borderColor: '#d1d5db', color: '#1f2937', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                            onClick={() => handleClaim('B2B_PARTNER', item.id)}
+                            disabled={actionStatus.type === 'loading'}
+                          >
+                            <Clock size={14} /> Nhận việc (Claim)
+                          </button>
+                        )}
+                        {isClaimedByMe && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="admin-type-badge" style={{ background: '#dcfce7', color: '#15803d', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <CheckCircle2 size={12} /> Bạn đang duyệt
+                            </span>
+                            <button
+                              type="button"
+                              className="button secondary-button"
+                              style={{ padding: '4px 8px', fontSize: '0.75rem', height: 'auto', background: '#fee2e2', color: '#991b1b', border: 'none', cursor: 'pointer' }}
+                              onClick={() => handleUnclaim('B2B_PARTNER', item.id)}
+                              disabled={actionStatus.type === 'loading'}
+                            >
+                              Nhả việc
+                            </button>
+                          </div>
+                        )}
+                        {isClaimedByOther && (
+                          <span className="admin-type-badge" style={{ background: '#fef3c7', color: '#b45309', fontWeight: 'bold' }}>
+                            🔒 Đang duyệt bởi: {item.claimedByAdminName || 'Admin khác'}
+                          </span>
+                        )}
+
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                          <button
+                            className="button primary-button admin-approve-btn"
+                            onClick={() => openApproveConfirmation(item.id, item.name)}
+                            disabled={actionStatus.type === 'loading' || !isClaimedByMe}
+                          >
+                            <Check size={16} /> Phê duyệt
+                          </button>
+                          <button
+                            className="button secondary-button admin-reject-btn"
+                            onClick={() => setRejectingItem(item)}
+                            disabled={actionStatus.type === 'loading' || !isClaimedByMe}
+                          >
+                            <X size={16} /> Từ chối
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -2207,6 +2382,43 @@ export function AdminB2bReviewPage() {
                           </button>
                         ) : (
                           <span style={{ fontSize: '0.86rem', color: '#dc2626' }}>⚠ Chưa có tài liệu</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="admin-card-notes" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--line, #e2e8f0)' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--p-ink, #0d1b33)', marginBottom: '8px' }}>
+                        📓 Ghi chú nội bộ (Chỉ Admin nhìn thấy)
+                      </label>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <textarea
+                          value={notesValue}
+                          onChange={(e) => setNotesDrafts(prev => ({ ...prev, [item.id]: e.target.value }))}
+                          disabled={isClaimedByOther}
+                          placeholder={isClaimedByOther ? "Đang bị khóa bởi admin khác..." : "Nhập ghi chú nội bộ (VD: cần kiểm tra thêm giấy phép, thông tin mập mờ...)"}
+                          style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: '1.5px solid var(--p-line, #cbd5e1)',
+                            fontSize: '0.85rem',
+                            minHeight: '60px',
+                            resize: 'vertical',
+                            outline: 'none',
+                            fontFamily: 'inherit',
+                            background: isClaimedByOther ? '#f9fafb' : '#fff'
+                          }}
+                        />
+                        {!isClaimedByOther && (
+                          <button
+                            type="button"
+                            className="button secondary-button"
+                            onClick={() => handleSaveNotes('B2B_PARTNER', item.id)}
+                            disabled={actionStatus.type === 'loading'}
+                            style={{ height: 'auto', alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                          >
+                            Lưu
+                          </button>
                         )}
                       </div>
                     </div>
@@ -2615,6 +2827,12 @@ export function AdminB2bReviewPage() {
             <div className="admin-group-modal-grid">
               {selectedJobGroup.jobs.map((job) => {
                 const si = getStatusInfo(job.status);
+                const liveJob = jobs.find(j => j.id === job.id) || job;
+                const isClaimedByMe = currentUser && liveJob.claimedByAdminId === currentUser.id;
+                const isClaimedByOther = liveJob.claimedByAdminId && liveJob.claimedByAdminId !== currentUser?.id;
+                const isUnclaimed = !liveJob.claimedByAdminId;
+                const isPending = (job.status || '').toLowerCase() === 'pending';
+
                 return (
                   <article key={job.id} className="admin-group-job-card">
                     <div className={`admin-post-icon ${job.postType === 'QUEST' ? 'quest' : ''}`}>
@@ -2631,7 +2849,7 @@ export function AdminB2bReviewPage() {
                       </div>
                     </div>
                     <span className={`badge-status ${si.badge}`}>{si.text}</span>
-                    <div className="admin-group-job-actions">
+                    <div className="admin-group-job-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <button
                         type="button"
                         className="button secondary-button"
@@ -2639,14 +2857,43 @@ export function AdminB2bReviewPage() {
                       >
                         Xem chi tiết
                       </button>
-                      {(job.status || '').toLowerCase() === 'pending' && (
+                      {isPending && (
                         <>
-                          <button type="button" className="button primary-button" onClick={() => openApproveJobConfirmation(job.id, job.title)}>
-                            <Check size={13} /> Duyệt
-                          </button>
-                          <button type="button" className="button danger-button" onClick={() => openRejectJobConfirmation(job.id, job.title)}>
-                            <X size={13} /> Từ chối
-                          </button>
+                          {isUnclaimed && (
+                            <button
+                              type="button"
+                              className="button secondary-button"
+                              style={{ padding: '6px 12px', fontSize: '0.8rem', background: '#f3f4f6', borderColor: '#d1d5db', color: '#1f2937', cursor: 'pointer' }}
+                              onClick={() => handleClaim('JOB', job.id)}
+                              disabled={actionStatus.type === 'loading'}
+                            >
+                              Nhận việc
+                            </button>
+                          )}
+                          {isClaimedByMe && (
+                            <>
+                              <button type="button" className="button primary-button" style={{ background: '#16a34a', borderColor: 'transparent', cursor: 'pointer' }} onClick={() => openApproveJobConfirmation(job.id, job.title)}>
+                                <Check size={13} /> Duyệt
+                              </button>
+                              <button type="button" className="button danger-button" style={{ background: '#dc2626', borderColor: 'transparent', cursor: 'pointer' }} onClick={() => openRejectJobConfirmation(job.id, job.title)}>
+                                <X size={13} /> Từ chối
+                              </button>
+                              <button
+                                type="button"
+                                className="button secondary-button"
+                                style={{ padding: '4px 8px', fontSize: '0.75rem', height: 'auto', background: '#fee2e2', color: '#991b1b', border: 'none', cursor: 'pointer' }}
+                                onClick={() => handleUnclaim('JOB', job.id)}
+                                disabled={actionStatus.type === 'loading'}
+                              >
+                                Nhả việc
+                              </button>
+                            </>
+                          )}
+                          {isClaimedByOther && (
+                            <span className="admin-type-badge" style={{ background: '#fef3c7', color: '#b45309', fontWeight: 'bold', fontSize: '0.75rem' }}>
+                              🔒 {liveJob.claimedByAdminName || 'Admin khác'}
+                            </span>
+                          )}
                         </>
                       )}
                     </div>
@@ -2730,212 +2977,308 @@ export function AdminB2bReviewPage() {
                 </button>
               </div>
             ) : selectedJobDetail ? (
-              <div>
-                {/* Rejection Reason Alert if status is rejected / closed */}
-                {(selectedJobDetail.status?.toLowerCase() === 'rejected' || (selectedJobDetail.isQuest && selectedJobDetail.status?.toLowerCase() === 'closed')) && selectedJobDetail.rejectionReason && (
-                  <div style={{
-                    backgroundColor: 'rgba(220,38,38,0.05)',
-                    border: '1px solid rgba(220,38,38,0.2)',
-                    borderRadius: '16px',
-                    padding: '16px',
-                    marginBottom: '20px',
-                    fontSize: '0.88rem',
-                  }}>
-                    <strong style={{ color: '#dc2626', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <AlertTriangle size={15} /> Lý do từ chối kiểm duyệt:
-                    </strong>
-                    <p style={{ margin: '6px 0 0', lineHeight: '1.4', color: 'var(--ink)' }}>
-                      {selectedJobDetail.rejectionReason}
-                    </p>
-                  </div>
-                )}
+              (() => {
+                const liveJob = jobs.find(j => j.id === selectedJobDetail.id) || selectedJobDetail;
+                const isClaimedByMe = currentUser && liveJob.claimedByAdminId === currentUser.id;
+                const isClaimedByOther = liveJob.claimedByAdminId && liveJob.claimedByAdminId !== currentUser?.id;
+                const isUnclaimed = !liveJob.claimedByAdminId;
+                const notesValue = notesDrafts[selectedJobDetail.id] !== undefined ? notesDrafts[selectedJobDetail.id] : (liveJob.internalNotes || '');
+                const isPending = (selectedJobDetail.status || '').toLowerCase() === 'pending';
 
-                {/* Metadata Grid */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '16px',
-                  marginBottom: '20px',
-                  background: 'var(--surface-soft)',
-                  padding: '16px',
-                  borderRadius: '16px',
-                  fontSize: '0.86rem'
-                }}>
+                return (
                   <div>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Phân loại bài đăng:</span>
-                    <strong style={{ textTransform: 'uppercase' }}>
-                      {selectedJobDetail.postType === 'JOB' ? 'Cơ hội việc làm (Job)' : 'Quest chiến dịch (Quest)'}
-                    </strong>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Loại hình:</span>
-                    <strong>{selectedJobDetail.jobType || '—'}</strong>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Nhà tuyển dụng / Tổ chức:</span>
-                    <strong style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {selectedJobDetail.companyType === 'CLUB' ? <GraduationCap size={13} style={{ color: '#ff7a1a' }} /> : <Building size={13} style={{ color: '#2563eb' }} />}
-                      {selectedJobDetail.companyName}
-                    </strong>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Hạn nộp hồ sơ:</span>
-                    <strong style={{ color: '#ff7a1a' }}>
-                      {selectedJobDetail.deadlineAt ? new Date(selectedJobDetail.deadlineAt).toLocaleString('vi-VN') : 'Không giới hạn'}
-                    </strong>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Địa điểm:</span>
-                    <strong>{selectedJobDetail.isRemote ? 'Làm việc từ xa (Remote)' : (selectedJobDetail.location || 'Chưa cập nhật')}</strong>
-                  </div>
-                  {selectedJobDetail.postType === 'QUEST' ? (
-                    <div>
-                      <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Thù lao / Phụ cấp:</span>
-                      <strong style={{ color: 'var(--muted)' }}>Không có</strong>
-                      <span style={{ fontSize: '0.76rem', color: '#ff7a1a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                        <Award size={13} /> Điểm EXP: +{selectedJobDetail.expReward || 100} EXP khi hoàn thành
-                      </span>
-                    </div>
-                  ) : (
-                    <div>
-                      <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Thù lao / Phụ cấp:</span>
-                      <strong style={{ color: '#16a34a' }}>
-                        {selectedJobDetail.compensation ? `${parseInt(selectedJobDetail.compensation, 10).toLocaleString('vi-VN')} VND` : 'Thỏa thuận'}
-                      </strong>
-                    </div>
-                  )}
-                  <div>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Chỉ tiêu Capacity:</span>
-                    <strong>{selectedJobDetail.capacity ? `${selectedJobDetail.capacity} chỉ tiêu` : 'Không giới hạn'}</strong>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Uy tín tối thiểu:</span>
-                    <strong style={{ color: '#2563eb' }}>{selectedJobDetail.minReqRs} RS</strong>
-                  </div>
-                </div>
+                    {/* Rejection Reason Alert if status is rejected / closed */}
+                    {(selectedJobDetail.status?.toLowerCase() === 'rejected' || (selectedJobDetail.isQuest && selectedJobDetail.status?.toLowerCase() === 'closed')) && selectedJobDetail.rejectionReason && (
+                      <div style={{
+                        backgroundColor: 'rgba(220,38,38,0.05)',
+                        border: '1px solid rgba(220,38,38,0.2)',
+                        borderRadius: '16px',
+                        padding: '16px',
+                        marginBottom: '20px',
+                        fontSize: '0.88rem',
+                      }}>
+                        <strong style={{ color: '#dc2626', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <AlertTriangle size={15} /> Lý do từ chối kiểm duyệt:
+                        </strong>
+                        <p style={{ margin: '6px 0 0', lineHeight: '1.4', color: 'var(--ink)' }}>
+                          {selectedJobDetail.rejectionReason}
+                        </p>
+                      </div>
+                    )}
 
-                {/* Required Skills */}
-                {selectedJobDetail.skills && selectedJobDetail.skills.length > 0 && (
-                  <div style={{ marginBottom: '20px' }}>
-                    <h4 style={{ margin: '0 0 8px', fontSize: '0.86rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Yêu cầu kỹ năng
-                    </h4>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                      {selectedJobDetail.skills.map((s, idx) => (
-                        <span key={idx} style={{
-                          padding: '4px 10px',
-                          borderRadius: '8px',
-                          background: 'var(--surface-soft)',
-                          border: '1px solid var(--line)',
-                          fontSize: '0.8rem',
-                        }}>
-                          <strong style={{ color: '#2563eb', marginRight: '4px' }}>{s.skillName}</strong>
-                          <span style={{ fontSize: '0.72rem', color: 'var(--muted)', fontWeight: 'bold' }}>
-                            ({s.requiredLevel === 'BEGINNER' ? 'Cơ bản' :
-                              s.requiredLevel === 'INTERMEDIATE' ? 'Trung bình' :
-                              s.requiredLevel === 'ADVANCED' ? 'Nâng cao' : 'Chuyên gia'})
-                          </span>
+                    {isPending && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 16px',
+                        borderRadius: '12px',
+                        background: isClaimedByMe ? '#dcfce7' : isClaimedByOther ? '#fef3c7' : '#f3f4f6',
+                        color: isClaimedByMe ? '#15803d' : isClaimedByOther ? '#b45309' : '#1f2937',
+                        marginBottom: '16px',
+                        fontSize: '0.88rem',
+                        fontWeight: '600'
+                      }}>
+                        <span>
+                          {isClaimedByMe ? '✅ Bạn đang phụ trách duyệt bài đăng này.' :
+                           isClaimedByOther ? `🔒 Đang được duyệt bởi: ${liveJob.claimedByAdminName || 'Admin khác'}` :
+                           '⌛ Bài đăng này chưa có người phụ trách.'}
                         </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                        <div>
+                          {isUnclaimed && (
+                            <button
+                              type="button"
+                              className="button secondary-button"
+                              style={{ padding: '6px 12px', fontSize: '0.8rem', background: '#fff', borderColor: '#d1d5db', cursor: 'pointer' }}
+                              onClick={() => handleClaim('JOB', selectedJobDetail.id)}
+                              disabled={actionStatus.type === 'loading'}
+                            >
+                              Nhận việc
+                            </button>
+                          )}
+                          {isClaimedByMe && (
+                            <button
+                              type="button"
+                              className="button secondary-button"
+                              style={{ padding: '6px 12px', fontSize: '0.8rem', background: '#fee2e2', color: '#991b1b', border: 'none', cursor: 'pointer' }}
+                              onClick={() => handleUnclaim('JOB', selectedJobDetail.id)}
+                              disabled={actionStatus.type === 'loading'}
+                            >
+                              Nhả việc
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
-                {/* Custom application questions */}
-                {selectedJobDetail.formFields && selectedJobDetail.formFields.length > 0 && (
-                  <div style={{ marginBottom: '20px' }}>
-                    <h4 style={{ margin: '0 0 8px', fontSize: '0.86rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Câu hỏi thêm cho ứng viên ({selectedJobDetail.formFields.length})
-                    </h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {selectedJobDetail.formFields.map((f, idx) => {
-                        const typeLabel = f.fieldType === 'TEXTAREA' ? 'Văn bản dài' : f.fieldType === 'SELECT' ? 'Chọn 1 đáp án' : 'Văn bản ngắn';
-                        const opts = f.fieldType === 'SELECT' ? (f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean) : [];
-                        return (
-                          <div key={f.id || idx} style={{ padding: '10px 12px', borderRadius: '10px', background: 'var(--surface-soft)', border: '1px solid var(--line)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#2563eb' }}>{idx + 1}.</span>
-                              <strong style={{ fontSize: '0.85rem' }}>{f.label}</strong>
-                              {f.required && <span style={{ fontSize: '0.66rem', fontWeight: '800', color: '#dc2626', background: 'rgba(220,38,38,0.08)', padding: '2px 7px', borderRadius: '999px' }}>Bắt buộc</span>}
-                              <span style={{ fontSize: '0.66rem', fontWeight: '700', color: 'var(--muted)', background: 'var(--bg)', border: '1px solid var(--line)', padding: '2px 7px', borderRadius: '999px' }}>{typeLabel}</span>
-                            </div>
-                            {opts.length > 0 && (
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '6px' }}>
-                                {opts.map((o, i) => (
-                                  <span key={i} style={{ fontSize: '0.72rem', fontWeight: '600', background: 'var(--bg)', border: '1px solid var(--line)', padding: '2px 8px', borderRadius: '6px' }}>{o}</span>
-                                ))}
+                    {/* Metadata Grid */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '16px',
+                      marginBottom: '20px',
+                      background: 'var(--surface-soft)',
+                      padding: '16px',
+                      borderRadius: '16px',
+                      fontSize: '0.86rem'
+                    }}>
+                      <div>
+                        <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Phân loại bài đăng:</span>
+                        <strong style={{ textTransform: 'uppercase' }}>
+                          {selectedJobDetail.postType === 'JOB' ? 'Cơ hội việc làm (Job)' : 'Quest chiến dịch (Quest)'}
+                        </strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Loại hình:</span>
+                        <strong>{selectedJobDetail.jobType || '—'}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Nhà tuyển dụng / Tổ chức:</span>
+                        <strong style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          {selectedJobDetail.companyType === 'CLUB' ? <GraduationCap size={13} style={{ color: '#ff7a1a' }} /> : <Building size={13} style={{ color: '#2563eb' }} />}
+                          {selectedJobDetail.companyName}
+                        </strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Hạn nộp hồ sơ:</span>
+                        <strong style={{ color: '#ff7a1a' }}>
+                          {selectedJobDetail.deadlineAt ? new Date(selectedJobDetail.deadlineAt).toLocaleString('vi-VN') : 'Không giới hạn'}
+                        </strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Địa điểm:</span>
+                        <strong>{selectedJobDetail.isRemote ? 'Làm việc từ xa (Remote)' : (selectedJobDetail.location || 'Chưa cập nhật')}</strong>
+                      </div>
+                      {selectedJobDetail.postType === 'QUEST' ? (
+                        <div>
+                          <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Thù lao / Phụ cấp:</span>
+                          <strong style={{ color: 'var(--muted)' }}>Không có</strong>
+                          <span style={{ fontSize: '0.76rem', color: '#ff7a1a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                            <Award size={13} /> Điểm EXP: +{selectedJobDetail.expReward || 100} EXP khi hoàn thành
+                          </span>
+                        </div>
+                      ) : (
+                        <div>
+                          <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Thù lao / Phụ cấp:</span>
+                          <strong style={{ color: '#16a34a' }}>
+                            {selectedJobDetail.compensation ? `${parseInt(selectedJobDetail.compensation, 10).toLocaleString('vi-VN')} VND` : 'Thỏa thuận'}
+                          </strong>
+                        </div>
+                      )}
+                      <div>
+                        <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Chỉ tiêu Capacity:</span>
+                        <strong>{selectedJobDetail.capacity ? `${selectedJobDetail.capacity} chỉ tiêu` : 'Không giới hạn'}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.76rem', color: 'var(--muted)', display: 'block', marginBottom: '2px' }}>Uy tín tối thiểu:</span>
+                        <strong style={{ color: '#2563eb' }}>{selectedJobDetail.minReqRs} RS</strong>
+                      </div>
+                    </div>
+
+                    {/* Required Skills */}
+                    {selectedJobDetail.skills && selectedJobDetail.skills.length > 0 && (
+                      <div style={{ marginBottom: '20px' }}>
+                        <h4 style={{ margin: '0 0 8px', fontSize: '0.86rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Yêu cầu kỹ năng
+                        </h4>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {selectedJobDetail.skills.map((s, idx) => (
+                            <span key={idx} style={{
+                              padding: '4px 10px',
+                              borderRadius: '8px',
+                              background: 'var(--surface-soft)',
+                              border: '1px solid var(--line)',
+                              fontSize: '0.8rem',
+                            }}>
+                              <strong style={{ color: '#2563eb', marginRight: '4px' }}>{s.skillName}</strong>
+                              <span style={{ fontSize: '0.72rem', color: 'var(--muted)', fontWeight: 'bold' }}>
+                                ({s.requiredLevel === 'BEGINNER' ? 'Cơ bản' :
+                                  s.requiredLevel === 'INTERMEDIATE' ? 'Trung bình' :
+                                  s.requiredLevel === 'ADVANCED' ? 'Nâng cao' : 'Chuyên gia'})
+                              </span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Custom application questions */}
+                    {selectedJobDetail.formFields && selectedJobDetail.formFields.length > 0 && (
+                      <div style={{ marginBottom: '20px' }}>
+                        <h4 style={{ margin: '0 0 8px', fontSize: '0.86rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Câu hỏi thêm cho ứng viên ({selectedJobDetail.formFields.length})
+                        </h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {selectedJobDetail.formFields.map((f, idx) => {
+                            const typeLabel = f.fieldType === 'TEXTAREA' ? 'Văn bản dài' : f.fieldType === 'SELECT' ? 'Chọn 1 đáp án' : 'Văn bản ngắn';
+                            const opts = f.fieldType === 'SELECT' ? (f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean) : [];
+                            return (
+                              <div key={f.id || idx} style={{ padding: '10px 12px', borderRadius: '10px', background: 'var(--surface-soft)', border: '1px solid var(--line)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                  <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#2563eb' }}>{idx + 1}.</span>
+                                  <strong style={{ fontSize: '0.85rem' }}>{f.label}</strong>
+                                  {f.required && <span style={{ fontSize: '0.66rem', fontWeight: '800', color: '#dc2626', background: 'rgba(220,38,38,0.08)', padding: '2px 7px', borderRadius: '999px' }}>Bắt buộc</span>}
+                                  <span style={{ fontSize: '0.66rem', fontWeight: '700', color: 'var(--muted)', background: 'var(--bg)', border: '1px solid var(--line)', padding: '2px 7px', borderRadius: '999px' }}>{typeLabel}</span>
+                                </div>
+                                {opts.length > 0 && (
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '6px' }}>
+                                    {opts.map((o, i) => (
+                                      <span key={i} style={{ fontSize: '0.72rem', fontWeight: '600', background: 'var(--bg)', border: '1px solid var(--line)', padding: '2px 8px', borderRadius: '6px' }}>{o}</span>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Job Description */}
+                    <div style={{ marginBottom: '24px' }}>
+                      <h4 style={{ margin: '0 0 8px', fontSize: '0.86rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        Mô tả chi tiết (JD)
+                      </h4>
+                      <div style={{
+                        background: 'var(--surface-soft)',
+                        padding: '16px',
+                        borderRadius: '12px',
+                        fontSize: '0.88rem',
+                        lineHeight: 1.5,
+                        whiteSpace: 'pre-wrap',
+                        maxHeight: '180px',
+                        overflowY: 'auto',
+                        border: '1px solid var(--line)'
+                      }}>
+                        {selectedJobDetail.description}
+                      </div>
+                    </div>
+
+                    {/* Internal Notes */}
+                    <div style={{ marginBottom: '24px', paddingTop: '16px', borderTop: '1px dashed var(--line, #e2e8f0)' }}>
+                      <h4 style={{ margin: '0 0 8px', fontSize: '0.86rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        📓 Ghi chú nội bộ (Chỉ Admin nhìn thấy)
+                      </h4>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <textarea
+                          value={notesValue}
+                          onChange={(e) => setNotesDrafts(prev => ({ ...prev, [selectedJobDetail.id]: e.target.value }))}
+                          disabled={isClaimedByOther}
+                          placeholder={isClaimedByOther ? "Đang bị khóa bởi admin khác..." : "Nhập ghi chú nội bộ cho bài đăng này..."}
+                          style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: '1.5px solid var(--p-line, #cbd5e1)',
+                            fontSize: '0.85rem',
+                            minHeight: '60px',
+                            resize: 'vertical',
+                            outline: 'none',
+                            fontFamily: 'inherit',
+                            background: isClaimedByOther ? '#f9fafb' : '#fff'
+                          }}
+                        />
+                        {!isClaimedByOther && (
+                          <button
+                            type="button"
+                            className="button secondary-button"
+                            onClick={() => handleSaveNotes('JOB', selectedJobDetail.id)}
+                            disabled={actionStatus.type === 'loading'}
+                            style={{ height: 'auto', alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                          >
+                            Lưu
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--line)', paddingTop: '16px' }}>
+                      <button
+                        type="button"
+                        className="button secondary-button"
+                        onClick={() => {
+                          setSelectedJobId(null);
+                          setSelectedJobDetail(null);
+                        }}
+                      >
+                        Đóng
+                      </button>
+
+                      {isPending && (
+                        <>
+                          <button
+                            type="button"
+                            className="button primary-button"
+                            style={{ background: '#dc2626', borderColor: 'transparent', color: '#fff', cursor: 'pointer' }}
+                            disabled={!isClaimedByMe}
+                            onClick={() => {
+                              setSelectedJobId(null);
+                              setSelectedJobDetail(null);
+                              openRejectJobConfirmation(selectedJobDetail.id, selectedJobDetail.title);
+                            }}
+                          >
+                            <X size={15} /> Từ chối
+                          </button>
+                          <button
+                            type="button"
+                            className="button primary-button"
+                            style={{ background: '#16a34a', borderColor: 'transparent', color: '#fff', cursor: 'pointer' }}
+                            disabled={!isClaimedByMe}
+                            onClick={() => {
+                              setSelectedJobId(null);
+                              setSelectedJobDetail(null);
+                              openApproveJobConfirmation(selectedJobDetail.id, selectedJobDetail.title);
+                            }}
+                          >
+                            <Check size={15} /> Duyệt bài
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
-                )}
-
-                {/* Job Description */}
-                <div style={{ marginBottom: '24px' }}>
-                  <h4 style={{ margin: '0 0 8px', fontSize: '0.86rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Mô tả chi tiết (JD)
-                  </h4>
-                  <div style={{
-                    background: 'var(--surface-soft)',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    fontSize: '0.88rem',
-                    lineHeight: 1.5,
-                    whiteSpace: 'pre-wrap',
-                    maxHeight: '180px',
-                    overflowY: 'auto',
-                    border: '1px solid var(--line)'
-                  }}>
-                    {selectedJobDetail.description}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--line)', paddingTop: '16px' }}>
-                  <button
-                    type="button"
-                    className="button secondary-button"
-                    onClick={() => {
-                      setSelectedJobId(null);
-                      setSelectedJobDetail(null);
-                    }}
-                  >
-                    Đóng
-                  </button>
-
-                  {(selectedJobDetail.status || '').toLowerCase() === 'pending' && (
-                    <>
-                      <button
-                        type="button"
-                        className="button primary-button"
-                        style={{ background: '#dc2626', borderColor: 'transparent', color: '#fff' }}
-                        onClick={() => {
-                          setSelectedJobId(null);
-                          setSelectedJobDetail(null);
-                          openRejectJobConfirmation(selectedJobDetail.id, selectedJobDetail.title);
-                        }}
-                      >
-                        <X size={15} /> Từ chối
-                      </button>
-                      <button
-                        type="button"
-                        className="button primary-button"
-                        style={{ background: '#16a34a', borderColor: 'transparent', color: '#fff' }}
-                        onClick={() => {
-                          setSelectedJobId(null);
-                          setSelectedJobDetail(null);
-                          openApproveJobConfirmation(selectedJobDetail.id, selectedJobDetail.title);
-                        }}
-                      >
-                        <Check size={15} /> Duyệt bài
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
+                );
+              })()
             ) : null}
           </div>
         </div>
