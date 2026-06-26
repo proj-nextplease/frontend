@@ -1018,27 +1018,44 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     }
   }
 
-  const handleBoostApplication = async (applicationId, applicationType) => {
-    if (window.confirm(`Bạn có chắc chắn muốn đẩy tin nổi bật đơn ứng tuyển này với giá ${premiumConfig.boostPriceNp.toLocaleString()} NP?`)) {
-      const loadingKey = encodePremiumTarget(applicationType, applicationId);
-      setBoostLoadingId(loadingKey);
-      try {
-        const result = await boostApplication(applicationId, applicationType);
-        if (applicationType === 'QUEST') {
-          const apps = await getMyQuestApplications();
-          setQuestApplications(apps || []);
-        } else {
-          const apps = await getMyApplications();
-          setAppliedJobs(apps || []);
+  // Styled confirm dialog + toast (replaces native window.confirm / alert)
+  const [confirmDialog, setConfirmDialog] = useState(null);
+  const [toast, setToast] = useState(null);
+  const showToast = (type, message) => setToast({ type, message });
+  const askConfirm = (opts) => setConfirmDialog(opts);
+  useEffect(() => {
+    if (!toast) return undefined;
+    const t = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const handleBoostApplication = (applicationId, applicationType) => {
+    askConfirm({
+      title: 'Đẩy tin nổi bật (Profile Boost)',
+      message: `Hệ thống sẽ trừ ${premiumConfig.boostPriceNp.toLocaleString()} NP để ghim đơn ứng tuyển này lên đầu danh sách của nhà tuyển dụng trong ${premiumConfig.boostDurationHours || 48} giờ.`,
+      confirmText: 'Boost ngay',
+      accent: '#d97706',
+      onConfirm: async () => {
+        const loadingKey = encodePremiumTarget(applicationType, applicationId);
+        setBoostLoadingId(loadingKey);
+        try {
+          const result = await boostApplication(applicationId, applicationType);
+          if (applicationType === 'QUEST') {
+            const apps = await getMyQuestApplications();
+            setQuestApplications(apps || []);
+          } else {
+            const apps = await getMyApplications();
+            setAppliedJobs(apps || []);
+          }
+          setWallet(prev => prev ? { ...prev, npBalance: result.npBalance } : prev);
+          showToast('success', 'Đẩy tin nổi bật thành công!');
+        } catch (err) {
+          showToast('error', err.message || 'Đẩy tin nổi bật thất bại.');
+        } finally {
+          setBoostLoadingId(null);
         }
-        setWallet(prev => prev ? { ...prev, npBalance: result.npBalance } : prev);
-        alert("Đẩy tin ứng tuyển thành công!");
-      } catch (err) {
-        alert(err.message || "Đẩy tin nổi bật thất bại.");
-      } finally {
-        setBoostLoadingId(null);
-      }
-    }
+      },
+    });
   };
 
   const handleViewInsight = async (application) => {
@@ -1051,56 +1068,76 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       setInsightData(res);
       setInsightModalJob({ ...application, applicationType, targetId });
     } catch (err) {
-      alert(err.message || "Không thể tải thống kê ứng tuyển.");
+      showToast('error', err.message || "Không thể tải thống kê ứng tuyển.");
     } finally {
       setInsightLoadingJobId(null);
     }
   };
 
-  const handleUnlockInsight = async (targetId, applicationType) => {
-    if (window.confirm(`Bạn có đồng ý mở khóa Application Insight cho đơn này với giá ${premiumConfig.insightPriceNp.toLocaleString()} NP?`)) {
-      try {
-        const res = await unlockInsight(targetId, applicationType);
-        setWallet(prev => prev ? { ...prev, npBalance: res.npBalance } : prev);
-        const newInsight = await getInsight(targetId, applicationType);
-        setInsightData(newInsight);
-        alert("Mở khóa Insight thành công!");
-      } catch (err) {
-        alert(err.message || "Mở khóa Insight thất bại.");
-      }
-    }
+  const handleUnlockInsight = (targetId, applicationType) => {
+    askConfirm({
+      title: 'Mở khóa Application Insight',
+      message: `Hệ thống sẽ trừ ${premiumConfig.insightPriceNp.toLocaleString()} NP để mở khóa thứ hạng và phân tích cạnh tranh cho đơn ứng tuyển này.`,
+      confirmText: 'Mở khóa',
+      accent: '#7c3aed',
+      onConfirm: async () => {
+        try {
+          const res = await unlockInsight(targetId, applicationType);
+          setWallet(prev => prev ? { ...prev, npBalance: res.npBalance } : prev);
+          const newInsight = await getInsight(targetId, applicationType);
+          setInsightData(newInsight);
+          showToast('success', 'Mở khóa Insight thành công!');
+        } catch (err) {
+          showToast('error', err.message || 'Mở khóa Insight thất bại.');
+        }
+      },
+    });
   };
 
-  const handleExpressVerification = async (experienceId) => {
-    if (window.confirm(`Bạn có muốn đăng ký Xác thực nhanh 24h cho minh chứng này với giá ${premiumConfig.expressPriceNp.toLocaleString()} NP?`)) {
-      setExpressLoadingId(experienceId);
-      try {
-        const res = await requestExpressVerification(experienceId);
-        setWallet(prev => prev ? { ...prev, npBalance: res.npBalance } : prev);
-        const creds = await getMyCredentialSubmissions();
-        setCredentialSubmissions(creds || []);
-        alert("Đăng ký xác thực nhanh thành công!");
-      } catch (err) {
-        alert(err.message || "Đăng ký duyệt nhanh thất bại.");
-      } finally {
-        setExpressLoadingId(null);
-      }
-    }
+  const handleExpressVerification = (experienceId) => {
+    askConfirm({
+      title: 'Xác thực nhanh 24h (Express)',
+      message: `Hệ thống sẽ trừ ${premiumConfig.expressPriceNp.toLocaleString()} NP để ưu tiên thẩm định minh chứng này trong 24 giờ.`,
+      confirmText: 'Nâng cấp Express',
+      accent: '#d97706',
+      onConfirm: async () => {
+        setExpressLoadingId(experienceId);
+        try {
+          const res = await requestExpressVerification(experienceId);
+          setWallet(prev => prev ? { ...prev, npBalance: res.npBalance } : prev);
+          const creds = await getMyCredentialSubmissions();
+          setCredentialSubmissions(creds || []);
+          showToast('success', 'Đăng ký xác thực nhanh thành công!');
+        } catch (err) {
+          showToast('error', err.message || 'Đăng ký duyệt nhanh thất bại.');
+        } finally {
+          setExpressLoadingId(null);
+        }
+      },
+    });
   };
 
-  const handleSubscribeMatchAlert = async () => {
-    setSubscribingMatchAlert(true);
-    try {
-      await subscribeJobMatchAlert();
-      const newWallet = await getWallet();
-      setWallet(newWallet);
-      alert("Đăng ký dịch vụ Job Match Alert thành công!");
-      setShowMatchAlertModal(false);
-    } catch (err) {
-      alert(err.message || "Đăng ký thất bại.");
-    } finally {
-      setSubscribingMatchAlert(false);
-    }
+  const handleSubscribeMatchAlert = () => {
+    askConfirm({
+      title: 'Đăng ký Job Match Alert',
+      message: `Hệ thống sẽ trừ ${(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP cho gói 30 ngày: gợi ý việc làm cá nhân hóa + xem sớm tin mới.`,
+      confirmText: 'Đăng ký ngay',
+      accent: '#059669',
+      onConfirm: async () => {
+        setSubscribingMatchAlert(true);
+        try {
+          await subscribeJobMatchAlert();
+          const newWallet = await getWallet();
+          setWallet(newWallet);
+          showToast('success', 'Đăng ký dịch vụ Job Match Alert thành công!');
+          setShowMatchAlertModal(false);
+        } catch (err) {
+          showToast('error', err.message || 'Đăng ký thất bại.');
+        } finally {
+          setSubscribingMatchAlert(false);
+        }
+      },
+    });
   };
 
   async function handleWithdrawJob(applicationId) {
@@ -2647,7 +2684,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 const updated = await getMyPortfolio();
                                 setPortfolio(updated);
                               } catch (err) {
-                                alert(err.message || 'Thay đổi giao diện thất bại.');
+                                showToast('error', err.message || 'Thay đổi giao diện thất bại.');
                               }
                             }}
                             className={`premium-theme-option ${isActive ? 'active' : ''}`}
@@ -2665,8 +2702,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   ) : (
                     <button
                       type="button"
-                      onClick={async () => {
-                        if (window.confirm(`Bạn có đồng ý mở khóa trọn đời Visual Upgrade với giá ${(premiumConfig.themePriceNp || 50000).toLocaleString()} NP?`)) {
+                      onClick={() => askConfirm({
+                        title: 'Mở khóa Visual Upgrade',
+                        message: `Hệ thống sẽ trừ ${(premiumConfig.themePriceNp || 50000).toLocaleString()} NP để mở khóa trọn đời bộ theme cho link portfolio công khai.`,
+                        confirmText: 'Mua trọn đời',
+                        accent: '#7c3aed',
+                        onConfirm: async () => {
                           try {
                             const res = await unlockTheme();
                             if (res.npBalance !== undefined) {
@@ -2677,12 +2718,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                             }
                             const updated = await getMyPortfolio();
                             setPortfolio(updated);
-                            alert('Mở khóa Theme thành công!');
+                            showToast('success', 'Mở khóa Theme thành công!');
                           } catch (err) {
-                            alert(err.message || 'Mở khóa thất bại.');
+                            showToast('error', err.message || 'Mở khóa thất bại.');
                           }
-                        }
-                      }}
+                        },
+                      })}
                       className="button primary-button accent-violet"
                     >
                       Mua trọn đời
@@ -4096,6 +4137,43 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Styled confirm dialog (replaces window.confirm) */}
+      {confirmDialog && (
+        <div className="glass-modal-overlay" onClick={() => setConfirmDialog(null)}>
+          <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+            <div className="glass-modal-header" style={{ borderTop: `3px solid ${confirmDialog.accent || 'var(--primary)'}`, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit' }}>
+              <span style={{ display: 'inline-flex', width: '34px', height: '34px', borderRadius: '10px', alignItems: 'center', justifyContent: 'center', background: `${confirmDialog.accent || 'var(--primary)'}14`, color: confirmDialog.accent || 'var(--primary)' }}>
+                <Crown size={18} />
+              </span>
+              <h2>{confirmDialog.title}</h2>
+            </div>
+            <div className="glass-modal-body">
+              <p style={{ margin: 0, fontSize: '0.92rem', lineHeight: 1.6, color: 'var(--c-ink)' }}>{confirmDialog.message}</p>
+            </div>
+            <div className="glass-modal-footer">
+              <button className="button secondary-button" type="button" onClick={() => setConfirmDialog(null)}>Hủy bỏ</button>
+              <button
+                className="button primary-button"
+                type="button"
+                style={{ background: confirmDialog.accent || undefined, borderColor: 'transparent' }}
+                onClick={() => { const fn = confirmDialog.onConfirm; setConfirmDialog(null); if (fn) fn(); }}
+              >
+                {confirmDialog.confirmText || 'Xác nhận'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast (replaces alert) */}
+      {toast && (
+        <div className={`candidate-toast ${toast.type}`} role="status">
+          {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
+          <span>{toast.message}</span>
+          <button type="button" onClick={() => setToast(null)} aria-label="Đóng"><X size={15} /></button>
         </div>
       )}
     </div>
