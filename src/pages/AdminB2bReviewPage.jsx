@@ -1553,7 +1553,13 @@ export function AdminB2bReviewPage() {
               </div>
 
               {(() => {
-                const creds = selectedVerifGroup.credentials || [];
+                // Read live data from verifQueue so claim/approve/reject/notes reflect immediately
+                // (selectedVerifGroup is only a snapshot captured when the modal opened).
+                const groupKey = selectedVerifGroup.key;
+                const liveCreds = (verifQueue || []).filter(item =>
+                  (item.candidate_email || item.candidate_id || item.candidate_name || item.id) === groupKey
+                );
+                const creds = liveCreds.length > 0 ? liveCreds : (selectedVerifGroup.credentials || []);
                 const statusLabel = (s) => s === 'APPROVED' ? 'Đã duyệt' : s === 'REJECTED' ? 'Từ chối' : 'Chờ xác thực';
                 const activeCred = creds.find(c => c.id === activeCredId) || creds[0];
                 if (!activeCred) return null;
