@@ -1565,8 +1565,8 @@ export function AdminB2bReviewPage() {
                 if (!activeCred) return null;
 
                 const status = (activeCred.verification_status || activeCred.status || 'PENDING').toUpperCase();
-                const isClaimedByMe = currentUser && activeCred.claimedByAdminId === currentUser.id;
-                const isClaimedByOther = activeCred.claimedByAdminId && activeCred.claimedByAdminId !== currentUser?.id;
+                const isClaimedByMe = activeCred.claimedByMe === true;
+                const isClaimedByOther = !!activeCred.claimedByAdminId && !isClaimedByMe;
                 const isUnclaimed = !activeCred.claimedByAdminId;
                 const notesValue = notesDrafts[activeCred.id] !== undefined ? notesDrafts[activeCred.id] : (activeCred.internalNotes || '');
                 let imgs = [];
@@ -2864,8 +2864,8 @@ export function AdminB2bReviewPage() {
               {selectedJobGroup.jobs.map((job) => {
                 const si = getStatusInfo(job.status);
                 const liveJob = jobs.find(j => j.id === job.id) || job;
-                const isClaimedByMe = currentUser && liveJob.claimedByAdminId === currentUser.id;
-                const isClaimedByOther = liveJob.claimedByAdminId && liveJob.claimedByAdminId !== currentUser?.id;
+                const isClaimedByMe = liveJob.claimedByMe === true;
+                const isClaimedByOther = !!liveJob.claimedByAdminId && !isClaimedByMe;
                 const isUnclaimed = !liveJob.claimedByAdminId;
                 const isPending = (job.status || '').toLowerCase() === 'pending';
 
@@ -3015,8 +3015,8 @@ export function AdminB2bReviewPage() {
             ) : selectedJobDetail ? (
               (() => {
                 const liveJob = jobs.find(j => j.id === selectedJobDetail.id) || selectedJobDetail;
-                const isClaimedByMe = currentUser && liveJob.claimedByAdminId === currentUser.id;
-                const isClaimedByOther = liveJob.claimedByAdminId && liveJob.claimedByAdminId !== currentUser?.id;
+                const isClaimedByMe = liveJob.claimedByMe === true;
+                const isClaimedByOther = !!liveJob.claimedByAdminId && !isClaimedByMe;
                 const isUnclaimed = !liveJob.claimedByAdminId;
                 const notesValue = notesDrafts[selectedJobDetail.id] !== undefined ? notesDrafts[selectedJobDetail.id] : (liveJob.internalNotes || '');
                 const isPending = (selectedJobDetail.status || '').toLowerCase() === 'pending';
