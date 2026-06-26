@@ -34,6 +34,7 @@ import {
   SlidersHorizontal,
   Users,
   ImagePlus,
+  Palette,
 } from 'lucide-react';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
@@ -44,6 +45,17 @@ import { NotificationBell } from '../components/NotificationBell.jsx';
 import { getWallet, topUp, buyPremium } from '../api/walletApi.js';
 import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication } from '../api/questApi.js';
 import { supabase } from '../services/supabaseClient.js';
+import {
+  boostApplication,
+  unlockInsight,
+  getInsight,
+  requestExpressVerification,
+  subscribeJobMatchAlert,
+  getPersonalizedRecommendations,
+  getPremiumConfig,
+  unlockTheme,
+  selectTheme
+} from '../api/premiumApi.js';
 
 const CATEGORY_MAP = {
   TECH: {
@@ -122,6 +134,19 @@ function formatMonthValue(value) {
   const monthIndex = Number(month) - 1;
   if (!year || monthIndex < 0 || monthIndex > 11) return 'Chọn tháng / năm';
   return `${MONTH_LABELS[monthIndex]} ${year}`;
+}
+
+function encodePremiumTarget(type, id) {
+  return `${type}:${id}`;
+}
+
+function decodePremiumTarget(value) {
+  const separatorIndex = value.indexOf(':');
+  if (separatorIndex < 0) return { type: 'JOB', id: value };
+  return {
+    type: value.slice(0, separatorIndex),
+    id: value.slice(separatorIndex + 1),
+  };
 }
 
 function CredentialMonthPicker({ id, label, value, minValue, maxValue, openPicker, setOpenPicker, onChange, helperText }) {
@@ -387,10 +412,34 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [buyPremiumLoading, setBuyPremiumLoading] = useState(false);
   const [buyPremiumError, setBuyPremiumError] = useState('');
 
+  // Premium Monetization states
+  const [premiumConfig, setPremiumConfig] = useState({
+    boostPriceNp: 15000,
+    boostDurationHours: 48,
+    insightPriceNp: 10000,
+    expressPriceNp: 25000,
+    themePriceNp: 50000,
+    matchAlertPriceNp: 19000,
+    earlyAccessHours: 12
+  });
+  const [insightData, setInsightData] = useState(null);
+  const [insightLoadingJobId, setInsightLoadingJobId] = useState(null);
+  const [insightModalJob, setInsightModalJob] = useState(null);
+  const [boostLoadingId, setBoostLoadingId] = useState(null);
+  const [expressLoadingId, setExpressLoadingId] = useState(null);
+  const [subscribingMatchAlert, setSubscribingMatchAlert] = useState(false);
+  const [recommendations, setRecommendations] = useState(null);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [showMatchAlertModal, setShowMatchAlertModal] = useState(false);
+  const [selectedBoostAppId, setSelectedBoostAppId] = useState('');
+  const [selectedExpressSubId, setSelectedExpressSubId] = useState('');
+  const [selectedInsightJobId, setSelectedInsightJobId] = useState('');
+
   // Quest states
   const [questsList, setQuestsList] = useState([]);
   const [questsLoading, setQuestsLoading] = useState(false);
   const [questApplications, setQuestApplications] = useState([]);
+  const [questApplicationsLoading, setQuestApplicationsLoading] = useState(true);
   const [viewingApp, setViewingApp] = useState(null); // { app, isQuest } for the "Xem chi tiết" tracking modal
   const [questApplyLoading, setQuestApplyLoading] = useState(false);
   const [questApplyError, setQuestApplyError] = useState('');
@@ -501,7 +550,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   useEffect(() => {
     if (tabSlug) {
       const upperTab = tabSlug.toUpperCase();
-      if (['OVERVIEW', 'OPPORTUNITIES', 'QUESTS', 'ROADMAP', 'CREDENTIALS', 'ORGANIZATIONS', 'MY_APPLICATIONS'].includes(upperTab)) {
+      if (['OVERVIEW', 'OPPORTUNITIES', 'QUESTS', 'ROADMAP', 'CREDENTIALS', 'ORGANIZATIONS', 'MY_APPLICATIONS', 'RECOMMENDATIONS', 'PREMIUM_STORE'].includes(upperTab)) {
         setActiveView(upperTab);
         setSelectedOrg(null);
       } else if (tabSlug.startsWith('org-')) {
@@ -689,9 +738,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     };
   }, [filterSearch, filterCategory, filterSpecialty, filterJobType, filterIsRemote]);
 
-  // Fetch credential submissions when CREDENTIALS tab is active
+  // Fetch credential submissions when CREDENTIALS or PREMIUM_STORE tab is active
   useEffect(() => {
-    if (activeView !== 'CREDENTIALS') return;
+    if (activeView !== 'CREDENTIALS' && activeView !== 'PREMIUM_STORE') return;
     let isMounted = true;
     setCredentialSubmissionsLoading(true);
     getMyCredentialSubmissions()
@@ -701,7 +750,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     return () => { isMounted = false; };
   }, [activeView]);
 
-  // Load real applications from API on mount
+  // Load real applications from API on mount AND when navigating to PREMIUM_STORE
   useEffect(() => {
     let isMounted = true;
     setApplicationsLoading(true);
@@ -710,7 +759,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .catch(err => console.error('Lỗi tải ứng tuyển:', err))
       .finally(() => { if (isMounted) setApplicationsLoading(false); });
     return () => { isMounted = false; };
-  }, []);
+  }, [activeView]);
 
   // Load wallet on mount
   useEffect(() => {
@@ -722,6 +771,24 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .finally(() => { if (isMounted) setWalletLoading(false); });
     return () => { isMounted = false; };
   }, []);
+
+  // Load premium config and recommendations on mount/update
+  useEffect(() => {
+    getPremiumConfig()
+      .then(setPremiumConfig)
+      .catch(err => console.error('Lỗi tải cấu hình premium:', err));
+  }, []);
+
+  useEffect(() => {
+    if (!wallet || (!wallet.isPremium && !wallet.hasJobMatchAlert)) return;
+    let isMounted = true;
+    setRecommendationsLoading(true);
+    getPersonalizedRecommendations()
+      .then(data => { if (isMounted) setRecommendations(data); })
+      .catch(err => console.error('Lỗi tải gợi ý cá nhân hóa:', err))
+      .finally(() => { if (isMounted) setRecommendationsLoading(false); });
+    return () => { isMounted = false; };
+  }, [wallet]);
 
   // Load quests when OPPORTUNITIES tab opens (or on mount)
   useEffect(() => {
@@ -737,9 +804,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   // Load my quest applications on mount
   useEffect(() => {
     let isMounted = true;
+    setQuestApplicationsLoading(true);
     getMyQuestApplications()
       .then(data => { if (isMounted) setQuestApplications(data || []); })
-      .catch(err => console.error('Lỗi tải đơn Quest:', err));
+      .catch(err => console.error('Lỗi tải đơn Quest:', err))
+      .finally(() => { if (isMounted) setQuestApplicationsLoading(false); });
     return () => { isMounted = false; };
   }, []);
 
@@ -938,6 +1007,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       if (err.errorCode === 'PREMIUM_REQUIRED') {
         setShowApplyModal(false);
         setShowPremiumPaywall(true);
+      } else if (err.errorCode === 'EARLY_ACCESS_REQUIRED') {
+        setShowApplyModal(false);
+        setShowMatchAlertModal(true);
       } else {
         setApplyModalError(err.message || 'Ứng tuyển thất bại. Vui lòng thử lại.');
       }
@@ -945,6 +1017,91 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       setApplyModalLoading(false);
     }
   }
+
+  const handleBoostApplication = async (applicationId, applicationType) => {
+    if (window.confirm(`Bạn có chắc chắn muốn đẩy tin nổi bật đơn ứng tuyển này với giá ${premiumConfig.boostPriceNp.toLocaleString()} NP?`)) {
+      const loadingKey = encodePremiumTarget(applicationType, applicationId);
+      setBoostLoadingId(loadingKey);
+      try {
+        const result = await boostApplication(applicationId, applicationType);
+        if (applicationType === 'QUEST') {
+          const apps = await getMyQuestApplications();
+          setQuestApplications(apps || []);
+        } else {
+          const apps = await getMyApplications();
+          setAppliedJobs(apps || []);
+        }
+        setWallet(prev => prev ? { ...prev, npBalance: result.npBalance } : prev);
+        alert("Đẩy tin ứng tuyển thành công!");
+      } catch (err) {
+        alert(err.message || "Đẩy tin nổi bật thất bại.");
+      } finally {
+        setBoostLoadingId(null);
+      }
+    }
+  };
+
+  const handleViewInsight = async (application) => {
+    const applicationType = application.applicationType || 'JOB';
+    const targetId = application.targetId || application.job_id || application.jobId || application.questId || application.id;
+    const loadingKey = encodePremiumTarget(applicationType, targetId);
+    setInsightLoadingJobId(loadingKey);
+    try {
+      const res = await getInsight(targetId, applicationType);
+      setInsightData(res);
+      setInsightModalJob({ ...application, applicationType, targetId });
+    } catch (err) {
+      alert(err.message || "Không thể tải thống kê ứng tuyển.");
+    } finally {
+      setInsightLoadingJobId(null);
+    }
+  };
+
+  const handleUnlockInsight = async (targetId, applicationType) => {
+    if (window.confirm(`Bạn có đồng ý mở khóa Application Insight cho đơn này với giá ${premiumConfig.insightPriceNp.toLocaleString()} NP?`)) {
+      try {
+        const res = await unlockInsight(targetId, applicationType);
+        setWallet(prev => prev ? { ...prev, npBalance: res.npBalance } : prev);
+        const newInsight = await getInsight(targetId, applicationType);
+        setInsightData(newInsight);
+        alert("Mở khóa Insight thành công!");
+      } catch (err) {
+        alert(err.message || "Mở khóa Insight thất bại.");
+      }
+    }
+  };
+
+  const handleExpressVerification = async (experienceId) => {
+    if (window.confirm(`Bạn có muốn đăng ký Xác thực nhanh 24h cho minh chứng này với giá ${premiumConfig.expressPriceNp.toLocaleString()} NP?`)) {
+      setExpressLoadingId(experienceId);
+      try {
+        const res = await requestExpressVerification(experienceId);
+        setWallet(prev => prev ? { ...prev, npBalance: res.npBalance } : prev);
+        const creds = await getMyCredentialSubmissions();
+        setCredentialSubmissions(creds || []);
+        alert("Đăng ký xác thực nhanh thành công!");
+      } catch (err) {
+        alert(err.message || "Đăng ký duyệt nhanh thất bại.");
+      } finally {
+        setExpressLoadingId(null);
+      }
+    }
+  };
+
+  const handleSubscribeMatchAlert = async () => {
+    setSubscribingMatchAlert(true);
+    try {
+      await subscribeJobMatchAlert();
+      const newWallet = await getWallet();
+      setWallet(newWallet);
+      alert("Đăng ký dịch vụ Job Match Alert thành công!");
+      setShowMatchAlertModal(false);
+    } catch (err) {
+      alert(err.message || "Đăng ký thất bại.");
+    } finally {
+      setSubscribingMatchAlert(false);
+    }
+  };
 
   async function handleWithdrawJob(applicationId) {
     setWithdrawingId(applicationId);
@@ -1113,6 +1270,34 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             >
               <Zap size={18} />
               {!isSidebarCollapsed && <span>Quest</span>}
+            </button>
+
+            <button
+              className={`candidate-portal-nav-item ${activeView === 'RECOMMENDATIONS' ? 'active' : ''}`}
+              onClick={() => handleTabChange('RECOMMENDATIONS')}
+              type="button"
+            >
+              <Sparkles size={18} color={wallet?.hasJobMatchAlert ? '#facc15' : 'currentColor'} />
+              {!isSidebarCollapsed && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', justifyContent: 'space-between' }}>
+                  Gợi ý việc làm AI
+                  <span style={{ fontSize: '0.62rem', fontWeight: '800', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', borderRadius: '4px', padding: '1px 5px', textTransform: 'uppercase' }}>NEW</span>
+                </span>
+              )}
+            </button>
+
+            <button
+              className={`candidate-portal-nav-item ${activeView === 'PREMIUM_STORE' ? 'active' : ''}`}
+              onClick={() => handleTabChange('PREMIUM_STORE')}
+              type="button"
+            >
+              <Crown size={18} color="#f59e0b" />
+              {!isSidebarCollapsed && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', justifyContent: 'space-between', color: '#f59e0b', fontWeight: '800' }}>
+                  Cửa hàng Premium
+                  <span style={{ fontSize: '0.62rem', fontWeight: '800', backgroundColor: '#f59e0b', color: '#fff', borderRadius: '4px', padding: '1px 5px', textTransform: 'uppercase' }}>HOT</span>
+                </span>
+              )}
             </button>
 
             <button
@@ -1523,21 +1708,18 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 {/* Loại hình */}
                 <div>
                   <p style={{ margin: '0 0 10px', fontSize: '0.72rem', fontWeight: '850', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Loại hình làm việc</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {JOB_TYPES.map(opt => (
-                      <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
-                        <input type="radio" name="jobType" checked={filterJobType === opt.value} onChange={() => { setFilterJobType(opt.value); updateSearchUrl('t', opt.value); }}
-                          style={{ accentColor: 'var(--primary)', width: '15px', height: '15px', cursor: 'pointer' }} />
-                        <span style={{ fontSize: '0.86rem', color: filterJobType === opt.value ? 'var(--primary)' : 'var(--ink)', fontWeight: filterJobType === opt.value ? '700' : '500' }}>{opt.label}</span>
-                        {opt.exp && <span style={{ fontSize: '0.68rem', color: '#f59e0b', fontWeight: '800', marginLeft: 'auto' }}>+{opt.exp} EXP</span>}
-                      </label>
-                    ))}
-                    {filterJobType && (
-                      <button type="button" onClick={() => { setFilterJobType(''); updateSearchUrl('t', ''); }}
-                        style={{ fontSize: '0.78rem', color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: '2px 0', fontWeight: '600' }}>
-                        Bỏ chọn
-                      </button>
-                    )}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
+                    {JOB_TYPES.map(opt => {
+                      const active = filterJobType === opt.value;
+                      return (
+                        <button key={opt.value} type="button"
+                          onClick={() => { const next = active ? '' : opt.value; setFilterJobType(next); updateSearchUrl('t', next); }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 11px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: active ? '750' : '600', border: active ? '1.5px solid var(--primary)' : '1.5px solid var(--c-line)', background: active ? 'var(--primary)' : '#fff', color: active ? '#fff' : 'var(--ink)', transition: 'all 0.15s' }}>
+                          {opt.label}
+                          {opt.exp && <span style={{ fontSize: '0.66rem', fontWeight: '800', opacity: active ? 0.85 : 1, color: active ? '#fff' : '#f59e0b' }}>+{opt.exp}</span>}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1559,17 +1741,19 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 </div>
 
                 {/* Toggles */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', borderTop: '1px solid var(--line)', paddingTop: '16px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
-                    <input type="checkbox" checked={filterIsRemote} onChange={e => { setFilterIsRemote(e.target.checked); updateSearchUrl('r', e.target.checked); }}
-                      style={{ accentColor: 'var(--primary)', width: '16px', height: '16px', cursor: 'pointer' }} />
-                    <span style={{ fontSize: '0.86rem', color: 'var(--ink)', fontWeight: '600' }}>Chỉ Remote</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
-                    <input type="checkbox" checked={filterCanApply} onChange={e => { setFilterCanApply(e.target.checked); updateSearchUrl('fit', e.target.checked); }}
-                      style={{ accentColor: 'var(--primary)', width: '16px', height: '16px', cursor: 'pointer' }} />
-                    <span style={{ fontSize: '0.86rem', color: 'var(--ink)', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><ShieldCheck size={13} color="var(--primary)" /> Đủ RS</span>
-                  </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', borderTop: '1px solid var(--line)', paddingTop: '16px' }}>
+                  {[
+                    { on: filterIsRemote, label: 'Chỉ Remote', icon: null, toggle: () => { const v = !filterIsRemote; setFilterIsRemote(v); updateSearchUrl('r', v); } },
+                    { on: filterCanApply, label: 'Đủ RS', icon: ShieldCheck, toggle: () => { const v = !filterCanApply; setFilterCanApply(v); updateSearchUrl('fit', v); } },
+                  ].map((t, i) => {
+                    const TIcon = t.icon;
+                    return (
+                      <button key={i} type="button" onClick={t.toggle}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: t.on ? '750' : '600', border: t.on ? '1.5px solid var(--primary)' : '1.5px solid var(--c-line)', background: t.on ? 'var(--primary)' : '#fff', color: t.on ? '#fff' : 'var(--ink)', transition: 'all 0.15s' }}>
+                        {TIcon && <TIcon size={13} color={t.on ? '#fff' : 'var(--primary)'} />} {t.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1600,6 +1784,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <div className="np-stagger" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {filteredJobs.map(job => {
                       const isLocked = candidateRs < job.minReqRs;
+                      const isEarlyAccess = job.createdAt && (new Date() - new Date(job.createdAt)) < (premiumConfig.earlyAccessHours * 60 * 60 * 1000);
+                      const userHasEarlyAccess = wallet?.isPremium || wallet?.hasJobMatchAlert;
                       const alreadyApplied = appliedJobs.some(a => (a.job_id || a.jobId) === job.id);
                       const compensationText = job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận';
                       const typeLabel = JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType;
@@ -1620,6 +1806,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                               {job.requiresPremium && (
                                 <span style={{ fontSize: '0.68rem', fontWeight: '800', padding: '2px 7px', borderRadius: '5px', background: 'rgba(245,158,11,0.12)', color: '#d97706', border: '1px solid rgba(245,158,11,0.3)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                                   <Crown size={9} /> Premium
+                                </span>
+                              )}
+                              {isEarlyAccess && (
+                                <span style={{ fontSize: '0.68rem', fontWeight: '800', padding: '2px 7px', borderRadius: '5px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.35)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                  <Clock3 size={9} /> {userHasEarlyAccess ? 'Xem sớm (Đã mở)' : 'Xem sớm'}
                                 </span>
                               )}
                               {isLocked && (
@@ -1707,21 +1898,24 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
                 <div>
                   <p style={{ margin: '0 0 10px', fontSize: '0.72rem', fontWeight: '850', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Loại Quest</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
                     {[
                       { value: 'SMALL_EVENT', label: 'Sự kiện nhỏ', exp: 100, color: '#8b5cf6' },
                       { value: 'SCHOOL_CAMPAIGN', label: 'Chiến dịch trường', exp: 300, color: '#0ea5e9' },
                       { value: 'COMPANY_PROJECT', label: 'Dự án DN', exp: 500, color: '#f59e0b' },
                       { value: 'SHORT_INTERNSHIP', label: 'Thực tập ngắn', exp: 500, color: '#10b981' },
                       { value: 'FREELANCE_GIG', label: 'Freelance', exp: 300, color: '#ec4899' },
-                    ].map(opt => (
-                      <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', userSelect: 'none' }}>
-                        <input type="radio" name="questCat" checked={questCategoryFilter === opt.value} onChange={() => setQuestCategoryFilter(opt.value)}
-                          style={{ accentColor: opt.color, width: '15px', height: '15px', cursor: 'pointer' }} />
-                        <span style={{ fontSize: '0.86rem', color: questCategoryFilter === opt.value ? opt.color : 'var(--ink)', fontWeight: questCategoryFilter === opt.value ? '700' : '500', flex: 1 }}>{opt.label}</span>
-                        <span style={{ fontSize: '0.68rem', color: '#f59e0b', fontWeight: '800' }}>+{opt.exp}</span>
-                      </label>
-                    ))}
+                    ].map(opt => {
+                      const active = questCategoryFilter === opt.value;
+                      return (
+                        <button key={opt.value} type="button"
+                          onClick={() => setQuestCategoryFilter(active ? '' : opt.value)}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 11px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: active ? '750' : '600', border: active ? `1.5px solid ${opt.color}` : '1.5px solid var(--c-line)', background: active ? opt.color : '#fff', color: active ? '#fff' : 'var(--ink)', transition: 'all 0.15s' }}>
+                          {opt.label}
+                          <span style={{ fontSize: '0.66rem', fontWeight: '800', color: active ? '#fff' : '#f59e0b', opacity: active ? 0.85 : 1 }}>+{opt.exp}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1934,7 +2128,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                   )}
                                 </div>
                               )}
-                              <div style={{ display: 'flex', gap: '6px' }}>
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                 <button
                                   onClick={() => setViewingApp({ app, isQuest: false })}
                                   style={{ fontSize: '0.76rem', fontWeight: '700', color: '#2563eb', background: 'none', border: '1px solid rgba(37,99,235,0.35)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
@@ -1948,6 +2142,39 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                     {withdrawingId === app.id ? 'Đang rút...' : 'Rút đơn'}
                                   </button>
                                 )}
+                                
+                                {/* Insight Button */}
+                                <button
+                                  onClick={() => handleViewInsight(app)}
+                                  disabled={insightLoadingJobId === (app.job_id || app.id)}
+                                  style={{ fontSize: '0.76rem', fontWeight: '700', color: '#7c3aed', background: 'none', border: '1px solid rgba(124,58,237,0.35)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  {insightLoadingJobId === (app.job_id || app.id) ? '...' : '📊 Xem Insight'}
+                                </button>
+
+                                {/* Boost Button */}
+                                {(() => {
+                                  const isBoosted = app.boostedUntil && new Date(app.boostedUntil) > new Date();
+                                  if (isBoosted) {
+                                    return (
+                                      <span style={{ fontSize: '0.76rem', fontWeight: '800', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', padding: '3px 10px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} title={`Nổi bật đến ${new Date(app.boostedUntil).toLocaleString('vi-VN')}`}>
+                                        🚀 Đang Nổi Bật
+                                      </span>
+                                    );
+                                  }
+                                  if (['SUBMITTED', 'VIEWED'].includes(st)) {
+                                    return (
+                                      <button
+                                        onClick={() => handleBoostApplication(app.id)}
+                                        disabled={boostLoadingId === app.id}
+                                        style={{ fontSize: '0.76rem', fontWeight: '700', color: '#eab308', background: 'none', border: '1px solid rgba(234,179,8,0.35)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}
+                                        title={`Đẩy tin nổi bật trong ${premiumConfig.boostDurationHours}h với giá ${premiumConfig.boostPriceNp.toLocaleString()} NP`}
+                                      >
+                                        {boostLoadingId === app.id ? '...' : '🚀 Đẩy tin'}
+                                      </button>
+                                    );
+                                  }
+                                  return null;
+                                })()}
                               </div>
                             </div>
                           </div>
@@ -2058,6 +2285,595 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             </section>
           );
         })()}
+
+        {/* 2d. PERSONALIZED AI RECOMMENDATIONS VIEW */}
+        {activeView === 'RECOMMENDATIONS' && (
+          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: '#fff', borderRadius: '20px', padding: '28px' }}>
+            {/* Header */}
+            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '800', color: '#d97706', letterSpacing: '0.06em', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Sparkles size={14} color="#d97706" /> AI-Powered Recommendations
+                </p>
+                <h2 style={{ margin: '0', fontSize: '1.6rem', fontWeight: '800', letterSpacing: '-0.03em', color: 'var(--c-ink)' }}>Gợi ý việc làm & thử thách từ AI</h2>
+                <p style={{ margin: '4px 0 0', fontSize: '0.86rem', color: 'var(--muted)' }}>Hệ thống tự động đối khớp kỹ năng đã xác thực của bạn với các tin tuyển dụng và Quest phù hợp nhất.</p>
+              </div>
+
+              {wallet?.hasJobMatchAlert && (
+                <span style={{ fontSize: '0.84rem', fontWeight: '700', color: '#16a34a', background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.25)', padding: '6px 12px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                  <CheckCircle2 size={15} /> Đã đăng ký Job Match Alert
+                </span>
+              )}
+            </div>
+
+            {!wallet?.hasJobMatchAlert ? (
+              /* Subscribed Paywall Gate */
+              <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', background: 'linear-gradient(135deg, #faf7f5 0%, #fffbf0 100%)', border: '1.5px dashed #f59e0b', padding: '40px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', marginBottom: '8px' }}>
+                  <LockKeyhole size={28} />
+                </div>
+                
+                <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: '800', color: 'var(--c-ink)' }}>Mở khóa Tính năng AI Matching & Job Match Alert</h3>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--c-muted)', maxWidth: '520px', lineHeight: 1.5 }}>
+                  Nhận quyền truy cập vào danh sách đề xuất việc làm cá nhân hóa khớp 100% với kỹ năng thực chiến của bạn, cùng với <strong>quyền xem sớm (Early Access) trước 12 giờ</strong> cho tất cả cơ hội mới!
+                </p>
+
+                <button
+                  type="button"
+                  onClick={handleSubscribeMatchAlert}
+                  disabled={subscribingMatchAlert}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px', fontSize: '0.94rem', fontWeight: '850', color: '#fff', background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none', borderRadius: '12px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(217,119,6,0.25)', transition: 'all 0.2s' }}
+                >
+                  <Sparkles size={16} /> {subscribingMatchAlert ? 'Đang kích hoạt...' : `Kích hoạt gói dịch vụ (${(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP / tháng)`}
+                </button>
+
+                <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '16px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.78rem', fontWeight: '600', color: 'var(--c-muted)' }}>⚡ Đề xuất khớp kỹ năng thực chiến</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: '600', color: 'var(--c-muted)' }}>⌛ Ưu tiên ứng tuyển trước 12h</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: '600', color: 'var(--c-muted)' }}>📈 Tăng tỷ lệ gọi phỏng vấn</span>
+                </div>
+              </div>
+            ) : recommendationsLoading ? (
+              /* Loading Spinner */
+              <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                <RefreshCw className="spin" size={32} style={{ color: 'var(--c-red)', marginBottom: '12px' }} />
+                <p style={{ margin: 0, color: 'var(--c-muted)', fontWeight: '600' }}>AI đang phân tích và tìm kiếm cơ hội phù hợp...</p>
+              </div>
+            ) : !recommendations || ((recommendations.jobs || []).length === 0 && (recommendations.quests || []).length === 0) ? (
+              /* Empty State */
+              <div style={{ textAlign: 'center', padding: '60px 20px', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
+                <Sparkles size={32} style={{ color: 'var(--muted)', marginBottom: '12px' }} />
+                <p style={{ margin: '0 0 6px', color: 'var(--ink)', fontWeight: '750' }}>Không tìm thấy gợi ý phù hợp lúc này</p>
+                <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.84rem' }}>Hãy tiếp tục cập nhật và xác thực thêm nhiều kinh nghiệm để nhận gợi ý chính xác hơn.</p>
+              </div>
+            ) : (
+              /* Active Recommendations Workspace */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                {/* 1. Job recommendations */}
+                {(recommendations.jobs || []).length > 0 && (
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      💼 Việc làm phù hợp nhất
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {recommendations.jobs.map(job => {
+                        const alreadyApplied = appliedJobs.some(a => (a.job_id || a.jobId) === job.id);
+                        const compensationText = job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận';
+                        const typeLabel = JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType;
+                        const matchCount = job.match_count || 0;
+                        return (
+                          <article key={job.id} style={{ display: 'flex', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1.5px solid #f59e0b', background: 'linear-gradient(to right, #fffdf8, #fff)', transition: 'box-shadow 0.2s' }}>
+                            {/* Logo */}
+                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', border: '1px solid var(--c-line)', background: '#faf7f5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                              {job.companyLogo ? <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={20} style={{ color: 'var(--c-muted)' }} />}
+                            </div>
+
+                            {/* Middle content */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
+                                <span style={{ fontSize: '0.68rem', fontWeight: '850', padding: '2px 7px', borderRadius: '5px', background: 'rgba(245,158,11,0.12)', color: '#d97706', border: '1px solid rgba(245,158,11,0.25)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                  ✨ Khớp {matchCount} kỹ năng
+                                </span>
+                                {job.requiresPremium && (
+                                  <span style={{ fontSize: '0.68rem', fontWeight: '800', padding: '2px 7px', borderRadius: '5px', background: 'rgba(124,58,237,0.08)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.2)' }}>
+                                    Premium
+                                  </span>
+                                )}
+                              </div>
+                              <h4 style={{ margin: '0 0 2px', fontSize: '0.98rem', fontWeight: '800', color: 'var(--ink)' }}>{job.title}</h4>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                <span>{job.companyName}</span>
+                                {job.location && <span>· {job.isRemote ? 'Remote' : job.location}</span>}
+                                {typeLabel && <span style={{ color: '#e5533f', fontWeight: '700' }}>· {typeLabel}</span>}
+                              </div>
+                            </div>
+
+                            {/* Right content */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0 }}>
+                              <strong style={{ fontSize: '0.9rem', color: '#16a34a', fontWeight: '800' }}>{compensationText}</strong>
+                              <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                                <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer"
+                                  style={{ padding: '5px 10px', fontSize: '0.76rem', fontWeight: '700', borderRadius: '8px', border: '1px solid var(--c-line)', background: '#fff', color: 'var(--c-ink)', textDecoration: 'none' }}>
+                                  Xem chi tiết
+                                </a>
+                                <button type="button" disabled={alreadyApplied} onClick={() => handleApplyJob(job)}
+                                  style={{ padding: '5px 12px', fontSize: '0.76rem', fontWeight: '800', borderRadius: '8px', border: 'none', background: alreadyApplied ? '#f3ede9' : 'var(--c-red)', color: alreadyApplied ? 'var(--c-muted)' : '#fff', cursor: alreadyApplied ? 'not-allowed' : 'pointer' }}>
+                                  {alreadyApplied ? 'Đã ứng tuyển' : 'Ứng tuyển'}
+                                </button>
+                              </div>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Quest recommendations */}
+                {(recommendations.quests || []).length > 0 && (
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      🏆 Thử thách CLB phù hợp
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {recommendations.quests.map(quest => {
+                        const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
+                        const matchCount = quest.match_count || 0;
+                        return (
+                          <article key={quest.id} style={{ display: 'flex', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1.5px solid #2563eb', background: 'linear-gradient(to right, #f8faff, #fff)', transition: 'box-shadow 0.2s' }}>
+                            {/* Logo */}
+                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', border: '1px solid var(--c-line)', background: '#faf7f5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                              {quest.companyLogo ? <img src={quest.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={20} style={{ color: 'var(--c-muted)' }} />}
+                            </div>
+
+                            {/* Middle content */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
+                                <span style={{ fontSize: '0.68rem', fontWeight: '850', padding: '2px 7px', borderRadius: '5px', background: 'rgba(37,99,235,0.08)', color: '#2563eb', border: '1px solid rgba(37,99,235,0.25)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                  ✨ Khớp {matchCount} kỹ năng
+                                </span>
+                              </div>
+                              <h4 style={{ margin: '0 0 2px', fontSize: '0.98rem', fontWeight: '800', color: 'var(--ink)' }}>{quest.title}</h4>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                <span>{quest.companyName}</span>
+                                <span style={{ color: '#f59e0b', fontWeight: '700' }}>· +{quest.expReward} EXP</span>
+                                <span style={{ color: '#10b981', fontWeight: '700' }}>· +{quest.npReward} NP</span>
+                              </div>
+                            </div>
+
+                            {/* Right content */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0 }}>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--c-muted)', fontWeight: '600' }}>
+                                Cần {quest.minReqRs} RS
+                              </span>
+                              <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedQuestForApply(quest);
+                                    setShowQuestApplyModal(true);
+                                  }}
+                                  disabled={alreadyApplied}
+                                  style={{ padding: '5px 12px', fontSize: '0.76rem', fontWeight: '800', borderRadius: '8px', border: 'none', background: alreadyApplied ? '#f3ede9' : '#2563eb', color: alreadyApplied ? 'var(--c-muted)' : '#fff', cursor: alreadyApplied ? 'not-allowed' : 'pointer' }}
+                                >
+                                  {alreadyApplied ? 'Đã tham gia' : 'Tham gia'}
+                                </button>
+                              </div>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* 2e. PREMIUM STORE VIEW */}
+        {activeView === 'PREMIUM_STORE' && (
+          <section className="candidate-premium-workspace np-view">
+            <header className="candidate-overview-header candidate-premium-header">
+              <div className="candidate-overview-title">
+                <span className="candidate-premium-eyebrow">
+                  <Crown size={13} /> Premium Store
+                </span>
+                <h1>Cửa hàng Premium</h1>
+                <p>Quản lý gói Premium và các dịch vụ tăng tốc hồ sơ bằng số dư NP trong ví.</p>
+              </div>
+              <button type="button" className="button primary-button" onClick={() => setShowTopUpModal(true)}>
+                <WalletCards size={16} /> Nạp NP
+              </button>
+            </header>
+
+            {buyPremiumError && (
+              <div className="alert-banner error candidate-premium-alert">
+                <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
+                <span>{buyPremiumError}</span>
+                {buyPremiumError.includes('Số dư') && (
+                  <button type="button" className="candidate-premium-inline-link" onClick={() => setShowTopUpModal(true)}>Nạp thêm NP</button>
+                )}
+              </div>
+            )}
+
+            <section className="candidate-metrics-grid candidate-premium-summary-grid np-stagger">
+              <div className="candidate-metric-box" onClick={() => setShowTopUpModal(true)} style={{ cursor: 'pointer' }}>
+                <div className="candidate-metric-icon">
+                  <WalletCards size={22} />
+                </div>
+                <div className="candidate-metric-details">
+                  <span className="candidate-metric-label">Số dư ví</span>
+                  <span className="candidate-metric-value">{walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString()} NP</span>
+                  <span className="candidate-metric-subtext">Nhấn để nạp thêm NP</span>
+                </div>
+              </div>
+              <div className="candidate-metric-box">
+                <div className="candidate-metric-icon" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#d97706' }}>
+                  <Crown size={22} />
+                </div>
+                <div className="candidate-metric-details">
+                  <span className="candidate-metric-label">Premium Pass</span>
+                  <span className="candidate-metric-value" style={{ fontSize: '1.08rem' }}>{wallet?.isPremium ? 'Đang hoạt động' : 'Chưa kích hoạt'}</span>
+                  <span className="candidate-metric-subtext">
+                    {wallet?.isPremium ? `Đến ${wallet.premiumUntil ? new Date(wallet.premiumUntil).toLocaleDateString('vi-VN') : '—'}` : '40,000 NP / tháng'}
+                  </span>
+                </div>
+              </div>
+              <div className="candidate-metric-box">
+                <div className="candidate-metric-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#059669' }}>
+                  <Sparkles size={22} />
+                </div>
+                <div className="candidate-metric-details">
+                  <span className="candidate-metric-label">Job Match Alert</span>
+                  <span className="candidate-metric-value" style={{ fontSize: '1.08rem' }}>{wallet?.hasJobMatchAlert ? 'Đang bật' : 'Chưa bật'}</span>
+                  <span className="candidate-metric-subtext">{(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP / tháng</span>
+                </div>
+              </div>
+            </section>
+
+            <div className="candidate-premium-layout">
+              <section className={`candidate-premium-pass-card ${wallet?.isPremium ? 'active' : ''}`}>
+                <div className="candidate-premium-card-header">
+                  <div className="candidate-premium-card-title">
+                    <div className="candidate-premium-mark">
+                      <Crown size={22} />
+                    </div>
+                    <div>
+                      <span>{wallet?.isPremium ? 'Đang sở hữu' : 'Gói tài khoản'}</span>
+                      <h2>Premium Pass</h2>
+                    </div>
+                  </div>
+                  <span className={`candidate-premium-status ${wallet?.isPremium ? 'success' : ''}`}>
+                    {wallet?.isPremium ? 'Đã kích hoạt' : '40,000 NP / tháng'}
+                  </span>
+                </div>
+                <p className="candidate-premium-pass-copy">
+                  Mở quyền ứng tuyển vào cơ hội yêu cầu Premium, hiển thị huy hiệu trên portfolio và tăng độ tin cậy khi nhà tuyển dụng xem hồ sơ.
+                </p>
+                <div className="candidate-premium-benefit-list">
+                  <span><CheckCircle2 size={15} /> Ứng tuyển cơ hội yêu cầu Premium</span>
+                  <span><CheckCircle2 size={15} /> Huy hiệu Premium trên hồ sơ</span>
+                  <span><CheckCircle2 size={15} /> Phù hợp ứng viên muốn tìm cơ hội chất lượng cao</span>
+                </div>
+                {!wallet?.isPremium ? (
+                  <button
+                    type="button"
+                    className="button primary-button candidate-premium-full-button"
+                    onClick={handleBuyPremium}
+                    disabled={buyPremiumLoading}
+                  >
+                    {buyPremiumLoading ? 'Đang xử lý...' : 'Kích hoạt Premium'}
+                  </button>
+                ) : (
+                  <span className="candidate-premium-owned">Đã sở hữu quyền lợi Premium</span>
+                )}
+              </section>
+
+              <aside className="candidate-premium-side-card">
+                <h3>Trạng thái dịch vụ</h3>
+                <div className="candidate-premium-state-list">
+                  <div>
+                    <span className={wallet?.isPremium ? 'active' : ''} />
+                    <div><strong>Premium Pass</strong><p>{wallet?.isPremium ? 'Đang sở hữu' : 'Chưa kích hoạt'}</p></div>
+                  </div>
+                  <div>
+                    <span className={wallet?.hasJobMatchAlert ? 'active' : ''} />
+                    <div><strong>Job Match Alert</strong><p>{wallet?.hasJobMatchAlert ? 'Đang bật' : 'Chưa đăng ký'}</p></div>
+                  </div>
+                  <div>
+                    <span className={portfolio?.themeUnlocked ? 'active' : ''} />
+                    <div><strong>Portfolio Theme</strong><p>{portfolio?.themeUnlocked ? 'Đã mở khóa' : 'Chưa mở khóa'}</p></div>
+                  </div>
+                </div>
+              </aside>
+            </div>
+
+            <div className="candidate-premium-section-heading">
+              <div>
+                <span>Dịch vụ bổ sung</span>
+                <h2>Tối ưu từng bước trong hành trình ứng tuyển</h2>
+              </div>
+              <p>Các dịch vụ dưới đây chỉ thay đổi trải nghiệm hiển thị, tốc độ xử lý hoặc insight. Reputation Score và NP vẫn do backend xử lý.</p>
+            </div>
+
+            <div className="candidate-premium-service-list np-stagger">
+              <article className={`candidate-premium-service-row ${wallet?.hasJobMatchAlert ? 'active' : ''}`}>
+                <div className="candidate-premium-service-copy">
+                  <div className="candidate-premium-mark green"><Sparkles size={20} /></div>
+                  <div>
+                    <div className="candidate-premium-service-title">
+                      <h3>Job Match Alert & Đề xuất AI</h3>
+                      <span>{wallet?.hasJobMatchAlert ? 'Đang hoạt động' : `${(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP / tháng`}</span>
+                    </div>
+                    <p>Xem sớm trước {premiumConfig.earlyAccessHours || 12}h các tin hot và mở tab gợi ý việc làm, Quest CLB khớp kỹ năng.</p>
+                  </div>
+                </div>
+                <div className="candidate-premium-row-action">
+                  <button type="button" className={`button ${wallet?.hasJobMatchAlert ? 'secondary-button' : 'primary-button accent-green'}`} onClick={handleSubscribeMatchAlert} disabled={subscribingMatchAlert}>
+                    {subscribingMatchAlert ? <><span className="premium-loading-dot" aria-hidden="true" /> Đang xử lý...</> : wallet?.hasJobMatchAlert ? 'Gia hạn 30 ngày' : 'Đăng ký ngay'}
+                  </button>
+                </div>
+              </article>
+
+              <article className={`candidate-premium-service-row ${portfolio?.themeUnlocked ? 'active' : ''}`}>
+                <div className="candidate-premium-service-copy">
+                  <div className="candidate-premium-mark violet"><Palette size={20} /></div>
+                  <div>
+                    <div className="candidate-premium-service-title">
+                      <h3>Visual Upgrade</h3>
+                      <span>{portfolio?.themeUnlocked ? 'Đã mở khóa' : `${(premiumConfig.themePriceNp || 50000).toLocaleString()} NP`}</span>
+                    </div>
+                    <p>Mở khóa trọn đời bộ theme màu cho link portfolio công khai mà không ảnh hưởng Reputation Score.</p>
+                  </div>
+                </div>
+                <div className="candidate-premium-row-action wide">
+                  {portfolio?.themeUnlocked ? (
+                    <div className="premium-theme-grid candidate-premium-theme-grid">
+                      {[
+                        { id: 'DEFAULT', name: 'Classic Default', colorBox: ['#e5533f', '#f3ede9'] },
+                        { id: 'DARK_GOLD', name: 'Luxury Gold', colorBox: ['#eab308', '#fef08a'] },
+                        { id: 'CYBERPUNK', name: 'Cyberpunk Neon', colorBox: ['#ec4899', '#06b6d4'] },
+                        { id: 'EMERALD_CLASSIC', name: 'Emerald Executive', colorBox: ['#10b981', '#a7f3d0'] }
+                      ].map(theme => {
+                        const isActive = (portfolio?.selectedTheme || 'DEFAULT') === theme.id;
+                        return (
+                          <button
+                            key={theme.id}
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await selectTheme(theme.id);
+                                const updated = await getMyPortfolio();
+                                setPortfolio(updated);
+                              } catch (err) {
+                                alert(err.message || 'Thay đổi giao diện thất bại.');
+                              }
+                            }}
+                            className={`premium-theme-option ${isActive ? 'active' : ''}`}
+                          >
+                            <span className="premium-theme-swatches">
+                              {theme.colorBox.map((col, idx) => (
+                                <span key={idx} style={{ background: col }} />
+                              ))}
+                            </span>
+                            <span>{theme.name}{isActive ? ' · đang dùng' : ''}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (window.confirm(`Bạn có đồng ý mở khóa trọn đời Visual Upgrade với giá ${(premiumConfig.themePriceNp || 50000).toLocaleString()} NP?`)) {
+                          try {
+                            const res = await unlockTheme();
+                            if (res.npBalance !== undefined) {
+                              setWallet(prev => prev ? { ...prev, npBalance: res.npBalance } : prev);
+                            } else {
+                              const newWallet = await getWallet();
+                              setWallet(newWallet);
+                            }
+                            const updated = await getMyPortfolio();
+                            setPortfolio(updated);
+                            alert('Mở khóa Theme thành công!');
+                          } catch (err) {
+                            alert(err.message || 'Mở khóa thất bại.');
+                          }
+                        }
+                      }}
+                      className="button primary-button accent-violet"
+                    >
+                      Mua trọn đời
+                    </button>
+                  )}
+                </div>
+              </article>
+
+              {(() => {
+                const allApplications = [
+                  ...appliedJobs.map(app => ({
+                    ...app,
+                    applicationType: 'JOB',
+                    title: app.job_title || app.title,
+                    companyName: app.company_name || app.companyName,
+                  })),
+                  ...questApplications.map(app => ({
+                    ...app,
+                    applicationType: 'QUEST',
+                    title: app.questTitle,
+                    companyName: app.companyName,
+                  })),
+                ];
+                const boostableApps = allApplications.filter(app =>
+                  !['WITHDRAWN', 'REJECTED', 'COMPLETED'].includes(app.status)
+                  && !(app.boostedUntil && new Date(app.boostedUntil) > new Date())
+                );
+                const premiumApplicationsLoading = applicationsLoading || questApplicationsLoading;
+                return (
+                  <article className="candidate-premium-service-row">
+                    <div className="candidate-premium-service-copy">
+                      <div className="candidate-premium-mark amber"><ExternalLink size={19} /></div>
+                      <div>
+                        <div className="candidate-premium-service-title">
+                          <h3>Profile Boost</h3>
+                          <span>{(premiumConfig.boostPriceNp || 15000).toLocaleString()} NP</span>
+                        </div>
+                        <p>Ghim đơn ứng tuyển trong {premiumConfig.boostDurationHours || 48}h để xuất hiện nổi bật hơn trong danh sách của nhà tuyển dụng.</p>
+                      </div>
+                    </div>
+                    <div className="candidate-premium-row-action wide">
+                      <label className="premium-field-label">Chọn đơn ứng tuyển để ghim</label>
+                      {premiumApplicationsLoading ? (
+                        <div className="premium-inline-state">Đang tải danh sách đơn ứng tuyển...</div>
+                      ) : allApplications.length === 0 ? (
+                        <div className="premium-inline-state danger">Bạn chưa có đơn ứng tuyển nào. Hãy ứng tuyển vào một công việc trước.</div>
+                      ) : boostableApps.length === 0 ? (
+                        <div className="premium-inline-state warning">Tất cả đơn ứng tuyển của bạn đang được boost hoặc đã kết thúc.</div>
+                      ) : (
+                        <select value={selectedBoostAppId} onChange={(e) => setSelectedBoostAppId(e.target.value)} className="premium-store-select">
+                          <option value="">-- Chọn đơn ứng tuyển --</option>
+                          {boostableApps.map(app => (
+                            <option key={`${app.applicationType}-${app.id}`} value={encodePremiumTarget(app.applicationType, app.id)}>
+                              [{app.applicationType === 'QUEST' ? 'Quest' : 'Việc làm'}] {app.title} ({app.companyName})
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      <button
+                        type="button"
+                        className="button primary-button accent-amber"
+                        disabled={!selectedBoostAppId || boostLoadingId === selectedBoostAppId}
+                        onClick={async () => {
+                          const target = decodePremiumTarget(selectedBoostAppId);
+                          await handleBoostApplication(target.id, target.type);
+                          setSelectedBoostAppId('');
+                        }}
+                      >
+                        {boostLoadingId === selectedBoostAppId ? <><span className="premium-loading-dot" aria-hidden="true" /> Đang xử lý...</> : 'Boost đơn ngay'}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })()}
+
+              {(() => {
+                const expressableCredentials = credentialSubmissions.filter(sub => sub.verification_status === 'PENDING' && !sub.expressVerification);
+                return (
+                  <article className="candidate-premium-service-row">
+                    <div className="candidate-premium-service-copy">
+                      <div className="candidate-premium-mark amber"><Zap size={20} /></div>
+                      <div>
+                        <div className="candidate-premium-service-title">
+                          <h3>Duyệt nhanh 24h Express</h3>
+                          <span>{(premiumConfig.expressPriceNp || 25000).toLocaleString()} NP</span>
+                        </div>
+                        <p>Ưu tiên thẩm định minh chứng đang chờ duyệt để rút ngắn thời gian tích lũy RS và EXP.</p>
+                      </div>
+                    </div>
+                    <div className="candidate-premium-row-action wide">
+                      <label className="premium-field-label">Chọn minh chứng chờ duyệt</label>
+                      {expressableCredentials.length === 0 ? (
+                        <div className="premium-inline-state warning">Bạn chưa có minh chứng chờ duyệt phù hợp để nâng cấp Express.</div>
+                      ) : (
+                        <select value={selectedExpressSubId} onChange={(e) => setSelectedExpressSubId(e.target.value)} className="premium-store-select">
+                          <option value="">-- Chọn minh chứng --</option>
+                          {expressableCredentials.map(sub => (
+                            <option key={sub.id} value={sub.id}>{sub.project_name} - {sub.position}</option>
+                          ))}
+                        </select>
+                      )}
+                      <button
+                        type="button"
+                        className="button primary-button accent-amber"
+                        disabled={!selectedExpressSubId || expressLoadingId === selectedExpressSubId}
+                        onClick={async () => {
+                          await handleExpressVerification(selectedExpressSubId);
+                          setSelectedExpressSubId('');
+                        }}
+                      >
+                        {expressLoadingId === selectedExpressSubId ? <><span className="premium-loading-dot" aria-hidden="true" /> Đang xử lý...</> : 'Nâng cấp Express'}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })()}
+
+              {(() => {
+                const insightApps = [
+                  ...appliedJobs.map(app => ({
+                    ...app,
+                    applicationType: 'JOB',
+                    targetId: app.job_id || app.jobId,
+                    title: app.job_title || app.title,
+                    companyName: app.company_name || app.companyName,
+                  })),
+                  ...questApplications.map(app => ({
+                    ...app,
+                    applicationType: 'QUEST',
+                    targetId: app.questId,
+                    title: app.questTitle,
+                    companyName: app.companyName,
+                  })),
+                ];
+                const premiumApplicationsLoading = applicationsLoading || questApplicationsLoading;
+                return (
+                  <article className="candidate-premium-service-row">
+                    <div className="candidate-premium-service-copy">
+                      <div className="candidate-premium-mark violet"><Award size={20} /></div>
+                      <div>
+                        <div className="candidate-premium-service-title">
+                          <h3>Application Insight</h3>
+                          <span>{(premiumConfig.insightPriceNp || 10000).toLocaleString()} NP</span>
+                        </div>
+                        <p>Mở khóa xếp hạng thực tế và phân tích Reputation Score trong nhóm ứng viên của từng cơ hội.</p>
+                      </div>
+                    </div>
+                    <div className="candidate-premium-row-action wide">
+                      <label className="premium-field-label">Chọn đơn tuyển dụng để xem</label>
+                      {premiumApplicationsLoading ? (
+                        <div className="premium-inline-state">Đang tải danh sách đơn ứng tuyển...</div>
+                      ) : insightApps.length === 0 ? (
+                        <div className="premium-inline-state danger">Bạn chưa có đơn ứng tuyển nào.</div>
+                      ) : (
+                        <select value={selectedInsightJobId} onChange={(e) => setSelectedInsightJobId(e.target.value)} className="premium-store-select">
+                          <option value="">-- Chọn đơn ứng tuyển --</option>
+                          {insightApps.map(app => (
+                            <option key={`${app.applicationType}-${app.id}`} value={encodePremiumTarget(app.applicationType, app.targetId)}>
+                              [{app.applicationType === 'QUEST' ? 'Quest' : 'Việc làm'}] {app.title} ({app.companyName})
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      <button
+                        type="button"
+                        className="button primary-button accent-violet"
+                        disabled={!selectedInsightJobId || insightLoadingJobId === selectedInsightJobId}
+                        onClick={async () => {
+                          const target = decodePremiumTarget(selectedInsightJobId);
+                          const matched = insightApps.find(app =>
+                            app.applicationType === target.type && String(app.targetId) === target.id
+                          );
+                          await handleViewInsight(matched || {
+                            applicationType: target.type,
+                            targetId: target.id,
+                            title: 'Đơn ứng tuyển',
+                            companyName: 'Đối tác',
+                          });
+                          setSelectedInsightJobId('');
+                        }}
+                      >
+                        {insightLoadingJobId === selectedInsightJobId ? <><span className="premium-loading-dot" aria-hidden="true" /> Đang tải...</> : 'Xem Insight'}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })()}
+
+            </div>
+          </section>
+        )}
 
         {/* 3. ORGANIZATIONS VIEW (DIRECTORY) */}
         {activeView === 'ORGANIZATIONS' && (
@@ -2825,9 +3641,28 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                             </p>
                           )}
                         </div>
-                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <span className={`proof-status-badge ${statusKey}`}>{statusLabel}</span>
-                          <p style={{ margin: '6px 0 0', fontSize: '0.75rem', color: 'var(--muted)' }}>
+                        <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {sub.expressVerification && (
+                              <span style={{ fontSize: '0.72rem', fontWeight: '800', border: '1px solid #f59e0b', color: '#f59e0b', background: 'rgba(245,158,11,0.08)', padding: '2px 8px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '3px', boxShadow: '0 0 8px rgba(245,158,11,0.2)' }}>
+                                ⚡ EXPRESS
+                              </span>
+                            )}
+                            <span className={`proof-status-badge ${statusKey}`}>{statusLabel}</span>
+                          </div>
+                          
+                          {!sub.expressVerification && sub.verification_status === 'PENDING' && (
+                            <button
+                              onClick={() => handleExpressVerification(sub.id)}
+                              disabled={expressLoadingId === sub.id}
+                              style={{ fontSize: '0.72rem', fontWeight: '700', color: '#d97706', background: 'none', border: '1px solid rgba(217,119,6,0.35)', borderRadius: '6px', padding: '3px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', transition: 'all 0.2s' }}
+                              title={`Nâng cấp duyệt nhanh 24h với ${premiumConfig.expressPriceNp.toLocaleString()} NP`}
+                            >
+                              {expressLoadingId === sub.id ? '...' : '⚡ Duyệt nhanh 24h'}
+                            </button>
+                          )}
+
+                          <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--muted)' }}>
                             {sub.created_at ? new Date(sub.created_at).toLocaleDateString('vi-VN') : ''}
                           </p>
                         </div>
@@ -3100,6 +3935,164 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </button>
               <button className="button primary-button" onClick={handleBuyPremium} type="button" disabled={buyPremiumLoading} style={{ padding: '10px 18px', borderRadius: '12px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none' }}>
                 {buyPremiumLoading ? 'Đang xử lý...' : <><Crown size={15} style={{ marginRight: '6px' }} /> Kích hoạt Premium</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Application Insight Modal ─── */}
+      {insightModalJob && (
+        <div className="glass-modal-overlay" onClick={() => { setInsightModalJob(null); setInsightData(null); }}>
+          <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div className="glass-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={20} color="#7c3aed" />
+                <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Phân tích cạnh tranh</h2>
+              </div>
+              <button 
+                onClick={() => { setInsightModalJob(null); setInsightData(null); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', fontSize: '1.2rem' }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="glass-modal-body" style={{ padding: '20px 24px' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <p style={{ margin: '0 0 4px', fontSize: '0.78rem', textTransform: 'uppercase', fontWeight: '800', color: 'var(--c-muted)' }}>
+                  {insightModalJob.applicationType === 'QUEST' ? 'Quest / CLB' : 'Công việc'}
+                </p>
+                <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: 'var(--c-ink)' }}>{insightModalJob.job_title || insightModalJob.questTitle || insightModalJob.title}</h4>
+                <p style={{ margin: '4px 0 0', fontSize: '0.84rem', color: 'var(--muted)' }}>{insightModalJob.company_name || insightModalJob.companyName}</p>
+              </div>
+
+              {/* Total applicants (Teaser, always unlocked) */}
+              <div style={{ background: '#f8f6f5', borderRadius: '12px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', border: '1px solid var(--c-line)' }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--c-ink)' }}>Tổng số ứng viên ứng tuyển:</span>
+                <strong style={{ fontSize: '1.1rem', color: 'var(--c-red)', fontWeight: '900' }}>
+                  {insightData?.totalApplicants ?? 0}
+                </strong>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                {/* Avg RS */}
+                <div style={{ background: '#fff', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '14px', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
+                  <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: '750', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Trung bình RS</span>
+                  <div style={{ filter: !insightData?.unlocked ? 'blur(4px)' : 'none', fontSize: '1.4rem', fontWeight: '900', color: 'var(--c-ink)' }}>
+                    {insightData?.unlocked ? insightData.averageRs : 99}
+                  </div>
+                  {!insightData?.unlocked && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.4)' }}>
+                      <LockKeyhole size={16} color="var(--c-muted)" />
+                    </div>
+                  )}
+                </div>
+
+                {/* My Rank */}
+                <div style={{ background: '#fff', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '14px', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
+                  <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: '750', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Hạng của bạn</span>
+                  <div style={{ filter: !insightData?.unlocked ? 'blur(4px)' : 'none', fontSize: '1.4rem', fontWeight: '900', color: 'var(--c-ink)' }}>
+                    {insightData?.unlocked ? `${insightData.myRank} / ${insightData.totalApplicants}` : '7 / 42'}
+                  </div>
+                  {!insightData?.unlocked && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.4)' }}>
+                      <LockKeyhole size={16} color="var(--c-muted)" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Percentile visual indicator */}
+              <div style={{ background: '#fff', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden', marginBottom: '20px' }}>
+                <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: '750', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px', textAlign: 'center' }}>Tỷ lệ phần trăm cạnh tranh</span>
+                <div style={{ filter: !insightData?.unlocked ? 'blur(4px)' : 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                  <strong style={{ fontSize: '1.6rem', fontWeight: '950', color: '#7c3aed' }}>
+                    {insightData?.unlocked ? `Giỏi hơn ${insightData.percentile}%` : 'Giỏi hơn 85%'}
+                  </strong>
+                  <div style={{ width: '100%', height: '8px', background: 'var(--c-line)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ width: insightData?.unlocked ? `${insightData.percentile}%` : '85%', height: '100%', background: 'linear-gradient(to right, #a78bfa, #7c3aed)', borderRadius: '4px' }} />
+                  </div>
+                  <span style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>
+                    {insightData?.unlocked ? 'Hồ sơ của bạn vượt trội hơn ' + insightData.percentile + '% số ứng viên khác.' : 'Độ cạnh tranh so với các đối thủ khác'}
+                  </span>
+                </div>
+                {!insightData?.unlocked && (
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.4)' }}>
+                    <LockKeyhole size={20} color="var(--c-muted)" />
+                  </div>
+                )}
+              </div>
+
+              {/* Unlock Actions */}
+              {!insightData?.unlocked && (
+                <div style={{ background: 'rgba(124,58,237,0.04)', border: '1.5px dashed rgba(124,58,237,0.35)', borderRadius: '16px', padding: '20px', textAlign: 'center' }}>
+                  <p style={{ margin: '0 0 14px', fontSize: '0.86rem', color: 'var(--c-ink)', lineHeight: 1.4, fontWeight: '600' }}>
+                    Tìm hiểu đối thủ và xem vị trí xếp hạng thực tế của bạn dựa trên điểm Reputation Score để chuẩn bị tốt nhất.
+                  </p>
+                  <button
+                    onClick={() => handleUnlockInsight(insightModalJob.targetId, insightModalJob.applicationType)}
+                    style={{ background: 'linear-gradient(135deg, #a78bfa, #7c3aed)', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: '800', cursor: 'pointer', boxShadow: '0 4px 12px rgba(124,58,237,0.2)' }}
+                  >
+                    Mở khóa ngay ({premiumConfig.insightPriceNp.toLocaleString()} NP)
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="glass-modal-footer">
+              <button 
+                className="button secondary-button" 
+                onClick={() => { setInsightModalJob(null); setInsightData(null); }}
+                style={{ padding: '10px 16px', borderRadius: '12px' }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Job Match Alert / Early Access Modal ─── */}
+      {showMatchAlertModal && (
+        <div className="glass-modal-overlay" onClick={() => setShowMatchAlertModal(false)}>
+          <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+            <div className="glass-modal-header">
+              <Sparkles size={22} color="#f59e0b" />
+              <h2>Cơ hội trong Cổng xem sớm</h2>
+            </div>
+            <div className="glass-modal-body" style={{ padding: '20px 24px' }}>
+              <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', margin: '0 auto 16px' }}>
+                  <Clock3 size={28} />
+                </div>
+                <h3 style={{ margin: '0 0 10px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)' }}>Tin tuyển dụng vừa đăng tải</h3>
+                <p style={{ margin: '0 0 18px', fontSize: '0.88rem', color: 'var(--muted)', lineHeight: 1.6 }}>
+                  Vị trí tuyển dụng này hiện đang trong thời gian <strong>Early Access (12 giờ đầu)</strong> dành riêng cho các thành viên đã đăng ký gói Job Match Alert.
+                </p>
+                <div style={{ background: '#faf7f5', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '14px', textAlign: 'left', fontSize: '0.84rem', color: 'var(--ink)', lineHeight: 1.4 }}>
+                  <p style={{ margin: '0 0 6px', fontWeight: '800' }}>Quyền lợi khi đăng ký Job Match Alert:</p>
+                  <div>⌛ Xem sớm & nộp hồ sơ trước các ứng viên khác 12h.</div>
+                  <div>✨ Mở khóa bảng Gợi ý việc làm & thử thách CLB cá nhân hóa.</div>
+                </div>
+              </div>
+            </div>
+            <div className="glass-modal-body" style={{ paddingTop: 0 }}>
+              <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--muted)', textAlign: 'center' }}>
+                Số dư hiện tại: <strong style={{ color: 'var(--ink)' }}>{wallet?.npBalance?.toLocaleString() ?? 0} NP</strong>
+                {' · '}Gói đăng ký: <strong style={{ color: '#d97706' }}>{(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP / tháng</strong>
+              </p>
+            </div>
+            <div className="glass-modal-footer">
+              <button className="button secondary-button" onClick={() => setShowMatchAlertModal(false)} style={{ padding: '10px 16px', borderRadius: '12px' }}>
+                Để sau
+              </button>
+              <button 
+                className="button primary-button" 
+                onClick={handleSubscribeMatchAlert} 
+                disabled={subscribingMatchAlert} 
+                style={{ padding: '10px 18px', borderRadius: '12px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none' }}
+              >
+                {subscribingMatchAlert ? 'Đang kích hoạt...' : 'Kích hoạt ngay'}
               </button>
             </div>
           </div>

@@ -167,6 +167,8 @@ function CandidatesView() {
   const accent = isQuest ? '#ff7a1a' : '#2563eb';
   const getName = app => app.candidateName || app.candidate_name || app.display_name || 'Ứng viên';
   const getEmail = app => app.candidateEmail || app.candidate_email || app.email || '';
+  const isBoosted = app => app?.boostedUntil && new Date(app.boostedUntil) > new Date();
+  const boostedUntilLabel = app => new Date(app.boostedUntil).toLocaleString('vi-VN');
 
   // ── Level 1: Posting list ─────────────────────────────────────────────────
   if (!selectedPosting) {
@@ -252,7 +254,7 @@ function CandidatesView() {
             {postings.length === 0 && <p className="empty-state-desc">Tạo tin tuyển dụng hoặc Quest để bắt đầu nhận hồ sơ ứng viên.</p>}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="partner-stagger" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {filtered.map(posting => {
               const isQ = posting.postType === 'QUEST';
               const ac = isQ ? '#ff7a1a' : '#2563eb';
@@ -326,6 +328,11 @@ function CandidatesView() {
           <h2 style={{ margin: '0 0 2px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)' }}>{selectedPosting.title}</h2>
           <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--muted)' }}>
             {isQuest ? 'Quest' : 'Tin tuyển dụng'} · {applicantsLoading ? '...' : `${applicants.length} ứng viên đã nộp`}
+            {!applicantsLoading && applicants.some(isBoosted) && (
+              <span style={{ color: '#d97706', fontWeight: '750' }}>
+                {' '}· {applicants.filter(isBoosted).length} đang Boost
+              </span>
+            )}
           </p>
         </div>
         <button className="button secondary-button" style={{ fontSize: '0.8rem', padding: '7px 14px', gap: '5px', flexShrink: 0 }} onClick={() => selectPosting(selectedPosting)}>
@@ -373,11 +380,12 @@ function CandidatesView() {
               {filteredApplicants.map((app, idx) => {
                 const isSelected = selectedApplicant?.id === app.id;
                 const sColor = colorOf(app.status);
+                const boosted = isBoosted(app);
                 return (
                   <div key={app.id} className="np-cand-row" onClick={() => { setSelectedApplicant(app); setShowRejectInput(false); setRejectReason(''); }}
-                    style={{ border: `1.5px solid ${isSelected ? accent : 'var(--p-line)'}`, borderRadius: '14px', padding: '14px 16px', background: isSelected ? `${accent}08` : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', animationDelay: `${Math.min(idx * 0.04, 0.3)}s`, boxShadow: isSelected ? `0 0 0 3px ${accent}1a` : 'none' }}
+                    style={{ border: `1.5px solid ${isSelected ? accent : boosted ? '#f59e0b' : 'var(--p-line)'}`, borderRadius: '14px', padding: '14px 16px', background: isSelected ? `${accent}08` : boosted ? 'linear-gradient(90deg, rgba(245,158,11,0.08), #fff 42%)' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', animationDelay: `${Math.min(idx * 0.04, 0.3)}s`, boxShadow: isSelected ? `0 0 0 3px ${accent}1a` : boosted ? '0 4px 16px rgba(245,158,11,0.1)' : 'none' }}
                     onMouseEnter={e => { if (!isSelected) e.currentTarget.style.borderColor = accent + '55'; }}
-                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.borderColor = 'var(--p-line)'; }}
+                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.borderColor = boosted ? '#f59e0b' : 'var(--p-line)'; }}
                   >
                     <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.05rem', color: accent, flexShrink: 0, overflow: 'hidden' }}>
                       {app.avatar_url ? <img src={app.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (getName(app)[0]?.toUpperCase() || 'U')}
@@ -385,6 +393,14 @@ function CandidatesView() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '3px', flexWrap: 'wrap' }}>
                         <strong style={{ fontSize: '0.92rem', color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getName(app)}</strong>
+                        {boosted && (
+                          <span
+                            title={`Ứng viên đã dùng Profile Boost, hiệu lực đến ${boostedUntilLabel(app)}`}
+                            style={{ fontSize: '0.68rem', fontWeight: '850', color: '#92400e', background: 'linear-gradient(135deg, #fef3c7, #fde68a)', border: '1px solid #f59e0b66', padding: '2px 7px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}
+                          >
+                            <Crown size={10} /> Đang Boost
+                          </span>
+                        )}
                         <span style={{ fontSize: '0.7rem', fontWeight: '700', color: sColor, background: `${sColor}15`, padding: '1px 7px', borderRadius: '6px', flexShrink: 0 }}>{labelOf(app.status)}</span>
                       </div>
                       <div style={{ display: 'flex', gap: '10px', fontSize: '0.78rem', color: 'var(--muted)', flexWrap: 'wrap' }}>
@@ -427,6 +443,18 @@ function CandidatesView() {
                   )}
                 </div>
               </div>
+
+              {isBoosted(selectedApplicant) && (
+                <div className="np-di" style={{ marginBottom: '16px', padding: '11px 14px', borderRadius: '12px', border: '1px solid rgba(245,158,11,0.45)', background: 'linear-gradient(135deg, rgba(254,243,199,0.8), rgba(255,255,255,0.95))', color: '#92400e', display: 'flex', alignItems: 'center', gap: '9px' }}>
+                  <Crown size={18} style={{ color: '#d97706', flexShrink: 0 }} />
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '0.82rem', fontWeight: '850' }}>Ứng viên đang sử dụng Profile Boost</strong>
+                    <span style={{ display: 'block', marginTop: '2px', fontSize: '0.75rem', color: '#a16207' }}>
+                      Hồ sơ được ưu tiên hiển thị đến {boostedUntilLabel(selectedApplicant)}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Stats */}
               <div className="np-di" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '16px' }}>
@@ -2148,7 +2176,7 @@ function ManageJobsView({ onTabChange, company }) {
           </div>
         ) : (
           /* Cards Grid Layout */
-          <div style={{
+          <div className="partner-stagger" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
             gap: '24px',
@@ -3315,7 +3343,9 @@ export function BusinessPage() {
       {/* ── Main Panel ── */}
       <main className="partner-main-container">
         <div className="partner-view-pane">
-          {renderContent()}
+          <div key={activeTab} className="partner-view-anim">
+            {renderContent()}
+          </div>
         </div>
       </main>
 

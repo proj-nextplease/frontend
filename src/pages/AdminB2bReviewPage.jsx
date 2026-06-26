@@ -367,6 +367,7 @@ export function AdminB2bReviewPage() {
   const [verifRejectReason, setVerifRejectReason] = useState('');
   const [verifStatusFilter, setVerifStatusFilter] = useState('ALL');
   const [selectedVerifGroup, setSelectedVerifGroup] = useState(null);
+  const [activeCredId, setActiveCredId] = useState(null);
   const [verifLightbox, setVerifLightbox] = useState(null);
   const [auditLogTab, setAuditLogTab] = useState('ALL');
   const [expandedActors, setExpandedActors] = useState({});
@@ -1405,7 +1406,14 @@ export function AdminB2bReviewPage() {
       }
       groupedByCandidate[key].credentials.push(item);
     });
-    const candidateGroups = Object.values(groupedByCandidate);
+    const candidateGroups = Object.values(groupedByCandidate)
+      // Sort express candidates to the top
+      .sort((a, b) => {
+        const aHasExpress = a.credentials.some(item => item.expressVerification) ? 0 : 1;
+        const bHasExpress = b.credentials.some(item => item.expressVerification) ? 0 : 1;
+        return aHasExpress - bHasExpress;
+      });
+
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1471,11 +1479,16 @@ export function AdminB2bReviewPage() {
           <div className="admin-square-grid">
             {candidateGroups.map((group) => {
               const pendingInGroup = group.credentials.filter((item) => ((item.verification_status || item.status || 'PENDING').toUpperCase()) === 'PENDING').length;
+              const hasExpress = group.credentials.some(item => item.expressVerification);
               return (
                 <button
                   key={group.key}
                   className="admin-square-group-card"
-                  style={{ '--accent-color': '#7c3aed' }}
+                  style={{
+                    '--accent-color': '#7c3aed',
+                    border: hasExpress ? '1px solid #eab308' : undefined,
+                    boxShadow: hasExpress ? '0 0 10px rgba(234,179,8,0.12)' : undefined
+                  }}
                   onClick={() => setSelectedVerifGroup(group)}
                   type="button"
                 >
@@ -1483,9 +1496,15 @@ export function AdminB2bReviewPage() {
                     <div className="admin-square-avatar large">
                       {(group.name || 'UV').slice(0, 2).toUpperCase()}
                     </div>
-                    <span className="admin-mini-badge">
-                      <User size={10} /> Ứng viên
-                    </span>
+                    {hasExpress ? (
+                      <span style={{ fontSize: '0.68rem', fontWeight: '850', color: '#fff', background: 'linear-gradient(135deg, #f59e0b, #d97706)', padding: '2px 8px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '2px', textTransform: 'uppercase', boxShadow: '0 2px 4px rgba(217,119,6,0.15)' }}>
+                        ⚡ EXPRESS
+                      </span>
+                    ) : (
+                      <span className="admin-mini-badge">
+                        <User size={10} /> Ứng viên
+                      </span>
+                    )}
                   </div>
 
                   <div className="admin-square-card-main">
@@ -1493,7 +1512,11 @@ export function AdminB2bReviewPage() {
                     <div className="admin-accordion-meta">
                       {group.email && <span><Mail size={12} /> {group.email}</span>}
                       <span><FileText size={12} /> {group.credentials.length} minh chứng</span>
-                      {pendingInGroup > 0 && <span className="warning"><Clock size={12} /> {pendingInGroup} chờ xác thực</span>}
+                      {pendingInGroup > 0 && (
+                        <span className="warning" style={hasExpress ? { color: '#d97706', fontWeight: '800' } : undefined}>
+                          <Clock size={12} /> {pendingInGroup} chờ xác thực
+                        </span>
+                      )}
                       <span>RS: {group.reputationScore ?? '—'} · Lv.{group.currentLevel ?? '—'}</span>
                     </div>
                   </div>
@@ -1529,179 +1552,186 @@ export function AdminB2bReviewPage() {
                 </button>
               </div>
 
-              <div className="admin-group-modal-grid">
-                {selectedVerifGroup.credentials.map((item) => {
-                  const status = (item.verification_status || item.status || 'PENDING').toUpperCase();
-                  const isClaimedByMe = currentUser && item.claimedByAdminId === currentUser.id;
-                  const isClaimedByOther = item.claimedByAdminId && item.claimedByAdminId !== currentUser?.id;
-                  const isUnclaimed = !item.claimedByAdminId;
-                  const notesValue = notesDrafts[item.id] !== undefined ? notesDrafts[item.id] : (item.internalNotes || '');
+              {(() => {
+                const creds = selectedVerifGroup.credentials || [];
+                const statusLabel = (s) => s === 'APPROVED' ? 'Đã duyệt' : s === 'REJECTED' ? 'Từ chối' : 'Chờ xác thực';
+                const activeCred = creds.find(c => c.id === activeCredId) || creds[0];
+                if (!activeCred) return null;
 
-                  return (
-                    <article key={item.id} className="admin-group-job-card credential">
-                      <div className="admin-post-icon credential">
-                        <ShieldCheck size={16} />
-                      </div>
-                      <div className="admin-subitem-main">
-                        <h4>{item.project_name}</h4>
-                        <div className="admin-subitem-meta">
-                          <span className="proof-chip category">{CATEGORY_LABELS[item.category] || item.category}</span>
-                          <span className={`proof-chip ${(item.role_level || 'MEMBER').toLowerCase()}`}>{item.role_level === 'LEADER' ? 'Trưởng nhóm' : 'Thành viên'}</span>
-                          <span>{item.position}</span>
-                          <span>{item.created_at ? new Date(item.created_at).toLocaleDateString('vi-VN') : '—'}</span>
-                        </div>
-                        {item.description && <p className="admin-subitem-desc">{item.description}</p>}
-                        {(() => {
-                          let imgs = [];
-                          try { imgs = JSON.parse(item.proof_images || '[]'); } catch { imgs = []; }
-                          if (!Array.isArray(imgs)) imgs = [];
-                          const hasProof = imgs.length > 0 || !!item.proof_link;
+                const status = (activeCred.verification_status || activeCred.status || 'PENDING').toUpperCase();
+                const isClaimedByMe = currentUser && activeCred.claimedByAdminId === currentUser.id;
+                const isClaimedByOther = activeCred.claimedByAdminId && activeCred.claimedByAdminId !== currentUser?.id;
+                const isUnclaimed = !activeCred.claimedByAdminId;
+                const notesValue = notesDrafts[activeCred.id] !== undefined ? notesDrafts[activeCred.id] : (activeCred.internalNotes || '');
+                let imgs = [];
+                try { imgs = JSON.parse(activeCred.proof_images || '[]'); } catch { imgs = []; }
+                if (!Array.isArray(imgs)) imgs = [];
+                const hasProof = imgs.length > 0 || !!activeCred.proof_link;
+
+                return (
+                  <div className={`verif-md ${creds.length < 2 ? 'single' : ''}`}>
+                    {/* MASTER — credential list */}
+                    {creds.length > 1 && (
+                      <aside className="verif-md-list">
+                        {creds.map((c) => {
+                          const cs = (c.verification_status || c.status || 'PENDING').toUpperCase();
+                          const active = c.id === activeCred.id;
                           return (
-                            <>
-                              {imgs.length > 0 && (
-                                <div style={{ margin: '10px 0' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', fontWeight: 700, color: 'var(--muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                    <ImageIcon size={12} /> Ảnh minh chứng ({imgs.length})
-                                  </div>
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                    {imgs.map((src, i) => (
-                                      <button key={i} type="button" onClick={() => setVerifLightbox({ images: imgs, index: i })} title="Bấm để phóng to"
-                                        style={{ position: 'relative', width: '84px', height: '84px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--p-line, #e3e8ef)', padding: 0, cursor: 'zoom-in', background: '#0d1b33' }}>
-                                        <img src={src} alt={`Minh chứng ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(13,27,51,0.45)', color: '#fff', opacity: 0, transition: 'opacity 0.15s' }}
-                                          onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; }}
-                                          onMouseLeave={(e) => { e.currentTarget.style.opacity = 0; }}>
-                                          <Search size={18} />
-                                        </span>
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              {item.proof_link && (
-                                <a href={item.proof_link} target="_blank" rel="noopener noreferrer" className="proof-card-proof-link">
-                                  <ExternalLink size={12} /> Mở link minh chứng
-                                </a>
-                              )}
-                              {!hasProof && (
-                                <span style={{ fontSize: '0.78rem', color: '#dc2626', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                  <AlertTriangle size={12} /> Chưa có minh chứng đính kèm
+                            <button key={c.id} type="button"
+                              className={`verif-md-row ${cs.toLowerCase()} ${active ? 'active' : ''}`}
+                              onClick={() => setActiveCredId(c.id)}>
+                              <span className="verif-md-row-avatar"><ShieldCheck size={16} /></span>
+                              <span className="verif-md-row-body">
+                                <span className="verif-md-row-title">
+                                  {c.project_name}
+                                  {c.expressVerification && <span className="verif-md-express" title="Express">⚡</span>}
                                 </span>
-                              )}
-                            </>
+                                <span className={`proof-status-badge ${cs.toLowerCase()}`}>{statusLabel(cs)}</span>
+                              </span>
+                              <ChevronRight size={15} className="verif-md-row-chev" />
+                            </button>
                           );
-                        })()}
-                        <span className="verif-reward-badge">+{EXP_REWARDS[item.category] || 100} EXP · +{item.role_level === 'LEADER' ? 10 : 5} RS</span>
+                        })}
+                      </aside>
+                    )}
 
-                        {/* Internal Notes */}
-                        <div className="admin-card-notes" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--line, #e2e8f0)', width: '100%' }}>
-                          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--p-ink, #0d1b33)', marginBottom: '8px' }}>
-                            📓 Ghi chú nội bộ (Chỉ Admin nhìn thấy)
-                          </label>
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <textarea
-                              value={notesValue}
-                              onChange={(e) => setNotesDrafts(prev => ({ ...prev, [item.id]: e.target.value }))}
-                              disabled={isClaimedByOther}
-                              placeholder={isClaimedByOther ? "Đang bị khóa bởi admin khác..." : "Nhập ghi chú nội bộ cho minh chứng này..."}
-                              style={{
-                                flex: 1,
-                                padding: '8px 12px',
-                                borderRadius: '8px',
-                                border: '1.5px solid var(--p-line, #cbd5e1)',
-                                fontSize: '0.85rem',
-                                minHeight: '50px',
-                                resize: 'vertical',
-                                outline: 'none',
-                                fontFamily: 'inherit',
-                                background: isClaimedByOther ? '#f9fafb' : '#fff'
-                              }}
-                            />
-                            {!isClaimedByOther && (
-                              <button
-                                type="button"
-                                className="button secondary-button"
-                                onClick={() => handleSaveNotes('EXPERIENCE', item.id)}
-                                disabled={actionStatus.type === 'loading'}
-                                style={{ height: 'auto', alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                              >
-                                Lưu
-                              </button>
+                    {/* DETAIL — selected credential */}
+                    <section key={activeCred.id} className={`verif-md-detail ${status.toLowerCase()}`}>
+                      <div className="verif-card-head">
+                        <div className="admin-post-icon credential">
+                          <ShieldCheck size={16} />
+                        </div>
+                        <div className="verif-card-titlewrap">
+                          <div className="verif-card-titlerow">
+                            <h4 className="verif-card-title">{activeCred.project_name}</h4>
+                            {activeCred.expressVerification && (
+                              <span className="verif-express-tag">⚡ EXPRESS</span>
                             )}
                           </div>
+                          <div className="admin-subitem-meta">
+                            <span className="proof-chip category">{CATEGORY_LABELS[activeCred.category] || activeCred.category}</span>
+                            <span className={`proof-chip ${(activeCred.role_level || 'MEMBER').toLowerCase()}`}>{activeCred.role_level === 'LEADER' ? 'Trưởng nhóm' : 'Thành viên'}</span>
+                            <span>{activeCred.position}</span>
+                            <span>{activeCred.created_at ? new Date(activeCred.created_at).toLocaleDateString('vi-VN') : '—'}</span>
+                          </div>
+                        </div>
+                        <span className={`proof-status-badge ${status.toLowerCase()}`}>{statusLabel(status)}</span>
+                      </div>
+
+                      {activeCred.description && <p className="admin-subitem-desc" style={{ marginTop: '14px' }}>{activeCred.description}</p>}
+
+                      {imgs.length > 0 && (
+                        <div style={{ marginTop: '16px' }}>
+                          <div className="verif-md-imglabel"><ImageIcon size={13} /> Ảnh minh chứng ({imgs.length})</div>
+                          <div className="verif-md-imggrid">
+                            {imgs.map((src, i) => (
+                              <button key={i} type="button" className="verif-md-img" onClick={() => setVerifLightbox({ images: imgs, index: i })} title="Bấm để phóng to">
+                                <img src={src} alt={`Minh chứng ${i + 1}`} />
+                                <span className="verif-md-img-zoom"><Search size={20} /></span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {activeCred.proof_link && (
+                        <a href={activeCred.proof_link} target="_blank" rel="noopener noreferrer" className="proof-card-proof-link" style={{ marginTop: '12px' }}>
+                          <ExternalLink size={12} /> Mở link minh chứng
+                        </a>
+                      )}
+                      {!hasProof && (
+                        <span style={{ fontSize: '0.82rem', color: '#dc2626', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '12px' }}>
+                          <AlertTriangle size={13} /> Chưa có minh chứng đính kèm
+                        </span>
+                      )}
+
+                      <div style={{ marginTop: '16px' }}>
+                        <span className="verif-reward-badge">+{EXP_REWARDS[activeCred.category] || 100} EXP · +{activeCred.role_level === 'LEADER' ? 10 : 5} RS</span>
+                      </div>
+
+                      {/* Internal Notes */}
+                      <div className="admin-card-notes" style={{ marginTop: '20px', paddingTop: '18px', borderTop: '1px dashed var(--line, #e2e8f0)' }}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--p-ink, #0d1b33)', marginBottom: '8px' }}>
+                          📓 Ghi chú nội bộ (Chỉ Admin nhìn thấy)
+                        </label>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <textarea
+                            value={notesValue}
+                            onChange={(e) => setNotesDrafts(prev => ({ ...prev, [activeCred.id]: e.target.value }))}
+                            disabled={isClaimedByOther}
+                            placeholder={isClaimedByOther ? "Đang bị khóa bởi admin khác..." : "Nhập ghi chú nội bộ cho minh chứng này..."}
+                            style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1.5px solid var(--p-line, #cbd5e1)', fontSize: '0.85rem', minHeight: '54px', resize: 'vertical', outline: 'none', fontFamily: 'inherit', background: isClaimedByOther ? '#f9fafb' : '#fff' }}
+                          />
+                          {!isClaimedByOther && (
+                            <button type="button" className="button secondary-button"
+                              onClick={() => handleSaveNotes('EXPERIENCE', activeCred.id)}
+                              disabled={actionStatus.type === 'loading'}
+                              style={{ height: 'auto', alignSelf: 'stretch', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                              Lưu
+                            </button>
+                          )}
                         </div>
                       </div>
-                      <span className={`proof-status-badge ${status.toLowerCase()}`}>
-                        {status === 'APPROVED' ? 'Đã duyệt' : status === 'REJECTED' ? 'Từ chối' : 'Chờ xác thực'}
-                      </span>
 
                       {status === 'PENDING' && (
-                        <div className="admin-group-job-actions" style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'stretch', width: '100%', marginTop: '12px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="verif-md-actions">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                             {isUnclaimed && (
-                              <button
-                                type="button"
-                                className="button secondary-button"
+                              <button type="button" className="button secondary-button"
                                 style={{ background: '#f3f4f6', borderColor: '#d1d5db', color: '#1f2937', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
-                                onClick={() => handleClaim('EXPERIENCE', item.id)}
-                                disabled={actionStatus.type === 'loading'}
-                              >
+                                onClick={() => handleClaim('EXPERIENCE', activeCred.id)}
+                                disabled={actionStatus.type === 'loading'}>
                                 <Clock size={14} /> Nhận việc (Claim)
                               </button>
                             )}
                             {isClaimedByMe && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <>
                                 <span className="admin-type-badge" style={{ background: '#dcfce7', color: '#15803d', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                   <CheckCircle2 size={12} /> Bạn đang duyệt
                                 </span>
-                                <button
-                                  type="button"
-                                  className="button secondary-button"
-                                  style={{ padding: '4px 8px', fontSize: '0.75rem', height: 'auto', background: '#fee2e2', color: '#991b1b', border: 'none', cursor: 'pointer' }}
-                                  onClick={() => handleUnclaim('EXPERIENCE', item.id)}
-                                  disabled={actionStatus.type === 'loading'}
-                                >
+                                <button type="button" className="button secondary-button"
+                                  style={{ padding: '4px 10px', fontSize: '0.75rem', height: 'auto', background: '#fee2e2', color: '#991b1b', border: 'none', cursor: 'pointer' }}
+                                  onClick={() => handleUnclaim('EXPERIENCE', activeCred.id)}
+                                  disabled={actionStatus.type === 'loading'}>
                                   Nhả việc
                                 </button>
-                              </div>
+                              </>
                             )}
                             {isClaimedByOther && (
                               <span className="admin-type-badge" style={{ background: '#fef3c7', color: '#b45309', fontWeight: 'bold' }}>
-                                🔒 Đang duyệt bởi: {item.claimedByAdminName || 'Admin khác'}
+                                🔒 Đang duyệt bởi: {activeCred.claimedByAdminName || 'Admin khác'}
                               </span>
                             )}
                           </div>
 
-                          {verifRejectingId === item.id ? (
-                            <div className="verif-reject-inline" style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                              <input
-                                className="form-input"
-                                placeholder="Nhập lý do từ chối..."
-                                value={verifRejectReason}
-                                onChange={e => setVerifRejectReason(e.target.value)}
-                                style={{ flex: 1, fontSize: '0.86rem' }}
-                              />
-                              <button className="button danger-button" disabled={verifActionLoading === item.id + '_reject' || !verifRejectReason.trim() || !isClaimedByMe} onClick={() => handleReject(item.id)}>
-                                {verifActionLoading === item.id + '_reject' ? 'Đang xử lý...' : 'Xác nhận'}
+                          {!isClaimedByMe && (
+                            <p className="verif-md-hint">Bấm “Nhận việc” để mở khoá nút Phê duyệt / Từ chối.</p>
+                          )}
+
+                          {verifRejectingId === activeCred.id ? (
+                            <div className="verif-reject-inline" style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                              <input className="form-input" placeholder="Nhập lý do từ chối..." value={verifRejectReason}
+                                onChange={e => setVerifRejectReason(e.target.value)} style={{ flex: 1, fontSize: '0.86rem' }} />
+                              <button className="button danger-button" disabled={verifActionLoading === activeCred.id + '_reject' || !verifRejectReason.trim() || !isClaimedByMe} onClick={() => handleReject(activeCred.id)}>
+                                {verifActionLoading === activeCred.id + '_reject' ? 'Đang xử lý...' : 'Xác nhận'}
                               </button>
                               <button className="button secondary-button" onClick={() => { setVerifRejectingId(null); setVerifRejectReason(''); }}>Hủy</button>
                             </div>
                           ) : (
-                            <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
-                              <button className="button primary-button" disabled={verifActionLoading === item.id + '_approve' || !isClaimedByMe} onClick={() => handleApprove(item.id)}>
-                                {verifActionLoading === item.id + '_approve' ? 'Đang duyệt...' : 'Phê duyệt'}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+                              <button className="button primary-button" style={{ width: '100%', justifyContent: 'center' }} disabled={verifActionLoading === activeCred.id + '_approve' || !isClaimedByMe} onClick={() => handleApprove(activeCred.id)}>
+                                <CheckCircle2 size={16} /> {verifActionLoading === activeCred.id + '_approve' ? 'Đang duyệt...' : 'Phê duyệt minh chứng'}
                               </button>
-                              <button className="button danger-button" disabled={!isClaimedByMe} onClick={() => { setVerifRejectingId(item.id); setVerifRejectReason(''); }}>
-                                Từ chối
+                              <button className="button danger-button" style={{ width: '100%', justifyContent: 'center' }} disabled={!isClaimedByMe} onClick={() => { setVerifRejectingId(activeCred.id); setVerifRejectReason(''); }}>
+                                Từ chối minh chứng
                               </button>
                             </div>
                           )}
                         </div>
                       )}
-                    </article>
-                  );
-                })}
-              </div>
+                    </section>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
@@ -2603,7 +2633,7 @@ export function AdminB2bReviewPage() {
               <span style={{ color: 'var(--muted)', fontWeight: '600' }}>Đang tải dữ liệu...</span>
             </div>
           ) : (
-            <div>
+            <div key={`${activeTab}-${jobsSubTab}-${verifSubTab}`} className="admin-view-anim">
               {activeTab === 'OVERVIEW' && renderOverview()}
               {activeTab === 'USERS' && renderUsers()}
               {activeTab === 'B2B_REVIEWS' && renderB2bReviews()}
@@ -3250,8 +3280,9 @@ export function AdminB2bReviewPage() {
                           <button
                             type="button"
                             className="button primary-button"
-                            style={{ background: '#dc2626', borderColor: 'transparent', color: '#fff', cursor: 'pointer' }}
+                            style={{ background: '#dc2626', borderColor: 'transparent', color: '#fff', cursor: isClaimedByMe ? 'pointer' : 'not-allowed' }}
                             disabled={!isClaimedByMe}
+                            title={!isClaimedByMe ? 'Bấm "Nhận việc" trước khi xử lý' : undefined}
                             onClick={() => {
                               setSelectedJobId(null);
                               setSelectedJobDetail(null);
@@ -3263,8 +3294,9 @@ export function AdminB2bReviewPage() {
                           <button
                             type="button"
                             className="button primary-button"
-                            style={{ background: '#16a34a', borderColor: 'transparent', color: '#fff', cursor: 'pointer' }}
+                            style={{ background: '#16a34a', borderColor: 'transparent', color: '#fff', cursor: isClaimedByMe ? 'pointer' : 'not-allowed' }}
                             disabled={!isClaimedByMe}
+                            title={!isClaimedByMe ? 'Bấm "Nhận việc" trước khi xử lý' : undefined}
                             onClick={() => {
                               setSelectedJobId(null);
                               setSelectedJobDetail(null);
