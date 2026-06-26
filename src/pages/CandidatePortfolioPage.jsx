@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   ChevronDown,
   Link as LinkIcon,
+  LockKeyhole,
 } from 'lucide-react';
 import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';

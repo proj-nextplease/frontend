@@ -45,8 +45,109 @@ export function CandidatePortfolioViewPage() {
   const credentials = Array.isArray(profile.credentials) ? profile.credentials : [];
   const avatar = profile.avatar && Object.keys(profile.avatar).length > 0 ? profile.avatar : { gender: 'male' };
 
+  const themeClass = profile.selectedTheme ? `theme-${profile.selectedTheme}` : '';
+
   return (
-    <section className="portfolio-preview-page">
+    <section className={`portfolio-preview-page ${themeClass}`}>
+      <style>{`
+        /* Style overrides for Luxury Gold */
+        .portfolio-preview-page.theme-DARK_GOLD {
+          background: linear-gradient(135deg, #fdfaf2 0%, #fffbf0 100%) !important;
+          color: #451a03 !important;
+        }
+        .portfolio-preview-page.theme-DARK_GOLD .public-portfolio-shell {
+          background: transparent !important;
+        }
+        .portfolio-preview-page.theme-DARK_GOLD .public-section-card,
+        .portfolio-preview-page.theme-DARK_GOLD .public-profile-card,
+        .portfolio-preview-page.theme-DARK_GOLD .public-avatar-panel {
+          background: #fffdf5 !important;
+          border: 1.5px solid #f59e0b !important;
+          box-shadow: 0 4px 20px rgba(245,158,11,0.08) !important;
+        }
+        .portfolio-preview-page.theme-DARK_GOLD h1,
+        .portfolio-preview-page.theme-DARK_GOLD h2,
+        .portfolio-preview-page.theme-DARK_GOLD h3 {
+          color: #78350f !important;
+        }
+        .portfolio-preview-page.theme-DARK_GOLD .preview-subheading svg {
+          color: #d97706 !important;
+        }
+        .portfolio-preview-page.theme-DARK_GOLD .avatar-badge {
+          background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+          color: #fff !important;
+        }
+        .portfolio-preview-page.theme-DARK_GOLD .skill-cloud span {
+          background: #fef3c7 !important;
+          color: #78350f !important;
+          border: 1px solid #fde68a !important;
+        }
+
+        /* Style overrides for Cyberpunk Neon */
+        .portfolio-preview-page.theme-CYBERPUNK {
+          background: #090d16 !important;
+          color: #e2e8f0 !important;
+        }
+        .portfolio-preview-page.theme-CYBERPUNK .public-section-card,
+        .portfolio-preview-page.theme-CYBERPUNK .public-profile-card,
+        .portfolio-preview-page.theme-CYBERPUNK .public-avatar-panel {
+          background: #111827 !important;
+          border: 1.5px solid #ec4899 !important;
+          box-shadow: 0 0 15px rgba(236,72,153,0.15), 0 0 5px rgba(6,182,212,0.15) !important;
+        }
+        .portfolio-preview-page.theme-CYBERPUNK h1,
+        .portfolio-preview-page.theme-CYBERPUNK h2,
+        .portfolio-preview-page.theme-CYBERPUNK h3 {
+          color: #06b6d4 !important;
+          text-shadow: 0 0 8px rgba(6,182,212,0.3) !important;
+        }
+        .portfolio-preview-page.theme-CYBERPUNK .preview-subheading svg {
+          color: #ec4899 !important;
+        }
+        .portfolio-preview-page.theme-CYBERPUNK .avatar-badge {
+          background: linear-gradient(135deg, #ec4899, #8b5cf6) !important;
+          color: #fff !important;
+        }
+        .portfolio-preview-page.theme-CYBERPUNK .skill-cloud span {
+          background: rgba(236,72,153,0.1) !important;
+          color: #ec4899 !important;
+          border: 1px solid rgba(236,72,153,0.3) !important;
+        }
+        .portfolio-preview-page.theme-CYBERPUNK .experience-preview-card,
+        .portfolio-preview-page.theme-CYBERPUNK .credential-preview-card {
+          border-bottom: 1px solid rgba(236,72,153,0.2) !important;
+        }
+
+        /* Style overrides for Emerald Executive */
+        .portfolio-preview-page.theme-EMERALD_CLASSIC {
+          background: linear-gradient(135deg, #f0fbf4 0%, #f0fdf4 100%) !important;
+          color: #064e3b !important;
+        }
+        .portfolio-preview-page.theme-EMERALD_CLASSIC .public-section-card,
+        .portfolio-preview-page.theme-EMERALD_CLASSIC .public-profile-card,
+        .portfolio-preview-page.theme-EMERALD_CLASSIC .public-avatar-panel {
+          background: #ffffff !important;
+          border: 1.5px solid #10b981 !important;
+          box-shadow: 0 4px 20px rgba(16,185,129,0.06) !important;
+        }
+        .portfolio-preview-page.theme-EMERALD_CLASSIC h1,
+        .portfolio-preview-page.theme-EMERALD_CLASSIC h2,
+        .portfolio-preview-page.theme-EMERALD_CLASSIC h3 {
+          color: #065f46 !important;
+        }
+        .portfolio-preview-page.theme-EMERALD_CLASSIC .preview-subheading svg {
+          color: #059669 !important;
+        }
+        .portfolio-preview-page.theme-EMERALD_CLASSIC .avatar-badge {
+          background: linear-gradient(135deg, #10b981, #059669) !important;
+          color: #fff !important;
+        }
+        .portfolio-preview-page.theme-EMERALD_CLASSIC .skill-cloud span {
+          background: #d1fae5 !important;
+          color: #065f46 !important;
+          border: 1px solid #a7f3d0 !important;
+        }
+      `}</style>
       {/* Close button */}
       <div style={{ position: 'fixed', top: '16px', left: '16px', zIndex: 100 }}>
         <button onClick={() => window.close()}
