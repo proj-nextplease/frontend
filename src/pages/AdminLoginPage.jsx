@@ -3,6 +3,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
+import { setRemember, setStoredToken, setStoredUser, clearStoredAuth } from '../lib/authStorage.js';
 import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
 
 const INK = '#101828';
@@ -150,6 +151,8 @@ export function AdminLoginPage() {
     }
 
     try {
+      // Admin sessions are never "remembered" — always tab-scoped (sessionStorage).
+      setRemember(false);
       const response = await loginCandidate(loginData.email, loginData.password);
       const roles = response.user?.roles || [];
       if (!roles.includes('admin')) {
@@ -157,10 +160,10 @@ export function AdminLoginPage() {
         return;
       }
       if (response.accessToken) {
-        sessionStorage.setItem('nextplease:access_token', response.accessToken);
+        setStoredToken(response.accessToken);
       }
       if (response.user) {
-        sessionStorage.setItem('nextplease:current_user', JSON.stringify(response.user));
+        setStoredUser(response.user);
       }
       if (supabase && response.accessToken && response.refreshToken) {
         const { error } = await supabase.auth.setSession({
@@ -171,7 +174,7 @@ export function AdminLoginPage() {
       }
       navigate('/nextplease-admin-portal/b2b-reviews');
     } catch (error) {
-      sessionStorage.removeItem('nextplease:access_token');
+      clearStoredAuth();
       setStatus({
         type: 'error',
         message: error.response?.data?.message || error.message || 'Đăng nhập thất bại.',
@@ -203,11 +206,11 @@ export function AdminLoginPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '18px' }}>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex' }}><Mail size={18} /></span>
-              <input className="np-adminf" name="email" type="email" value={loginData.email} onChange={updateField} placeholder="Email admin" style={FIELD} />
+              <input className="np-adminf" name="email" type="email" autoComplete="username" value={loginData.email} onChange={updateField} placeholder="Email admin" style={FIELD} />
             </div>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex' }}><LockKeyhole size={18} /></span>
-              <input className="np-adminf" name="password" type={showPassword ? 'text' : 'password'} value={loginData.password} onChange={updateField} placeholder="Mật khẩu bảo mật" style={{ ...FIELD, paddingRight: '44px' }} />
+              <input className="np-adminf" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={loginData.password} onChange={updateField} placeholder="Mật khẩu bảo mật" style={{ ...FIELD, paddingRight: '44px' }} />
               <button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} onClick={() => setShowPassword((c) => !c)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: MUTED, cursor: 'pointer', display: 'flex' }}>
                 {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
               </button>

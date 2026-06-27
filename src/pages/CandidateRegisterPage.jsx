@@ -9,6 +9,7 @@ import {
   verifyCandidateRegistrationOtp,
 } from '../api/candidateRegistrationApi.js';
 import { loginCandidate } from '../api/authApi.js';
+import { setRemember, setStoredToken } from '../lib/authStorage.js';
 import { supabase } from '../services/supabaseClient.js';
 import { AuthBrandPanel } from '../components/AuthBrandPanel.jsx';
 import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
@@ -229,11 +230,13 @@ export function CandidateRegisterPage() {
     try {
       await verifyCandidateRegistrationOtp({ registrationId, otp: code, password: formData.password });
       try {
+        // New candidate accounts default to "keep signed in".
+        setRemember(true);
         const loginData = await loginCandidate(formData.email, formData.password);
         if (loginData && loginData.accessToken) {
-          // Persist token in sessionStorage so httpClient interceptor picks it up
-          // immediately – avoids race with Supabase SDK session refresh.
-          sessionStorage.setItem('nextplease:access_token', loginData.accessToken);
+          // Persist token immediately so httpClient interceptor picks it up –
+          // avoids race with Supabase SDK session refresh.
+          setStoredToken(loginData.accessToken);
           await supabase.auth.setSession({ access_token: loginData.accessToken, refresh_token: loginData.refreshToken });
         }
       } catch (loginError) {

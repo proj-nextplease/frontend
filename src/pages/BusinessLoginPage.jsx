@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
 import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
+import { setRemember, setStoredToken, clearStoredAuth, rememberLastEmail, getLastEmail } from '../lib/authStorage.js';
 import { BusinessAuthPanel } from '../components/BusinessAuthPanel.jsx';
 import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
 
@@ -21,8 +22,9 @@ const FIELD = {
 
 export function BusinessLoginPage() {
   const navigate = useNavigate();
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [rememberPassword, setRememberPassword] = useState(false);
+  const [loginData, setLoginData] = useState({ email: getLastEmail(), password: '' });
+  // Business: opt-in (default off) — more sensitive than a consumer account.
+  const [keepSignedIn, setKeepSignedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const isSupabaseConfigured = Boolean(supabase);
@@ -50,10 +52,12 @@ export function BusinessLoginPage() {
     }
 
     try {
+      setRemember(keepSignedIn);
       const response = await loginCandidate(loginData.email, loginData.password);
+      rememberLastEmail(loginData.email);
 
       if (response.accessToken) {
-        sessionStorage.setItem('nextplease:access_token', response.accessToken);
+        setStoredToken(response.accessToken);
       }
 
       if (supabase && response.accessToken && response.refreshToken) {
@@ -74,7 +78,7 @@ export function BusinessLoginPage() {
         navigate('/businesses/dashboard');
       }
     } catch (error) {
-      sessionStorage.removeItem('nextplease:access_token');
+      clearStoredAuth();
       setStatus({
         type: 'error',
         message: error.response?.data?.message || error.message || 'Đăng nhập thất bại.',
@@ -103,11 +107,11 @@ export function BusinessLoginPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '16px' }}>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex' }}><Mail size={18} /></span>
-              <input className="np-bizf" name="email" type="email" value={loginData.email} onChange={updateField} placeholder="Email đăng nhập" style={FIELD} />
+              <input className="np-bizf" name="email" type="email" autoComplete="username" value={loginData.email} onChange={updateField} placeholder="Email đăng nhập" style={FIELD} />
             </div>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex' }}><LockKeyhole size={18} /></span>
-              <input className="np-bizf" name="password" type={showPassword ? 'text' : 'password'} value={loginData.password} onChange={updateField} placeholder="Mật khẩu" style={{ ...FIELD, paddingRight: '44px' }} />
+              <input className="np-bizf" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={loginData.password} onChange={updateField} placeholder="Mật khẩu" style={{ ...FIELD, paddingRight: '44px' }} />
               <button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} onClick={() => setShowPassword((c) => !c)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: MUTED, cursor: 'pointer', display: 'flex' }}>
                 {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
               </button>
@@ -116,10 +120,10 @@ export function BusinessLoginPage() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', color: MUTED, cursor: 'pointer' }}>
-              <input type="checkbox" checked={rememberPassword} onChange={(e) => setRememberPassword(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: BLUE, cursor: 'pointer' }} />
-              Ghi nhớ đăng nhập
+              <input type="checkbox" checked={keepSignedIn} onChange={(e) => setKeepSignedIn(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: BLUE, cursor: 'pointer' }} />
+              Giữ đăng nhập
             </label>
-            <button type="button" onClick={() => setStatus({ type: 'warning', message: 'Vui lòng liên hệ quản trị viên để khôi phục mật khẩu tài khoản tổ chức.' })}
+            <button type="button" onClick={() => navigate('/forgot-password?role=business')}
               style={{ background: 'none', border: 'none', color: BLUE, fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer' }}>Quên mật khẩu?</button>
           </div>
 

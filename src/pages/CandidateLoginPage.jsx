@@ -4,6 +4,7 @@ import { ArrowRight, Eye, EyeOff, Mail, LockKeyhole } from 'lucide-react';
 import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
+import { setRemember, setStoredToken, rememberLastEmail, getLastEmail } from '../lib/authStorage.js';
 import { AuthBrandPanel } from '../components/AuthBrandPanel.jsx';
 import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
 
@@ -38,8 +39,9 @@ const FIELD = {
 
 export function CandidateLoginPage() {
   const navigate = useNavigate();
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [rememberPassword, setRememberPassword] = useState(false);
+  const [loginData, setLoginData] = useState({ email: getLastEmail(), password: '' });
+  // Candidate: keep signed in by default (consumer-friendly).
+  const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const isSupabaseConfigured = Boolean(supabase);
@@ -76,11 +78,15 @@ export function CandidateLoginPage() {
       return;
     }
     try {
+      // Decide persistence BEFORE establishing the session so the storage
+      // adapter routes the token to local/session storage accordingly.
+      setRemember(keepSignedIn);
       const response = await loginCandidate(loginData.email, loginData.password);
-      // Persist token in sessionStorage so httpClient interceptor picks it up
-      // immediately – avoids race with Supabase SDK session refresh.
+      rememberLastEmail(loginData.email);
+      // Persist token immediately so httpClient interceptor picks it up –
+      // avoids race with Supabase SDK session refresh.
       if (response.accessToken) {
-        sessionStorage.setItem('nextplease:access_token', response.accessToken);
+        setStoredToken(response.accessToken);
       }
       const { error } = await supabase.auth.setSession({
         access_token: response.accessToken,
@@ -137,11 +143,11 @@ export function CandidateLoginPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '14px' }}>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex' }}><Mail size={18} /></span>
-              <input name="email" type="email" value={loginData.email} onChange={updateField} placeholder="Email đăng nhập" style={FIELD} />
+              <input name="email" type="email" autoComplete="username" value={loginData.email} onChange={updateField} placeholder="Email đăng nhập" style={FIELD} />
             </div>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex' }}><LockKeyhole size={18} /></span>
-              <input name="password" type={showPassword ? 'text' : 'password'} value={loginData.password} onChange={updateField} placeholder="Mật khẩu" style={{ ...FIELD, paddingRight: '44px' }} />
+              <input name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={loginData.password} onChange={updateField} placeholder="Mật khẩu" style={{ ...FIELD, paddingRight: '44px' }} />
               <button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} onClick={() => setShowPassword((c) => !c)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: MUTED, cursor: 'pointer', display: 'flex' }}>
                 {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
               </button>
@@ -150,10 +156,10 @@ export function CandidateLoginPage() {
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', color: MUTED, cursor: 'pointer' }}>
-              <input type="checkbox" checked={rememberPassword} onChange={(e) => setRememberPassword(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: RED, cursor: 'pointer' }} />
-              Ghi nhớ đăng nhập
+              <input type="checkbox" checked={keepSignedIn} onChange={(e) => setKeepSignedIn(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: RED, cursor: 'pointer' }} />
+              Giữ đăng nhập
             </label>
-            <button type="button" onClick={() => setStatus({ type: 'warning', message: 'Luồng quên mật khẩu sẽ nối với backend/auth provider ở bước tiếp theo.' })}
+            <button type="button" onClick={() => navigate('/forgot-password?role=candidate')}
               style={{ background: 'none', border: 'none', color: RED, fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer' }}>Quên mật khẩu?</button>
           </div>
 

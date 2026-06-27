@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { supabase } from '../services/supabaseClient.js';
+import { getStoredToken, setStoredToken, clearStoredAuth } from '../lib/authStorage.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api/v1';
-const ACCESS_TOKEN_KEY = 'nextplease:access_token';
 
 export const httpClient = axios.create({
   baseURL: API_BASE_URL,
@@ -19,9 +19,9 @@ export const httpClient = axios.create({
 if (supabase) {
   supabase.auth.onAuthStateChange((event, session) => {
     if (session?.access_token) {
-      sessionStorage.setItem(ACCESS_TOKEN_KEY, session.access_token);
+      setStoredToken(session.access_token);
     } else if (event === 'SIGNED_OUT') {
-      sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+      clearStoredAuth();
     }
   });
 }
@@ -37,7 +37,7 @@ httpClient.interceptors.request.use(async (config) => {
       const { data } = await supabase.auth.getSession();
       accessToken = data.session?.access_token ?? null;
       if (accessToken) {
-        sessionStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+        setStoredToken(accessToken);
       }
     } catch {
       // ignore – fall back to the stored token below
@@ -47,7 +47,7 @@ httpClient.interceptors.request.use(async (config) => {
   // 2. Fall back to the explicitly stored token (BE-login flows where Supabase
   //    isn't managing the session, e.g. Supabase not configured).
   if (!accessToken) {
-    accessToken = sessionStorage.getItem(ACCESS_TOKEN_KEY);
+    accessToken = getStoredToken();
   }
 
   if (accessToken) {
@@ -74,7 +74,7 @@ httpClient.interceptors.response.use(
           const { data, error: refreshError } = await supabase.auth.refreshSession();
           if (!refreshError && data.session?.access_token) {
             const newToken = data.session.access_token;
-            sessionStorage.setItem(ACCESS_TOKEN_KEY, newToken);
+            setStoredToken(newToken);
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return httpClient(originalRequest);
           }
@@ -85,8 +85,7 @@ httpClient.interceptors.response.use(
 
       // Refresh failed or Supabase not configured – the session is dead. Clear
       // stale auth so guards bounce the user back to the appropriate login.
-      sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-      sessionStorage.removeItem('nextplease:current_user');
+      clearStoredAuth();
     }
 
     const beMessage = error.response?.data?.message;
@@ -115,8 +114,6 @@ export async function logout() {
       await supabase.auth.signOut();
     }
   } finally {
-    sessionStorage.removeItem(ACCESS_TOKEN_KEY);
-    sessionStorage.removeItem('nextplease:current_user');
-    sessionStorage.removeItem('nextplease:admin-bypass');
+    clearStoredAuth();
   }
 }
