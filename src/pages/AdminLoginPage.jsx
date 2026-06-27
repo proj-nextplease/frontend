@@ -81,7 +81,7 @@ export function AdminLoginPage() {
       if (localStorage.getItem('nextplease:admin-bypass')) {
         localStorage.removeItem('nextplease:admin-bypass');
       }
-      if (sessionStorage.getItem('nextplease:admin-bypass') === 'true') {
+      if (import.meta.env.DEV && sessionStorage.getItem('nextplease:admin-bypass') === 'true') {
         if (isMounted) { setAlreadyAdmin(true); setChecking(false); }
         return;
       }
@@ -139,6 +139,10 @@ export function AdminLoginPage() {
     }
 
     if (!isSupabaseConfigured) {
+      if (!import.meta.env.DEV) {
+        setStatus({ type: 'error', message: 'Hệ thống xác thực chưa được cấu hình. Vui lòng liên hệ quản trị.' });
+        return;
+      }
       setStatus({ type: 'success', message: 'Đăng nhập Admin giả lập thành công (Dev mode).' });
       sessionStorage.setItem('nextplease:admin-bypass', 'true');
       navigate('/nextplease-admin-portal/b2b-reviews');

@@ -37,6 +37,7 @@ import {
   Palette,
 } from 'lucide-react';
 import { getMyPortfolio } from '../api/portfolioApi.js';
+import { logout } from '../api/httpClient.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
 import { getJobs, getCompanies, getCompanyDetail, getJobDetail } from '../api/jobApi.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
@@ -44,7 +45,6 @@ import { applyToJob, getMyApplications, withdrawApplication } from '../api/appli
 import { NotificationBell } from '../components/NotificationBell.jsx';
 import { getWallet, topUp, buyPremium } from '../api/walletApi.js';
 import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication } from '../api/questApi.js';
-import { supabase } from '../services/supabaseClient.js';
 import {
   boostApplication,
   unlockInsight,
@@ -962,9 +962,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   };
 
   async function handleLogout() {
-    if (supabase) {
-      await supabase.auth.signOut().catch(() => {});
-    }
+    await logout();
     navigate('/');
   }
 

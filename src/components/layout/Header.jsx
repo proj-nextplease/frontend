@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Moon, Sparkles, Sun, Compass, WalletCards, FileText, LogOut } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient.js';
 import { getMyPortfolio } from '../../api/portfolioApi.js';
+import { logout } from '../../api/httpClient.js';
 
 const THEME_STORAGE_KEY = 'nextplease:theme';
 
@@ -137,9 +138,7 @@ export function Header() {
 
   const handleLogout = async () => {
     try {
-      if (supabase) {
-        await supabase.auth.signOut();
-      }
+      await logout();
       setShowDropdown(false);
       navigate('/');
     } catch (err) {

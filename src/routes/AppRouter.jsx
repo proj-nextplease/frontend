@@ -18,6 +18,7 @@ import { BusinessLandingPage } from '../pages/BusinessLandingPage.jsx';
 import { AdminLoginPage } from '../pages/AdminLoginPage.jsx';
 import { JobDetailPage } from '../pages/JobDetailPage.jsx';
 import { CandidatePortfolioViewPage } from '../pages/CandidatePortfolioViewPage.jsx';
+import { getCurrentRoles, isAdmin, isBusiness } from '../lib/authRoles.js';
 
 const CandidatePortfolioPage = lazy(() =>
   import('../pages/CandidatePortfolioPage.jsx').then((module) => ({
@@ -193,43 +194,51 @@ function ProtectedPortfolioRoute({ isEditing = false }) {
 }
 
 function ProtectedBusinessRoute() {
-  const [hasAccess, setHasAccess] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // 'checking' → 'granted' (business role) → 'no-session' (login) → 'wrong-role'
+  const [access, setAccess] = useState('checking');
 
   useEffect(() => {
     let isMounted = true;
     async function checkSession() {
-      // 1. Check Supabase session
-      if (supabase) {
+      // When Supabase isn't configured (pure dev), skip the gate entirely.
+      const supabaseConfigured = Boolean(supabase);
+      const storedToken = sessionStorage.getItem('nextplease:access_token');
+
+      let hasSession = false;
+      if (supabaseConfigured) {
         try {
           const { data: { session: currentSession } } = await supabase.auth.getSession();
-          if (currentSession && isMounted) {
-            setHasAccess(true);
-            setLoading(false);
-            return;
-          }
+          hasSession = Boolean(currentSession);
         } catch (err) {
           console.error("Lỗi khi kiểm tra session B2B:", err);
         }
-      } else if (isMounted) {
-        setHasAccess(true);
-        setLoading(false);
+      }
+      if (!hasSession && storedToken) {
+        hasSession = true;
+      }
+      if (!supabaseConfigured && !storedToken) {
+        // No auth backend wired up at all – allow through for local UI work.
+        if (isMounted) setAccess('granted');
         return;
       }
 
-      // 2. Fallback: check sessionStorage token (set after BE login)
-      const token = sessionStorage.getItem('nextplease:access_token');
-      if (token && isMounted) {
-        setHasAccess(true);
+      if (!hasSession) {
+        if (isMounted) setAccess('no-session');
+        return;
       }
 
-      if (isMounted) setLoading(false);
+      // Has a session – now confirm the role actually belongs to the B2B space.
+      // Admins may pass through too (they manage B2B). Candidates are bounced.
+      const roles = await getCurrentRoles();
+      if (isMounted) {
+        setAccess(isBusiness(roles) || isAdmin(roles) ? 'granted' : 'wrong-role');
+      }
     }
     checkSession();
     return () => { isMounted = false; };
   }, []);
 
-  if (loading) {
+  if (access === 'checking') {
     return (
       <div className="route-loading" style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -241,8 +250,13 @@ function ProtectedBusinessRoute() {
     );
   }
 
-  if (!hasAccess) {
+  if (access === 'no-session') {
     return <Navigate to="/business/login" replace />;
+  }
+
+  if (access === 'wrong-role') {
+    // Logged in, but not a business account – send them to the candidate area.
+    return <Navigate to="/candidates/dashboard" replace />;
   }
 
   return <BusinessPage />;
@@ -268,8 +282,10 @@ function ProtectedAdminRoute() {
         }
       }
 
-      // 1. sessionStorage bypass (dev mode)
-      if (sessionStorage.getItem('nextplease:admin-bypass') === 'true') {
+      // 1. sessionStorage bypass — ONLY honored in dev builds. In production
+      //    this flag is ignored so a manually-set sessionStorage value can't
+      //    grant access to the admin UI.
+      if (import.meta.env.DEV && sessionStorage.getItem('nextplease:admin-bypass') === 'true') {
         if (isMounted) { setIsAdmin(true); setLoading(false); }
         return;
       }
