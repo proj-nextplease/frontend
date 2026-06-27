@@ -49,6 +49,7 @@ import {
   resendCompanyInvitation,
   leaveCompany,
 } from '../api/b2bApi.js';
+import { logout } from '../api/httpClient.js';
 import { supabase } from '../services/supabaseClient.js';
 import { JobPostForm } from '../components/JobPostForm.jsx';
 import { QuestPostForm } from '../components/QuestPostForm.jsx';
@@ -3112,8 +3113,7 @@ export function BusinessPage() {
   }
 
   async function handleLogout() {
-    sessionStorage.removeItem('nextplease:access_token');
-    if (supabase) await supabase.auth.signOut().catch(() => {});
+    await logout();
     navigate('/business/login');
   }
 

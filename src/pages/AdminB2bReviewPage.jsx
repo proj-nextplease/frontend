@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { supabase } from '../services/supabaseClient.js';
 import { NotificationBell } from '../components/NotificationBell.jsx';
 import {
   getPendingB2bRegistrations,
@@ -9,6 +8,7 @@ import {
   rejectB2bRegistration,
   provisionCompany,
 } from '../api/b2bApi.js';
+import { logout } from '../api/httpClient.js';
 import {
   getAdminStats,
   getAdminUsers,
@@ -792,10 +792,8 @@ export function AdminB2bReviewPage() {
   /* Logout */
   async function handleLogout() {
     try {
-      sessionStorage.removeItem('nextplease:admin-bypass');
-      sessionStorage.removeItem('nextplease:access_token');
       localStorage.removeItem('nextplease:admin-bypass');
-      if (supabase) await supabase.auth.signOut();
+      await logout();
     } catch (err) {
       console.error('Lỗi khi đăng xuất admin:', err);
     } finally {
