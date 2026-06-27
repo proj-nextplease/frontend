@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Eye, EyeOff, Loader2, LockKeyhole, LogIn, Mail, ShieldCheck } from 'lucide-react';
 import { supabase } from '../services/supabaseClient.js';
 import { acceptCompanyInvitation, previewInvitation, registerInvitation } from '../api/b2bApi.js';
+import { setStoredToken } from '../lib/authStorage.js';
 import { BusinessAuthPanel } from '../components/BusinessAuthPanel.jsx';
 import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
 
@@ -112,7 +113,7 @@ export function AcceptInvitePage() {
     try {
       const result = await registerInvitation(token, password);
       if (result?.accessToken) {
-        sessionStorage.setItem('nextplease:access_token', result.accessToken);
+        setStoredToken(result.accessToken);
       }
       if (supabase && result?.accessToken && result?.refreshToken) {
         try {

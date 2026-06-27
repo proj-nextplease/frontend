@@ -19,6 +19,9 @@ import { AdminLoginPage } from '../pages/AdminLoginPage.jsx';
 import { JobDetailPage } from '../pages/JobDetailPage.jsx';
 import { CandidatePortfolioViewPage } from '../pages/CandidatePortfolioViewPage.jsx';
 import { getCurrentRoles, isAdmin, isBusiness } from '../lib/authRoles.js';
+import { getStoredToken } from '../lib/authStorage.js';
+import { ForgotPasswordPage } from '../pages/ForgotPasswordPage.jsx';
+import { ResetPasswordPage } from '../pages/ResetPasswordPage.jsx';
 
 const CandidatePortfolioPage = lazy(() =>
   import('../pages/CandidatePortfolioPage.jsx').then((module) => ({
@@ -202,7 +205,7 @@ function ProtectedBusinessRoute() {
     async function checkSession() {
       // When Supabase isn't configured (pure dev), skip the gate entirely.
       const supabaseConfigured = Boolean(supabase);
-      const storedToken = sessionStorage.getItem('nextplease:access_token');
+      const storedToken = getStoredToken();
 
       let hasSession = false;
       if (supabaseConfigured) {
@@ -291,7 +294,7 @@ function ProtectedAdminRoute() {
       }
 
       // 2. sessionStorage token (primary — set after BE login)
-      const storedToken = sessionStorage.getItem('nextplease:access_token');
+      const storedToken = getStoredToken();
       if (storedToken) {
         if (hasAdminRole(storedToken) && isMounted) {
           setIsAdmin(true);
@@ -349,6 +352,10 @@ export function AppRouter() {
         <Route path="/candidate/dashboard" element={<Navigate to="/candidates/dashboard/overview" replace />} />
         <Route path="/candidate/login" element={<CandidateLoginPage />} />
         <Route path="/candidate/register" element={<CandidateRegisterPage />} />
+
+        {/* Shared password-reset flow (candidate + business; admin excluded) */}
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         
         {/* B2B Authentication and Dashboard Routes */}
         <Route path="/business/login" element={<BusinessLoginPage />} />

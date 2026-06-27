@@ -1,5 +1,6 @@
 import { ROLES } from '../config/roles.js';
 import { supabase } from '../services/supabaseClient.js';
+import { getStoredToken, getStoredUser } from './authStorage.js';
 
 /** Decode the `app_metadata.roles` array out of a Supabase JWT. Returns [] on any failure. */
 function rolesFromToken(token) {
@@ -23,7 +24,7 @@ function rolesFromToken(token) {
  *      after the first login).
  */
 export async function getCurrentRoles() {
-  const storedToken = sessionStorage.getItem('nextplease:access_token');
+  const storedToken = getStoredToken();
   if (storedToken) {
     const roles = rolesFromToken(storedToken);
     if (roles.length) return roles;
@@ -42,15 +43,8 @@ export async function getCurrentRoles() {
     }
   }
 
-  try {
-    const cached = sessionStorage.getItem('nextplease:current_user');
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed?.roles)) return parsed.roles;
-    }
-  } catch {
-    // ignore
-  }
+  const cachedUser = getStoredUser();
+  if (Array.isArray(cachedUser?.roles)) return cachedUser.roles;
 
   return [];
 }
