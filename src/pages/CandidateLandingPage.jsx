@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowRight, BadgeCheck, ShieldCheck, Star, Quote, Sparkles,
+  ArrowRight, Quote, Sparkles, Plus, ChevronRight,
+  Wallet, ShieldCheck, TrendingUp, MousePointerClick, Target,
 } from 'lucide-react';
 
 /* Wellfound-faithful palette (fixed light) */
@@ -71,10 +72,10 @@ const GLYPHS = {
   ),
 };
 
-const stats = [
-  { value: 2400, suffix: '+', label: 'ứng viên đang xây hồ sơ' },
-  { value: 12000, suffix: '+', label: 'proof đã được xác minh' },
-  { value: 1200, suffix: '+', label: 'cơ hội & Quest đang mở' },
+const steps = [
+  { title: 'Tạo hồ sơ', desc: 'Thêm kỹ năng, mong muốn và thông tin của bạn — chỉ vài phút.' },
+  { title: 'Gom proof thật', desc: 'Hoạt động, chứng chỉ và kinh nghiệm được tổ chức xác minh.' },
+  { title: 'Ứng tuyển một chạm', desc: 'Nộp mọi việc làm & Quest CLB chỉ với một click duy nhất.' },
 ];
 
 const partners = [
@@ -122,24 +123,111 @@ const testimonials = [
   { quote: 'Một hồ sơ duy nhất dùng cho cả việc làm lẫn Quest CLB, rất tiện.', name: 'phat280405', role: 'Ứng viên · FPTU HCM' },
 ];
 
-function AnimatedStatNumber({ value, suffix, run }) {
-  const [display, setDisplay] = useState(0);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!run) { setDisplay(0); return undefined; }
-    const duration = 1400;
-    const startedAt = performance.now();
-    let frameId;
-    function tick(now) {
-      const progress = Math.min((now - startedAt) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(value * eased));
-      if (progress < 1) frameId = requestAnimationFrame(tick);
-    }
-    frameId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameId);
-  }, [value, run]);
-  return <>{display.toLocaleString('vi-VN')}{suffix}</>;
+const faqs = [
+  {
+    icon: Wallet,
+    q: 'Tạo hồ sơ có mất phí không?',
+    a: 'Hoàn toàn miễn phí. Bạn tạo hồ sơ, gom proof và ứng tuyển không tốn bất kỳ chi phí nào.',
+    highlight: 'Miễn phí 100%',
+  },
+  {
+    icon: ShieldCheck,
+    q: 'Proof được xác minh như thế nào?',
+    a: 'Mọi minh chứng (hoạt động, chứng chỉ, kinh nghiệm) được tổ chức liên quan duyệt; điểm RS và EXP do hệ thống kiểm soát, không tự khai.',
+    highlight: 'Xác minh bởi tổ chức',
+  },
+  {
+    icon: TrendingUp,
+    q: 'RS, EXP và Level là gì?',
+    a: 'Đó là chỉ số uy tín và kinh nghiệm tích luỹ qua hoạt động thật. Hồ sơ uy tín cao được nhà tuyển dụng ưu tiên hiển thị.',
+    highlight: 'Uy tín hiển thị nổi bật',
+  },
+  {
+    icon: MousePointerClick,
+    q: 'Tôi có thể ứng tuyển ngay khi vừa tạo hồ sơ?',
+    a: 'Có. Sau khi hoàn thiện thông tin cơ bản, bạn ứng tuyển mọi việc làm và Quest CLB chỉ với một chạm.',
+    highlight: 'Ứng tuyển một chạm',
+  },
+  {
+    icon: Target,
+    q: 'Quest CLB là gì?',
+    a: 'Quest là nhiệm vụ và hoạt động do câu lạc bộ, tổ chức đăng tải. Hoàn thành Quest giúp bạn tích EXP, mở rộng proof và kết nối với cộng đồng.',
+    highlight: 'Tích EXP qua hoạt động',
+  },
+];
+
+function FaqSection() {
+  const [active, setActive] = useState(null);   // null = đóng, hỏi tràn full width
+  const [last, setLast] = useState(0);          // giữ nội dung khi đang đóng để animate mượt
+  const open = active !== null;
+  const cur = faqs[last];
+  const Icon = cur.icon;
+
+  const toggle = (i) => {
+    if (i === active) { setActive(null); return; }
+    setActive(i);
+    setLast(i);
+  };
+
+  return (
+    <div className="np-faq" style={{ display: 'flex', gap: open ? '20px' : '0', alignItems: 'flex-start', transition: 'gap 0.4s ease' }}>
+      {/* LEFT — question list: full-width grid khi đóng, 1 cột khi mở */}
+      <div
+        className="np-faq-q"
+        style={{
+          flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px',
+        }}
+      >
+        {faqs.map((f, i) => {
+          const on = i === active;
+          return (
+            <button
+              key={f.q}
+              onClick={() => toggle(i)}
+              aria-expanded={on}
+              className="np-card"
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px',
+                padding: '18px 20px', borderRadius: '16px', cursor: 'pointer', textAlign: 'left', font: 'inherit',
+                background: on ? PINK : WHITE, border: `1.5px solid ${on ? RED : LINE}`,
+              }}
+            >
+              <span style={{ fontWeight: '700', color: on ? RED : INK, fontSize: '1rem' }}>{f.q}</span>
+              <ChevronRight size={20} color={on ? RED : MUTED} style={{ flexShrink: 0, transition: 'transform 0.3s cubic-bezier(0.22,1,0.36,1)', transform: on ? 'rotate(90deg)' : 'none' }} />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* RIGHT — answer panel: collapse khi đóng, slide + fade khi mở */}
+      <div
+        className="np-faq-a"
+        style={{
+          flexGrow: 0, flexShrink: 0,
+          flexBasis: open ? 'clamp(320px, 42%, 520px)' : '0px',
+          maxHeight: open ? '1200px' : '0px',
+          opacity: open ? 1 : 0,
+          transform: open ? 'none' : 'translateX(24px)',
+          overflow: 'hidden',
+          position: 'sticky', top: '90px',
+          background: PLUM, borderRadius: '24px',
+          padding: open ? 'clamp(26px, 3vw, 40px)' : '0 clamp(26px, 3vw, 40px)',
+          transition: 'flex-basis 0.45s cubic-bezier(0.22,1,0.36,1), max-height 0.45s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1), padding 0.45s ease',
+        }}
+      >
+        <div key={last} className="np-in" style={{ animationDuration: '0.45s', minWidth: 'clamp(280px, 38vw, 460px)' }}>
+          <span style={{ display: 'inline-flex', width: '56px', height: '56px', borderRadius: '16px', background: RED, color: WHITE, alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+            <Icon size={26} />
+          </span>
+          <h3 style={{ fontSize: '1.4rem', fontWeight: '800', letterSpacing: '-0.02em', color: WHITE, margin: '0 0 14px', lineHeight: 1.2 }}>{cur.q}</h3>
+          <p style={{ fontSize: '1.02rem', lineHeight: 1.65, color: 'rgba(255,255,255,0.7)', margin: '0 0 22px' }}>{cur.a}</p>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: '700', color: WHITE, background: 'rgba(255,255,255,0.1)', borderRadius: '999px', padding: '8px 16px' }}>
+            <Sparkles size={14} /> {cur.highlight}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function Reveal({ children, delay = 0, y = 32, style }) {
@@ -189,7 +277,7 @@ function FeatureSection({ reverse, eyebrow, title, points, cta, media }) {
   );
   return (
     <Reveal>
-      <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'center', padding: '20px 0' }}>
+      <section className="np-feature" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'center', padding: '20px 0' }}>
         {reverse ? <>{copy}{media}</> : <>{media}{copy}</>}
       </section>
     </Reveal>
@@ -199,7 +287,7 @@ function FeatureSection({ reverse, eyebrow, title, points, cta, media }) {
 /* Flat "media" mocks (thay cho 3D render trả phí của Wellfound) */
 function MediaPanel({ bg, children }) {
   return (
-    <div style={{ background: bg, borderRadius: '24px', padding: 'clamp(28px, 4vw, 48px)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '320px' }}>
+    <div className="np-card" style={{ background: bg, borderRadius: '24px', padding: 'clamp(28px, 4vw, 48px)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '320px' }}>
       <div style={{ width: '100%', maxWidth: '360px', background: WHITE, borderRadius: '18px', boxShadow: '0 16px 40px rgba(30,19,32,0.10)', padding: '20px' }}>
         {children}
       </div>
@@ -208,19 +296,39 @@ function MediaPanel({ bg, children }) {
 }
 
 export function CandidateLandingPage() {
-  const statsRef = useRef(null);
-  const [statsRun, setStatsRun] = useState(false);
-
-  useEffect(() => {
-    const node = statsRef.current;
-    if (!node) return undefined;
-    const obs = new IntersectionObserver((entries) => { setStatsRun(entries[0].isIntersecting); }, { threshold: 0.4 });
-    obs.observe(node);
-    return () => obs.disconnect();
-  }, []);
-
   return (
     <div style={{ background: WHITE, color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", paddingBottom: '48px' }}>
+
+      {/* Global interaction + entrance styles */}
+      <style>{`
+        .np-navlink { position: relative; text-decoration: none; transition: color 0.2s ease; }
+        .np-navlink::after { content: ''; position: absolute; left: 0; bottom: -2px; height: 2px; width: 100%; background: ${RED}; transform: scaleX(0); transform-origin: left; transition: transform 0.28s cubic-bezier(0.22,1,0.36,1); }
+        .np-navlink:hover { color: ${RED}; }
+        .np-navlink:hover::after { transform: scaleX(1); }
+        .np-cta { transition: transform 0.18s cubic-bezier(0.22,1,0.36,1), box-shadow 0.22s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; will-change: transform; }
+        .np-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(30,19,32,0.18); }
+        .np-cta:active { transform: translateY(0) scale(0.98); box-shadow: 0 6px 14px rgba(30,19,32,0.14); }
+        .np-cta-ghost:hover { background: ${PINK}; border-color: ${RED}; color: ${RED}; }
+        .np-card { transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s ease, border-color 0.25s ease; will-change: transform; }
+        .np-card:hover { transform: translateY(-6px); box-shadow: 0 26px 50px rgba(30,19,32,0.14); }
+        :focus-visible { outline: 2px solid ${RED}; outline-offset: 3px; border-radius: 8px; }
+        @keyframes npFadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+        .np-in { animation: npFadeUp 0.75s cubic-bezier(0.22,1,0.36,1) both; }
+        @media (max-width: 760px) {
+          .np-feature { grid-template-columns: 1fr !important; gap: 28px !important; }
+          .np-grid-3 { grid-template-columns: 1fr !important; }
+          .np-footer-grid { grid-template-columns: 1fr !important; }
+          .np-faq { flex-direction: column !important; gap: 16px !important; }
+          .np-faq-q { grid-template-columns: 1fr !important; }
+          .np-faq-a { flex-basis: auto !important; width: 100%; position: static !important; transform: none !important; }
+          .np-faq-a > div { min-width: 0 !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .np-in { animation: none; }
+          .np-cta, .np-card, .np-navlink::after { transition: none !important; }
+          .np-card:hover, .np-cta:hover { transform: none; }
+        }
+      `}</style>
 
       {/* NAV */}
       <div style={{ ...INNER, paddingTop: '22px' }}>
@@ -230,8 +338,8 @@ export function CandidateLandingPage() {
             <span style={{ fontSize: '1.45rem', fontWeight: '800', color: RED }}>:</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
-            <Link to="/" style={{ fontSize: '0.96rem', fontWeight: '600', color: INK, textDecoration: 'none' }}>Trang chủ</Link>
-            <Link to="/candidate/login" style={{ fontSize: '0.96rem', fontWeight: '600', color: INK, textDecoration: 'none' }}>Đăng nhập</Link>
+            <Link to="/" className="np-navlink" style={{ fontSize: '0.96rem', fontWeight: '600', color: INK }}>Trang chủ</Link>
+            <Link to="/candidate/login" className="np-navlink" style={{ fontSize: '0.96rem', fontWeight: '600', color: INK }}>Đăng nhập</Link>
           </div>
         </nav>
       </div>
@@ -239,18 +347,18 @@ export function CandidateLandingPage() {
       {/* HERO — centered */}
       <div style={{ ...INNER }}>
         <section style={{ textAlign: 'center', padding: 'clamp(48px, 9vw, 110px) 0 clamp(36px, 6vw, 72px)', maxWidth: '46rem', margin: '0 auto' }}>
-          <p style={{ ...EYEBROW }}>Dành cho ứng viên sinh viên</p>
-          <h1 style={{ fontSize: 'clamp(2.6rem, 6vw, 4.4rem)', fontWeight: '800', lineHeight: 1.02, letterSpacing: '-0.045em', color: INK, margin: '0 0 22px' }}>
+          <p className="np-in" style={{ ...EYEBROW }}>Dành cho ứng viên sinh viên</p>
+          <h1 className="np-in" style={{ fontSize: 'clamp(2.6rem, 6vw, 4.4rem)', fontWeight: '800', lineHeight: 1.02, letterSpacing: '-0.045em', color: INK, margin: '0 0 22px', animationDelay: '0.08s' }}>
             Hồ sơ của bạn<span style={{ color: RED }}>.</span><br />Cơ hội của bạn<span style={{ color: RED }}>.</span>
           </h1>
-          <p style={{ fontSize: '1.15rem', lineHeight: 1.55, color: MUTED, margin: '0 auto 30px', maxWidth: '34rem' }}>
+          <p className="np-in" style={{ fontSize: '1.15rem', lineHeight: 1.55, color: MUTED, margin: '0 auto 30px', maxWidth: '34rem', animationDelay: '0.16s' }}>
             Tạo hồ sơ nêu bật kỹ năng và mong muốn của bạn, gom proof thật — rồi ứng tuyển mọi cơ hội chỉ với một chạm.
           </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link to="/candidate/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
+          <div className="np-in" style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', animationDelay: '0.24s' }}>
+            <Link to="/candidate/register" className="np-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
               Tạo hồ sơ <ArrowRight size={18} />
             </Link>
-            <Link to="/candidate/login" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: WHITE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
+            <Link to="/candidate/login" className="np-cta np-cta-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: WHITE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
               Tôi đã có tài khoản
             </Link>
           </div>
@@ -260,16 +368,23 @@ export function CandidateLandingPage() {
       {/* Lower content */}
       <div style={{ ...INNER, display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-        {/* STATS — white with dividers */}
-        <section ref={statsRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0', padding: 'clamp(24px, 4vw, 48px) 0', borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }}>
-          {stats.map((item, i) => (
-            <div key={item.label} style={{ textAlign: 'center', borderLeft: i === 0 ? 'none' : `1px solid ${LINE}` }}>
-              <div style={{ fontSize: 'clamp(2.6rem, 6vw, 4rem)', fontWeight: '800', color: INK, lineHeight: 1, letterSpacing: '-0.04em' }}>
-                <AnimatedStatNumber value={item.value} suffix={item.suffix} run={statsRun} />
-              </div>
-              <div style={{ fontSize: '0.92rem', color: MUTED, fontWeight: '600', marginTop: '12px' }}>{item.label}</div>
-            </div>
-          ))}
+        {/* STEPS — 3 bước bắt đầu */}
+        <section style={{ padding: 'clamp(28px, 4vw, 52px) 0', borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }}>
+          <Reveal>
+            <p style={{ ...EYEBROW, textAlign: 'center' }}>Bắt đầu trong 3 bước</p>
+            <h2 style={{ ...H2, textAlign: 'center', marginBottom: '32px' }}>Từ hồ sơ trống đến cơ hội thật</h2>
+          </Reveal>
+          <div className="np-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            {steps.map((s, i) => (
+              <Reveal key={s.title} delay={i * 120} style={{ height: '100%' }}>
+                <div className="np-card" style={{ height: '100%', background: WHITE, border: `1px solid ${LINE}`, borderRadius: '20px', padding: '26px', boxSizing: 'border-box' }}>
+                  <span style={{ display: 'inline-flex', width: '40px', height: '40px', borderRadius: '12px', background: PINK, color: RED, alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.05rem', marginBottom: '16px' }}>{i + 1}</span>
+                  <div style={{ fontWeight: '800', color: INK, fontSize: '1.08rem', marginBottom: '6px' }}>{s.title}</div>
+                  <p style={{ margin: 0, fontSize: '0.94rem', lineHeight: 1.55, color: MUTED }}>{s.desc}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </section>
 
         {/* PARTNER MARQUEE */}
@@ -306,14 +421,21 @@ export function CandidateLandingPage() {
           media={(
             <MediaPanel bg={GREEN_SOFT}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-                <span style={{ width: '40px', height: '40px', borderRadius: '50%', background: INK, color: WHITE, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>PT</span>
-                <div><div style={{ fontWeight: '800', fontSize: '0.94rem' }}>phat280405</div><div style={{ fontSize: '0.78rem', color: MUTED }}>FPTU HCM</div></div>
-                <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: '700', color: '#1f7a4d', background: '#e6f4ec', padding: '3px 9px', borderRadius: '999px' }}><ShieldCheck size={12} />Verified</span>
+                <span style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#eee7e2', border: `1.5px dashed ${LINE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c4bcb6' }}>
+                  <Plus size={18} />
+                </span>
+                <div>
+                  <div style={{ height: '10px', width: '120px', borderRadius: '6px', background: '#e7e0db', marginBottom: '7px' }} />
+                  <div style={{ height: '8px', width: '74px', borderRadius: '6px', background: '#eee7e2' }} />
+                </div>
+                <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: '700', color: '#b0a8a2', background: '#f1ece8', padding: '3px 9px', borderRadius: '999px' }}>Chưa khai báo</span>
               </div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                {['Figma', 'React', 'Sự kiện'].map((s) => <span key={s} style={{ fontSize: '0.74rem', fontWeight: '600', color: INK, background: PINK, borderRadius: '8px', padding: '4px 10px' }}>{s}</span>)}
+                <span style={{ fontSize: '0.74rem', fontWeight: '600', color: '#b0a8a2', background: '#f1ece8', border: `1px dashed ${LINE}`, borderRadius: '8px', padding: '4px 12px' }}>+ Thêm kỹ năng</span>
+                <span style={{ height: '24px', width: '52px', borderRadius: '8px', background: '#f1ece8' }} />
+                <span style={{ height: '24px', width: '40px', borderRadius: '8px', background: '#f1ece8' }} />
               </div>
-              <div style={{ background: INK, color: WHITE, borderRadius: '12px', padding: '12px', textAlign: 'center', fontWeight: '700', fontSize: '0.9rem' }}>Ứng tuyển 1 chạm</div>
+              <div style={{ background: '#efe9e4', color: '#a79f99', borderRadius: '12px', padding: '12px', textAlign: 'center', fontWeight: '700', fontSize: '0.9rem', border: `1px dashed ${LINE}` }}>Hoàn thiện hồ sơ để bắt đầu</div>
             </MediaPanel>
           )}
         />
@@ -371,34 +493,31 @@ export function CandidateLandingPage() {
             <p style={{ ...EYEBROW, color: INK }}>Từ cộng đồng</p>
             <h2 style={{ ...H2, marginBottom: '26px' }}>Ứng viên nói gì về nextplease</h2>
           </Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          <div className="np-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
             {testimonials.map((t, i) => (
-              <Reveal key={t.name} delay={i * 130} style={{ height: '100%' }}>
-                <div style={{ height: '100%', background: PINK_CARD, borderRadius: '20px', padding: '26px', boxSizing: 'border-box' }}>
+              <Reveal key={t.quote} delay={i * 130} style={{ height: '100%' }}>
+                <div className="np-card" style={{ height: '100%', background: PINK_CARD, borderRadius: '20px', padding: '26px', boxSizing: 'border-box' }}>
                   <span style={{ display: 'inline-flex', width: '42px', height: '42px', borderRadius: '50%', background: PINK, color: RED, alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}><Quote size={20} /></span>
-                  <p style={{ fontSize: '0.98rem', lineHeight: 1.6, color: INK, margin: '0 0 18px' }}>{t.quote}</p>
-                  <div style={{ fontWeight: '700', color: INK, fontSize: '0.9rem' }}>{t.name}</div>
-                  <div style={{ fontSize: '0.82rem', color: MUTED }}>{t.role}</div>
+                  <p style={{ fontSize: '0.98rem', lineHeight: 1.6, color: INK, margin: 0 }}>{t.quote}</p>
                 </div>
               </Reveal>
             ))}
           </div>
         </section>
 
-        {/* BOTTOM CTA */}
-        <Reveal>
-          <section style={{ background: PLUM, borderRadius: '24px', padding: 'clamp(36px, 5vw, 60px)', textAlign: 'center' }}>
-            <span style={{ display: 'inline-flex', width: '54px', height: '54px', borderRadius: '16px', background: RED, color: WHITE, alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}><BadgeCheck size={26} /></span>
-            <h2 style={{ ...H2, color: WHITE, marginBottom: '10px' }}>Sẵn sàng tìm bước tiếp theo?</h2>
-            <p style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,0.65)', margin: '0 auto 26px', maxWidth: '32rem' }}>Tạo hồ sơ ứng viên miễn phí và bắt đầu biến trải nghiệm thành cơ hội thật.</p>
-            <Link to="/candidate/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 30px', borderRadius: '999px', background: WHITE, color: INK, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
-              Tạo hồ sơ miễn phí <ArrowRight size={18} />
-            </Link>
-          </section>
-        </Reveal>
+        {/* FAQ */}
+        <section style={{ padding: '20px 0' }}>
+          <Reveal>
+            <p style={{ ...EYEBROW, color: INK }}>Giải đáp nhanh</p>
+            <h2 style={{ ...H2, marginBottom: '26px' }}>Câu hỏi thường gặp</h2>
+          </Reveal>
+          <Reveal>
+            <FaqSection />
+          </Reveal>
+        </section>
 
         {/* FOOTER */}
-        <footer style={{ borderTop: `1px solid ${LINE}`, marginTop: '12px', paddingTop: '28px', display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '24px' }}>
+        <footer className="np-footer-grid" style={{ borderTop: `1px solid ${LINE}`, marginTop: '12px', paddingTop: '28px', display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '24px' }}>
           <div>
             <strong style={{ fontSize: '1.2rem', color: INK }}>next please<span style={{ color: RED }}>:</span></strong>
             <p style={{ fontSize: '0.9rem', color: MUTED, lineHeight: 1.6, margin: '8px 0 0', maxWidth: '24rem' }}>

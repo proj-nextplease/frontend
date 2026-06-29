@@ -182,11 +182,22 @@ export function HomePage() {
   const heroRef = useRef(null);
   const statsRef = useRef(null);
   const [statsRun, setStatsRun] = useState(false);
+  const [navScrolled, setNavScrolled] = useState(false);
+
+  /* Sticky nav: gain a backdrop blur + shadow once the user scrolls past the top. */
+  useEffect(() => {
+    function onScroll() { setNavScrolled(window.scrollY > 12); }
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   /* Smooth animation engine: organic drift + lerped mouse parallax + scroll parallax. */
   useEffect(() => {
     const hero = heroRef.current;
     if (!hero) return undefined;
+    // Respect users who prefer reduced motion: skip parallax + drift entirely.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
     const anchors = Array.from(hero.querySelectorAll('.np-anchor'));
     const items = anchors.map((el) => ({
       el,
@@ -253,19 +264,58 @@ export function HomePage() {
   return (
     <div style={{ background: WHITE, color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", paddingBottom: '48px' }}>
 
-      {/* 0. NAV — Wellfound-style white nav */}
-      <div style={{ ...INNER, paddingTop: '22px' }}>
-        <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', paddingBottom: '14px', flexWrap: 'wrap' }}>
-          <Link to="/" style={{ display: 'inline-flex', alignItems: 'baseline', textDecoration: 'none' }}>
-            <span style={{ fontSize: '1.45rem', fontWeight: '800', letterSpacing: '-0.03em', color: INK }}>nextplease</span>
-            <span style={{ fontSize: '1.45rem', fontWeight: '800', color: RED }}>:</span>
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
-            <Link to="/candidates" style={{ fontSize: '0.96rem', fontWeight: '600', color: INK, textDecoration: 'none' }}>Ứng viên</Link>
-            <Link to="/businesses" style={{ fontSize: '0.96rem', fontWeight: '600', color: INK, textDecoration: 'none' }}>Doanh nghiệp & CLB</Link>
-            <a href="#about" style={{ fontSize: '0.96rem', fontWeight: '600', color: INK, textDecoration: 'none' }}>Về chúng tôi</a>
-          </div>
-        </nav>
+      {/* Global interaction + responsive styles for nav, CTAs and hero */}
+      <style>{`
+        .np-navlink { position: relative; font-size: 0.96rem; font-weight: 600; color: ${INK}; text-decoration: none; padding: 4px 0; transition: color 0.2s ease; }
+        .np-navlink::after { content: ''; position: absolute; left: 0; bottom: -2px; height: 2px; width: 100%; background: ${RED}; transform: scaleX(0); transform-origin: left; transition: transform 0.28s cubic-bezier(0.22,1,0.36,1); }
+        .np-navlink:hover { color: ${RED}; }
+        .np-navlink:hover::after { transform: scaleX(1); }
+        .np-cta { transition: transform 0.18s cubic-bezier(0.22,1,0.36,1), box-shadow 0.22s ease, background-color 0.2s ease, color 0.2s ease; will-change: transform; }
+        .np-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(30,19,32,0.18); }
+        .np-cta:active { transform: translateY(0) scale(0.98); box-shadow: 0 6px 14px rgba(30,19,32,0.14); }
+        .np-cta-ghost:hover { background: ${PINK}; border-color: ${RED}; color: ${RED}; }
+        :focus-visible { outline: 2px solid ${RED}; outline-offset: 3px; border-radius: 8px; }
+        .np-nav-cta { display: none; }
+        @media (min-width: 760px) { .np-nav-cta { display: inline-flex; } }
+        @media (max-width: 759px) { .np-navlinks { display: none !important; } }
+        .np-lift { transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s ease; will-change: transform; }
+        .np-lift:hover { transform: scale(1.035); box-shadow: 0 26px 50px rgba(30,19,32,0.16); }
+        @media (prefers-reduced-motion: reduce) { .np-lift { transition: none; } .np-lift:hover { transform: none; } }
+        @keyframes npHeroIn { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+        .np-hero-in { animation: npHeroIn 0.8s cubic-bezier(0.22,1,0.36,1) both; }
+        @media (max-width: 680px) { .np-anchor { display: none !important; } }
+        @media (prefers-reduced-motion: reduce) {
+          .np-hero-in { animation: none; }
+          .np-pill, .np-cta, .np-navlink::after { transition: none !important; }
+        }
+      `}</style>
+
+      {/* 0. NAV — sticky, blur-on-scroll, Wellfound-style */}
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 100, width: '100%',
+        background: navScrolled ? 'rgba(255,255,255,0.82)' : 'transparent',
+        backdropFilter: navScrolled ? 'saturate(180%) blur(12px)' : 'none',
+        WebkitBackdropFilter: navScrolled ? 'saturate(180%) blur(12px)' : 'none',
+        borderBottom: `1px solid ${navScrolled ? LINE : 'transparent'}`,
+        boxShadow: navScrolled ? '0 6px 24px rgba(30,19,32,0.06)' : 'none',
+        transition: 'background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
+      }}>
+        <div style={{ ...INNER }}>
+          <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '16px 0' }}>
+            <Link to="/" style={{ display: 'inline-flex', alignItems: 'baseline', textDecoration: 'none' }}>
+              <span style={{ fontSize: '1.45rem', fontWeight: '800', letterSpacing: '-0.03em', color: INK }}>nextplease</span>
+              <span style={{ fontSize: '1.45rem', fontWeight: '800', color: RED }}>:</span>
+            </Link>
+            <div className="np-navlinks" style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
+              <Link to="/candidates" className="np-navlink">Ứng viên</Link>
+              <Link to="/businesses" className="np-navlink">Doanh nghiệp & CLB</Link>
+              <a href="#about" className="np-navlink">Về chúng tôi</a>
+            </div>
+            <Link to="/candidate/login" className="np-cta np-nav-cta" style={{ alignItems: 'center', gap: '6px', padding: '9px 18px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.9rem', textDecoration: 'none' }}>
+              Đăng nhập <ArrowRight size={15} />
+            </Link>
+          </nav>
+        </div>
       </div>
 
       {/* 1. HERO — full-bleed floating pills */}
@@ -287,7 +337,7 @@ export function HomePage() {
           </span>
         ))}
 
-        <div style={{ position: 'relative', zIndex: 5, display: 'flex', alignItems: 'center', gap: 'clamp(10px, 2vw, 22px)', padding: '0 16px' }}>
+        <div className="np-hero-in" style={{ position: 'relative', zIndex: 5, display: 'flex', alignItems: 'center', gap: 'clamp(10px, 2vw, 22px)', padding: '0 16px' }}>
           <span style={{ fontSize: 'clamp(1.6rem, 4vw, 2.8rem)', fontWeight: '800', letterSpacing: '-0.04em', color: INK, whiteSpace: 'nowrap' }}>
             nextplease<span style={{ color: RED }}>:</span>
           </span>
@@ -296,15 +346,15 @@ export function HomePage() {
           </span>
         </div>
 
-        <p style={{ position: 'relative', zIndex: 5, marginTop: '26px', fontSize: '1.06rem', color: MUTED, textAlign: 'center', maxWidth: '30rem', padding: '0 16px' }}>
+        <p className="np-hero-in" style={{ position: 'relative', zIndex: 5, marginTop: '26px', fontSize: '1.06rem', color: MUTED, textAlign: 'center', maxWidth: '30rem', padding: '0 16px', animationDelay: '0.12s' }}>
           Một hồ sơ năng lực có kiểm chứng — cho cả ứng viên và nhà tuyển dụng.
         </p>
 
-        <div style={{ position: 'relative', zIndex: 5, display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <Link to="/candidates" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>
+        <div className="np-hero-in" style={{ position: 'relative', zIndex: 5, display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap', justifyContent: 'center', animationDelay: '0.24s' }}>
+          <Link to="/candidates" className="np-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>
             Tôi là ứng viên <ArrowRight size={18} />
           </Link>
-          <Link to="/businesses" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: WHITE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>
+          <Link to="/businesses" className="np-cta np-cta-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: WHITE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>
             Tôi tuyển dụng <ArrowRight size={18} />
           </Link>
         </div>
@@ -391,7 +441,6 @@ export function HomePage() {
                     <Quote size={20} />
                   </span>
                   <p style={{ fontSize: '0.98rem', lineHeight: 1.6, color: INK, margin: '0 0 18px' }}>{t.quote}</p>
-                  <div style={{ fontWeight: '700', color: INK, fontSize: '0.9rem' }}>{t.name}</div>
                   <div style={{ fontSize: '0.82rem', color: MUTED }}>{t.role}</div>
                 </div>
               </Reveal>
@@ -402,7 +451,7 @@ export function HomePage() {
         {/* 6. FINAL CTA */}
         <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
           <Reveal style={{ height: '100%' }}>
-            <div style={{ height: '100%', background: CREAM, borderRadius: '24px', padding: 'clamp(30px, 3.5vw, 44px)', boxSizing: 'border-box' }}>
+            <div className="np-lift" style={{ height: '100%', background: CREAM, borderRadius: '24px', padding: 'clamp(30px, 3.5vw, 44px)', boxSizing: 'border-box' }}>
               <GraduationCap size={28} color={INK} />
               <h2 style={{ ...H2, margin: '18px 0 10px' }}>Sẵn sàng xây hồ sơ?</h2>
               <p style={{ fontSize: '1rem', color: '#6b5d2f', margin: '0 0 22px' }}>Tạo tài khoản ứng viên miễn phí và bắt đầu tích lũy uy tín.</p>
@@ -412,7 +461,7 @@ export function HomePage() {
             </div>
           </Reveal>
           <Reveal delay={120} style={{ height: '100%' }}>
-            <div style={{ height: '100%', background: MAUVE, borderRadius: '24px', padding: 'clamp(30px, 3.5vw, 44px)', boxSizing: 'border-box' }}>
+            <div className="np-lift" style={{ height: '100%', background: MAUVE, borderRadius: '24px', padding: 'clamp(30px, 3.5vw, 44px)', boxSizing: 'border-box' }}>
               <Search size={28} color={WHITE} />
               <h2 style={{ ...H2, color: WHITE, margin: '18px 0 10px' }}>Cần tuyển tài năng trẻ?</h2>
               <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.85)', margin: '0 0 22px' }}>Đăng tin, đăng Quest và tiếp cận ứng viên đã được xác minh.</p>
