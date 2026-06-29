@@ -8,13 +8,16 @@ import { setRemember, setStoredToken, rememberLastEmail, getLastEmail } from '..
 import { AuthBrandPanel } from '../components/AuthBrandPanel.jsx';
 import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
 
-const INK = '#1d1320';
-const MUTED = '#6e6470';
-const RED = '#e5533f';
-const PLUM = '#1e1320';
-const PINK = '#fdeeeb';
-const LINE = '#ece6e2';
+const INK = 'var(--lp-ink)';
+const MUTED = 'var(--lp-muted)';
+const RED = 'var(--lp-red)';
+const PLUM = 'var(--lp-plum)';
+const PINK = 'var(--lp-pink)';
+const LINE = 'var(--lp-line)';
 const WHITE = '#ffffff';
+const SURFACE = 'var(--lp-surface)';
+const BTN_BG = 'var(--lp-btn-bg)';
+const BTN_TEXT = 'var(--lp-btn-text)';
 
 const socialProviders = [
   { provider: 'google', label: 'Google', mark: 'G' },
@@ -32,7 +35,7 @@ const socialProviders = [
 
 const FIELD = {
   width: '100%', padding: '14px 14px 14px 44px', borderRadius: '12px',
-  border: `1.5px solid ${LINE}`, background: WHITE, color: INK,
+  border: `1.5px solid ${LINE}`, background: SURFACE, color: INK,
   fontSize: '0.98rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit',
 };
 
@@ -110,7 +113,7 @@ export function CandidateLoginPage() {
   }
 
   return (
-    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 1.12fr) minmax(0, 0.88fr)', background: WHITE, color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
+    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 1.12fr) minmax(0, 0.88fr)', background: 'var(--lp-bg)', color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
       <style>{`
         @keyframes npBrandInR { from { opacity:0; transform: translateX(48px);} to { opacity:1; transform:none; } }
         @keyframes npFormIn { from { opacity:0; transform: translateY(22px);} to { opacity:1; transform:none; } }
@@ -128,7 +131,7 @@ export function CandidateLoginPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
             {socialProviders.map((item) => (
               <button key={item.provider} type="button" onClick={() => handleSocialLogin(item.provider)}
-                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px', borderRadius: '12px', border: `1.5px solid ${LINE}`, background: WHITE, color: INK, fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer' }}>
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px', borderRadius: '12px', border: `1.5px solid ${LINE}`, background: SURFACE, color: INK, fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer' }}>
                 <span style={{ display: 'flex', fontWeight: '800' }}>{item.mark}</span>{item.label}
               </button>
             ))}
@@ -171,7 +174,7 @@ export function CandidateLoginPage() {
           />
 
           <button type="submit" disabled={status.type === 'loading'}
-            style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: 'pointer' }}>
+            style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '999px', background: BTN_BG, color: BTN_TEXT, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: 'pointer' }}>
             {status.type === 'loading' ? 'Đang đăng nhập...' : 'Đăng nhập'} <ArrowRight size={18} />
           </button>
 

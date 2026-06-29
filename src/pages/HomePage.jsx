@@ -2,17 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap, Search, Quote } from 'lucide-react';
 
-/* Wellfound-faithful palette (fixed light theme) */
-const INK = '#1d1320';
-const MUTED = '#6e6470';
-const RED = '#e5533f';
-const PLUM = '#1e1320';
-const PINK = '#fdeeeb';
-const PINK_CARD = '#fbf3f1';
-const CREAM = '#f3df9c';
-const MAUVE = '#9d7e8e';
-const LINE = '#ece6e2';
-const WHITE = '#ffffff';
+/* Wellfound palette — now theme-aware via CSS variables (see --lp-* in index.css). */
+const INK = 'var(--lp-ink)';
+const MUTED = 'var(--lp-muted)';
+const RED = 'var(--lp-red)';
+const PLUM = 'var(--lp-plum)';
+const PINK = 'var(--lp-pink)';
+const PINK_CARD = 'var(--lp-pink-card)';
+const CREAM = 'var(--lp-cream)';
+const MAUVE = 'var(--lp-mauve)';
+const LINE = 'var(--lp-line)';
+const WHITE = '#ffffff';          /* literal white — for text/elements that sit on dark fills */
+const SURFACE = 'var(--lp-surface)'; /* page & card backgrounds that flip with the theme */
 
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 
@@ -47,47 +48,51 @@ const heroPills = [
 function Svg({ children }) {
   return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>;
 }
+/* stroke/fill via `style` so the CSS-variable colors resolve on SVG (var() is ignored in presentation attributes). */
+const sInk = { stroke: INK };
+const sRed = { stroke: RED };
+const fRed = { fill: RED };
 const GLYPHS = {
   badge: (
     <Svg>
-      <path d="M12 3l7 2.5v5c0 4.2-3 7.8-7 9-4-1.2-7-4.8-7-9v-5z" stroke={INK} strokeWidth="1.8" />
-      <path d="M9 12l2 2 4-4" stroke={RED} strokeWidth="1.8" />
+      <path d="M12 3l7 2.5v5c0 4.2-3 7.8-7 9-4-1.2-7-4.8-7-9v-5z" style={sInk} strokeWidth="1.8" />
+      <path d="M9 12l2 2 4-4" style={sRed} strokeWidth="1.8" />
     </Svg>
   ),
   trophy: (
     <Svg>
-      <path d="M7 4h10v3.2a5 5 0 0 1-10 0z" stroke={INK} strokeWidth="1.8" />
-      <path d="M7 5H4.8a2.2 2.2 0 0 0 2.4 2.4M17 5h2.2a2.2 2.2 0 0 1-2.4 2.4" stroke={INK} strokeWidth="1.8" />
-      <path d="M12 12.2v3.3" stroke={INK} strokeWidth="1.8" />
-      <path d="M8.6 20h6.8l-1.1-3.6H9.7z" stroke={RED} strokeWidth="1.8" />
+      <path d="M7 4h10v3.2a5 5 0 0 1-10 0z" style={sInk} strokeWidth="1.8" />
+      <path d="M7 5H4.8a2.2 2.2 0 0 0 2.4 2.4M17 5h2.2a2.2 2.2 0 0 1-2.4 2.4" style={sInk} strokeWidth="1.8" />
+      <path d="M12 12.2v3.3" style={sInk} strokeWidth="1.8" />
+      <path d="M8.6 20h6.8l-1.1-3.6H9.7z" style={sRed} strokeWidth="1.8" />
     </Svg>
   ),
   apply: (
     <Svg>
-      <path d="M6 4.2v12l3-2.6 1.9 4.2 2.1-1-1.9-4.1H15z" stroke={INK} strokeWidth="1.8" />
-      <path d="M17 6l1.7-1.7M18.6 11H21M17 16l1.7 1.7" stroke={RED} strokeWidth="1.8" />
+      <path d="M6 4.2v12l3-2.6 1.9 4.2 2.1-1-1.9-4.1H15z" style={sInk} strokeWidth="1.8" />
+      <path d="M17 6l1.7-1.7M18.6 11H21M17 16l1.7 1.7" style={sRed} strokeWidth="1.8" />
     </Svg>
   ),
   people: (
     <Svg>
-      <circle cx="9.5" cy="8" r="3" stroke={INK} strokeWidth="1.8" />
-      <path d="M3.8 19c0-3.1 2.6-5 5.7-5s5.7 1.9 5.7 5" stroke={INK} strokeWidth="1.8" />
-      <circle cx="18" cy="9.5" r="2.4" stroke={RED} strokeWidth="1.8" />
+      <circle cx="9.5" cy="8" r="3" style={sInk} strokeWidth="1.8" />
+      <path d="M3.8 19c0-3.1 2.6-5 5.7-5s5.7 1.9 5.7 5" style={sInk} strokeWidth="1.8" />
+      <circle cx="18" cy="9.5" r="2.4" style={sRed} strokeWidth="1.8" />
     </Svg>
   ),
   post: (
     <Svg>
-      <rect x="3.5" y="4.5" width="17" height="4" rx="1.2" stroke={INK} strokeWidth="1.8" />
-      <rect x="3.5" y="11.5" width="5.5" height="8" rx="1.2" stroke={RED} strokeWidth="1.8" />
-      <line x1="12" y1="12.5" x2="20.5" y2="12.5" stroke={INK} strokeWidth="1.8" />
-      <line x1="12" y1="16" x2="20.5" y2="16" stroke={INK} strokeWidth="1.8" />
-      <line x1="12" y1="19.5" x2="20.5" y2="19.5" stroke={INK} strokeWidth="1.8" />
+      <rect x="3.5" y="4.5" width="17" height="4" rx="1.2" style={sInk} strokeWidth="1.8" />
+      <rect x="3.5" y="11.5" width="5.5" height="8" rx="1.2" style={sRed} strokeWidth="1.8" />
+      <line x1="12" y1="12.5" x2="20.5" y2="12.5" style={sInk} strokeWidth="1.8" />
+      <line x1="12" y1="16" x2="20.5" y2="16" style={sInk} strokeWidth="1.8" />
+      <line x1="12" y1="19.5" x2="20.5" y2="19.5" style={sInk} strokeWidth="1.8" />
     </Svg>
   ),
   star: (
     <Svg>
-      <path d="M12 4l2.3 4.7 5.2.8-3.8 3.7.9 5.1L12 16.6l-4.6 1.7.9-5.1-3.8-3.7 5.2-.8z" stroke={INK} strokeWidth="1.8" />
-      <circle cx="12" cy="11" r="1.7" fill={RED} />
+      <path d="M12 4l2.3 4.7 5.2.8-3.8 3.7.9 5.1L12 16.6l-4.6 1.7.9-5.1-3.8-3.7 5.2-.8z" style={sInk} strokeWidth="1.8" />
+      <circle cx="12" cy="11" r="1.7" style={fRed} />
     </Svg>
   ),
 };
@@ -262,7 +267,7 @@ export function HomePage() {
   }, []);
 
   return (
-    <div style={{ background: WHITE, color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", paddingBottom: '48px' }}>
+    <div style={{ background: 'var(--lp-bg)', color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", paddingBottom: '48px' }}>
 
       {/* Global interaction + responsive styles for nav, CTAs and hero */}
       <style>{`
@@ -293,7 +298,7 @@ export function HomePage() {
       {/* 0. NAV — sticky, blur-on-scroll, Wellfound-style */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 100, width: '100%',
-        background: navScrolled ? 'rgba(255,255,255,0.82)' : 'transparent',
+        background: navScrolled ? 'var(--lp-nav-bg)' : 'transparent',
         backdropFilter: navScrolled ? 'saturate(180%) blur(12px)' : 'none',
         WebkitBackdropFilter: navScrolled ? 'saturate(180%) blur(12px)' : 'none',
         borderBottom: `1px solid ${navScrolled ? LINE : 'transparent'}`,
@@ -311,7 +316,7 @@ export function HomePage() {
               <Link to="/businesses" className="np-navlink">Doanh nghiệp & CLB</Link>
               <a href="#about" className="np-navlink">Về chúng tôi</a>
             </div>
-            <Link to="/candidate/login" className="np-cta np-nav-cta" style={{ alignItems: 'center', gap: '6px', padding: '9px 18px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.9rem', textDecoration: 'none' }}>
+            <Link to="/candidate/login" className="np-cta np-nav-cta" style={{ alignItems: 'center', gap: '6px', padding: '9px 18px', borderRadius: '999px', background: 'var(--lp-btn-bg)', color: 'var(--lp-btn-text)', fontWeight: '700', fontSize: '0.9rem', textDecoration: 'none' }}>
               Đăng nhập <ArrowRight size={15} />
             </Link>
           </nav>
@@ -326,9 +331,9 @@ export function HomePage() {
         <style>{`
           .np-anchor { position: absolute; will-change: transform; }
           .np-anchor:hover { z-index: 30; }
-          .np-pill { display: inline-block; background: #fff; border: 1px solid #ece6e2; border-radius: 14px; padding: 11px 18px; font-weight: 700; font-size: clamp(0.8rem,1.3vw,1.02rem); color: #1d1320; box-shadow: 0 14px 30px rgba(30,19,32,0.10); white-space: nowrap; cursor: pointer; transition: transform 0.45s cubic-bezier(0.22,1,0.36,1), color 0.45s ease, background-color 0.45s ease, border-color 0.45s ease, box-shadow 0.45s ease; }
-          .np-pill.faded { color: #cbc4bf; border-color: #f1ece8; box-shadow: 0 6px 16px rgba(30,19,32,0.05); }
-          .np-pill:hover, .np-pill.faded:hover { transform: scale(1.22); color: #e5533f; background: #fdeeeb; border-color: #f3b4a6; box-shadow: 0 24px 48px rgba(229,83,63,0.20); }
+          .np-pill { display: inline-block; background: var(--lp-pill-bg); border: 1px solid var(--lp-pill-border); border-radius: 14px; padding: 11px 18px; font-weight: 700; font-size: clamp(0.8rem,1.3vw,1.02rem); color: var(--lp-ink); box-shadow: 0 14px 30px var(--lp-pill-shadow); white-space: nowrap; cursor: pointer; transition: transform 0.45s cubic-bezier(0.22,1,0.36,1), color 0.45s ease, background-color 0.45s ease, border-color 0.45s ease, box-shadow 0.45s ease; }
+          .np-pill.faded { color: var(--lp-muted); border-color: var(--lp-pill-border); box-shadow: 0 6px 16px var(--lp-pill-shadow); opacity: 0.8; }
+          .np-pill:hover, .np-pill.faded:hover { transform: scale(1.22); color: var(--lp-red); background: var(--lp-pink); border-color: var(--lp-red-soft); box-shadow: 0 24px 48px rgba(229,83,63,0.20); opacity: 1; }
         `}</style>
 
         {heroPills.map((p) => (
@@ -341,7 +346,7 @@ export function HomePage() {
           <span style={{ fontSize: 'clamp(1.6rem, 4vw, 2.8rem)', fontWeight: '800', letterSpacing: '-0.04em', color: INK, whiteSpace: 'nowrap' }}>
             nextplease<span style={{ color: RED }}>:</span>
           </span>
-          <span style={{ border: `2px dashed ${RED}`, borderRadius: '18px', padding: 'clamp(6px,1.2vw,12px) clamp(16px,2.5vw,34px)', background: 'rgba(255,255,255,0.55)' }}>
+          <span style={{ border: `2px dashed ${RED}`, borderRadius: '18px', padding: 'clamp(6px,1.2vw,12px) clamp(16px,2.5vw,34px)', background: 'transparent' }}>
             <span style={{ fontSize: 'clamp(2rem, 6vw, 4.4rem)', fontWeight: '800', letterSpacing: '-0.045em', color: INK, lineHeight: 1 }}>Tìm bước tiếp theo</span>
           </span>
         </div>
@@ -351,10 +356,10 @@ export function HomePage() {
         </p>
 
         <div className="np-hero-in" style={{ position: 'relative', zIndex: 5, display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap', justifyContent: 'center', animationDelay: '0.24s' }}>
-          <Link to="/candidates" className="np-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>
+          <Link to="/candidates" className="np-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: 'var(--lp-btn-bg)', color: 'var(--lp-btn-text)', fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>
             Tôi là ứng viên <ArrowRight size={18} />
           </Link>
-          <Link to="/businesses" className="np-cta np-cta-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: WHITE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>
+          <Link to="/businesses" className="np-cta np-cta-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: SURFACE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>
             Tôi tuyển dụng <ArrowRight size={18} />
           </Link>
         </div>
@@ -378,7 +383,7 @@ export function HomePage() {
         {/* 3. SPLIT */}
         <section id="about" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', scrollMarginTop: '24px' }}>
           <Reveal style={{ height: '100%' }}>
-            <div style={{ height: '100%', background: WHITE, border: `1px solid ${LINE}`, borderRadius: '24px', padding: 'clamp(26px, 3vw, 40px)', boxSizing: 'border-box' }}>
+            <div style={{ height: '100%', background: SURFACE, border: `1px solid ${LINE}`, borderRadius: '24px', padding: 'clamp(26px, 3vw, 40px)', boxSizing: 'border-box' }}>
               <p style={EYEBROW}>Bạn là sinh viên?</p>
               <h2 style={{ ...H2, marginBottom: '26px' }}>Vì sao ứng viên chọn chúng tôi</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -394,7 +399,7 @@ export function HomePage() {
               <p style={EYEBROW}>Bạn tuyển dụng?</p>
               <h2 style={{ ...H2, marginBottom: '26px' }}>Vì sao tổ chức tin chúng tôi</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {hirerPoints.map((p) => <FeatureRow key={p.text} icon={p.icon} text={p.text} chipBg={WHITE} chipColor={INK} />)}
+                {hirerPoints.map((p) => <FeatureRow key={p.text} icon={p.icon} text={p.text} chipBg={SURFACE} chipColor={INK} />)}
               </div>
               <Link to="/businesses" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '26px', color: INK, fontWeight: '700', fontSize: '0.94rem', textDecoration: 'none' }}>
                 Tuyển ngay <ArrowRight size={16} />
@@ -454,8 +459,8 @@ export function HomePage() {
             <div className="np-lift" style={{ height: '100%', background: CREAM, borderRadius: '24px', padding: 'clamp(30px, 3.5vw, 44px)', boxSizing: 'border-box' }}>
               <GraduationCap size={28} color={INK} />
               <h2 style={{ ...H2, margin: '18px 0 10px' }}>Sẵn sàng xây hồ sơ?</h2>
-              <p style={{ fontSize: '1rem', color: '#6b5d2f', margin: '0 0 22px' }}>Tạo tài khoản ứng viên miễn phí và bắt đầu tích lũy uy tín.</p>
-              <Link to="/candidate/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.94rem', textDecoration: 'none' }}>
+              <p style={{ fontSize: '1rem', color: 'var(--lp-cream-ink)', margin: '0 0 22px' }}>Tạo tài khoản ứng viên miễn phí và bắt đầu tích lũy uy tín.</p>
+              <Link to="/candidate/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: 'var(--lp-btn-bg)', color: 'var(--lp-btn-text)', fontWeight: '700', fontSize: '0.94rem', textDecoration: 'none' }}>
                 Tạo hồ sơ miễn phí <ArrowRight size={18} />
               </Link>
             </div>

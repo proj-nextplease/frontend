@@ -7434,6 +7434,8 @@ img {
   --p-club: #ff7a1a;
   --p-club-soft: #fff2e8;
   --p-line-strong: #cdd6e4;
+  --p-surface: #ffffff;
+  --p-surface-soft: #f7f9fc;
 }
 
 /* Partner dashboard — flat Wellfound language (scoped to dashboard only) */
@@ -8436,6 +8438,10 @@ img {
   --c-muted: #6e6470;
   --c-line: #ece6e2;
   --c-line-strong: #ddd4cf;
+  --c-surface: #ffffff;
+  --c-surface-soft: #faf7f5;
+  --c-disabled: #f3ede9;
+  --c-veil: rgba(255, 255, 255, 0.4);
   /* Recolor inherited primary to warm coral across the candidate dashboard */
   --primary: #e5533f;
   --primary-dark: #c8412f;
@@ -12059,3 +12065,239 @@ img {
   border: 1px solid rgba(239,68,68,0.3);
   color: #dc2626;
 }
+
+/* ============================================================
+   Global floating theme toggle — available on every page
+   (landing, auth, workspace) regardless of the Header.
+   ============================================================ */
+.np-floating-theme-toggle {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1200;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease, background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+.np-floating-theme-toggle:hover {
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: var(--shadow);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.np-floating-theme-toggle:active { transform: scale(0.95); }
+.np-floating-theme-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .np-floating-theme-toggle { transition: none; }
+  .np-floating-theme-toggle:hover { transform: none; }
+}
+
+/* ============================================================
+   Landing/Wellfound palette tokens (--lp-*) — theme-aware.
+   ============================================================ */
+:root {
+  --lp-bg: #ffffff;
+  --lp-surface: #ffffff;
+  --lp-ink: #1d1320;
+  --lp-muted: #6e6470;
+  --lp-red: #e5533f;
+  --lp-red-soft: #f3b4a6;
+  --lp-plum: #1e1320;
+  --lp-pink: #fdeeeb;
+  --lp-pink-card: #fbf3f1;
+  --lp-cream: #f3df9c;
+  --lp-cream-ink: #6b5d2f;
+  --lp-mauve: #9d7e8e;
+  --lp-line: #ece6e2;
+  --lp-nav-bg: rgba(255, 255, 255, 0.82);
+  --lp-pill-bg: #ffffff;
+  --lp-pill-border: #ece6e2;
+  --lp-pill-shadow: rgba(30, 19, 32, 0.10);
+  --lp-on-plum: rgba(255, 255, 255, 0.65);
+  --lp-on-plum-strong: #ffffff;
+}
+:root[data-theme='dark'] {
+  --lp-bg: #0f1216;
+  --lp-surface: #181b21;
+  --lp-ink: #f2edef;
+  --lp-muted: #a69da2;
+  --lp-red: #ff6f59;
+  --lp-red-soft: #7a3327;
+  --lp-plum: #14161b;
+  --lp-pink: rgba(255, 111, 89, 0.16);
+  --lp-pink-card: #1e2127;
+  --lp-cream: #2b2715;
+  --lp-cream-ink: #e0cf9c;
+  --lp-mauve: #3c3038;
+  --lp-line: rgba(255, 255, 255, 0.12);
+  --lp-nav-bg: rgba(15, 18, 22, 0.82);
+  --lp-pill-bg: #1c1f25;
+  --lp-pill-border: rgba(255, 255, 255, 0.12);
+  --lp-pill-shadow: rgba(0, 0, 0, 0.45);
+  --lp-on-plum: rgba(255, 255, 255, 0.7);
+  --lp-on-plum-strong: #ffffff;
+}
+
+/* Candidate portal — dark theme override (flips the warm --c-* tokens). */
+:root[data-theme='dark'] .candidate-portal-layout {
+  background: #0f1216;
+  color: #f2edef;
+  --c-red: #ff6f59;
+  --c-red-soft: rgba(255, 111, 89, 0.16);
+  --c-ink: #f2edef;
+  --c-muted: #a69da2;
+  --c-line: rgba(255, 255, 255, 0.12);
+  --c-line-strong: rgba(255, 255, 255, 0.2);
+  --c-surface: #181b21;
+  --c-surface-soft: #14161b;
+  --c-disabled: #23262d;
+  --c-veil: rgba(10, 12, 16, 0.55);
+  --primary: #ff6f59;
+  --primary-dark: #ff5238;
+}
+
+/* Soft pastel media-panel backgrounds for the candidate landing page. */
+:root {
+  --lp-green-soft: #e3f3ea;
+  --lp-cream-soft: #fbf1d6;
+  --lp-blue-soft: #eceffb;
+}
+:root[data-theme='dark'] {
+  --lp-green-soft: #16241d;
+  --lp-cream-soft: #271f12;
+  --lp-blue-soft: #161a28;
+}
+
+/* Primary (inverted) button tokens — keep high contrast in both themes.
+   Light: dark button + white text. Dark: light button + dark text. */
+:root { --lp-btn-bg: #1d1320; --lp-btn-text: #ffffff; }
+:root[data-theme='dark'] { --lp-btn-bg: #f2edef; --lp-btn-text: #16131a; }
+
+/* ============================================================
+   Candidate portal — dark surfaces (cards/sidebar hardcode #fff).
+   ============================================================ */
+:root[data-theme='dark'] .candidate-portal-sidebar { background: #14161b; }
+:root[data-theme='dark'] .candidate-portal-profile-card,
+:root[data-theme='dark'] .candidate-wallet-chip,
+:root[data-theme='dark'] .candidate-sidebar-toggle { background: #1c2027; }
+:root[data-theme='dark'] .candidate-gaming-exp-card,
+:root[data-theme='dark'] .candidate-checklist-card,
+:root[data-theme='dark'] .candidate-avatar-3d-card,
+:root[data-theme='dark'] .candidate-metric-box { background: #181b21; }
+:root[data-theme='dark'] .avatar-3d-glow-frame { background: #0f1216; }
+:root[data-theme='dark'] .candidate-sidebar-toggle:hover { background: #23272f; }
+:root[data-theme='dark'] .checklist-item:hover { border-color: rgba(255, 111, 89, 0.35); }
+
+/* Candidate Premium store — dark surfaces + badge contrast. */
+:root[data-theme='dark'] .candidate-premium-pass-card,
+:root[data-theme='dark'] .candidate-premium-side-card,
+:root[data-theme='dark'] .candidate-premium-service-card { background: #181b21; }
+:root[data-theme='dark'] .candidate-premium-benefit-list span { background: #14161b; }
+:root[data-theme='dark'] .candidate-premium-owned { background: rgba(34, 197, 94, 0.14); color: #4ade80; }
+:root[data-theme='dark'] .candidate-premium-status { color: #fbbf24; }
+:root[data-theme='dark'] .candidate-premium-status.success { color: #4ade80; }
+
+:root[data-theme='dark'] .candidate-premium-state-list > div { background: #14161b; }
+:root[data-theme='dark'] .candidate-premium-service-row { background: #181b21; }
+
+/* ============================================================
+   Candidate portal — comprehensive dark surfaces sweep
+   (cards/sections/pickers across all tabs).
+   ============================================================ */
+:root[data-theme='dark'] .candidate-portal-nav-item:hover { background: var(--c-disabled); color: var(--c-ink); }
+
+:root[data-theme='dark'] .credentials-list-section,
+:root[data-theme='dark'] .applications-tracker-section,
+:root[data-theme='dark'] .road-map-card,
+:root[data-theme='dark'] .org-card,
+:root[data-theme='dark'] .candidate-toast,
+:root[data-theme='dark'] .premium-status-card,
+:root[data-theme='dark'] .premium-product-card,
+:root[data-theme='dark'] .premium-service-card { background: #181b21; }
+
+:root[data-theme='dark'] .candidate-premium-store,
+:root[data-theme='dark'] .premium-shop,
+:root[data-theme='dark'] .premium-status-visual,
+:root[data-theme='dark'] .premium-store-select,
+:root[data-theme='dark'] .premium-inline-state,
+:root[data-theme='dark'] .premium-theme-option,
+:root[data-theme='dark'] .premium-state-list div,
+:root[data-theme='dark'] .premium-object.express span { background: #14161b; }
+
+:root[data-theme='dark'] .premium-theme-option.active {
+  background: rgba(124, 58, 237, 0.22);
+  color: #c4b5fd;
+  border-color: #7c3aed;
+}
+
+/* Premium store — neutralize light gradient variants in dark. */
+:root[data-theme='dark'] .premium-store-wallet-panel,
+:root[data-theme='dark'] .premium-wallet-card,
+:root[data-theme='dark'] .premium-pass-showcase,
+:root[data-theme='dark'] .premium-pass-showcase.owned,
+:root[data-theme='dark'] .premium-product-card.featured,
+:root[data-theme='dark'] .premium-product-card.owned { background: #181b21; }
+:root[data-theme='dark'] .premium-status-card.active { background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), #181b21); }
+
+/* ============================================================
+   Partner (business) dashboard — dark theme.
+   Flip the --p-* tokens + dark surfaces (cards hardcode #fff).
+   ============================================================ */
+:root[data-theme='dark'] .partner-layout {
+  background: #0f1216;
+  color: #e8ecf2;
+  --p-ink: #e8ecf2;
+  --p-muted: #9aa4b2;
+  --p-line: rgba(255, 255, 255, 0.12);
+  --p-line-strong: rgba(255, 255, 255, 0.2);
+  --p-blue: #6ea8ff;
+  --p-blue-soft: rgba(110, 168, 255, 0.16);
+  --p-club: #ff9442;
+  --p-club-soft: rgba(255, 122, 26, 0.18);
+  --p-navy: #1c2740;
+  --p-surface: #181b21;
+  --p-surface-soft: #14161b;
+}
+:root[data-theme='dark'] .partner-sidebar-logo,
+:root[data-theme='dark'] .admin-sidebar-logo { color: #e8ecf2; }
+
+:root[data-theme='dark'] .partner-sidebar,
+:root[data-theme='dark'] .partner-account-hero,
+:root[data-theme='dark'] .partner-layout .panel,
+:root[data-theme='dark'] .partner-layout .feature-card,
+:root[data-theme='dark'] .partner-layout .talent-card,
+:root[data-theme='dark'] .partner-layout .secondary-button,
+:root[data-theme='dark'] .np-card,
+:root[data-theme='dark'] .np-member-row,
+:root[data-theme='dark'] .np-icon-btn,
+:root[data-theme='dark'] .np-mem-field,
+:root[data-theme='dark'] .np-dash-head,
+:root[data-theme='dark'] .np-act-row,
+:root[data-theme='dark'] .np-check,
+:root[data-theme='dark'] .np-quick,
+:root[data-theme='dark'] .np-kpi { background: #181b21; }
+
+:root[data-theme='dark'] .partner-layout .timeline-item,
+:root[data-theme='dark'] .partner-sidebar-profile,
+:root[data-theme='dark'] .np-act-row:hover,
+:root[data-theme='dark'] .np-check:hover { background: #14161b; }
+
+/* Partner dashboard — b2b cards + nav hover dark (scoped to partner). */
+:root[data-theme='dark'] .partner-layout .b2b-dashboard-hero,
+:root[data-theme='dark'] .partner-layout .b2b-stat-card,
+:root[data-theme='dark'] .partner-layout .b2b-quick-card { background: #181b21; }
+:root[data-theme='dark'] .partner-layout .b2b-hero-meta span { background: #14161b; }
+:root[data-theme='dark'] .partner-nav-item:hover { background: var(--p-surface-soft); }
+
+:root[data-theme='dark'] .np-card-tag,
+:root[data-theme='dark'] .np-empty-ic { background: #181b21; }

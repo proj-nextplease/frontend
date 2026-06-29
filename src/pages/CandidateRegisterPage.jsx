@@ -21,13 +21,16 @@ const STATUS_TITLES = {
   loading: 'Đang xử lý',
 };
 
-const INK = '#1d1320';
-const MUTED = '#6e6470';
-const RED = '#e5533f';
-const PLUM = '#1e1320';
-const PINK = '#fdeeeb';
-const LINE = '#ece6e2';
+const INK = 'var(--lp-ink)';
+const MUTED = 'var(--lp-muted)';
+const RED = 'var(--lp-red)';
+const PLUM = 'var(--lp-plum)';
+const PINK = 'var(--lp-pink)';
+const LINE = 'var(--lp-line)';
 const WHITE = '#ffffff';
+const SURFACE = 'var(--lp-surface)';
+const BTN_BG = 'var(--lp-btn-bg)';
+const BTN_TEXT = 'var(--lp-btn-text)';
 
 const socialProviders = [
   { provider: 'google', label: 'Google', mark: 'G' },
@@ -60,7 +63,7 @@ const OTP_COOLDOWN_SECONDS = 60;
 
 const FIELD = {
   width: '100%', padding: '14px 14px 14px 44px', borderRadius: '12px',
-  border: `1.5px solid ${LINE}`, background: WHITE, color: INK,
+  border: `1.5px solid ${LINE}`, background: SURFACE, color: INK,
   fontSize: '0.98rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit',
 };
 
@@ -307,7 +310,7 @@ export function CandidateRegisterPage() {
   }
 
   return (
-    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 0.88fr) minmax(0, 1.12fr)', background: WHITE, color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
+    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 0.88fr) minmax(0, 1.12fr)', background: 'var(--lp-bg)', color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
       <style>{`
         @keyframes npBrandInL { from { opacity:0; transform: translateX(-48px);} to { opacity:1; transform:none; } }
         @keyframes npFormIn { from { opacity:0; transform: translateY(22px);} to { opacity:1; transform:none; } }
@@ -333,7 +336,7 @@ export function CandidateRegisterPage() {
               const state = n < currentStep ? 'done' : n === currentStep ? 'current' : 'pending';
               return (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: i < 2 ? 1 : 'none' }}>
-                  <span style={{ width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.78rem', flexShrink: 0, background: state === 'pending' ? '#f0ece9' : state === 'done' ? '#16a34a' : INK, color: state === 'pending' ? MUTED : WHITE }}>
+                  <span style={{ width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.78rem', flexShrink: 0, background: state === 'pending' ? 'var(--lp-line)' : state === 'done' ? '#16a34a' : RED, color: state === 'pending' ? MUTED : WHITE }}>
                     {state === 'done' ? <CheckCircle2 size={16} /> : n}
                   </span>
                   <span style={{ fontSize: '0.84rem', fontWeight: state === 'current' ? '800' : '600', color: state === 'pending' ? MUTED : INK, whiteSpace: 'nowrap' }}>{label}</span>
@@ -352,7 +355,7 @@ export function CandidateRegisterPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px' }}>
                 {socialProviders.map((item) => (
                   <button key={item.provider} type="button" onClick={() => handleSocialRegister(item.provider)}
-                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px', borderRadius: '12px', border: `1.5px solid ${LINE}`, background: WHITE, color: INK, fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer' }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px', borderRadius: '12px', border: `1.5px solid ${LINE}`, background: SURFACE, color: INK, fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer' }}>
                     <span style={{ display: 'flex', fontWeight: '800' }}>{item.mark}</span>{item.label}
                   </button>
                 ))}
@@ -389,7 +392,7 @@ export function CandidateRegisterPage() {
               <AuthStatusCard status={status} titles={STATUS_TITLES} onClose={() => setStatus({ type: 'idle', message: '' })} style={{ marginTop: '16px' }} />
 
               <button type="submit" disabled={status.type === 'loading' || otpCooldown > 0}
-                style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: 'pointer', marginTop: '20px' }}>
+                style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '999px', background: BTN_BG, color: BTN_TEXT, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: 'pointer', marginTop: '20px' }}>
                 {otpCooldown > 0 ? <><Clock size={18} /> Đợi {otpCooldown}s</> : <>Xác thực tài khoản <ArrowRight size={18} /></>}
               </button>
 
@@ -443,13 +446,13 @@ export function CandidateRegisterPage() {
           {/* STEP 3 — complete */}
           {currentStep === 3 && (
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <span style={{ display: 'inline-flex', width: '64px', height: '64px', borderRadius: '50%', background: '#e6f4ec', color: '#16a34a', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}><CheckCircle2 size={36} /></span>
+              <span style={{ display: 'inline-flex', width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(34,197,94,0.16)', color: '#16a34a', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}><CheckCircle2 size={36} /></span>
               <h2 style={{ fontSize: 'clamp(1.7rem, 2.8vw, 2.2rem)', fontWeight: '800', letterSpacing: '-0.03em', color: INK, margin: '0 0 10px' }}>Bạn đã là ứng viên!</h2>
               <p style={{ fontSize: '1rem', color: MUTED, lineHeight: 1.6, margin: '0 auto 26px', maxWidth: '28rem' }}>
                 Tài khoản đã được xác thực. Tiếp theo, hãy dựng Portfolio để kể câu chuyện kỹ năng của bạn.
               </p>
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <Link to="/portfolio" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>
+                <Link to="/portfolio" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: BTN_BG, color: BTN_TEXT, fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>
                   Dựng Portfolio ngay <ArrowRight size={18} />
                 </Link>
                 <Link to="/candidates" style={{ display: 'inline-flex', alignItems: 'center', padding: '14px 24px', borderRadius: '999px', border: `1.5px solid ${INK}`, color: INK, fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>

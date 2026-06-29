@@ -1,37 +1,19 @@
 import { useEffect, useState, useRef } from 'react';
-import { flushSync } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { Moon, Sparkles, Sun, Compass, WalletCards, FileText, LogOut } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient.js';
 import { getMyPortfolio } from '../../api/portfolioApi.js';
 import { logout } from '../../api/httpClient.js';
-
-const THEME_STORAGE_KEY = 'nextplease:theme';
-
-function getInitialTheme() {
-  if (typeof window === 'undefined') return 'light';
-
-  const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
+import { useTheme } from '../../lib/themeContext.jsx';
 
 export function Header() {
   const navigate = useNavigate();
-  const [theme, setTheme] = useState(getInitialTheme);
-  const isDarkTheme = theme === 'dark';
+  const { isDark: isDarkTheme, toggleTheme } = useTheme();
 
   const [session, setSession] = useState(null);
   const [portfolio, setPortfolio] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    document.documentElement.style.colorScheme = theme;
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
 
   // Auth listener & portfolio loading
   useEffect(() => {
@@ -86,23 +68,6 @@ export function Header() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  function toggleTheme() {
-    const nextTheme = isDarkTheme ? 'light' : 'dark';
-
-    if (document.startViewTransition) {
-      document.startViewTransition(() => {
-        flushSync(() => setTheme(nextTheme));
-      });
-      return;
-    }
-
-    document.documentElement.classList.add('theme-transitioning');
-    setTheme(nextTheme);
-    window.setTimeout(() => {
-      document.documentElement.classList.remove('theme-transitioning');
-    }, 460);
-  }
 
   const openPortfolioPreview = () => {
     if (!portfolio) return;
