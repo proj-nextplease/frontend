@@ -7,7 +7,7 @@ export function AppLayout() {
   const isAdminWorkspace = location.pathname.startsWith('/nextplease-admin-portal/b2b-reviews');
   const isCandidateWorkspace = location.pathname.startsWith('/candidates/dashboard');
   const isWorkspace = isBusinessWorkspace || isAdminWorkspace || isCandidateWorkspace;
-  const isLandingPage = ['/', '/candidates', '/businesses'].includes(location.pathname);
+  const isLandingPage = ['/', '/candidates', '/businesses', '/terms', '/privacy'].includes(location.pathname);
   const isAuthPage = location.pathname.endsWith('/login') || location.pathname.endsWith('/register') || location.pathname.endsWith('/accept-invite')
     || location.pathname === '/forgot-password' || location.pathname === '/reset-password';
   // Standalone detail tabs render their own hero + "Đóng tab" control, so the

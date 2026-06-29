@@ -12301,3 +12301,150 @@ img {
 
 :root[data-theme='dark'] .np-card-tag,
 :root[data-theme='dark'] .np-empty-ic { background: #181b21; }
+
+/* Asymmetric "bento" testimonials (taste-skill: break the 3-equal-cards tell). */
+.np-bento-quotes { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+@media (max-width: 760px) {
+  .np-bento-quotes { grid-template-columns: 1fr !important; }
+  .np-bento-quotes > * { grid-row: auto !important; }
+}
+
+/* Typography polish (redesign-skill): balance headline line lengths, avoid orphan words. */
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+/* ============================================================
+   Reputation Passport — the Overview focal point (replaces the
+   scattered exp card + avatar card + bottom metric boxes).
+   ============================================================ */
+.candidate-portal-layout { --np-passport: #1e1320; }
+:root[data-theme='dark'] .candidate-portal-layout { --np-passport: #221c2b; }
+
+.np-passport {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(22px, 3vw, 48px);
+  background: var(--np-passport);
+  color: #fff;
+  border-radius: 26px;
+  padding: clamp(24px, 2.6vw, 36px) clamp(26px, 3vw, 44px);
+  overflow: hidden;
+  box-shadow: 0 26px 64px rgba(30, 19, 32, 0.20);
+  margin-bottom: 28px;
+}
+.np-passport::before {
+  content: '';
+  position: absolute;
+  top: -45%;
+  right: -8%;
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, rgba(229, 83, 63, 0.26), transparent 68%);
+  pointer-events: none;
+}
+.np-passport > * { position: relative; z-index: 1; }
+
+.np-pp-avatar { width: clamp(116px, 11vw, 156px); flex-shrink: 0; }
+.np-pp-avatar .avatar-3d-glow-frame {
+  width: 100%; aspect-ratio: 1; min-height: 0; padding: 0;
+  border-radius: 22px; background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.np-pp-name { font-size: clamp(1.3rem, 2vw, 1.7rem); font-weight: 800; letter-spacing: -0.02em; }
+.np-pp-sub { font-size: 0.86rem; color: rgba(255, 255, 255, 0.6); margin-top: 2px; }
+.np-pp-expbar { height: 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.np-pp-expbar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f6845f, #e5533f); transition: width 0.9s cubic-bezier(0.22,1,0.36,1); }
+
+.np-pp-stats { display: flex; gap: clamp(14px, 1.6vw, 26px); flex-shrink: 0; }
+.np-pp-stat { text-align: left; }
+.np-pp-stat-val { font-size: clamp(1.4rem, 2vw, 1.9rem); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.np-pp-stat-label { font-size: 0.74rem; font-weight: 700; color: rgba(255, 255, 255, 0.55); margin-top: 5px; display: flex; align-items: center; gap: 4px; }
+.np-pp-divider { width: 1px; align-self: stretch; background: rgba(255, 255, 255, 0.12); }
+
+@media (max-width: 880px) {
+  .np-passport { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 22px; }
+  .np-pp-stats { justify-content: center; }
+}
+
+/* ============================================================
+   Wellfound-style company-grouped job list (Opportunities tab).
+   ============================================================ */
+.np-cogroup { background: var(--c-surface); border: 1px solid var(--c-line); border-radius: 16px; overflow: hidden; transition: border-color 0.2s ease, box-shadow 0.25s ease; }
+.np-cogroup:hover { box-shadow: 0 12px 32px rgba(30, 19, 32, 0.07); }
+.np-cogroup-head { display: flex; align-items: center; gap: 14px; padding: 16px 22px; border-bottom: 1px solid var(--c-line); }
+.np-cogroup-logo { width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0; overflow: hidden; background: var(--c-surface-soft); border: 1px solid var(--c-line); display: flex; align-items: center; justify-content: center; }
+.np-role-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 15px 22px; border-bottom: 1px solid var(--c-line); transition: background-color 0.18s ease; }
+.np-role-row:last-child { border-bottom: none; }
+.np-role-row:hover { background: var(--c-surface-soft); }
+.np-role-title { font-size: 1rem; font-weight: 700; color: var(--c-ink); text-decoration: none; transition: color 0.18s ease; line-height: 1.35; }
+.np-role-title:hover { color: var(--c-red); }
+.np-role-meta { display: flex; flex-wrap: wrap; align-items: center; font-size: 0.82rem; color: var(--c-muted); margin-top: 4px; }
+.np-role-meta > span:not(:first-child)::before { content: '·'; margin: 0 7px; opacity: 0.5; }
+.np-role-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.np-role-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+@media (max-width: 580px) {
+  .np-role-row { flex-direction: column; align-items: stretch; }
+  .np-role-right { align-items: stretch; }
+}
+
+/* Wellfound-faithful FLAT job list: rows split by hairlines, no per-row card. */
+.np-joblist { border-top: 1px solid var(--c-line); }
+.np-job-row { display: flex; align-items: center; gap: 14px; padding: 16px 8px; border-bottom: 1px solid var(--c-line); transition: background-color 0.16s ease; }
+.np-job-row:hover { background: var(--c-surface-soft); }
+.np-job-logo { width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0; overflow: hidden; background: var(--c-surface-soft); border: 1px solid var(--c-line); display: flex; align-items: center; justify-content: center; }
+.np-job-meta { display: flex; flex-wrap: wrap; align-items: center; font-size: 0.83rem; color: var(--c-muted); margin-top: 3px; }
+.np-job-meta > span:not(:first-child)::before { content: '•'; margin: 0 7px; opacity: 0.45; }
+.np-job-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+.np-job-detail { display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; font-size: 0.82rem; font-weight: 700; border-radius: 9px; border: 1px solid var(--c-line); background: var(--c-surface); color: var(--c-ink); text-decoration: none; white-space: nowrap; transition: border-color 0.18s, background-color 0.18s; }
+.np-job-detail:hover { border-color: var(--c-red); color: var(--c-red); }
+@media (max-width: 640px) {
+  .np-job-row { flex-wrap: wrap; }
+  .np-job-actions { width: 100%; }
+  .np-job-actions > * { flex: 1; }
+}
+
+/* ============================================================
+   Full Wellfound-style jobs/quests tab: hero search + company
+   strip + flat list.
+   ============================================================ */
+.np-jobs-hero { background: var(--c-surface-soft); border-radius: 24px; padding: clamp(30px, 4vw, 56px) clamp(20px, 4vw, 48px); text-align: center; margin-bottom: 34px; }
+.np-jobs-eyebrow { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--c-red); margin: 0 0 10px; }
+.np-jobs-title { font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; color: var(--c-ink); margin: 0 0 26px; }
+.np-search-bar { display: flex; align-items: center; gap: 8px; max-width: 740px; margin: 0 auto; background: var(--c-surface); border: 1px solid var(--c-line); border-radius: 16px; padding: 8px 8px 8px 16px; box-shadow: 0 12px 34px rgba(30, 19, 32, 0.07); }
+.np-search-bar input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; font-size: 0.96rem; color: var(--c-ink); font-family: inherit; }
+.np-search-bar select { border: none; background: transparent; font-size: 0.9rem; color: var(--c-ink); cursor: pointer; outline: none; max-width: 160px; font-family: inherit; }
+.np-search-div { width: 1px; height: 26px; background: var(--c-line); flex-shrink: 0; }
+.np-search-btn { border: none; background: var(--c-red); color: #fff; font-weight: 800; font-size: 0.9rem; padding: 11px 24px; border-radius: 11px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.np-quick-filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; margin-top: 18px; }
+.np-jobs-section { margin-bottom: 34px; }
+.np-jobs-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.np-jobs-section-head h3 { font-size: clamp(1.2rem, 2vw, 1.45rem); font-weight: 800; letter-spacing: -0.02em; color: var(--c-ink); margin: 0; }
+.np-co-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(238px, 1fr)); gap: 16px; }
+.np-co-card { display: flex; flex-direction: column; background: var(--c-surface); border: 1px solid var(--c-line); border-radius: 16px; padding: 18px; cursor: pointer; text-align: left; transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s cubic-bezier(0.22,1,0.36,1); }
+.np-co-card:hover { border-color: var(--c-red); box-shadow: 0 14px 34px rgba(30, 19, 32, 0.09); transform: translateY(-3px); }
+.np-co-foot { border-top: 1px solid var(--c-line); margin-top: 14px; padding-top: 12px; display: flex; align-items: center; gap: 5px; font-size: 0.82rem; font-weight: 800; color: var(--c-red); }
+@media (max-width: 560px) { .np-search-bar { flex-wrap: wrap; } .np-search-bar input { flex-basis: 100%; } .np-search-btn { flex: 1; } }
+
+/* Segmented job-board search bar (category button + input + search button). */
+.np-search-bar { padding: 7px 7px 7px 8px; }
+.np-sb-seg { position: relative; display: flex; align-items: center; flex-shrink: 0; }
+.np-sb-trigger { display: inline-flex; align-items: center; gap: 7px; border: none; background: transparent; cursor: pointer; font-size: 0.9rem; font-weight: 700; white-space: nowrap; font-family: inherit; padding: 9px 12px; border-radius: 11px; transition: background-color 0.15s ease; color: var(--c-ink); }
+.np-sb-trigger:hover { background: var(--c-surface-soft); }
+.np-sb-trigger.accent { color: var(--c-red); }
+.np-sb-menu { position: absolute; top: calc(100% + 12px); left: 0; z-index: 50; min-width: 250px; max-height: 340px; overflow-y: auto; background: var(--c-surface); border: 1px solid var(--c-line); border-radius: 14px; box-shadow: 0 22px 54px rgba(30, 19, 32, 0.18); padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.np-sb-menu button { display: block; width: 100%; text-align: left; border: none; background: none; cursor: pointer; padding: 9px 12px; border-radius: 9px; font-size: 0.9rem; color: var(--c-ink); font-family: inherit; transition: background-color 0.15s ease; }
+.np-sb-menu button:hover { background: var(--c-surface-soft); }
+.np-sb-menu button.active { background: var(--c-red-soft); color: var(--c-red); font-weight: 700; }
+.np-sb-overlay { position: fixed; inset: 0; z-index: 40; }
+@media (max-width: 620px) { .np-search-bar { flex-wrap: wrap; } .np-search-bar input { flex-basis: 100%; order: -1; } }
+
+.np-sb-menu-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--c-muted); padding: 7px 12px 4px; }
+.np-sb-menu-sep { height: 1px; background: var(--c-line); margin: 6px 4px; }
+
+/* Premium store — slim wallet bar (replaces 3 equal metric boxes). */
+.np-premium-wallet { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: var(--c-surface); border: 1px solid var(--c-line); border-radius: 18px; padding: 18px 22px; margin-bottom: 26px; }
+
+/* Credentials tab: de-card the section wrappers (no card-in-card). */
+.credentials-list-section { border: none !important; background: transparent !important; padding: 0 !important; border-radius: 0 !important; margin-bottom: 34px; }

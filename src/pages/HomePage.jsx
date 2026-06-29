@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap, Search, Quote } from 'lucide-react';
 
-/* Wellfound palette — now theme-aware via CSS variables (see --lp-* in index.css). */
+/* Wellfound palette, now theme-aware via CSS variables (see --lp-* in index.css). */
 const INK = 'var(--lp-ink)';
 const MUTED = 'var(--lp-muted)';
 const RED = 'var(--lp-red)';
@@ -12,15 +12,15 @@ const PINK_CARD = 'var(--lp-pink-card)';
 const CREAM = 'var(--lp-cream)';
 const MAUVE = 'var(--lp-mauve)';
 const LINE = 'var(--lp-line)';
-const WHITE = '#ffffff';          /* literal white — for text/elements that sit on dark fills */
+const WHITE = '#ffffff';          /* literal white, for text/elements that sit on dark fills */
 const SURFACE = 'var(--lp-surface)'; /* page & card backgrounds that flip with the theme */
 
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 
 const stats = [
-  { value: 2400, suffix: '+', label: 'ứng viên sinh viên' },
-  { value: 180, suffix: '+', label: 'doanh nghiệp & CLB' },
-  { value: 95, suffix: '%', label: 'proof được xác minh' },
+  { value: 2418, suffix: '+', label: 'ứng viên sinh viên' },
+  { value: 186, suffix: '+', label: 'doanh nghiệp & CLB' },
+  { value: 96, suffix: '%', label: 'proof được xác minh' },
 ];
 
 /* Pills spread across the FULL viewport width (l = % of screen). */
@@ -98,7 +98,7 @@ const GLYPHS = {
 };
 
 const seekerPoints = [
-  { icon: GLYPHS.badge, text: 'Hồ sơ năng lực có kiểm chứng — thay CV tự khai bằng proof thật.' },
+  { icon: GLYPHS.badge, text: 'Hồ sơ năng lực có kiểm chứng, thay CV tự khai bằng proof thật.' },
   { icon: GLYPHS.trophy, text: 'Tích EXP, lên Level, tăng uy tín (RS) qua từng hoạt động.' },
   { icon: GLYPHS.apply, text: 'Ứng tuyển việc làm và tham gia Quest CLB chỉ với một hồ sơ.' },
 ];
@@ -295,7 +295,7 @@ export function HomePage() {
         }
       `}</style>
 
-      {/* 0. NAV — sticky, blur-on-scroll, Wellfound-style */}
+      {/* 0. NAV, sticky, blur-on-scroll, Wellfound-style */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 100, width: '100%',
         background: navScrolled ? 'var(--lp-nav-bg)' : 'transparent',
@@ -323,7 +323,7 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* 1. HERO — full-bleed floating pills */}
+      {/* 1. HERO, full-bleed floating pills */}
       <section
         ref={heroRef}
         style={{ position: 'relative', overflow: 'hidden', width: '100%', minHeight: 'clamp(540px, 74vh, 720px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
@@ -352,7 +352,7 @@ export function HomePage() {
         </div>
 
         <p className="np-hero-in" style={{ position: 'relative', zIndex: 5, marginTop: '26px', fontSize: '1.06rem', color: MUTED, textAlign: 'center', maxWidth: '30rem', padding: '0 16px', animationDelay: '0.12s' }}>
-          Một hồ sơ năng lực có kiểm chứng — cho cả ứng viên và nhà tuyển dụng.
+          Một hồ sơ năng lực có kiểm chứng, cho cả ứng viên và nhà tuyển dụng.
         </p>
 
         <div className="np-hero-in" style={{ position: 'relative', zIndex: 5, display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap', justifyContent: 'center', animationDelay: '0.24s' }}>
@@ -365,14 +365,14 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Lower content — centered column */}
+      {/* Lower content, centered column */}
       <div style={{ ...INNER, display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-        {/* 2. STATS — white with dividers */}
+        {/* 2. STATS, white with dividers */}
         <section ref={statsRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0', padding: 'clamp(24px, 4vw, 48px) 0', borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }}>
           {stats.map((item, i) => (
             <div key={item.label} style={{ textAlign: 'center', borderLeft: i === 0 ? 'none' : `1px solid ${LINE}` }}>
-              <div style={{ fontSize: 'clamp(2.6rem, 6vw, 4rem)', fontWeight: '800', color: INK, lineHeight: 1, letterSpacing: '-0.04em' }}>
+              <div style={{ fontSize: 'clamp(2.6rem, 6vw, 4rem)', fontWeight: '800', color: INK, lineHeight: 1, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums' }}>
                 <AnimatedStatNumber value={item.value} suffix={item.suffix} run={statsRun} />
               </div>
               <div style={{ fontSize: '0.92rem', color: MUTED, fontWeight: '600', marginTop: '12px' }}>{item.label}</div>
@@ -415,7 +415,7 @@ export function HomePage() {
               <p style={{ ...EYEBROW, color: 'rgba(255,255,255,0.55)' }}>Proof of work</p>
               <h2 style={{ ...H2, color: WHITE, marginBottom: '14px' }}>Proof thật dẫn đường cho cơ hội thật</h2>
               <p style={{ fontSize: '1.02rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.65)', margin: 0 }}>
-                Mọi thay đổi về RS, EXP và NP đều do hệ thống kiểm soát qua event log — minh bạch, có thể kiểm chứng, không tự khai.
+                Mọi thay đổi về RS, EXP và NP đều do hệ thống kiểm soát qua event log, minh bạch, có thể kiểm chứng, không tự khai.
               </p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -438,18 +438,21 @@ export function HomePage() {
             <p style={EYEBROW}>Từ cộng đồng</p>
             <h2 style={{ ...H2, marginBottom: '26px' }}>Tín hiệu từ hệ sinh thái</h2>
           </Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-            {testimonials.map((t, i) => (
-              <Reveal key={t.name} delay={i * 130} style={{ height: '100%' }}>
-                <div style={{ height: '100%', background: PINK_CARD, borderRadius: '20px', padding: '26px', boxSizing: 'border-box' }}>
-                  <span style={{ display: 'inline-flex', width: '42px', height: '42px', borderRadius: '50%', background: PINK, color: RED, alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-                    <Quote size={20} />
-                  </span>
-                  <p style={{ fontSize: '0.98rem', lineHeight: 1.6, color: INK, margin: '0 0 18px' }}>{t.quote}</p>
-                  <div style={{ fontSize: '0.82rem', color: MUTED }}>{t.role}</div>
-                </div>
-              </Reveal>
-            ))}
+          <div className="np-bento-quotes">
+            {testimonials.map((t, i) => {
+              const featured = i === 0;
+              return (
+                <Reveal key={t.quote} delay={i * 130} style={{ height: '100%', ...(featured ? { gridRow: 'span 2' } : {}) }}>
+                  <div className="np-card" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: featured ? PLUM : PINK_CARD, borderRadius: '20px', padding: featured ? 'clamp(28px, 3vw, 40px)' : '26px', boxSizing: 'border-box' }}>
+                    <span style={{ display: 'inline-flex', width: featured ? '52px' : '42px', height: featured ? '52px' : '42px', borderRadius: '50%', background: featured ? 'rgba(255,255,255,0.1)' : PINK, color: RED, alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                      <Quote size={featured ? 26 : 20} />
+                    </span>
+                    <p style={{ fontSize: featured ? 'clamp(1.1rem, 1.6vw, 1.5rem)' : '0.98rem', lineHeight: 1.55, color: featured ? '#fff' : INK, margin: '0 0 18px', fontWeight: featured ? '600' : '400' }}>{t.quote}</p>
+                    <div style={{ fontSize: '0.82rem', color: featured ? 'rgba(255,255,255,0.6)' : MUTED, marginTop: 'auto' }}>{t.role}</div>
+                  </div>
+                </Reveal>
+              );
+            })}
           </div>
         </section>
 
@@ -495,6 +498,13 @@ export function HomePage() {
             <span style={{ fontSize: '0.9rem', color: MUTED }}>Verified Proof of Work</span>
             <span style={{ fontSize: '0.9rem', color: MUTED }}>Backend-owned RS / EXP / NP</span>
             <span style={{ fontSize: '0.9rem', color: MUTED }}>Audit-ready workflows</span>
+          </div>
+          <div style={{ gridColumn: '1 / -1', borderTop: `1px solid ${LINE}`, marginTop: '20px', paddingTop: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.84rem', color: MUTED }}>© 2026 next please</span>
+            <div style={{ display: 'flex', gap: '18px' }}>
+              <Link to="/terms" style={{ fontSize: '0.86rem', color: MUTED, textDecoration: 'none' }}>Điều khoản</Link>
+              <Link to="/privacy" style={{ fontSize: '0.86rem', color: MUTED, textDecoration: 'none' }}>Bảo mật</Link>
+            </div>
           </div>
         </footer>
       </div>

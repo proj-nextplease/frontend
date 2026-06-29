@@ -57,7 +57,7 @@ import {
   selectTheme
 } from '../api/premiumApi.js';
 import { getGamification, pingGamification, claimQuest, recordGamificationEvent } from '../api/gamificationApi.js';
-import { Flame, Target, Gift } from 'lucide-react';
+import { Flame, Target, Gift, ChevronDown } from 'lucide-react';
 
 const CATEGORY_MAP = {
   TECH: {
@@ -600,6 +600,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [filterJobType, setFilterJobType] = useState('');
   const [filterIsRemote, setFilterIsRemote] = useState(false);
   const [filterCanApply, setFilterCanApply] = useState(false); // Filter by matching RS threshold
+  const [searchMenu, setSearchMenu] = useState(null); // 'cat' | 'type' — segmented search-bar dropdowns
 
   // Merge database companies and mock companies (to guarantee a populated view)
   const allOrganizations = [...companiesList, ...defaultMockOrganizations.filter(mock => 
@@ -1413,7 +1414,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               {!isSidebarCollapsed && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', justifyContent: 'space-between' }}>
                   Gợi ý việc làm AI
-                  <span style={{ fontSize: '0.62rem', fontWeight: '800', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', borderRadius: '4px', padding: '1px 5px', textTransform: 'uppercase' }}>NEW</span>
+                  <span style={{ fontSize: '0.62rem', fontWeight: '800', background: '#d97706', color: '#fff', borderRadius: '4px', padding: '1px 5px', textTransform: 'uppercase' }}>NEW</span>
                 </span>
               )}
             </button>
@@ -1622,163 +1623,55 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               .np-quest-claim.locked { background:var(--c-line); color:var(--c-muted); cursor:default; }
               @media (prefers-reduced-motion: reduce) { .np-streak-flame, .np-quest-card, .np-quest-claim.ready { animation:none !important; } }
             `}</style>
-            <header className="candidate-overview-header">
+            <header className="candidate-overview-header" style={{ marginBottom: '20px' }}>
               <div className="candidate-overview-title">
-                <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '0.82rem',
-                  fontWeight: '900',
-                  color: 'var(--c-red)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05rem',
-                  background: 'var(--c-red-soft)',
-                  padding: '6px 12px',
-                  borderRadius: '999px',
-                  marginBottom: '10px'
-                }}>
-                  <Sparkles size={13} /> Chào mừng trở lại, {portfolio?.name || 'Ứng viên'}
-                </span>
-                <h1>Không gian phát triển sự nghiệp</h1>
-                <p>Theo dõi nhiệm vụ, hoàn thiện hồ sơ 3D và minh chứng năng lực của bạn.</p>
-              </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                {has3D ? (
-                  <Link className="button primary-button" to="/portfolio/edit" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
-                    Chỉnh sửa Portfolio 3D <ArrowRight size={16} />
-                  </Link>
-                ) : (
-                  <Link className="button primary-button" to="/portfolio" style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
-                    Thiết lập Portfolio 3D <ArrowRight size={16} />
-                  </Link>
-                )}
+                <h1>Chào {portfolio?.name || 'bạn'}</h1>
+                <p>Không gian danh tiếng của bạn. Giữ streak và hoàn thành nhiệm vụ để lên hạng.</p>
               </div>
             </header>
 
-            <div className="candidate-overview-workspace">
-              {/* Left Column */}
-              <div className="candidate-overview-left-panel">
-                <section className="candidate-gaming-exp-card">
-                  <div className="exp-gamer-header">
-                    <div className="exp-gamer-level">
-                      <span className="exp-level-label">Cấp độ tài năng</span>
-                      <span className="exp-level-badge">LV. {currentLevel}</span>
-                    </div>
-                    {/* Streak — prominent flame counter (Duolingo-style) */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(249,115,22,0.1)', padding: '6px 14px', borderRadius: '999px' }} title={`Chuỗi dài nhất: ${gamification?.longestStreak ?? 0} ngày`}>
-                      <Flame className="np-streak-flame" size={20} color="#f97316" fill={streak > 0 ? '#f97316' : 'none'} />
-                      <span style={{ fontSize: '1.05rem', fontWeight: '900', color: '#f97316' }}>{streak}</span>
-                      <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#c2410c' }}>ngày streak</span>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '14px 0 6px' }}>
-                    <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--muted)' }}>Tiến độ lên cấp {currentLevel + 1}</span>
-                    <span style={{ fontSize: '0.88rem', fontWeight: '800', color: 'var(--ink)' }}>
-                      <strong style={{ color: 'var(--primary)' }}>{Number(currentExp).toLocaleString('vi-VN')}</strong> / {Number(nextLevelExp).toLocaleString('vi-VN')} EXP
-                    </span>
-                  </div>
-                  <div className="exp-bar-wrapper">
-                    <div className="exp-bar-fill-glow" style={{ width: `${expPercentage}%`, animation: 'npBarFill 0.9s cubic-bezier(0.22,1,0.36,1)' }}>
-                      <div className="exp-bar-shine" />
-                    </div>
-                  </div>
-                  <p style={{ margin: '12px 0 0', fontSize: '0.85rem', color: 'var(--muted)', lineHeight: 1.4 }}>
-                    <Zap size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom', color: 'var(--primary)' }} />
-                    Hoàn thành nhiệm vụ hằng ngày & tuần bên dưới để nhận EXP và giữ chuỗi streak!
-                  </p>
-                </section>
-
-                <section className="candidate-checklist-card">
-                  <h2 className="candidate-checklist-title">
-                    <CheckCircle2 size={20} color="var(--primary)" />
-                    Hành trình phát triển hồ sơ (Next Steps)
-                  </h2>
-
-                  <div className="checklist-item">
-                    <div className="checklist-item-checkbox">
-                      {has3D ? <CheckCircle2 size={18} color="#22c55e" /> : <Clock3 size={18} color="var(--muted)" />}
-                    </div>
-                    <div className="checklist-item-content">
-                      <span className="checklist-item-title" style={{ textDecoration: has3D ? 'line-through' : 'none', opacity: has3D ? 0.6 : 1 }}>
-                        Khởi tạo và lưu hồ sơ Portfolio 3D
-                      </span>
-                      <span className="checklist-item-desc">Thiết lập nhân vật avatar đại diện 3D và điền các kỹ năng chuyên môn cốt lõi.</span>
-                    </div>
-                  </div>
-
-                  <div className="checklist-item">
-                    <div className="checklist-item-checkbox">
-                      {hasSchool ? <CheckCircle2 size={18} color="#22c55e" /> : <Clock3 size={18} color="var(--muted)" />}
-                    </div>
-                    <div className="checklist-item-content">
-                      <span className="checklist-item-title" style={{ textDecoration: hasSchool ? 'line-through' : 'none', opacity: hasSchool ? 0.6 : 1 }}>
-                        Bổ sung thông tin trường học & học vấn
-                      </span>
-                      <span className="checklist-item-desc">Điền thông tin trường cao đẳng/đại học để hỗ trợ bộ lọc tin tuyển dụng.</span>
-                    </div>
-                  </div>
-
-                  <div className="checklist-item">
-                    <div className="checklist-item-checkbox">
-                      {hasCredentials ? <CheckCircle2 size={18} color="#22c55e" /> : <Clock3 size={18} color="var(--muted)" />}
-                    </div>
-                    <div className="checklist-item-content">
-                      <span className="checklist-item-title" style={{ textDecoration: hasCredentials ? 'line-through' : 'none', opacity: hasCredentials ? 0.6 : 1 }}>
-                        Đăng tải minh chứng chứng chỉ / bằng cấp
-                      </span>
-                      <span className="checklist-item-desc">Nộp file minh chứng để nâng điểm danh tiếng (Reputation Score) tối đa.</span>
-                    </div>
-                  </div>
-
-                  <div className="checklist-item">
-                    <div className="checklist-item-checkbox">
-                      {hasApplications ? <CheckCircle2 size={18} color="#22c55e" /> : <Clock3 size={18} color="var(--muted)" />}
-                    </div>
-                    <div className="checklist-item-content">
-                      <span className="checklist-item-title" style={{ textDecoration: hasApplications ? 'line-through' : 'none', opacity: hasApplications ? 0.6 : 1 }}>
-                        Tìm kiếm và ứng tuyển Quest đầu tiên
-                      </span>
-                      <span className="checklist-item-desc">Khám phá Bảng cơ hội và gửi đơn ứng tuyển vào dự án phù hợp với năng lực.</span>
-                    </div>
-                  </div>
-                </section>
+            {/* Reputation Passport - hero focal point */}
+            <section className="np-passport">
+              <div className="np-pp-avatar">
+                <div className="avatar-3d-glow-frame">
+                  <PortfolioAvatar3D avatar={portfolio?.avatar} />
+                </div>
               </div>
 
-              {/* Right Column */}
-              <div className="candidate-overview-right-panel">
-                <section className="candidate-avatar-3d-card">
-                  <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '0.88rem', fontWeight: '800', color: 'var(--ink)' }}>Avatar 3D của bạn</span>
-                    <span style={{
-                      fontSize: '0.72rem',
-                      fontWeight: '800',
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      background: has3D ? 'rgba(34, 197, 94, 0.12)' : 'rgba(249, 115, 22, 0.12)',
-                      color: has3D ? '#22c55e' : '#f97316'
-                    }}>
-                      {has3D ? 'Đã kích hoạt' : 'Bản nháp mặc định'}
-                    </span>
-                  </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <span className="np-pp-name">{portfolio?.name || 'Ứng viên'}</span>
+                  <span className="exp-level-badge">LV. {currentLevel}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(249,115,22,0.18)', padding: '5px 12px', borderRadius: '999px', fontSize: '0.8rem', fontWeight: '800', color: '#fb923c' }} title={`Chuỗi dài nhất: ${gamification?.longestStreak ?? 0} ngày`}>
+                    <Flame className="np-streak-flame" size={15} color="#fb923c" fill={streak > 0 ? '#fb923c' : 'none'} /> {streak} ngày streak
+                  </span>
+                </div>
+                <div className="np-pp-sub">{has3D ? 'Hồ sơ 3D đã kích hoạt, đang hiển thị với nhà tuyển dụng' : 'Hồ sơ 3D chưa thiết lập, hoàn thiện để nổi bật hơn'}</div>
 
-                  <div className="avatar-3d-glow-frame">
-                    <PortfolioAvatar3D avatar={portfolio?.avatar} />
-                  </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '18px 0 7px' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'rgba(255,255,255,0.6)' }}>Tiến độ lên cấp {currentLevel + 1}</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '800' }}><span style={{ color: '#f6845f' }}>{Number(currentExp).toLocaleString('vi-VN')}</span> / {Number(nextLevelExp).toLocaleString('vi-VN')} EXP</span>
+                </div>
+                <div className="np-pp-expbar"><span style={{ width: `${expPercentage}%` }} /></div>
 
-                  {has3D ? (
-                    <Link className="avatar-quick-edit-btn" to="/portfolio/edit" target="_blank" rel="noopener noreferrer">
-                      <UserRound size={16} /> Chỉnh sửa ngoại hình 3D
-                    </Link>
-                  ) : (
-                    <Link className="avatar-quick-edit-btn" to="/portfolio">
-                      <UserRound size={16} /> Kích hoạt Portfolio 3D
-                    </Link>
-                  )}
-                </section>
+                <Link to={has3D ? '/portfolio/edit' : '/portfolio'} {...(has3D ? { target: '_blank', rel: 'noopener noreferrer' } : {})} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', marginTop: '16px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '9px 16px', borderRadius: '999px', textDecoration: 'none' }}>
+                  <UserRound size={15} /> {has3D ? 'Chỉnh sửa Portfolio 3D' : 'Thiết lập Portfolio 3D'} <ArrowRight size={14} />
+                </Link>
               </div>
-            </div>
+
+              <div className="np-pp-stats">
+                <button type="button" onClick={() => setShowTopUpModal(true)} title="Nhấn để nạp NP" className="np-pp-stat" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', padding: 0, textAlign: 'left' }}>
+                  <div className="np-pp-stat-val" style={{ color: '#4ade80' }}>{walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString('vi-VN')}</div>
+                  <div className="np-pp-stat-label"><WalletCards size={13} /> Ví NP {wallet?.isPremium && <Crown size={11} color="#fbbf24" style={{ marginLeft: '2px' }} />}</div>
+                </button>
+                <div className="np-pp-divider" />
+                <div className="np-pp-stat">
+                  <div className="np-pp-stat-val" style={{ color: '#c4b5fd' }}>{portfolio?.reputationScore ?? 0}</div>
+                  <div className="np-pp-stat-label"><ShieldCheck size={13} /> Trust Score (RS)</div>
+                </div>
+              </div>
+            </section>
+
 
             {/* Daily & weekly quests */}
             {gamification && (
@@ -1808,50 +1701,57 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </section>
             )}
 
-            {/* Metrics cards grid */}
-            <section className="candidate-metrics-grid np-stagger">
-              <div className="candidate-metric-box" style={{ cursor: 'pointer' }} onClick={() => setShowTopUpModal(true)} title="Nhấn để nạp NP">
-                <div className="candidate-metric-icon">
-                  <WalletCards size={22} />
+            <section className="candidate-checklist-card" style={{ marginTop: '4px' }}>
+              <h2 className="candidate-checklist-title">
+                <CheckCircle2 size={20} color="var(--primary)" />
+                Hành trình phát triển hồ sơ (Next Steps)
+              </h2>
+
+              <div className="checklist-item">
+                <div className="checklist-item-checkbox">
+                  {has3D ? <CheckCircle2 size={18} color="#22c55e" /> : <Clock3 size={18} color="var(--muted)" />}
                 </div>
-                <div className="candidate-metric-details">
-                  <span className="candidate-metric-label">Số dư ví {wallet?.isPremium && <Crown size={11} color="#d97706" style={{ verticalAlign: 'middle', marginLeft: '4px' }} />}</span>
-                  <span className="candidate-metric-value">
-                    {walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString()} NP
+                <div className="checklist-item-content">
+                  <span className="checklist-item-title" style={{ textDecoration: has3D ? 'line-through' : 'none', opacity: has3D ? 0.6 : 1 }}>
+                    Khởi tạo và lưu hồ sơ Portfolio 3D
                   </span>
-                  <span className="candidate-metric-subtext" style={{ color: wallet?.isPremium ? '#16a34a' : undefined }}>
-                    {wallet?.isPremium
-                      ? `Premium đến ${wallet.premiumUntil ? new Date(wallet.premiumUntil).toLocaleDateString('vi-VN') : '—'}`
-                      : 'Nhấn để nạp NP'}
-                  </span>
+                  <span className="checklist-item-desc">Thiết lập nhân vật avatar đại diện 3D và điền các kỹ năng chuyên môn cốt lõi.</span>
                 </div>
               </div>
 
-              <div className="candidate-metric-box">
-                <div className="candidate-metric-icon" style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7' }}>
-                  <ShieldCheck size={22} />
+              <div className="checklist-item">
+                <div className="checklist-item-checkbox">
+                  {hasSchool ? <CheckCircle2 size={18} color="#22c55e" /> : <Clock3 size={18} color="var(--muted)" />}
                 </div>
-                <div className="candidate-metric-details">
-                  <span className="candidate-metric-label">Reputation Score</span>
-                  <span className="candidate-metric-value">
-                    {portfolio?.reputationScore !== undefined ? portfolio.reputationScore : '0'} RS
+                <div className="checklist-item-content">
+                  <span className="checklist-item-title" style={{ textDecoration: hasSchool ? 'line-through' : 'none', opacity: hasSchool ? 0.6 : 1 }}>
+                    Bổ sung thông tin trường học & học vấn
                   </span>
-                  <span className="candidate-metric-subtext">Độ uy tín chuyên môn</span>
+                  <span className="checklist-item-desc">Điền thông tin trường cao đẳng/đại học để hỗ trợ bộ lọc tin tuyển dụng.</span>
                 </div>
               </div>
 
-              <div className="candidate-metric-box">
-                <div className="candidate-metric-icon" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>
-                  <BadgeCheck size={22} />
+              <div className="checklist-item">
+                <div className="checklist-item-checkbox">
+                  {hasCredentials ? <CheckCircle2 size={18} color="#22c55e" /> : <Clock3 size={18} color="var(--muted)" />}
                 </div>
-                <div className="candidate-metric-details">
-                  <span className="candidate-metric-label">Hồ sơ 3D</span>
-                  <span className="candidate-metric-value" style={{ fontSize: '1.15rem', marginTop: '6px' }}>
-                    {has3D ? 'Hoàn thành' : 'Đang thiết lập'}
+                <div className="checklist-item-content">
+                  <span className="checklist-item-title" style={{ textDecoration: hasCredentials ? 'line-through' : 'none', opacity: hasCredentials ? 0.6 : 1 }}>
+                    Đăng tải minh chứng chứng chỉ / bằng cấp
                   </span>
-                  <span className="candidate-metric-subtext">
-                    {has3D ? 'Đã hiển thị trên Marketplace' : 'Cần bổ sung thông tin'}
+                  <span className="checklist-item-desc">Nộp file minh chứng để nâng điểm danh tiếng (Reputation Score) tối đa.</span>
+                </div>
+              </div>
+
+              <div className="checklist-item">
+                <div className="checklist-item-checkbox">
+                  {hasApplications ? <CheckCircle2 size={18} color="#22c55e" /> : <Clock3 size={18} color="var(--muted)" />}
+                </div>
+                <div className="checklist-item-content">
+                  <span className="checklist-item-title" style={{ textDecoration: hasApplications ? 'line-through' : 'none', opacity: hasApplications ? 0.6 : 1 }}>
+                    Tìm kiếm và ứng tuyển Quest đầu tiên
                   </span>
+                  <span className="checklist-item-desc">Khám phá Bảng cơ hội và gửi đơn ứng tuyển vào dự án phù hợp với năng lực.</span>
                 </div>
               </div>
             </section>
@@ -1860,331 +1760,283 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 2. OPPORTUNITIES VIEW */}
         {activeView === 'OPPORTUNITIES' && (
-          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderRadius: '20px', padding: '24px' }}>
-            {/* Header */}
-            <div style={{ marginBottom: '20px' }}>
-              <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '800', color: 'var(--c-red)', letterSpacing: '0.06em', margin: '0 0 6px' }}>Bảng cơ hội</p>
-              <h2 style={{ margin: '0', fontSize: '1.6rem', fontWeight: '800', letterSpacing: '-0.03em', color: 'var(--c-ink)' }}>Cơ hội phát triển sự nghiệp</h2>
-            </div>
-
-            {/* Search bar */}
-            <div style={{ position: 'relative', marginBottom: '20px' }}>
-              <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: 'var(--c-muted)' }} />
-              <input type="text" value={filterSearch}
-                onChange={e => { setFilterSearch(e.target.value); updateSearchUrl('q', e.target.value); }}
-                placeholder="Tìm vị trí tuyển dụng, kỹ năng, hoặc tên công ty..."
-                className="np-candf"
-                style={{ width: '100%', padding: '13px 40px 13px 46px', borderRadius: '12px', border: '1.5px solid var(--c-line)', background: 'var(--c-surface)', color: 'var(--c-ink)', fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }}
-              />
-              {filterSearch && (
-                <button type="button" onClick={() => { setFilterSearch(''); updateSearchUrl('q', ''); }}
-                  style={{ position: 'absolute', right: '14px', top: '13px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', padding: '2px', display: 'flex' }} aria-label="Xóa tìm kiếm"><X size={16} /></button>
+          <section className="np-view">
+            {/* HERO SEARCH */}
+            <div className="np-jobs-hero">
+              <p className="np-jobs-eyebrow">{jobsList.length}+ cơ hội việc làm & Quest đang mở</p>
+              <h2 className="np-jobs-title">Tìm bước tiếp theo</h2>
+              <div className="np-search-bar">
+                <div className="np-sb-seg">
+                  <button type="button" className="np-sb-trigger accent" onClick={() => setSearchMenu(searchMenu === 'cat' ? null : 'cat')}>
+                    <SlidersHorizontal size={16} /> {filterCategory ? CATEGORY_MAP[filterCategory].label : 'Danh mục'} <ChevronDown size={15} />
+                  </button>
+                  {searchMenu === 'cat' && (
+                    <div className="np-sb-menu">
+                      <button className={!filterCategory ? 'active' : ''} onClick={() => { setFilterCategory(''); setFilterSpecialty(''); updateSearchUrl('c', ''); updateSearchUrl('s', ''); setSearchMenu(null); }}>Mọi lĩnh vực</button>
+                      {Object.keys(CATEGORY_MAP).map(key => (
+                        <button key={key} className={filterCategory === key ? 'active' : ''} onClick={() => { setFilterCategory(key); setFilterSpecialty(''); updateSearchUrl('c', key); updateSearchUrl('s', ''); setSearchMenu(null); }}>{CATEGORY_MAP[key].label}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="np-search-div" />
+                <Search size={18} style={{ color: 'var(--c-muted)', flexShrink: 0 }} />
+                <input type="text" value={filterSearch} onChange={e => { setFilterSearch(e.target.value); updateSearchUrl('q', e.target.value); }} placeholder="Vị trí tuyển dụng, tên công ty..." />
+                <div className="np-search-div" />
+                <div className="np-sb-seg">
+                  <button type="button" className="np-sb-trigger" onClick={() => setSearchMenu(searchMenu === 'type' ? null : 'type')}>
+                    <SlidersHorizontal size={15} /> Bộ lọc{(filterJobType || filterIsRemote || filterCanApply) ? ` · ${[filterJobType, filterIsRemote, filterCanApply].filter(Boolean).length}` : ''} <ChevronDown size={15} />
+                  </button>
+                  {searchMenu === 'type' && (
+                    <div className="np-sb-menu" style={{ minWidth: '260px' }}>
+                      <div className="np-sb-menu-label">Loại hình</div>
+                      <button className={!filterJobType ? 'active' : ''} onClick={() => { setFilterJobType(''); updateSearchUrl('t', ''); }}>Tất cả loại hình</button>
+                      {JOB_TYPES.map(opt => (
+                        <button key={opt.value} className={filterJobType === opt.value ? 'active' : ''} onClick={() => { setFilterJobType(opt.value); updateSearchUrl('t', opt.value); }}>{opt.label}</button>
+                      ))}
+                      <div className="np-sb-menu-sep" />
+                      <div className="np-sb-menu-label">Khác</div>
+                      <button className={filterIsRemote ? 'active' : ''} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onClick={() => { const v = !filterIsRemote; setFilterIsRemote(v); updateSearchUrl('r', v); }}>Chỉ Remote {filterIsRemote && <Check size={15} />}</button>
+                      <button className={filterCanApply ? 'active' : ''} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onClick={() => { const v = !filterCanApply; setFilterCanApply(v); updateSearchUrl('fit', v); }}>Đủ RS để ứng tuyển {filterCanApply && <Check size={15} />}</button>
+                    </div>
+                  )}
+                </div>
+                <button type="button" className="np-search-btn">Tìm kiếm</button>
+              </div>
+              {searchMenu && <div className="np-sb-overlay" onClick={() => setSearchMenu(null)} />}
+              {(filterCategory || filterSpecialty || filterJobType || filterIsRemote || filterCanApply || filterSearch) && (
+                <button type="button" onClick={() => { setFilterCategory(''); setFilterSpecialty(''); setFilterJobType(''); setFilterIsRemote(false); setFilterCanApply(false); setFilterSearch(''); }}
+                  style={{ display: 'block', margin: '14px auto 0', fontSize: '0.82rem', color: 'var(--c-muted)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700' }}>Xóa tất cả bộ lọc</button>
               )}
             </div>
 
-            {/* 2-col layout: filter sidebar + list */}
-            <div style={{ display: 'grid', gridTemplateColumns: '230px 1fr', gap: '20px', alignItems: 'start' }}>
-              {/* LEFT FILTER PANEL */}
-              <div style={{ background: 'var(--c-surface-soft)', border: '1px solid var(--c-line)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <strong style={{ fontSize: '0.84rem', fontWeight: '900', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '6px' }}><SlidersHorizontal size={14} /> Bộ lọc</strong>
-                  {(filterCategory || filterSpecialty || filterJobType || filterIsRemote || filterCanApply) && (
-                    <button type="button" onClick={() => { setFilterCategory(''); setFilterSpecialty(''); setFilterJobType(''); setFilterIsRemote(false); setFilterCanApply(false); }}
-                      style={{ fontSize: '0.74rem', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', padding: 0 }}>Xóa tất cả</button>
-                  )}
-                </div>
-
-                {/* Loại hình */}
-                <div>
-                  <p style={{ margin: '0 0 10px', fontSize: '0.72rem', fontWeight: '850', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Loại hình làm việc</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
-                    {JOB_TYPES.map(opt => {
-                      const active = filterJobType === opt.value;
+            {/* FEATURED COMPANIES */}
+            {(() => {
+              const byCo = new Map();
+              jobsList.forEach(j => { const key = j.companyId || j.companyName; if (!key) return; if (!byCo.has(key)) byCo.set(key, { key, name: j.companyName, logo: j.companyLogo, count: 0 }); byCo.get(key).count += 1; });
+              const featured = [...byCo.values()].sort((a, b) => b.count - a.count).slice(0, 4);
+              if (featured.length === 0) return null;
+              const info = {}; companiesList.forEach(c => { info[(c.name || '').toLowerCase()] = c; });
+              return (
+                <div className="np-jobs-section">
+                  <div className="np-jobs-section-head">
+                    <h3>Đối tác đang tuyển</h3>
+                    <button type="button" onClick={() => handleTabChange('ORGANIZATIONS')} style={{ fontSize: '0.86rem', fontWeight: '700', color: 'var(--c-red)', background: 'none', border: 'none', cursor: 'pointer' }}>Xem tất cả</button>
+                  </div>
+                  <div className="np-co-grid">
+                    {featured.map(co => {
+                      const meta = info[(co.name || '').toLowerCase()];
                       return (
-                        <button key={opt.value} type="button"
-                          onClick={() => { const next = active ? '' : opt.value; setFilterJobType(next); updateSearchUrl('t', next); }}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 11px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: active ? '750' : '600', border: active ? '1.5px solid var(--primary)' : '1.5px solid var(--c-line)', background: active ? 'var(--primary)' : 'var(--c-surface)', color: active ? '#fff' : 'var(--ink)', transition: 'all 0.15s' }}>
-                          {opt.label}
-                          {opt.exp && <span style={{ fontSize: '0.66rem', fontWeight: '800', opacity: active ? 0.85 : 1, color: active ? '#fff' : '#f59e0b' }}>+{opt.exp}</span>}
-                        </button>
+                        <div key={co.key} className="np-co-card" onClick={() => { setFilterSearch(co.name); updateSearchUrl('q', co.name); }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div className="np-job-logo">
+                              {co.logo ? <img src={co.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={20} style={{ color: 'var(--c-muted)' }} />}
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--c-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{co.name || 'Đối tác'}</div>
+                              {meta?.type && <div style={{ fontSize: '0.76rem', color: 'var(--c-muted)' }}>{meta.type === 'BUSINESS' ? 'Doanh nghiệp' : 'CLB / Tổ chức'}</div>}
+                            </div>
+                          </div>
+                          <p style={{ fontSize: '0.84rem', color: 'var(--c-muted)', margin: '12px 0 0', lineHeight: 1.5, height: '42px', overflow: 'hidden' }}>{meta?.description || 'Đối tác trên nền tảng next please.'}</p>
+                          <div className="np-co-foot">{co.count} vị trí đang mở <ArrowRight size={13} /></div>
+                        </div>
                       );
                     })}
                   </div>
                 </div>
+              );
+            })()}
 
-                {/* Lĩnh vực */}
-                <div>
-                  <p style={{ margin: '0 0 8px', fontSize: '0.72rem', fontWeight: '850', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Lĩnh vực</p>
-                  <select value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setFilterSpecialty(''); updateSearchUrl('c', e.target.value); updateSearchUrl('s', ''); }}
-                    style={{ width: '100%', padding: '9px 11px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.84rem', color: 'var(--ink)', cursor: 'pointer' }}>
-                    <option value="">Tất cả lĩnh vực</option>
-                    {Object.keys(CATEGORY_MAP).map(key => <option key={key} value={key}>{CATEGORY_MAP[key].label}</option>)}
-                  </select>
-                  {filterCategory && (
-                    <select value={filterSpecialty} onChange={e => { setFilterSpecialty(e.target.value); updateSearchUrl('s', e.target.value); }}
-                      style={{ width: '100%', padding: '9px 11px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.84rem', color: 'var(--ink)', cursor: 'pointer', marginTop: '8px' }}>
-                      <option value="">Tất cả chuyên ngành</option>
-                      {(CATEGORY_MAP[filterCategory]?.specialties || []).map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                    </select>
-                  )}
+            {/* JOB LIST */}
+            <div className="np-jobs-section">
+              <div className="np-jobs-section-head">
+                <h3>Cơ hội phù hợp</h3>
+                <span style={{ fontSize: '0.88rem', color: 'var(--c-muted)', fontWeight: '700' }}><strong style={{ color: 'var(--c-ink)' }}>{filteredJobs.length}</strong> kết quả</span>
+              </div>
+              {jobsLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '70px 20px', gap: '12px', background: 'var(--c-surface-soft)', borderRadius: '20px' }}>
+                  <RefreshCw size={26} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
+                  <p style={{ fontSize: '0.92rem', color: 'var(--c-muted)', fontWeight: '600', margin: 0 }}>Đang tải...</p>
                 </div>
-
-                {/* Toggles */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', borderTop: '1px solid var(--line)', paddingTop: '16px' }}>
-                  {[
-                    { on: filterIsRemote, label: 'Chỉ Remote', icon: null, toggle: () => { const v = !filterIsRemote; setFilterIsRemote(v); updateSearchUrl('r', v); } },
-                    { on: filterCanApply, label: 'Đủ RS', icon: ShieldCheck, toggle: () => { const v = !filterCanApply; setFilterCanApply(v); updateSearchUrl('fit', v); } },
-                  ].map((t, i) => {
-                    const TIcon = t.icon;
+              ) : jobsError ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '20px', background: 'rgba(220,38,38,0.05)', borderRadius: '16px', border: '1px solid rgba(220,38,38,0.2)', color: '#dc2626' }}>
+                  <AlertTriangle size={20} /><p style={{ margin: 0, fontSize: '0.92rem', fontWeight: '600' }}>{jobsError}</p>
+                </div>
+              ) : filteredJobs.length === 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '70px 20px', gap: '12px', background: 'var(--c-surface-soft)', borderRadius: '20px', border: '1px dashed var(--c-line)', textAlign: 'center' }}>
+                  <Search size={28} style={{ color: 'var(--c-muted)' }} />
+                  <div><h3 style={{ margin: '0 0 4px', color: 'var(--c-ink)' }}>Không tìm thấy cơ hội nào</h3>
+                  <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--c-muted)' }}>Thử bỏ bớt bộ lọc để xem thêm kết quả.</p></div>
+                </div>
+              ) : (
+                <div className="np-joblist np-stagger">
+                  {filteredJobs.map(job => {
+                    const isLocked = candidateRs < job.minReqRs;
+                    const isEarlyAccess = job.createdAt && (new Date() - new Date(job.createdAt)) < (premiumConfig.earlyAccessHours * 60 * 60 * 1000);
+                    const userHasEarlyAccess = wallet?.isPremium || wallet?.hasJobMatchAlert;
+                    const alreadyApplied = appliedJobs.some(a => (a.job_id || a.jobId) === job.id);
+                    const compensationText = job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận';
+                    const typeLabel = JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType;
+                    const typeExp = JOB_TYPES.find(t => t.value === job.jobType)?.exp;
                     return (
-                      <button key={i} type="button" onClick={t.toggle}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: t.on ? '750' : '600', border: t.on ? '1.5px solid var(--primary)' : '1.5px solid var(--c-line)', background: t.on ? 'var(--primary)' : 'var(--c-surface)', color: t.on ? '#fff' : 'var(--ink)', transition: 'all 0.15s' }}>
-                        {TIcon && <TIcon size={13} color={t.on ? '#fff' : 'var(--primary)'} />} {t.label}
-                      </button>
+                      <div key={job.id} className="np-job-row">
+                        <div className="np-job-logo">
+                          {job.companyLogo ? <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={20} style={{ color: 'var(--c-muted)' }} />}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(job.id)} className="np-role-title">{job.title}</a>
+                            {job.requiresPremium && <span className="np-role-badge" style={{ color: '#d97706', background: 'rgba(245,158,11,0.14)' }}><Crown size={9} /> Premium</span>}
+                            {isEarlyAccess && <span className="np-role-badge" style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)' }}><Clock3 size={9} /> {userHasEarlyAccess ? 'Xem sớm' : 'Xem sớm'}</span>}
+                            {isLocked && <span className="np-role-badge" style={{ color: '#dc2626', background: 'rgba(220,38,38,0.08)' }}><LockKeyhole size={9} /> Cần {job.minReqRs} RS</span>}
+                          </div>
+                          <div className="np-job-meta">
+                            <span>{job.companyName || 'Đối tác'}</span>
+                            <span>{job.isRemote ? 'Remote' : (job.location || 'Linh hoạt')}</span>
+                            <span style={{ color: '#16a34a', fontWeight: '700' }}>{compensationText}</span>
+                            {typeLabel && <span>{typeLabel}</span>}
+                            {typeExp && <span style={{ color: '#f59e0b', fontWeight: '700' }}>+{typeExp} EXP</span>}
+                            {job.deadlineAt && <span>HSD {new Date(job.deadlineAt).toLocaleDateString('vi-VN')}</span>}
+                          </div>
+                        </div>
+                        <div className="np-job-actions">
+                          <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(job.id)} className="np-job-detail">Chi tiết</a>
+                          <button type="button" disabled={isLocked || alreadyApplied} onClick={() => handleApplyJob(job)}
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 16px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', whiteSpace: 'nowrap', background: (isLocked || alreadyApplied) ? 'var(--c-disabled)' : 'var(--c-red)', color: (isLocked || alreadyApplied) ? 'var(--c-muted)' : '#fff', cursor: (isLocked || alreadyApplied) ? 'not-allowed' : 'pointer' }}>
+                            {alreadyApplied ? <><Check size={12} /> Đã ứng tuyển</> : isLocked ? <><LockKeyhole size={12} /> Cần RS</> : 'Ứng tuyển'}
+                          </button>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
-              </div>
-
-              {/* RIGHT: result count + list */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                  <span style={{ fontSize: '0.88rem', color: 'var(--muted)', fontWeight: '700' }}>
-                    Tìm thấy <strong style={{ color: 'var(--ink)' }}>{filteredJobs.length}</strong> cơ hội
-                  </span>
-                </div>
-
-                {jobsLoading ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 20px', gap: '12px', background: 'var(--surface-soft)', borderRadius: '20px' }}>
-                    <RefreshCw size={26} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
-                    <p style={{ fontSize: '0.92rem', color: 'var(--muted)', fontWeight: '600', margin: 0 }}>Đang tải...</p>
-                  </div>
-                ) : jobsError ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '20px', background: 'rgba(220,38,38,0.05)', borderRadius: '16px', border: '1px solid rgba(220,38,38,0.2)', color: '#dc2626' }}>
-                    <AlertTriangle size={20} /><p style={{ margin: 0, fontSize: '0.92rem', fontWeight: '600' }}>{jobsError}</p>
-                  </div>
-                ) : filteredJobs.length === 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 20px', gap: '12px', background: 'var(--surface-soft)', borderRadius: '20px', border: '1px dashed var(--line)', textAlign: 'center' }}>
-                    <Search size={28} style={{ color: 'var(--muted)' }} />
-                    <div><h3 style={{ margin: '0 0 4px', color: 'var(--ink)' }}>Không tìm thấy cơ hội nào</h3>
-                    <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--muted)' }}>Điều chỉnh bộ lọc để tìm thêm kết quả.</p></div>
-                  </div>
-                ) : (
-                  <div className="np-stagger" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {filteredJobs.map(job => {
-                      const isLocked = candidateRs < job.minReqRs;
-                      const isEarlyAccess = job.createdAt && (new Date() - new Date(job.createdAt)) < (premiumConfig.earlyAccessHours * 60 * 60 * 1000);
-                      const userHasEarlyAccess = wallet?.isPremium || wallet?.hasJobMatchAlert;
-                      const alreadyApplied = appliedJobs.some(a => (a.job_id || a.jobId) === job.id);
-                      const compensationText = job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận';
-                      const typeLabel = JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType;
-                      const typeExp = JOB_TYPES.find(t => t.value === job.jobType)?.exp;
-                      return (
-                        <article key={job.id} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '18px', border: '1px solid var(--line)', background: 'var(--c-surface)', transition: 'box-shadow 0.2s, border-color 0.2s' }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--c-red)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(229,83,63,0.08)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.boxShadow = 'none'; }}
-                        >
-                          {/* Logo */}
-                          <div style={{ width: '56px', height: '56px', borderRadius: '14px', border: '1px solid var(--c-line)', background: 'var(--c-surface-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                            {job.companyLogo ? <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={22} style={{ color: 'var(--c-muted)' }} />}
-                          </div>
-
-                          {/* Middle content */}
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '6px' }}>
-                              {job.requiresPremium && (
-                                <span style={{ fontSize: '0.68rem', fontWeight: '800', padding: '2px 7px', borderRadius: '5px', background: 'rgba(245,158,11,0.12)', color: '#d97706', border: '1px solid rgba(245,158,11,0.3)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                                  <Crown size={9} /> Premium
-                                </span>
-                              )}
-                              {isEarlyAccess && (
-                                <span style={{ fontSize: '0.68rem', fontWeight: '800', padding: '2px 7px', borderRadius: '5px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.35)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                                  <Clock3 size={9} /> {userHasEarlyAccess ? 'Xem sớm (Đã mở)' : 'Xem sớm'}
-                                </span>
-                              )}
-                              {isLocked && (
-                                <span style={{ fontSize: '0.68rem', fontWeight: '800', padding: '2px 7px', borderRadius: '5px', background: 'rgba(220,38,38,0.08)', color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                                  <LockKeyhole size={9} /> Cần {job.minReqRs} RS
-                                </span>
-                              )}
-                            </div>
-                            <h3 style={{ margin: '0 0 4px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)', lineHeight: 1.3 }}>{job.title}</h3>
-                            <div style={{ fontSize: '0.84rem', color: 'var(--muted)', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Building size={12} />{job.companyName || 'Đối tác'}</span>
-                              {job.location && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={12} />{job.isRemote ? 'Remote' : job.location}</span>}
-                              {(job.deadlineAt) && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={12} />HSD: {new Date(job.deadlineAt).toLocaleDateString('vi-VN')}</span>}
-                            </div>
-                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                              {typeLabel && <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '3px 9px', borderRadius: '6px', background: 'rgba(229,83,63,0.08)', color: '#e5533f' }}>{typeLabel}</span>}
-                              {job.isRemote && <span style={{ fontSize: '0.75rem', fontWeight: '700', padding: '3px 9px', borderRadius: '6px', background: 'rgba(139,92,246,0.08)', color: '#8b5cf6' }}>Remote</span>}
-                              {job.skills?.slice(0, 2).map((s, i) => <span key={i} style={{ fontSize: '0.75rem', fontWeight: '600', padding: '3px 9px', borderRadius: '6px', background: 'var(--surface-soft)', border: '1px solid var(--line)', color: 'var(--ink)' }}>{s.skillName}</span>)}
-                              {job.skills?.length > 2 && <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: '600' }}>+{job.skills.length - 2}</span>}
-                            </div>
-                          </div>
-
-                          {/* Right: salary + actions */}
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0, minWidth: '140px' }}>
-                            <div style={{ textAlign: 'right' }}>
-                              <strong style={{ display: 'block', fontSize: '0.96rem', color: '#16a34a', fontWeight: '900' }}>{compensationText}</strong>
-                              {typeExp && <span style={{ fontSize: '0.76rem', color: '#f59e0b', fontWeight: '800' }}>+{typeExp} EXP khi xong</span>}
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-                              <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer"
-                                onClick={() => viewOpportunityOnce(job.id)}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', color: 'var(--c-ink)', textDecoration: 'none' }}>
-                                Xem chi tiết
-                              </a>
-                              <button type="button" disabled={isLocked || alreadyApplied} onClick={() => handleApplyJob(job)}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (isLocked || alreadyApplied) ? '#f3ede9' : 'var(--c-red)', color: (isLocked || alreadyApplied) ? 'var(--c-muted)' : '#fff', cursor: (isLocked || alreadyApplied) ? 'not-allowed' : 'pointer' }}>
-                                {alreadyApplied ? <><Check size={12} /> Đã ứng tuyển</> : isLocked ? <><LockKeyhole size={12} /> Cần RS</> : 'Ứng tuyển'}
-                              </button>
-                            </div>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </section>
         )}
 
         {/* 2b. QUEST BOARD — dedicated QUESTS tab */}
         {activeView === 'QUESTS' && (
-          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderRadius: '20px', padding: '24px' }}>
+          <section className="np-view">
             {questApplySuccess && <div className="alert-banner success" style={{ marginBottom: '16px' }}>{questApplySuccess}</div>}
-
-            {/* Header */}
-            <div style={{ marginBottom: '20px' }}>
-              <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '800', color: 'var(--c-red)', letterSpacing: '0.06em', margin: '0 0 6px' }}>Quest CLB</p>
-              <h2 style={{ margin: '0', fontSize: '1.6rem', fontWeight: '800', letterSpacing: '-0.03em', color: 'var(--c-ink)' }}>Bảng Quest & Chiến dịch</h2>
-            </div>
-
-            {/* Search bar */}
-            <div style={{ position: 'relative', marginBottom: '20px' }}>
-              <Search size={18} style={{ position: 'absolute', left: '16px', top: '14px', color: 'var(--c-muted)' }} />
-              <input type="text" value={questSearchFilter} onChange={e => setQuestSearchFilter(e.target.value)}
-                placeholder="Tìm tên Quest, CLB, hoặc mô tả..."
-                className="np-candf"
-                style={{ width: '100%', padding: '13px 40px 13px 46px', borderRadius: '12px', border: '1.5px solid var(--c-line)', background: 'var(--c-surface)', color: 'var(--c-ink)', fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }} />
-              {questSearchFilter && (
-                <button type="button" onClick={() => setQuestSearchFilter('')}
-                  style={{ position: 'absolute', right: '14px', top: '13px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', padding: '2px', display: 'flex' }} aria-label="Xóa tìm kiếm"><X size={16} /></button>
-              )}
-            </div>
-
-            {/* 2-col layout */}
-            <div style={{ display: 'grid', gridTemplateColumns: '230px 1fr', gap: '20px', alignItems: 'start' }}>
-              {/* LEFT FILTER PANEL */}
-              <div style={{ background: 'var(--c-surface-soft)', border: '1px solid var(--c-line)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <strong style={{ fontSize: '0.84rem', fontWeight: '800', color: 'var(--c-ink)', display: 'flex', alignItems: 'center', gap: '6px' }}><SlidersHorizontal size={14} /> Bộ lọc</strong>
-                  {questCategoryFilter && (
-                    <button type="button" onClick={() => setQuestCategoryFilter('')}
-                      style={{ fontSize: '0.74rem', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', padding: 0 }}>Xóa</button>
-                  )}
-                </div>
-
-                <div>
-                  <p style={{ margin: '0 0 10px', fontSize: '0.72rem', fontWeight: '850', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Loại Quest</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
-                    {[
-                      { value: 'SMALL_EVENT', label: 'Sự kiện nhỏ', exp: 100, color: '#8b5cf6' },
-                      { value: 'SCHOOL_CAMPAIGN', label: 'Chiến dịch trường', exp: 300, color: '#0ea5e9' },
-                      { value: 'COMPANY_PROJECT', label: 'Dự án DN', exp: 500, color: '#f59e0b' },
-                      { value: 'SHORT_INTERNSHIP', label: 'Thực tập ngắn', exp: 500, color: '#10b981' },
-                      { value: 'FREELANCE_GIG', label: 'Freelance', exp: 300, color: '#ec4899' },
-                    ].map(opt => {
-                      const active = questCategoryFilter === opt.value;
-                      return (
-                        <button key={opt.value} type="button"
-                          onClick={() => setQuestCategoryFilter(active ? '' : opt.value)}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 11px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: active ? '750' : '600', border: active ? `1.5px solid ${opt.color}` : '1.5px solid var(--c-line)', background: active ? opt.color : 'var(--c-surface)', color: active ? '#fff' : 'var(--ink)', transition: 'all 0.15s' }}>
-                          {opt.label}
-                          <span style={{ fontSize: '0.66rem', fontWeight: '800', color: active ? '#fff' : '#f59e0b', opacity: active ? 0.85 : 1 }}>+{opt.exp}</span>
+            {(() => {
+              const CAT = { SMALL_EVENT: { label: 'Sự kiện nhỏ', color: '#8b5cf6' }, SCHOOL_CAMPAIGN: { label: 'Chiến dịch trường', color: '#0ea5e9' }, COMPANY_PROJECT: { label: 'Dự án DN', color: '#f59e0b' }, SHORT_INTERNSHIP: { label: 'Thực tập ngắn', color: '#10b981' }, FREELANCE_GIG: { label: 'Freelance', color: '#ec4899' } };
+              const byCo = new Map();
+              questsList.forEach(q => { const key = q.companyId || q.companyName; if (!key) return; if (!byCo.has(key)) byCo.set(key, { key, name: q.companyName, count: 0 }); byCo.get(key).count += 1; });
+              const featured = [...byCo.values()].sort((a, b) => b.count - a.count).slice(0, 4);
+              return (
+                <>
+                  {/* HERO SEARCH */}
+                  <div className="np-jobs-hero">
+                    <p className="np-jobs-eyebrow">{questsList.length}+ Quest & chiến dịch từ câu lạc bộ</p>
+                    <h2 className="np-jobs-title">Tham gia Quest CLB</h2>
+                    <div className="np-search-bar">
+                      <div className="np-sb-seg">
+                        <button type="button" className="np-sb-trigger accent" onClick={() => setSearchMenu(searchMenu === 'cat' ? null : 'cat')}>
+                          <SlidersHorizontal size={16} /> {questCategoryFilter ? (CAT[questCategoryFilter]?.label || 'Danh mục') : 'Danh mục'} <ChevronDown size={15} />
                         </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* RIGHT: list */}
-              <div>
-                {questsLoading ? (
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '60px', gap: '12px', background: 'var(--surface-soft)', borderRadius: '20px' }}>
-                    <RefreshCw size={22} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
-                    <span style={{ color: 'var(--muted)', fontWeight: '600' }}>Đang tải Quest...</span>
-                  </div>
-                ) : questsList.length === 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px', gap: '12px', background: 'var(--surface-soft)', borderRadius: '20px', border: '1px dashed var(--line)', textAlign: 'center' }}>
-                    <Sparkles size={28} style={{ color: 'var(--muted)' }} />
-                    <p style={{ margin: 0, color: 'var(--muted)', fontWeight: '600' }}>Chưa có Quest nào đang mở. Quay lại sau nhé!</p>
-                  </div>
-                ) : (
-                  <div className="np-stagger" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ fontSize: '0.88rem', color: 'var(--muted)', fontWeight: '700', marginBottom: '2px' }}>
-                      Tìm thấy <strong style={{ color: 'var(--ink)' }}>{questsList.length}</strong> Quest
+                        {searchMenu === 'cat' && (
+                          <div className="np-sb-menu">
+                            <button className={!questCategoryFilter ? 'active' : ''} onClick={() => { setQuestCategoryFilter(''); setSearchMenu(null); }}>Mọi loại Quest</button>
+                            {['SMALL_EVENT', 'SCHOOL_CAMPAIGN'].map(val => (
+                              <button key={val} className={questCategoryFilter === val ? 'active' : ''} onClick={() => { setQuestCategoryFilter(val); setSearchMenu(null); }}>{CAT[val].label}</button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="np-search-div" />
+                      <Search size={18} style={{ color: 'var(--c-muted)', flexShrink: 0 }} />
+                      <input type="text" value={questSearchFilter} onChange={e => setQuestSearchFilter(e.target.value)} placeholder="Tìm Quest, CLB hoặc mô tả..." />
+                      <button type="button" className="np-search-btn">Tìm kiếm</button>
                     </div>
-                    {questsList.map((quest) => {
-                      const isLocked = candidateRs < (quest.minReqRs || 0);
-                      const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
-                      const categoryMeta = { SMALL_EVENT: { label: 'Sự kiện nhỏ', color: '#8b5cf6' }, SCHOOL_CAMPAIGN: { label: 'Chiến dịch trường', color: '#0ea5e9' }, COMPANY_PROJECT: { label: 'Dự án DN', color: '#f59e0b' }, SHORT_INTERNSHIP: { label: 'Thực tập ngắn', color: '#10b981' }, FREELANCE_GIG: { label: 'Freelance', color: '#ec4899' } }[quest.category] || { label: quest.category, color: 'var(--primary)' };
-                      return (
-                        <article key={quest.id} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '18px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderLeftWidth: '4px', borderLeftColor: categoryMeta.color, transition: 'box-shadow 0.25s, border-color 0.2s, transform 0.25s cubic-bezier(0.22,1,0.36,1)', opacity: isLocked ? 0.75 : 1 }}
-                          onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 10px 28px ${categoryMeta.color}26`; e.currentTarget.style.transform = 'translateY(-3px)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
-                        >
-                          {/* Icon */}
-                          <div style={{ width: '56px', height: '56px', borderRadius: '14px', border: `1px solid ${categoryMeta.color}30`, background: `${categoryMeta.color}10`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <Zap size={24} style={{ color: categoryMeta.color }} />
-                          </div>
-
-                          {/* Middle */}
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '6px' }}>
-                              <span style={{ fontSize: '0.72rem', fontWeight: '800', padding: '2px 8px', borderRadius: '6px', background: `${categoryMeta.color}15`, color: categoryMeta.color }}>{categoryMeta.label}</span>
-                              {alreadyApplied && <span style={{ fontSize: '0.72rem', fontWeight: '800', padding: '2px 8px', borderRadius: '6px', background: 'rgba(22,163,74,0.1)', color: '#16a34a', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><Check size={10} /> Đã đăng ký</span>}
-                              {isLocked && <span style={{ fontSize: '0.72rem', fontWeight: '800', padding: '2px 8px', borderRadius: '6px', background: 'rgba(220,38,38,0.08)', color: '#dc2626', display: 'inline-flex', alignItems: 'center', gap: '3px' }}><LockKeyhole size={9} /> Cần {quest.minReqRs} RS</span>}
-                            </div>
-                            <h3 style={{ margin: '0 0 4px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)', lineHeight: 1.3 }}>{quest.title}</h3>
-                            <div style={{ fontSize: '0.84rem', color: 'var(--muted)', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Building size={12} />{quest.companyName || 'CLB'}</span>
-                              {quest.endsAt && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={12} />HSD: {new Date(quest.endsAt).toLocaleDateString('vi-VN')}</span>}
-                              {quest.capacity > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={12} />{quest.capacity - (quest.applicantCount || 0)}/{quest.capacity} chỗ</span>}
-                            </div>
-                            <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--muted)', lineHeight: 1.5 }}>
-                              {quest.description?.length > 100 ? `${quest.description.slice(0, 100)}...` : quest.description}
-                            </p>
-                          </div>
-
-                          {/* Right */}
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0, minWidth: '130px' }}>
-                            <div style={{ textAlign: 'right' }}>
-                              <strong style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '1.1rem', color: '#f59e0b', fontWeight: '900', justifyContent: 'flex-end' }}><Zap size={14} />+{quest.expReward} EXP</strong>
-                              {quest.npReward > 0 && <span style={{ fontSize: '0.76rem', color: '#10b981', fontWeight: '800' }}>+{quest.npReward} NP</span>}
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-                              <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer"
-                                onClick={() => viewOpportunityOnce(quest.id)}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', color: 'var(--c-ink)', textDecoration: 'none' }}>
-                                Xem chi tiết
-                              </a>
-                              <button type="button" disabled={isLocked || alreadyApplied}
-                                onClick={() => { setSelectedQuestForApply(quest); setQuestCoverNote(''); setQuestAnswers({}); setQuestApplyError(''); setShowQuestApplyModal(true); }}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (alreadyApplied || isLocked) ? 'var(--c-disabled)' : categoryMeta.color, color: (alreadyApplied || isLocked) ? 'var(--c-muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
-                                {alreadyApplied ? <><Check size={12} /> Đã đăng ký</> : isLocked ? <><LockKeyhole size={12} /> Cần RS</> : <><Zap size={12} /> Tham gia</>}
-                              </button>
-                            </div>
-                          </div>
-                        </article>
-                      );
-                    })}
+                    {searchMenu && <div className="np-sb-overlay" onClick={() => setSearchMenu(null)} />}
+                    {(questCategoryFilter || questSearchFilter) && (
+                      <div className="np-quick-filters">
+                        <button type="button" onClick={() => { setQuestCategoryFilter(''); setQuestSearchFilter(''); }}
+                          style={{ fontSize: '0.8rem', color: 'var(--c-red)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '800', padding: '6px 8px' }}>Xóa lọc</button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
+
+                  {/* FEATURED CLUBS */}
+                  {featured.length > 0 && (
+                    <div className="np-jobs-section">
+                      <div className="np-jobs-section-head">
+                        <h3>CLB đang mở Quest</h3>
+                      </div>
+                      <div className="np-co-grid">
+                        {featured.map(co => (
+                          <div key={co.key} className="np-co-card" onClick={() => setQuestSearchFilter(co.name)}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <div className="np-job-logo"><Building size={20} style={{ color: 'var(--c-muted)' }} /></div>
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--c-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{co.name || 'CLB'}</div>
+                                <div style={{ fontSize: '0.76rem', color: 'var(--c-muted)' }}>CLB / Tổ chức</div>
+                              </div>
+                            </div>
+                            <div className="np-co-foot">{co.count} Quest đang mở <ArrowRight size={13} /></div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* QUEST LIST */}
+                  <div className="np-jobs-section">
+                    <div className="np-jobs-section-head">
+                      <h3>Quest phù hợp</h3>
+                      <span style={{ fontSize: '0.88rem', color: 'var(--c-muted)', fontWeight: '700' }}><strong style={{ color: 'var(--c-ink)' }}>{questsList.length}</strong> kết quả</span>
+                    </div>
+                    {questsLoading ? (
+                      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '60px', gap: '12px', background: 'var(--c-surface-soft)', borderRadius: '20px' }}>
+                        <RefreshCw size={22} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
+                        <span style={{ color: 'var(--c-muted)', fontWeight: '600' }}>Đang tải Quest...</span>
+                      </div>
+                    ) : questsList.length === 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px', gap: '12px', background: 'var(--c-surface-soft)', borderRadius: '20px', border: '1px dashed var(--c-line)', textAlign: 'center' }}>
+                        <Sparkles size={28} style={{ color: 'var(--c-muted)' }} />
+                        <p style={{ margin: 0, color: 'var(--c-muted)', fontWeight: '600' }}>Chưa có Quest nào đang mở. Quay lại sau nhé!</p>
+                      </div>
+                    ) : (
+                      <div className="np-joblist np-stagger">
+                        {questsList.map(quest => {
+                          const isLocked = candidateRs < (quest.minReqRs || 0);
+                          const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
+                          const meta = CAT[quest.category] || { label: quest.category, color: 'var(--primary)' };
+                          return (
+                            <div key={quest.id} className="np-job-row" style={{ opacity: isLocked ? 0.7 : 1 }}>
+                              <div className="np-job-logo" style={{ background: `${meta.color}14`, borderColor: `${meta.color}33` }}><Zap size={20} style={{ color: meta.color }} /></div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                  <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(quest.id)} className="np-role-title">{quest.title}</a>
+                                  <span className="np-role-badge" style={{ color: meta.color, background: `${meta.color}1f` }}>{meta.label}</span>
+                                  {alreadyApplied && <span className="np-role-badge" style={{ color: '#16a34a', background: 'rgba(22,163,74,0.1)' }}><Check size={9} /> Đã đăng ký</span>}
+                                  {isLocked && <span className="np-role-badge" style={{ color: '#dc2626', background: 'rgba(220,38,38,0.08)' }}><LockKeyhole size={9} /> Cần {quest.minReqRs} RS</span>}
+                                </div>
+                                <div className="np-job-meta">
+                                  <span>{quest.companyName || 'CLB'}</span>
+                                  <span style={{ color: '#f59e0b', fontWeight: '700' }}>+{quest.expReward} EXP</span>
+                                  {quest.npReward > 0 && <span style={{ color: '#10b981', fontWeight: '700' }}>+{quest.npReward} NP</span>}
+                                  {quest.capacity > 0 && <span>{quest.capacity - (quest.applicantCount || 0)}/{quest.capacity} chỗ</span>}
+                                  {quest.endsAt && <span>HSD {new Date(quest.endsAt).toLocaleDateString('vi-VN')}</span>}
+                                </div>
+                              </div>
+                              <div className="np-job-actions">
+                                <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(quest.id)} className="np-job-detail">Chi tiết</a>
+                                <button type="button" disabled={isLocked || alreadyApplied} onClick={() => { setSelectedQuestForApply(quest); setQuestCoverNote(''); setQuestAnswers({}); setQuestApplyError(''); setShowQuestApplyModal(true); }}
+                                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 16px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', whiteSpace: 'nowrap', background: (alreadyApplied || isLocked) ? 'var(--c-disabled)' : meta.color, color: (alreadyApplied || isLocked) ? 'var(--c-muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
+                                  {alreadyApplied ? <><Check size={12} /> Đã đăng ký</> : isLocked ? <><LockKeyhole size={12} /> Cần RS</> : <><Zap size={12} /> Tham gia</>}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </section>
         )}
 
@@ -2208,11 +2060,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           });
 
           return (
-            <section className="np-view" style={{ border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderRadius: '20px', padding: '28px' }}>
+            <section className="np-view">
               {/* Header */}
-              <div style={{ marginBottom: '24px' }}>
-                <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '800', color: 'var(--c-red)', letterSpacing: '0.06em', margin: '0 0 6px' }}>Theo dõi ứng tuyển</p>
-                <h2 style={{ margin: '0', fontSize: '1.6rem', fontWeight: '800', letterSpacing: '-0.03em', color: 'var(--c-ink)' }}>Hồ sơ ứng tuyển của bạn</h2>
+              <div style={{ marginBottom: '22px' }}>
+                <h2 style={{ margin: '0 0 4px', fontSize: 'clamp(1.6rem, 2.4vw, 2rem)', fontWeight: '800', letterSpacing: '-0.035em', color: 'var(--c-ink)' }}>Theo dõi ứng tuyển</h2>
+                <p style={{ margin: 0, fontSize: '0.96rem', color: 'var(--c-muted)' }}>Trạng thái các đơn ứng tuyển việc làm và Quest của bạn.</p>
               </div>
 
               {/* Sub-tabs */}
@@ -2239,7 +2091,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               {withdrawError && (
                 <div style={{ padding: '10px 14px', background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '10px', color: '#dc2626', fontSize: '0.85rem', fontWeight: '600', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>{withdrawError}</span>
-                  <button onClick={() => setWithdrawError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1.1rem', lineHeight: 1 }}>×</button>
+                  <button onClick={() => setWithdrawError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', display: 'flex', padding: '2px' }} aria-label="Đóng"><X size={15} /></button>
                 </div>
               )}
 
@@ -2281,7 +2133,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         const sc = JOB_STATUS_COLOR[st] || '#6b7280';
                         const sl = JOB_STATUS_LABEL[st] || st;
                         return (
-                          <div key={app.id || idx} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--line)', background: 'var(--bg)', borderLeftWidth: '4px', borderLeftColor: sc }}>
+                          <div key={app.id || idx} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderLeftWidth: '4px', borderLeftColor: sc }}>
                             <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'var(--surface-soft)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               <Building size={20} style={{ color: 'var(--muted)' }} />
                             </div>
@@ -2347,8 +2199,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                   const isBoosted = app.boostedUntil && new Date(app.boostedUntil) > new Date();
                                   if (isBoosted) {
                                     return (
-                                      <span style={{ fontSize: '0.76rem', fontWeight: '800', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', padding: '3px 10px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }} title={`Nổi bật đến ${new Date(app.boostedUntil).toLocaleString('vi-VN')}`}>
-                                        🚀 Đang Nổi Bật
+                                      <span style={{ fontSize: '0.76rem', fontWeight: '800', background: '#d97706', color: '#fff', padding: '4px 11px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '5px' }} title={`Nổi bật đến ${new Date(app.boostedUntil).toLocaleString('vi-VN')}`}>
+                                        <Sparkles size={12} /> Đang nổi bật
                                       </span>
                                     );
                                   }
@@ -2360,7 +2212,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                         style={{ fontSize: '0.76rem', fontWeight: '700', color: '#eab308', background: 'none', border: '1px solid rgba(234,179,8,0.35)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}
                                         title={`Đẩy tin nổi bật trong ${premiumConfig.boostDurationHours}h với giá ${premiumConfig.boostPriceNp.toLocaleString()} NP`}
                                       >
-                                        {boostLoadingId === app.id ? '...' : '🚀 Đẩy tin'}
+                                        {boostLoadingId === app.id ? '...' : <><Sparkles size={12} /> Đẩy tin nổi bật</>}
                                       </button>
                                     );
                                   }
@@ -2414,7 +2266,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         const sc = QUEST_SC[qa.status] || '#6b7280';
                         const sl = QUEST_SL[qa.status] || qa.status;
                         return (
-                          <div key={qa.id || idx} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--line)', background: 'var(--bg)', borderLeftWidth: '4px', borderLeftColor: sc }}>
+                          <div key={qa.id || idx} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderLeftWidth: '4px', borderLeftColor: sc }}>
                             <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               <Zap size={20} style={{ color: '#f59e0b' }} />
                             </div>
@@ -2479,185 +2331,124 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 2d. PERSONALIZED AI RECOMMENDATIONS VIEW */}
         {activeView === 'RECOMMENDATIONS' && (
-          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderRadius: '20px', padding: '28px' }}>
-            {/* Header */}
+          <section className="np-view">
             <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '800', color: '#d97706', letterSpacing: '0.06em', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Sparkles size={14} color="#d97706" /> AI-Powered Recommendations
-                </p>
-                <h2 style={{ margin: '0', fontSize: '1.6rem', fontWeight: '800', letterSpacing: '-0.03em', color: 'var(--c-ink)' }}>Gợi ý việc làm & thử thách từ AI</h2>
-                <p style={{ margin: '4px 0 0', fontSize: '0.86rem', color: 'var(--muted)' }}>Hệ thống tự động đối khớp kỹ năng đã xác thực của bạn với các tin tuyển dụng và Quest phù hợp nhất.</p>
+                <p style={{ fontSize: '0.78rem', fontWeight: '800', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--c-red)', margin: '0 0 8px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}><Sparkles size={13} /> Gợi ý từ AI</p>
+                <h2 style={{ margin: '0 0 4px', fontSize: 'clamp(1.6rem, 2.4vw, 2rem)', fontWeight: '800', letterSpacing: '-0.035em', color: 'var(--c-ink)' }}>Gợi ý dành riêng cho bạn</h2>
+                <p style={{ margin: 0, fontSize: '0.96rem', color: 'var(--c-muted)' }}>Hệ thống đối khớp kỹ năng đã xác thực của bạn với cơ hội phù hợp nhất.</p>
               </div>
-
               {wallet?.hasJobMatchAlert && (
-                <span style={{ fontSize: '0.84rem', fontWeight: '700', color: '#16a34a', background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.25)', padding: '6px 12px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                  <CheckCircle2 size={15} /> Đã đăng ký Job Match Alert
-                </span>
+                <span style={{ fontSize: '0.82rem', fontWeight: '700', color: '#16a34a', background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.25)', padding: '7px 13px', borderRadius: '999px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} /> Job Match Alert đang bật</span>
               )}
             </div>
 
             {!wallet?.hasJobMatchAlert ? (
-              /* Subscribed Paywall Gate */
-              <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', background: 'var(--c-surface-soft)', border: '1.5px dashed #f59e0b', padding: '40px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', marginBottom: '8px' }}>
-                  <LockKeyhole size={28} />
+              <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '20px', padding: 'clamp(28px, 4vw, 48px)', maxWidth: '560px', margin: '8px auto 0', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <span style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(217,119,6,0.12)', color: '#d97706', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}><Sparkles size={26} /></span>
+                <h3 style={{ margin: '0 0 10px', fontSize: '1.35rem', fontWeight: '800', letterSpacing: '-0.02em', color: 'var(--c-ink)' }}>Mở khóa gợi ý AI & Job Match Alert</h3>
+                <p style={{ margin: '0 0 22px', fontSize: '0.96rem', color: 'var(--c-muted)', lineHeight: 1.6 }}>Nhận danh sách cơ hội cá nhân hóa khớp với kỹ năng thực chiến, kèm quyền xem sớm 12 giờ cho mọi tin mới.</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignSelf: 'stretch', textAlign: 'left', marginBottom: '24px' }}>
+                  {['Đề xuất khớp kỹ năng đã xác thực', 'Ưu tiên xem & ứng tuyển sớm 12 giờ', 'Tăng tỉ lệ được mời phỏng vấn'].map(t => (
+                    <div key={t} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ flexShrink: 0, width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(22,163,74,0.12)', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={13} /></span>
+                      <span style={{ fontSize: '0.92rem', color: 'var(--c-ink)', fontWeight: '600' }}>{t}</span>
+                    </div>
+                  ))}
                 </div>
-                
-                <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: '800', color: 'var(--c-ink)' }}>Mở khóa Tính năng AI Matching & Job Match Alert</h3>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--c-muted)', maxWidth: '520px', lineHeight: 1.5 }}>
-                  Nhận quyền truy cập vào danh sách đề xuất việc làm cá nhân hóa khớp 100% với kỹ năng thực chiến của bạn, cùng với <strong>quyền xem sớm (Early Access) trước 12 giờ</strong> cho tất cả cơ hội mới!
-                </p>
-
-                <button
-                  type="button"
-                  onClick={handleSubscribeMatchAlert}
-                  disabled={subscribingMatchAlert}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px', fontSize: '0.94rem', fontWeight: '850', color: '#fff', background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none', borderRadius: '12px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(217,119,6,0.25)', transition: 'all 0.2s' }}
-                >
-                  <Sparkles size={16} /> {subscribingMatchAlert ? 'Đang kích hoạt...' : `Kích hoạt gói dịch vụ (${(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP / tháng)`}
+                <button type="button" onClick={handleSubscribeMatchAlert} disabled={subscribingMatchAlert}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 26px', fontSize: '0.94rem', fontWeight: '800', color: '#fff', background: '#d97706', border: 'none', borderRadius: '12px', cursor: subscribingMatchAlert ? 'wait' : 'pointer' }}>
+                  <Sparkles size={16} /> {subscribingMatchAlert ? 'Đang kích hoạt...' : `Kích hoạt · ${(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP / tháng`}
                 </button>
-
-                <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '16px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '0.78rem', fontWeight: '600', color: 'var(--c-muted)' }}>⚡ Đề xuất khớp kỹ năng thực chiến</span>
-                  <span style={{ fontSize: '0.78rem', fontWeight: '600', color: 'var(--c-muted)' }}>⌛ Ưu tiên ứng tuyển trước 12h</span>
-                  <span style={{ fontSize: '0.78rem', fontWeight: '600', color: 'var(--c-muted)' }}>📈 Tăng tỷ lệ gọi phỏng vấn</span>
-                </div>
               </div>
             ) : recommendationsLoading ? (
-              /* Loading Spinner */
-              <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-                <RefreshCw className="spin" size={32} style={{ color: 'var(--c-red)', marginBottom: '12px' }} />
-                <p style={{ margin: 0, color: 'var(--c-muted)', fontWeight: '600' }}>AI đang phân tích và tìm kiếm cơ hội phù hợp...</p>
+              <div style={{ textAlign: 'center', padding: '70px 20px' }}>
+                <RefreshCw className="spin" size={30} style={{ color: 'var(--c-red)', marginBottom: '12px' }} />
+                <p style={{ margin: 0, color: 'var(--c-muted)', fontWeight: '600' }}>AI đang phân tích và tìm cơ hội phù hợp...</p>
               </div>
             ) : !recommendations || ((recommendations.jobs || []).length === 0 && (recommendations.quests || []).length === 0) ? (
-              /* Empty State */
-              <div style={{ textAlign: 'center', padding: '60px 20px', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
-                <Sparkles size={32} style={{ color: 'var(--muted)', marginBottom: '12px' }} />
-                <p style={{ margin: '0 0 6px', color: 'var(--ink)', fontWeight: '750' }}>Không tìm thấy gợi ý phù hợp lúc này</p>
-                <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.84rem' }}>Hãy tiếp tục cập nhật và xác thực thêm nhiều kinh nghiệm để nhận gợi ý chính xác hơn.</p>
+              <div style={{ textAlign: 'center', padding: '70px 20px', border: '1px dashed var(--c-line)', borderRadius: '16px', background: 'var(--c-surface-soft)' }}>
+                <Sparkles size={30} style={{ color: 'var(--c-muted)', marginBottom: '12px' }} />
+                <p style={{ margin: '0 0 6px', color: 'var(--c-ink)', fontWeight: '750' }}>Chưa có gợi ý phù hợp lúc này</p>
+                <p style={{ margin: 0, color: 'var(--c-muted)', fontSize: '0.86rem' }}>Cập nhật và xác thực thêm kinh nghiệm để nhận gợi ý chính xác hơn.</p>
               </div>
             ) : (
-              /* Active Recommendations Workspace */
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-                {/* 1. Job recommendations */}
+              <>
                 {(recommendations.jobs || []).length > 0 && (
-                  <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      💼 Việc làm phù hợp nhất
-                    </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div className="np-jobs-section">
+                    <div className="np-jobs-section-head"><h3>Việc làm phù hợp nhất</h3></div>
+                    <div className="np-joblist">
                       {recommendations.jobs.map(job => {
                         const alreadyApplied = appliedJobs.some(a => (a.job_id || a.jobId) === job.id);
                         const compensationText = job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận';
                         const typeLabel = JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType;
-                        const matchCount = job.match_count || 0;
                         return (
-                          <article key={job.id} style={{ display: 'flex', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1.5px solid #f59e0b', background: 'var(--c-surface)', transition: 'box-shadow 0.2s' }}>
-                            {/* Logo */}
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', border: '1px solid var(--c-line)', background: 'var(--c-surface-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                          <div key={job.id} className="np-job-row">
+                            <div className="np-job-logo">
                               {job.companyLogo ? <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={20} style={{ color: 'var(--c-muted)' }} />}
                             </div>
-
-                            {/* Middle content */}
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
-                                <span style={{ fontSize: '0.68rem', fontWeight: '850', padding: '2px 7px', borderRadius: '5px', background: 'rgba(245,158,11,0.12)', color: '#d97706', border: '1px solid rgba(245,158,11,0.25)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                                  ✨ Khớp {matchCount} kỹ năng
-                                </span>
-                                {job.requiresPremium && (
-                                  <span style={{ fontSize: '0.68rem', fontWeight: '800', padding: '2px 7px', borderRadius: '5px', background: 'rgba(124,58,237,0.08)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.2)' }}>
-                                    Premium
-                                  </span>
-                                )}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(job.id)} className="np-role-title">{job.title}</a>
+                                <span className="np-role-badge" style={{ color: '#d97706', background: 'rgba(245,158,11,0.14)' }}><Sparkles size={9} /> Khớp {job.match_count || 0} kỹ năng</span>
+                                {job.requiresPremium && <span className="np-role-badge" style={{ color: '#7c3aed', background: 'rgba(124,58,237,0.1)' }}>Premium</span>}
                               </div>
-                              <h4 style={{ margin: '0 0 2px', fontSize: '0.98rem', fontWeight: '800', color: 'var(--ink)' }}>{job.title}</h4>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                <span>{job.companyName}</span>
-                                {job.location && <span>· {job.isRemote ? 'Remote' : job.location}</span>}
-                                {typeLabel && <span style={{ color: '#e5533f', fontWeight: '700' }}>· {typeLabel}</span>}
+                              <div className="np-job-meta">
+                                <span>{job.companyName || 'Đối tác'}</span>
+                                <span>{job.isRemote ? 'Remote' : (job.location || 'Linh hoạt')}</span>
+                                <span style={{ color: '#16a34a', fontWeight: '700' }}>{compensationText}</span>
+                                {typeLabel && <span>{typeLabel}</span>}
                               </div>
                             </div>
-
-                            {/* Right content */}
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0 }}>
-                              <strong style={{ fontSize: '0.9rem', color: '#16a34a', fontWeight: '800' }}>{compensationText}</strong>
-                              <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
-                                <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer"
-                                  style={{ padding: '5px 10px', fontSize: '0.76rem', fontWeight: '700', borderRadius: '8px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', color: 'var(--c-ink)', textDecoration: 'none' }}>
-                                  Xem chi tiết
-                                </a>
-                                <button type="button" disabled={alreadyApplied} onClick={() => handleApplyJob(job)}
-                                  style={{ padding: '5px 12px', fontSize: '0.76rem', fontWeight: '800', borderRadius: '8px', border: 'none', background: alreadyApplied ? '#f3ede9' : 'var(--c-red)', color: alreadyApplied ? 'var(--c-muted)' : '#fff', cursor: alreadyApplied ? 'not-allowed' : 'pointer' }}>
-                                  {alreadyApplied ? 'Đã ứng tuyển' : 'Ứng tuyển'}
-                                </button>
-                              </div>
+                            <div className="np-job-actions">
+                              <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(job.id)} className="np-job-detail">Chi tiết</a>
+                              <button type="button" disabled={alreadyApplied} onClick={() => handleApplyJob(job)}
+                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', whiteSpace: 'nowrap', background: alreadyApplied ? 'var(--c-disabled)' : 'var(--c-red)', color: alreadyApplied ? 'var(--c-muted)' : '#fff', cursor: alreadyApplied ? 'not-allowed' : 'pointer' }}>
+                                {alreadyApplied ? 'Đã ứng tuyển' : 'Ứng tuyển'}
+                              </button>
                             </div>
-                          </article>
+                          </div>
                         );
                       })}
                     </div>
                   </div>
                 )}
 
-                {/* 2. Quest recommendations */}
                 {(recommendations.quests || []).length > 0 && (
-                  <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      🏆 Thử thách CLB phù hợp
-                    </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div className="np-jobs-section">
+                    <div className="np-jobs-section-head"><h3>Quest CLB phù hợp</h3></div>
+                    <div className="np-joblist">
                       {recommendations.quests.map(quest => {
                         const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
-                        const matchCount = quest.match_count || 0;
                         return (
-                          <article key={quest.id} style={{ display: 'flex', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1.5px solid #2563eb', background: 'var(--c-surface)', transition: 'box-shadow 0.2s' }}>
-                            {/* Logo */}
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', border: '1px solid var(--c-line)', background: 'var(--c-surface-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                              {quest.companyLogo ? <img src={quest.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={20} style={{ color: 'var(--c-muted)' }} />}
-                            </div>
-
-                            {/* Middle content */}
+                          <div key={quest.id} className="np-job-row">
+                            <div className="np-job-logo" style={{ background: 'rgba(37,99,235,0.1)', borderColor: 'rgba(37,99,235,0.25)' }}><Zap size={20} style={{ color: '#2563eb' }} /></div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '4px' }}>
-                                <span style={{ fontSize: '0.68rem', fontWeight: '850', padding: '2px 7px', borderRadius: '5px', background: 'rgba(37,99,235,0.08)', color: '#2563eb', border: '1px solid rgba(37,99,235,0.25)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                                  ✨ Khớp {matchCount} kỹ năng
-                                </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(quest.id)} className="np-role-title">{quest.title}</a>
+                                <span className="np-role-badge" style={{ color: '#2563eb', background: 'rgba(37,99,235,0.1)' }}><Sparkles size={9} /> Khớp {quest.match_count || 0} kỹ năng</span>
                               </div>
-                              <h4 style={{ margin: '0 0 2px', fontSize: '0.98rem', fontWeight: '800', color: 'var(--ink)' }}>{quest.title}</h4>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                <span>{quest.companyName}</span>
-                                <span style={{ color: '#f59e0b', fontWeight: '700' }}>· +{quest.expReward} EXP</span>
-                                <span style={{ color: '#10b981', fontWeight: '700' }}>· +{quest.npReward} NP</span>
-                              </div>
-                            </div>
-
-                            {/* Right content */}
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0 }}>
-                              <span style={{ fontSize: '0.78rem', color: 'var(--c-muted)', fontWeight: '600' }}>
-                                Cần {quest.minReqRs} RS
-                              </span>
-                              <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedQuestForApply(quest);
-                                    setShowQuestApplyModal(true);
-                                  }}
-                                  disabled={alreadyApplied}
-                                  style={{ padding: '5px 12px', fontSize: '0.76rem', fontWeight: '800', borderRadius: '8px', border: 'none', background: alreadyApplied ? '#f3ede9' : '#2563eb', color: alreadyApplied ? 'var(--c-muted)' : '#fff', cursor: alreadyApplied ? 'not-allowed' : 'pointer' }}
-                                >
-                                  {alreadyApplied ? 'Đã tham gia' : 'Tham gia'}
-                                </button>
+                              <div className="np-job-meta">
+                                <span>{quest.companyName || 'CLB'}</span>
+                                <span style={{ color: '#f59e0b', fontWeight: '700' }}>+{quest.expReward} EXP</span>
+                                {quest.npReward > 0 && <span style={{ color: '#10b981', fontWeight: '700' }}>+{quest.npReward} NP</span>}
+                                {quest.minReqRs > 0 && <span>Cần {quest.minReqRs} RS</span>}
                               </div>
                             </div>
-                          </article>
+                            <div className="np-job-actions">
+                              <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(quest.id)} className="np-job-detail">Chi tiết</a>
+                              <button type="button" disabled={alreadyApplied} onClick={() => { setSelectedQuestForApply(quest); setShowQuestApplyModal(true); }}
+                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 16px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', whiteSpace: 'nowrap', background: alreadyApplied ? 'var(--c-disabled)' : '#2563eb', color: alreadyApplied ? 'var(--c-muted)' : '#fff', cursor: alreadyApplied ? 'not-allowed' : 'pointer' }}>
+                                {alreadyApplied ? 'Đã tham gia' : <><Zap size={12} /> Tham gia</>}
+                              </button>
+                            </div>
+                          </div>
                         );
                       })}
                     </div>
                   </div>
                 )}
-              </div>
+              </>
             )}
           </section>
         )}
@@ -2667,15 +2458,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           <section className="candidate-premium-workspace np-view">
             <header className="candidate-overview-header candidate-premium-header">
               <div className="candidate-overview-title">
-                <span className="candidate-premium-eyebrow">
-                  <Crown size={13} /> Premium Store
-                </span>
                 <h1>Cửa hàng Premium</h1>
-                <p>Quản lý gói Premium và các dịch vụ tăng tốc hồ sơ bằng số dư NP trong ví.</p>
+                <p>Nâng cấp trải nghiệm và tăng tốc hồ sơ bằng số dư NP.</p>
               </div>
-              <button type="button" className="button primary-button" onClick={() => setShowTopUpModal(true)}>
-                <WalletCards size={16} /> Nạp NP
-              </button>
             </header>
 
             {buyPremiumError && (
@@ -2688,40 +2473,18 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </div>
             )}
 
-            <section className="candidate-metrics-grid candidate-premium-summary-grid np-stagger">
-              <div className="candidate-metric-box" onClick={() => setShowTopUpModal(true)} style={{ cursor: 'pointer' }}>
-                <div className="candidate-metric-icon">
-                  <WalletCards size={22} />
-                </div>
-                <div className="candidate-metric-details">
-                  <span className="candidate-metric-label">Số dư ví</span>
-                  <span className="candidate-metric-value">{walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString()} NP</span>
-                  <span className="candidate-metric-subtext">Nhấn để nạp thêm NP</span>
+            <div className="np-premium-wallet">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
+                <span style={{ flexShrink: 0, width: '46px', height: '46px', borderRadius: '13px', background: 'var(--c-red-soft)', color: 'var(--c-red)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><WalletCards size={22} /></span>
+                <div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--c-muted)', fontWeight: '600' }}>Số dư ví của bạn</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--c-ink)', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>{walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString('vi-VN')} <span style={{ fontSize: '0.9rem', color: 'var(--c-muted)' }}>NP</span></div>
                 </div>
               </div>
-              <div className="candidate-metric-box">
-                <div className="candidate-metric-icon" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#d97706' }}>
-                  <Crown size={22} />
-                </div>
-                <div className="candidate-metric-details">
-                  <span className="candidate-metric-label">Premium Pass</span>
-                  <span className="candidate-metric-value" style={{ fontSize: '1.08rem' }}>{wallet?.isPremium ? 'Đang hoạt động' : 'Chưa kích hoạt'}</span>
-                  <span className="candidate-metric-subtext">
-                    {wallet?.isPremium ? `Đến ${wallet.premiumUntil ? new Date(wallet.premiumUntil).toLocaleDateString('vi-VN') : '—'}` : '40,000 NP / tháng'}
-                  </span>
-                </div>
-              </div>
-              <div className="candidate-metric-box">
-                <div className="candidate-metric-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#059669' }}>
-                  <Sparkles size={22} />
-                </div>
-                <div className="candidate-metric-details">
-                  <span className="candidate-metric-label">Job Match Alert</span>
-                  <span className="candidate-metric-value" style={{ fontSize: '1.08rem' }}>{wallet?.hasJobMatchAlert ? 'Đang bật' : 'Chưa bật'}</span>
-                  <span className="candidate-metric-subtext">{(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP / tháng</span>
-                </div>
-              </div>
-            </section>
+              <button type="button" className="button primary-button" onClick={() => setShowTopUpModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <WalletCards size={16} /> Nạp NP
+              </button>
+            </div>
 
             <div className="candidate-premium-layout">
               <section className={`candidate-premium-pass-card ${wallet?.isPremium ? 'active' : ''}`}>
@@ -2782,10 +2545,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
             <div className="candidate-premium-section-heading">
               <div>
-                <span>Dịch vụ bổ sung</span>
-                <h2>Tối ưu từng bước trong hành trình ứng tuyển</h2>
+                <h2>Dịch vụ tăng tốc hồ sơ</h2>
               </div>
-              <p>Các dịch vụ dưới đây chỉ thay đổi trải nghiệm hiển thị, tốc độ xử lý hoặc insight. Reputation Score và NP vẫn do backend xử lý.</p>
+              <p>Giúp bạn nổi bật và ứng tuyển hiệu quả hơn.</p>
             </div>
 
             <div className="candidate-premium-service-list np-stagger">
@@ -3072,11 +2834,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 3. ORGANIZATIONS VIEW (DIRECTORY) */}
         {activeView === 'ORGANIZATIONS' && (
-          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderRadius: '20px', padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <section className="np-view">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '14px', marginBottom: '22px' }}>
               <div>
-                <p className="eyebrow" style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em', margin: 0 }}>Partners Directory</p>
-                <h2 style={{ margin: '4px 0 0', fontSize: '1.75rem', fontWeight: '900', color: 'var(--ink)' }}>Danh bạ Doanh nghiệp & Tổ chức CLB</h2>
+                <h2 style={{ margin: '0 0 4px', fontSize: 'clamp(1.6rem, 2.4vw, 2rem)', fontWeight: '800', letterSpacing: '-0.035em', color: 'var(--c-ink)' }}>Doanh nghiệp & CLB</h2>
+                <p style={{ margin: 0, fontSize: '0.96rem', color: 'var(--c-muted)' }}>Khám phá các tổ chức đang tuyển dụng và mở Quest trên nền tảng.</p>
               </div>
               <div style={{ display: 'flex', background: 'var(--surface-soft)', padding: '4px', borderRadius: '10px', gap: '4px' }}>
                 <button
@@ -3839,8 +3601,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             {sub.expressVerification && (
-                              <span style={{ fontSize: '0.72rem', fontWeight: '800', border: '1px solid #f59e0b', color: '#f59e0b', background: 'rgba(245,158,11,0.08)', padding: '2px 8px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '3px', boxShadow: '0 0 8px rgba(245,158,11,0.2)' }}>
-                                ⚡ EXPRESS
+                              <span style={{ fontSize: '0.72rem', fontWeight: '800', border: '1px solid #f59e0b', color: '#d97706', background: 'rgba(245,158,11,0.1)', padding: '3px 9px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <Zap size={11} /> Express
                               </span>
                             )}
                             <span className={`proof-status-badge ${statusKey}`}>{statusLabel}</span>
@@ -3853,7 +3615,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                               style={{ fontSize: '0.72rem', fontWeight: '700', color: '#d97706', background: 'none', border: '1px solid rgba(217,119,6,0.35)', borderRadius: '6px', padding: '3px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', transition: 'all 0.2s' }}
                               title={`Nâng cấp duyệt nhanh 24h với ${premiumConfig.expressPriceNp.toLocaleString()} NP`}
                             >
-                              {expressLoadingId === sub.id ? '...' : '⚡ Duyệt nhanh 24h'}
+                              {expressLoadingId === sub.id ? '...' : <><Zap size={11} /> Duyệt nhanh 24h</>}
                             </button>
                           )}
 
@@ -4090,14 +3852,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             </div>
             <div className="glass-modal-body">
               <div style={{ textAlign: 'center', padding: '8px 0 20px' }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <Crown size={32} color="#fff" />
                 </div>
                 <h3 style={{ margin: '0 0 10px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)' }}>Cơ hội này chỉ dành cho Premium</h3>
                 <p style={{ margin: '0 0 18px', fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.6 }}>
                   Nhà tuyển dụng yêu cầu ứng viên có <strong>Premium Pass</strong> để ứng tuyển vị trí này — giúp đảm bảo chất lượng hồ sơ và giảm spam.
                 </p>
-                <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(217,119,6,0.05))', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '14px', padding: '14px 18px', textAlign: 'left', marginBottom: '6px' }}>
+                <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '14px', padding: '14px 18px', textAlign: 'left', marginBottom: '6px' }}>
                   <p style={{ margin: '0 0 8px', fontWeight: '800', fontSize: '0.9rem', color: 'var(--ink)' }}>Premium Pass bao gồm:</p>
                   {['Ứng tuyển không giới hạn vị trí Premium', 'Hồ sơ nổi bật hơn trong kết quả tìm kiếm', 'Badge xác nhận Premium trên Profile 3D'].map(item => (
                     <div key={item} style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '0.85rem', color: 'var(--ink)', marginBottom: '4px' }}>
@@ -4128,7 +3890,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               <button className="button secondary-button" onClick={() => { setShowPremiumPaywall(false); setBuyPremiumError(''); }} type="button" style={{ padding: '10px 16px', borderRadius: '12px' }}>
                 Để sau
               </button>
-              <button className="button primary-button" onClick={handleBuyPremium} type="button" disabled={buyPremiumLoading} style={{ padding: '10px 18px', borderRadius: '12px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none' }}>
+              <button className="button primary-button" onClick={handleBuyPremium} type="button" disabled={buyPremiumLoading} style={{ padding: '10px 18px', borderRadius: '12px', background: '#d97706', border: 'none' }}>
                 {buyPremiumLoading ? 'Đang xử lý...' : <><Crown size={15} style={{ marginRight: '6px' }} /> Kích hoạt Premium</>}
               </button>
             </div>
@@ -4206,7 +3968,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     {insightData?.unlocked ? `Giỏi hơn ${insightData.percentile}%` : 'Giỏi hơn 85%'}
                   </strong>
                   <div style={{ width: '100%', height: '8px', background: 'var(--c-line)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ width: insightData?.unlocked ? `${insightData.percentile}%` : '85%', height: '100%', background: 'linear-gradient(to right, #a78bfa, #7c3aed)', borderRadius: '4px' }} />
+                    <div style={{ width: insightData?.unlocked ? `${insightData.percentile}%` : '85%', height: '100%', background: '#7c3aed', borderRadius: '4px' }} />
                   </div>
                   <span style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>
                     {insightData?.unlocked ? 'Hồ sơ của bạn vượt trội hơn ' + insightData.percentile + '% số ứng viên khác.' : 'Độ cạnh tranh so với các đối thủ khác'}
@@ -4227,7 +3989,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   </p>
                   <button
                     onClick={() => handleUnlockInsight(insightModalJob.targetId, insightModalJob.applicationType)}
-                    style={{ background: 'linear-gradient(135deg, #a78bfa, #7c3aed)', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: '800', cursor: 'pointer', boxShadow: '0 4px 12px rgba(124,58,237,0.2)' }}
+                    style={{ background: '#7c3aed', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: '800', cursor: 'pointer', boxShadow: '0 4px 12px rgba(124,58,237,0.2)' }}
                   >
                     Mở khóa ngay ({premiumConfig.insightPriceNp.toLocaleString()} NP)
                   </button>
@@ -4285,7 +4047,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 className="button primary-button" 
                 onClick={handleSubscribeMatchAlert} 
                 disabled={subscribingMatchAlert} 
-                style={{ padding: '10px 18px', borderRadius: '12px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none' }}
+                style={{ padding: '10px 18px', borderRadius: '12px', background: '#d97706', border: 'none' }}
               >
                 {subscribingMatchAlert ? 'Đang kích hoạt...' : 'Kích hoạt ngay'}
               </button>
