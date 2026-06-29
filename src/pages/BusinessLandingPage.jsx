@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Quote, Check, X } from 'lucide-react';
 
-/* Wellfound palette — theme-aware via CSS variables (see --lp-* in index.css). */
+/* Wellfound palette, theme-aware via CSS variables (see --lp-* in index.css). */
 const INK = 'var(--lp-ink)';
 const MUTED = 'var(--lp-muted)';
 const RED = 'var(--lp-red)';
@@ -13,7 +13,7 @@ const GREEN_SOFT = 'var(--lp-green-soft)';
 const CREAM_SOFT = 'var(--lp-cream-soft)';
 const BLUE_SOFT = 'var(--lp-blue-soft)';
 const LINE = 'var(--lp-line)';
-const WHITE = '#ffffff';            /* literal white — for text/elements on dark fills */
+const WHITE = '#ffffff';            /* literal white, for text/elements on dark fills */
 const SURFACE = 'var(--lp-surface)'; /* page & card backgrounds that flip with the theme */
 const BTN_BG = 'var(--lp-btn-bg)';
 const BTN_TEXT = 'var(--lp-btn-text)';
@@ -35,9 +35,9 @@ const GLYPHS = {
 };
 
 const stats = [
-  { value: 2400, suffix: '+', label: 'ứng viên đã xác minh' },
-  { value: 95, suffix: '%', label: 'proof được kiểm chứng' },
-  { value: 1200, suffix: '+', label: 'tin & Quest đã đăng' },
+  { value: 2418, suffix: '+', label: 'ứng viên đã xác minh' },
+  { value: 96, suffix: '%', label: 'proof được kiểm chứng' },
+  { value: 1240, suffix: '+', label: 'tin & Quest đã đăng' },
 ];
 
 const partners = [
@@ -231,7 +231,7 @@ export function BusinessLandingPage() {
         </nav>
       </div>
 
-      {/* HERO — 2 columns: copy left + recruiter dashboard mock right */}
+      {/* HERO, 2 columns: copy left + recruiter dashboard mock right */}
       <div style={{ ...INNER }}>
         <section className="npb-2col" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 0.95fr)', gap: '48px', alignItems: 'center', padding: 'clamp(28px, 5vw, 76px) 0 clamp(20px, 3vw, 40px)' }}>
           <div>
@@ -252,7 +252,7 @@ export function BusinessLandingPage() {
             </div>
           </div>
 
-          {/* Hero visual — job post card + floating notification */}
+          {/* Hero visual, job post card + floating notification */}
           <div style={{ position: 'relative', padding: '8px 0' }}>
             <div style={{ background: SURFACE, border: `1px solid ${LINE}`, borderRadius: '24px', padding: '24px', boxShadow: '0 22px 56px rgba(30,19,32,0.12)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
@@ -260,7 +260,7 @@ export function BusinessLandingPage() {
                 <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--success)', background: 'rgba(34,197,94,0.14)', borderRadius: '999px', padding: '4px 10px' }}>Đang mở</span>
               </div>
               <div style={{ fontSize: '1.25rem', fontWeight: '800', color: INK, lineHeight: 1.15, marginBottom: '6px' }}>Thực tập Thiết kế UI/UX</div>
-              <div style={{ fontSize: '0.84rem', color: MUTED, marginBottom: '16px' }}>Campus Tech · TP. HCM · Remote</div>
+              <div style={{ fontSize: '0.84rem', color: MUTED, marginBottom: '16px' }}>Campus Tech · TP. HCM, Remote</div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '18px' }}>
                 {['Thực tập', 'Figma', 'RS 60+'].map((s) => <span key={s} style={{ fontSize: '0.74rem', fontWeight: '700', color: RED, background: PINK, borderRadius: '999px', padding: '5px 12px' }}>{s}</span>)}
               </div>
@@ -289,7 +289,7 @@ export function BusinessLandingPage() {
         <section ref={statsRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0', padding: 'clamp(24px, 4vw, 52px) 0', borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }}>
           {stats.map((item, i) => (
             <div key={item.label} style={{ textAlign: 'center', borderLeft: i === 0 ? 'none' : `1px solid ${LINE}` }}>
-              <div style={{ fontSize: 'clamp(2.6rem, 6vw, 4rem)', fontWeight: '800', color: INK, lineHeight: 1, letterSpacing: '-0.04em' }}>
+              <div style={{ fontSize: 'clamp(2.6rem, 6vw, 4rem)', fontWeight: '800', color: INK, lineHeight: 1, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums' }}>
                 <AnimatedStatNumber value={item.value} suffix={item.suffix} run={statsRun} />
               </div>
               <div style={{ fontSize: '0.92rem', color: MUTED, fontWeight: '600', marginTop: '12px' }}>{item.label}</div>
@@ -319,7 +319,7 @@ export function BusinessLandingPage() {
           `}</style>
         </section>
 
-        {/* BENTO — capabilities grid (B2B layout, khác candidate) */}
+        {/* BENTO, capabilities grid (B2B layout, khác candidate) */}
         <section style={{ padding: '36px 0 12px' }}>
           <Reveal>
             <div style={{ marginBottom: '28px', maxWidth: '34rem' }}>
@@ -329,13 +329,13 @@ export function BusinessLandingPage() {
           </Reveal>
           <Reveal>
             <div className="npb-bento" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridAutoRows: 'minmax(160px, auto)', gap: '16px' }}>
-              {/* Big card — dashboard */}
+              {/* Big card, dashboard */}
               <div style={{ gridColumn: 'span 2', gridRow: 'span 2', background: SURFACE, border: `1px solid ${LINE}`, borderRadius: '22px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontWeight: '800', fontSize: '1.1rem', color: INK }}>Bảng điều khiển ứng viên</span>
                   <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--success)', background: 'rgba(34,197,94,0.14)', borderRadius: '999px', padding: '4px 10px' }}>Đang mở</span>
                 </div>
-                <p style={{ fontSize: '0.94rem', color: MUTED, margin: '0 0 16px', lineHeight: 1.55 }}>Quản lý tin đăng, ứng viên và trạng thái — tất cả ở một nơi.</p>
+                <p style={{ fontSize: '0.94rem', color: MUTED, margin: '0 0 16px', lineHeight: 1.55 }}>Quản lý tin đăng, ứng viên và trạng thái, tất cả ở một nơi.</p>
                 <div style={{ marginTop: 'auto', background: PINK_CARD, borderRadius: '14px', padding: '8px 14px' }}>
                   <CandRow initials="PT" name="phat280405" role="Tech Lead · FPTU" status="Vào vòng" statusColor="#d97706" rs="RS 82" />
                   <div style={{ borderTop: `1px solid ${LINE}` }} />
@@ -369,17 +369,17 @@ export function BusinessLandingPage() {
           </Reveal>
         </section>
 
-        {/* DARK SPOTLIGHT — sàng lọc bằng proof (Autopilot-style) */}
+        {/* DARK SPOTLIGHT, sàng lọc bằng proof (Autopilot-style) */}
         <Reveal>
           <section className="npb-2col" style={{ background: PLUM, borderRadius: '24px', padding: 'clamp(32px, 5vw, 60px)', display: 'grid', gridTemplateColumns: 'minmax(0,1.05fr) minmax(0,0.95fr)', gap: '44px', alignItems: 'center' }}>
             <div>
               <p style={{ ...EYEBROW, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.8rem' }}>Sàng lọc thông minh</p>
               <h2 style={{ fontSize: 'clamp(2.1rem, 4.2vw, 3.3rem)', fontWeight: '800', lineHeight: 1.02, letterSpacing: '-0.04em', color: WHITE, margin: '0 0 16px' }}>Sàng lọc bằng proof, không bằng cảm tính</h2>
               <p style={{ fontSize: '1.02rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.65)', margin: '0 0 26px' }}>
-                Mỗi ứng viên đi kèm minh chứng đã xác thực, điểm uy tín (RS) và đánh giá thật — bạn quyết định nhanh và chắc chắn hơn.
+                Mỗi ứng viên đi kèm minh chứng đã xác thực, điểm uy tín (RS) và đánh giá thật, bạn quyết định nhanh và chắc chắn hơn.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                <PointRow dark icon={GLYPHS.people} title="Hồ sơ thật, proof thật" desc="Không CV phóng đại — mọi thành tích đều kiểm chứng được." />
+                <PointRow dark icon={GLYPHS.people} title="Hồ sơ thật, proof thật" desc="Không CV phóng đại, mọi thành tích đều kiểm chứng được." />
                 <PointRow dark icon={GLYPHS.badge} title="Xếp hạng theo uy tín" desc="Lọc theo RS, kỹ năng và minh chứng để tìm đúng người." />
               </div>
             </div>
@@ -394,7 +394,7 @@ export function BusinessLandingPage() {
           </section>
         </Reveal>
 
-        {/* COMPARISON — CV vs Proof */}
+        {/* COMPARISON, CV vs Proof */}
         <section style={{ padding: '24px 0 12px' }}>
           <Reveal>
             <div style={{ textAlign: 'center', marginBottom: '28px' }}>
@@ -438,17 +438,20 @@ export function BusinessLandingPage() {
             <p style={{ ...EYEBROW, color: INK }}>Từ đối tác</p>
             <h2 style={{ ...H2, marginBottom: '26px' }}>Doanh nghiệp & CLB nói gì</h2>
           </Reveal>
-          <div className="npb-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-            {testimonials.map((t, i) => (
-              <Reveal key={t.name} delay={i * 130} style={{ height: '100%' }}>
-                <div className="np-card" style={{ height: '100%', background: PINK_CARD, borderRadius: '20px', padding: '26px', boxSizing: 'border-box' }}>
-                  <span style={{ display: 'inline-flex', width: '42px', height: '42px', borderRadius: '50%', background: PINK, color: RED, alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}><Quote size={20} /></span>
-                  <p style={{ fontSize: '0.98rem', lineHeight: 1.6, color: INK, margin: '0 0 18px' }}>{t.quote}</p>
-                  <div style={{ fontWeight: '700', color: INK, fontSize: '0.9rem' }}>{t.name}</div>
-                  <div style={{ fontSize: '0.82rem', color: MUTED }}>{t.role}</div>
-                </div>
-              </Reveal>
-            ))}
+          <div className="np-bento-quotes">
+            {testimonials.map((t, i) => {
+              const featured = i === 0;
+              return (
+                <Reveal key={t.name} delay={i * 130} style={{ height: '100%', ...(featured ? { gridRow: 'span 2' } : {}) }}>
+                  <div className="np-card" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: featured ? PLUM : PINK_CARD, borderRadius: '20px', padding: featured ? 'clamp(28px, 3vw, 40px)' : '26px', boxSizing: 'border-box' }}>
+                    <span style={{ display: 'inline-flex', width: featured ? '52px' : '42px', height: featured ? '52px' : '42px', borderRadius: '50%', background: featured ? 'rgba(255,255,255,0.1)' : PINK, color: RED, alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}><Quote size={featured ? 26 : 20} /></span>
+                    <p style={{ fontSize: featured ? 'clamp(1.1rem, 1.6vw, 1.5rem)' : '0.98rem', lineHeight: 1.55, color: featured ? '#fff' : INK, margin: '0 0 18px', fontWeight: featured ? '600' : '400' }}>{t.quote}</p>
+                    <div style={{ fontWeight: '700', color: featured ? '#fff' : INK, fontSize: '0.9rem', marginTop: 'auto' }}>{t.name}</div>
+                    <div style={{ fontSize: '0.82rem', color: featured ? 'rgba(255,255,255,0.6)' : MUTED }}>{t.role}</div>
+                  </div>
+                </Reveal>
+              );
+            })}
           </div>
         </section>
 
@@ -482,6 +485,13 @@ export function BusinessLandingPage() {
             <span style={{ fontSize: '0.9rem', color: MUTED }}>Lọc hồ sơ qua proof</span>
             <span style={{ fontSize: '0.9rem', color: MUTED }}>Quản trị tuyển dụng & Quest</span>
             <span style={{ fontSize: '0.9rem', color: MUTED }}>Đánh giá & thưởng ứng viên</span>
+          </div>
+          <div style={{ gridColumn: '1 / -1', borderTop: `1px solid ${LINE}`, marginTop: '20px', paddingTop: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.84rem', color: MUTED }}>© 2026 next please</span>
+            <div style={{ display: 'flex', gap: '18px' }}>
+              <Link to="/terms" style={{ fontSize: '0.86rem', color: MUTED, textDecoration: 'none' }}>Điều khoản</Link>
+              <Link to="/privacy" style={{ fontSize: '0.86rem', color: MUTED, textDecoration: 'none' }}>Bảo mật</Link>
+            </div>
           </div>
         </footer>
       </div>

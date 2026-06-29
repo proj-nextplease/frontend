@@ -310,7 +310,7 @@ export function CandidateRegisterPage() {
   }
 
   return (
-    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 0.88fr) minmax(0, 1.12fr)', background: 'var(--lp-bg)', color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
+    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100dvh', display: 'grid', gridTemplateColumns: 'minmax(0, 0.88fr) minmax(0, 1.12fr)', background: 'var(--lp-bg)', color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
       <style>{`
         @keyframes npBrandInL { from { opacity:0; transform: translateX(-48px);} to { opacity:1; transform:none; } }
         @keyframes npFormIn { from { opacity:0; transform: translateY(22px);} to { opacity:1; transform:none; } }

@@ -5,7 +5,7 @@ import {
   Wallet, ShieldCheck, TrendingUp, MousePointerClick, Target,
 } from 'lucide-react';
 
-/* Wellfound palette — theme-aware via CSS variables (see --lp-* in index.css). */
+/* Wellfound palette, theme-aware via CSS variables (see --lp-* in index.css). */
 const INK = 'var(--lp-ink)';
 const MUTED = 'var(--lp-muted)';
 const RED = 'var(--lp-red)';
@@ -16,7 +16,7 @@ const GREEN_SOFT = 'var(--lp-green-soft)';
 const CREAM_SOFT = 'var(--lp-cream-soft)';
 const BLUE_SOFT = 'var(--lp-blue-soft)';
 const LINE = 'var(--lp-line)';
-const WHITE = '#ffffff';            /* literal white — for text/elements on dark fills */
+const WHITE = '#ffffff';            /* literal white, for text/elements on dark fills */
 const SURFACE = 'var(--lp-surface)'; /* page & card backgrounds that flip with the theme */
 
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
@@ -79,13 +79,13 @@ const GLYPHS = {
 };
 
 const steps = [
-  { title: 'Tạo hồ sơ', desc: 'Thêm kỹ năng, mong muốn và thông tin của bạn — chỉ vài phút.' },
+  { title: 'Tạo hồ sơ', desc: 'Thêm kỹ năng, mong muốn và thông tin của bạn, chỉ vài phút.' },
   { title: 'Gom proof thật', desc: 'Hoạt động, chứng chỉ và kinh nghiệm được tổ chức xác minh.' },
   { title: 'Ứng tuyển một chạm', desc: 'Nộp mọi việc làm & Quest CLB chỉ với một click duy nhất.' },
 ];
 
 const partners = [
-  // Brand Việt — wordmark màu thương hiệu
+  // Brand Việt, wordmark màu thương hiệu
   { id: 'vng', name: 'VNG', color: '#F4731C' },
   { id: 'shopee', name: 'Shopee', slug: 'shopee' },
   { id: 'momo', name: 'MoMo', color: '#A50064' },
@@ -94,7 +94,7 @@ const partners = [
   { id: 'zalo', name: 'Zalo', slug: 'zalo' },
   { id: 'viettel', name: 'Viettel', color: '#EE0033' },
   { id: 'fpt', name: 'FPT', fpt: true },
-  // Brand quốc tế — logo chính hãng (Simple Icons)
+  // Brand quốc tế, logo chính hãng (Simple Icons)
   { id: 'google', name: 'Google', slug: 'google' },
   { id: 'figma', name: 'Figma', slug: 'figma' },
   { id: 'spotify', name: 'Spotify', slug: 'spotify' },
@@ -125,7 +125,7 @@ function LogoItem(p) {
 
 const testimonials = [
   { quote: 'Mình apply một chạm, hồ sơ proof giúp được nhận phỏng vấn nhanh hơn hẳn.', name: 'Minh Anh', role: 'Sinh viên Marketing' },
-  { quote: 'EXP và Level làm mình có động lực tham gia hoạt động hơn — như chơi game vậy.', name: 'Hoàng Nam', role: 'Sinh viên CNTT' },
+  { quote: 'EXP và Level làm mình có động lực tham gia hoạt động hơn, như chơi game vậy.', name: 'Hoàng Nam', role: 'Sinh viên CNTT' },
   { quote: 'Một hồ sơ duy nhất dùng cho cả việc làm lẫn Quest CLB, rất tiện.', name: 'phat280405', role: 'Ứng viên · FPTU HCM' },
 ];
 
@@ -177,7 +177,7 @@ function FaqSection() {
 
   return (
     <div className="np-faq" style={{ display: 'flex', gap: open ? '20px' : '0', alignItems: 'flex-start', transition: 'gap 0.4s ease' }}>
-      {/* LEFT — question list: full-width grid khi đóng, 1 cột khi mở */}
+      {/* LEFT, question list: full-width grid khi đóng, 1 cột khi mở */}
       <div
         className="np-faq-q"
         style={{
@@ -205,7 +205,7 @@ function FaqSection() {
         })}
       </div>
 
-      {/* RIGHT — answer panel: collapse khi đóng, slide + fade khi mở */}
+      {/* RIGHT, answer panel: collapse khi đóng, slide + fade khi mở */}
       <div
         className="np-faq-a"
         style={{
@@ -350,7 +350,7 @@ export function CandidateLandingPage() {
         </nav>
       </div>
 
-      {/* HERO — centered */}
+      {/* HERO, centered */}
       <div style={{ ...INNER }}>
         <section style={{ textAlign: 'center', padding: 'clamp(48px, 9vw, 110px) 0 clamp(36px, 6vw, 72px)', maxWidth: '46rem', margin: '0 auto' }}>
           <p className="np-in" style={{ ...EYEBROW }}>Dành cho ứng viên sinh viên</p>
@@ -358,7 +358,7 @@ export function CandidateLandingPage() {
             Hồ sơ của bạn<span style={{ color: RED }}>.</span><br />Cơ hội của bạn<span style={{ color: RED }}>.</span>
           </h1>
           <p className="np-in" style={{ fontSize: '1.15rem', lineHeight: 1.55, color: MUTED, margin: '0 auto 30px', maxWidth: '34rem', animationDelay: '0.16s' }}>
-            Tạo hồ sơ nêu bật kỹ năng và mong muốn của bạn, gom proof thật — rồi ứng tuyển mọi cơ hội chỉ với một chạm.
+            Tạo hồ sơ nêu bật kỹ năng và mong muốn của bạn, gom proof thật, rồi ứng tuyển mọi cơ hội chỉ với một chạm.
           </p>
           <div className="np-in" style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', animationDelay: '0.24s' }}>
             <Link to="/candidate/register" className="np-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: 'var(--lp-btn-bg)', color: 'var(--lp-btn-text)', fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
@@ -374,7 +374,7 @@ export function CandidateLandingPage() {
       {/* Lower content */}
       <div style={{ ...INNER, display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-        {/* STEPS — 3 bước bắt đầu */}
+        {/* STEPS, 3 bước bắt đầu */}
         <section style={{ padding: 'clamp(28px, 4vw, 52px) 0', borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }}>
           <Reveal>
             <p style={{ ...EYEBROW, textAlign: 'center' }}>Bắt đầu trong 3 bước</p>
@@ -415,12 +415,12 @@ export function CandidateLandingPage() {
           `}</style>
         </section>
 
-        {/* FEATURE 1 — media left, copy right */}
+        {/* FEATURE 1, media left, copy right */}
         <FeatureSection
           eyebrow="Ứng tuyển một chạm"
           title="Hồ sơ nổi bật, ứng tuyển chỉ với một click"
           points={[
-            { icon: GLYPHS.click, title: 'Ứng tuyển một chạm', desc: 'Không cần cover letter — hồ sơ của bạn là tất cả. Một click là xong.' },
+            { icon: GLYPHS.click, title: 'Ứng tuyển một chạm', desc: 'Không cần cover letter, hồ sơ của bạn là tất cả. Một click là xong.' },
             { icon: GLYPHS.sliders, title: 'Đặt mong muốn của bạn', desc: 'Nêu rõ kỳ vọng (thù lao, lĩnh vực, hình thức) ngay từ đầu.' },
           ]}
           cta={{ label: 'Tạo hồ sơ miễn phí', to: '/candidate/register' }}
@@ -446,13 +446,13 @@ export function CandidateLandingPage() {
           )}
         />
 
-        {/* FEATURE 2 — copy left, media right */}
+        {/* FEATURE 2, copy left, media right */}
         <FeatureSection
           reverse
           eyebrow="Mọi thông tin, ngay từ đầu"
           title="Biết rõ cơ hội trước khi ứng tuyển"
           points={[
-            { icon: GLYPHS.tag, title: 'Minh bạch thù lao', desc: 'Xem mức thù lao và quyền lợi trước khi nộp — không đoán mò.' },
+            { icon: GLYPHS.tag, title: 'Minh bạch thù lao', desc: 'Xem mức thù lao và quyền lợi trước khi nộp, không đoán mò.' },
             { icon: GLYPHS.filter, title: 'Tìm kiếm cá nhân hoá', desc: 'Bộ lọc theo RS, kỹ năng, hình thức giúp tìm đúng cơ hội.' },
             { icon: GLYPHS.star, title: 'Vai trò & Quest độc đáo', desc: 'Khám phá việc làm và Quest CLB từ các tổ chức năng động.' },
           ]}
@@ -475,7 +475,7 @@ export function CandidateLandingPage() {
           )}
         />
 
-        {/* FEATURE 3 — media left, copy right */}
+        {/* FEATURE 3, media left, copy right */}
         <FeatureSection
           eyebrow="Kết nối & nổi bật"
           title="Được tổ chức chú ý tới bạn"
@@ -499,15 +499,18 @@ export function CandidateLandingPage() {
             <p style={{ ...EYEBROW, color: INK }}>Từ cộng đồng</p>
             <h2 style={{ ...H2, marginBottom: '26px' }}>Ứng viên nói gì về nextplease</h2>
           </Reveal>
-          <div className="np-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-            {testimonials.map((t, i) => (
-              <Reveal key={t.quote} delay={i * 130} style={{ height: '100%' }}>
-                <div className="np-card" style={{ height: '100%', background: PINK_CARD, borderRadius: '20px', padding: '26px', boxSizing: 'border-box' }}>
-                  <span style={{ display: 'inline-flex', width: '42px', height: '42px', borderRadius: '50%', background: PINK, color: RED, alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}><Quote size={20} /></span>
-                  <p style={{ fontSize: '0.98rem', lineHeight: 1.6, color: INK, margin: 0 }}>{t.quote}</p>
-                </div>
-              </Reveal>
-            ))}
+          <div className="np-bento-quotes">
+            {testimonials.map((t, i) => {
+              const featured = i === 0;
+              return (
+                <Reveal key={t.quote} delay={i * 130} style={{ height: '100%', ...(featured ? { gridRow: 'span 2' } : {}) }}>
+                  <div className="np-card" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: featured ? PLUM : PINK_CARD, borderRadius: '20px', padding: featured ? 'clamp(28px, 3vw, 40px)' : '26px', boxSizing: 'border-box' }}>
+                    <span style={{ display: 'inline-flex', width: featured ? '52px' : '42px', height: featured ? '52px' : '42px', borderRadius: '50%', background: featured ? 'rgba(255,255,255,0.1)' : PINK, color: RED, alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}><Quote size={featured ? 26 : 20} /></span>
+                    <p style={{ fontSize: featured ? 'clamp(1.1rem, 1.6vw, 1.5rem)' : '0.98rem', lineHeight: 1.55, color: featured ? '#fff' : INK, margin: 0, fontWeight: featured ? '600' : '400' }}>{t.quote}</p>
+                  </div>
+                </Reveal>
+              );
+            })}
           </div>
         </section>
 
@@ -541,6 +544,13 @@ export function CandidateLandingPage() {
             <span style={{ fontSize: '0.9rem', color: MUTED }}>Portfolio cá nhân</span>
             <span style={{ fontSize: '0.9rem', color: MUTED }}>Proof, chứng chỉ, kinh nghiệm</span>
             <span style={{ fontSize: '0.9rem', color: MUTED }}>Backend xác thực RS / EXP</span>
+          </div>
+          <div style={{ gridColumn: '1 / -1', borderTop: `1px solid ${LINE}`, marginTop: '20px', paddingTop: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.84rem', color: MUTED }}>© 2026 next please</span>
+            <div style={{ display: 'flex', gap: '18px' }}>
+              <Link to="/terms" style={{ fontSize: '0.86rem', color: MUTED, textDecoration: 'none' }}>Điều khoản</Link>
+              <Link to="/privacy" style={{ fontSize: '0.86rem', color: MUTED, textDecoration: 'none' }}>Bảo mật</Link>
+            </div>
           </div>
         </footer>
       </div>
