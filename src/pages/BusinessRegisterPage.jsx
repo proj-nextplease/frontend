@@ -23,16 +23,18 @@ import { supabase } from '../services/supabaseClient.js';
 import { BusinessAuthPanel } from '../components/BusinessAuthPanel.jsx';
 import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
 
-const INK = '#101828';
-const MUTED = '#5b6472';
-const BLUE = '#2563eb';
-const NAVY = '#0d1b33';
-const LINE = '#e3e8ef';
+const INK = 'var(--ink)';
+const MUTED = 'var(--muted)';
+const BLUE = 'var(--primary)';
+const NAVY = 'var(--lp-btn-bg)';
+const LINE = 'var(--line)';
 const WHITE = '#ffffff';
+const SURFACE = 'var(--surface)';
+const BTN_TEXT = 'var(--lp-btn-text)';
 
 const FIELD = {
   width: '100%', padding: '13px 14px 13px 42px', borderRadius: '10px',
-  border: `1.5px solid ${LINE}`, background: WHITE, color: INK,
+  border: `1.5px solid ${LINE}`, background: SURFACE, color: INK,
   fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit',
 };
 const ICON = { position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: MUTED, display: 'flex', pointerEvents: 'none' };
@@ -248,7 +250,7 @@ export function BusinessRegisterPage() {
   const isBusiness = activeTab === 'BUSINESS';
 
   return (
-    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 0.92fr) minmax(0, 1.08fr)', alignItems: 'start', background: WHITE, color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
+    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 0.92fr) minmax(0, 1.08fr)', alignItems: 'start', background: 'var(--bg)', color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
       <style>{`
         @keyframes npBrandInL { from { opacity:0; transform: translateX(-48px);} to { opacity:1; transform:none; } }
         @keyframes npFormIn { from { opacity:0; transform: translateY(22px);} to { opacity:1; transform:none; } }
@@ -272,13 +274,13 @@ export function BusinessRegisterPage() {
               <h2 style={{ fontSize: 'clamp(1.7rem, 2.8vw, 2.2rem)', fontWeight: '800', letterSpacing: '-0.03em', color: INK, margin: '0 0 8px' }}>Tạo tài khoản tổ chức</h2>
               <p style={{ fontSize: '0.96rem', color: MUTED, margin: '0 0 22px', lineHeight: 1.55 }}>Đăng ký để đăng tin, mở Quest và tiếp cận ứng viên đã được xác thực năng lực.</p>
 
-              <div style={{ padding: '13px 16px', borderRadius: '12px', background: '#f3f6fb', border: `1px solid ${LINE}`, fontSize: '0.85rem', lineHeight: 1.55, color: MUTED, marginBottom: '24px' }}>
+              <div style={{ padding: '13px 16px', borderRadius: '12px', background: 'var(--surface-soft)', border: `1px solid ${LINE}`, fontSize: '0.85rem', lineHeight: 1.55, color: MUTED, marginBottom: '24px' }}>
                 <strong style={{ color: INK }}>Đã có lời mời từ tổ chức?</strong> Mở liên kết trong email mời rồi <Link to="/business/login" style={{ color: BLUE, fontWeight: '700', textDecoration: 'none' }}>đăng nhập</Link> để tham gia — không cần đăng ký mới.
               </div>
 
               <form onSubmit={handleSubmit} noValidate>
                 {/* Tab selector */}
-                <div style={{ display: 'flex', gap: '6px', padding: '5px', background: '#eef1f6', borderRadius: '12px', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', gap: '6px', padding: '5px', background: 'var(--surface-soft)', borderRadius: '12px', marginBottom: '8px' }}>
                   {[
                     { key: 'BUSINESS', label: 'Doanh nghiệp', icon: <BriefcaseBusiness size={18} /> },
                     { key: 'CLUB', label: 'CLB / Tổ chức sinh viên', icon: <GraduationCap size={18} /> },
@@ -286,7 +288,7 @@ export function BusinessRegisterPage() {
                     const on = activeTab === key;
                     return (
                       <button key={key} type="button" onClick={() => setActiveTab(key)}
-                        style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px', borderRadius: '9px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem', background: on ? WHITE : 'transparent', color: on ? NAVY : MUTED, boxShadow: on ? '0 2px 8px rgba(13,27,51,0.1)' : 'none', transition: 'all 0.2s' }}>
+                        style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px', borderRadius: '9px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.9rem', background: on ? 'var(--primary)' : 'transparent', color: on ? '#fff' : MUTED, boxShadow: on ? '0 2px 8px rgba(13,27,51,0.1)' : 'none', transition: 'all 0.2s' }}>
                         {icon}{label}
                       </button>
                     );
@@ -321,7 +323,7 @@ export function BusinessRegisterPage() {
                 </div>
 
                 {showPasswordGuide ? (
-                  <div style={{ marginTop: '12px', padding: '12px 16px', borderRadius: '10px', background: '#f7f9fc', border: `1px solid ${LINE}` }}>
+                  <div style={{ marginTop: '12px', padding: '12px 16px', borderRadius: '10px', background: 'var(--surface-soft)', border: `1px solid ${LINE}` }}>
                     <p style={{ margin: '0 0 8px', fontSize: '0.82rem', fontWeight: '700', color: INK }}>Hướng dẫn tạo mật khẩu</p>
                     <div style={{ ...lengthStyle, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontSize: '0.85rem' }}>
                       <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>{isPasswordEmpty ? '•' : isLengthValid ? '✓' : '✗'}</span>
@@ -400,8 +402,8 @@ export function BusinessRegisterPage() {
 
                   {/* Upload zone */}
                   <div onClick={handleUploadZoneClick}
-                    style={{ cursor: 'pointer', border: `1.5px dashed ${uploadedFileName ? BLUE : LINE}`, borderRadius: '12px', padding: '18px', display: 'flex', gap: '14px', alignItems: 'center', background: uploadedFileName ? 'rgba(37,99,235,0.04)' : '#fafbfd', transition: 'all 0.2s' }}>
-                    <div style={{ flexShrink: 0, width: '46px', height: '46px', borderRadius: '11px', background: uploadedFileName ? BLUE : '#eef1f6', color: uploadedFileName ? WHITE : NAVY, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    style={{ cursor: 'pointer', border: `1.5px dashed ${uploadedFileName ? BLUE : LINE}`, borderRadius: '12px', padding: '18px', display: 'flex', gap: '14px', alignItems: 'center', background: uploadedFileName ? 'rgba(37,99,235,0.08)' : 'var(--surface-soft)', transition: 'all 0.2s' }}>
+                    <div style={{ flexShrink: 0, width: '46px', height: '46px', borderRadius: '11px', background: uploadedFileName ? BLUE : 'var(--surface-soft)', color: uploadedFileName ? WHITE : 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <FileText size={22} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -447,7 +449,7 @@ export function BusinessRegisterPage() {
                 />
 
                 <button type="submit" disabled={status.type === 'loading'}
-                  style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '10px', background: NAVY, color: WHITE, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: status.type === 'loading' ? 'default' : 'pointer', opacity: status.type === 'loading' ? 0.7 : 1, marginTop: '24px' }}>
+                  style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '10px', background: NAVY, color: BTN_TEXT, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: status.type === 'loading' ? 'default' : 'pointer', opacity: status.type === 'loading' ? 0.7 : 1, marginTop: '24px' }}>
                   {status.type === 'loading' ? 'Đang gửi hồ sơ...' : 'Gửi hồ sơ đăng ký đối tác'} <ArrowRight size={18} />
                 </button>
 
@@ -466,7 +468,7 @@ export function BusinessRegisterPage() {
               <p style={{ maxWidth: '460px', margin: '0 auto 30px', color: MUTED, fontSize: '0.96rem', lineHeight: 1.6 }}>
                 Chúng tôi sẽ đối chiếu Mã số thuế / Quyết định thành lập CLB trong vòng 24 giờ làm việc. Bạn có thể đăng nhập ngay để theo dõi tiến trình phê duyệt.
               </p>
-              <Link to="/business/login" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 26px', borderRadius: '10px', background: NAVY, color: WHITE, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
+              <Link to="/business/login" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 26px', borderRadius: '10px', background: NAVY, color: BTN_TEXT, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
                 Đăng nhập đối tác ngay <ArrowRight size={18} />
               </Link>
             </div>
@@ -502,7 +504,7 @@ export function BusinessRegisterPage() {
                 Hủy bỏ
               </button>
               <button type="button" className="button primary-button"
-                style={{ background: NAVY, borderColor: 'transparent', color: WHITE }}
+                style={{ background: NAVY, borderColor: 'transparent', color: BTN_TEXT }}
                 onClick={() => {
                   setShowUploadConfirm(false);
                   const inputEl = document.getElementById('b2b-file-input');

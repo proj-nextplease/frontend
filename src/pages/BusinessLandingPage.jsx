@@ -2,18 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Quote, Check, X } from 'lucide-react';
 
-/* Wellfound-faithful palette (fixed light) */
-const INK = '#1d1320';
-const MUTED = '#6e6470';
-const RED = '#e5533f';
-const PLUM = '#1e1320';
-const PINK = '#fdeeeb';
-const PINK_CARD = '#fbf3f1';
-const GREEN_SOFT = '#e3f3ea';
-const CREAM_SOFT = '#fbf1d6';
-const BLUE_SOFT = '#eceffb';
-const LINE = '#ece6e2';
-const WHITE = '#ffffff';
+/* Wellfound palette — theme-aware via CSS variables (see --lp-* in index.css). */
+const INK = 'var(--lp-ink)';
+const MUTED = 'var(--lp-muted)';
+const RED = 'var(--lp-red)';
+const PLUM = 'var(--lp-plum)';
+const PINK = 'var(--lp-pink)';
+const PINK_CARD = 'var(--lp-pink-card)';
+const GREEN_SOFT = 'var(--lp-green-soft)';
+const CREAM_SOFT = 'var(--lp-cream-soft)';
+const BLUE_SOFT = 'var(--lp-blue-soft)';
+const LINE = 'var(--lp-line)';
+const WHITE = '#ffffff';            /* literal white — for text/elements on dark fills */
+const SURFACE = 'var(--lp-surface)'; /* page & card backgrounds that flip with the theme */
+const BTN_BG = 'var(--lp-btn-bg)';
+const BTN_TEXT = 'var(--lp-btn-text)';
 
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 
@@ -21,11 +24,14 @@ const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 function Svg({ children }) {
   return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>;
 }
+const sInk = { stroke: INK };
+const sRed = { stroke: RED };
+const fRed = { fill: RED };
 const GLYPHS = {
-  people: (<Svg><circle cx="9.5" cy="8" r="3" stroke={INK} strokeWidth="1.8" /><path d="M3.8 19c0-3.1 2.6-5 5.7-5s5.7 1.9 5.7 5" stroke={INK} strokeWidth="1.8" /><circle cx="18" cy="9.5" r="2.4" stroke={RED} strokeWidth="1.8" /></Svg>),
-  badge: (<Svg><path d="M12 3l7 2.5v5c0 4.2-3 7.8-7 9-4-1.2-7-4.8-7-9v-5z" stroke={INK} strokeWidth="1.8" /><path d="M9 12l2 2 4-4" stroke={RED} strokeWidth="1.8" /></Svg>),
-  post: (<Svg><rect x="3.5" y="4.5" width="17" height="4" rx="1.2" stroke={INK} strokeWidth="1.8" /><rect x="3.5" y="11.5" width="5.5" height="8" rx="1.2" stroke={RED} strokeWidth="1.8" /><line x1="12" y1="12.5" x2="20.5" y2="12.5" stroke={INK} strokeWidth="1.8" /><line x1="12" y1="16" x2="20.5" y2="16" stroke={INK} strokeWidth="1.8" /><line x1="12" y1="19.5" x2="20.5" y2="19.5" stroke={INK} strokeWidth="1.8" /></Svg>),
-  filter: (<Svg><path d="M4 5h16l-6.2 7.2V18l-3.6 2v-7.8z" stroke={INK} strokeWidth="1.8" /><circle cx="18" cy="6.4" r="2.3" fill={RED} /></Svg>),
+  people: (<Svg><circle cx="9.5" cy="8" r="3" style={sInk} strokeWidth="1.8" /><path d="M3.8 19c0-3.1 2.6-5 5.7-5s5.7 1.9 5.7 5" style={sInk} strokeWidth="1.8" /><circle cx="18" cy="9.5" r="2.4" style={sRed} strokeWidth="1.8" /></Svg>),
+  badge: (<Svg><path d="M12 3l7 2.5v5c0 4.2-3 7.8-7 9-4-1.2-7-4.8-7-9v-5z" style={sInk} strokeWidth="1.8" /><path d="M9 12l2 2 4-4" style={sRed} strokeWidth="1.8" /></Svg>),
+  post: (<Svg><rect x="3.5" y="4.5" width="17" height="4" rx="1.2" style={sInk} strokeWidth="1.8" /><rect x="3.5" y="11.5" width="5.5" height="8" rx="1.2" style={sRed} strokeWidth="1.8" /><line x1="12" y1="12.5" x2="20.5" y2="12.5" style={sInk} strokeWidth="1.8" /><line x1="12" y1="16" x2="20.5" y2="16" style={sInk} strokeWidth="1.8" /><line x1="12" y1="19.5" x2="20.5" y2="19.5" style={sInk} strokeWidth="1.8" /></Svg>),
+  filter: (<Svg><path d="M4 5h16l-6.2 7.2V18l-3.6 2v-7.8z" style={sInk} strokeWidth="1.8" /><circle cx="18" cy="6.4" r="2.3" style={fRed} /></Svg>),
 };
 
 const stats = [
@@ -57,7 +63,7 @@ function LogoItem(p) {
     return <span style={WORDMARK}><span style={{ color: '#F37021' }}>F</span><span style={{ color: '#00A651' }}>P</span><span style={{ color: '#0066B3' }}>T</span></span>;
   }
   if (p.slug) {
-    if (failed) return <span style={{ ...WORDMARK, color: '#4a434f' }}>{p.name}</span>;
+    if (failed) return <span style={{ ...WORDMARK, color: 'var(--lp-muted)' }}>{p.name}</span>;
     return <img src={`https://cdn.simpleicons.org/${p.slug}`} alt={p.name} onError={() => setFailed(true)} style={{ height: '34px', width: 'auto', objectFit: 'contain' }} />;
   }
   return <span style={{ ...WORDMARK, color: p.color }}>{p.name}</span>;
@@ -139,7 +145,7 @@ function CandRow({ initials, name, role, status, statusColor, rs, dark }) {
 function MediaPanel({ bg, children }) {
   return (
     <div style={{ background: bg, borderRadius: '24px', padding: 'clamp(28px, 4vw, 48px)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '340px' }}>
-      <div style={{ width: '100%', maxWidth: '380px', background: WHITE, borderRadius: '18px', boxShadow: '0 18px 44px rgba(30,19,32,0.10)', padding: '20px' }}>
+      <div style={{ width: '100%', maxWidth: '380px', background: SURFACE, borderRadius: '18px', boxShadow: '0 18px 44px rgba(30,19,32,0.10)', padding: '20px' }}>
         {children}
       </div>
     </div>
@@ -185,7 +191,31 @@ export function BusinessLandingPage() {
   }, []);
 
   return (
-    <div style={{ background: WHITE, color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", paddingBottom: '48px' }}>
+    <div style={{ background: 'var(--lp-bg)', color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", paddingBottom: '48px' }}>
+
+      {/* Global interaction + responsive styles */}
+      <style>{`
+        .npb-navlink { position: relative; font-size: 0.96rem; font-weight: 600; color: var(--lp-ink); text-decoration: none; transition: color 0.2s ease; }
+        .npb-navlink::after { content: ''; position: absolute; left: 0; bottom: -3px; height: 2px; width: 100%; background: var(--lp-red); transform: scaleX(0); transform-origin: left; transition: transform 0.28s cubic-bezier(0.22,1,0.36,1); }
+        .npb-navlink:hover { color: var(--lp-red); }
+        .npb-navlink:hover::after { transform: scaleX(1); }
+        .np-cta { transition: transform 0.18s cubic-bezier(0.22,1,0.36,1), box-shadow 0.22s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; will-change: transform; }
+        .np-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(30,19,32,0.18); }
+        .np-cta:active { transform: translateY(0) scale(0.98); }
+        .np-cta-ghost:hover { background: var(--lp-pink); border-color: var(--lp-red); color: var(--lp-red); }
+        .np-card { transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s ease, border-color 0.25s ease; will-change: transform; }
+        .np-card:hover { transform: translateY(-5px); box-shadow: 0 24px 46px rgba(30,19,32,0.14); }
+        :focus-visible { outline: 2px solid var(--lp-red); outline-offset: 3px; border-radius: 8px; }
+        @media (max-width: 860px) {
+          .npb-2col, .npb-bento, .npb-grid-2 { grid-template-columns: 1fr !important; }
+          .npb-grid-3, .npb-footer { grid-template-columns: 1fr !important; }
+          .npb-bento > * { grid-column: auto !important; grid-row: auto !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .np-cta, .np-card, .npb-navlink::after { transition: none !important; }
+          .np-cta:hover, .np-card:hover { transform: none; }
+        }
+      `}</style>
 
       {/* NAV */}
       <div style={{ ...INNER, paddingTop: '22px' }}>
@@ -195,16 +225,15 @@ export function BusinessLandingPage() {
             <span style={{ fontSize: '1.45rem', fontWeight: '800', color: RED }}>:</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
-            <Link to="/" style={{ fontSize: '0.96rem', fontWeight: '600', color: INK, textDecoration: 'none' }}>Trang chủ</Link>
-            {/* <Link to="/candidates" style={{ fontSize: '0.96rem', fontWeight: '600', color: INK, textDecoration: 'none' }}>Ứng viên</Link> */}
-            <Link to="/business/login" style={{ fontSize: '0.96rem', fontWeight: '600', color: INK, textDecoration: 'none' }}>Đăng nhập</Link>
+            <Link to="/" className="npb-navlink">Trang chủ</Link>
+            <Link to="/business/login" className="npb-navlink">Đăng nhập</Link>
           </div>
         </nav>
       </div>
 
       {/* HERO — 2 columns: copy left + recruiter dashboard mock right */}
       <div style={{ ...INNER }}>
-        <section style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 0.95fr)', gap: '48px', alignItems: 'center', padding: 'clamp(28px, 5vw, 76px) 0 clamp(20px, 3vw, 40px)' }}>
+        <section className="npb-2col" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 0.95fr)', gap: '48px', alignItems: 'center', padding: 'clamp(28px, 5vw, 76px) 0 clamp(20px, 3vw, 40px)' }}>
           <div>
             <p style={{ ...EYEBROW, textTransform: 'uppercase', letterSpacing: '0.07em', fontSize: '0.8rem' }}>Cho doanh nghiệp & câu lạc bộ</p>
             <h1 style={{ fontSize: 'clamp(2.5rem, 5.2vw, 4rem)', fontWeight: '800', lineHeight: 1.0, letterSpacing: '-0.045em', color: INK, margin: '0 0 20px' }}>
@@ -214,10 +243,10 @@ export function BusinessLandingPage() {
               Tiếp cận sinh viên đã kiểm chứng, đăng tin & Quest trong vài phút và quản lý toàn bộ ứng viên ngay trên một bảng điều khiển.
             </p>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <Link to="/business/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
+              <Link to="/business/register" className="np-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: BTN_BG, color: BTN_TEXT, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
                 Đăng tin tuyển dụng <ArrowRight size={18} />
               </Link>
-              <Link to="/business/login" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: WHITE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
+              <Link to="/business/login" className="np-cta np-cta-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: SURFACE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
                 Tôi đã là đối tác
               </Link>
             </div>
@@ -225,10 +254,10 @@ export function BusinessLandingPage() {
 
           {/* Hero visual — job post card + floating notification */}
           <div style={{ position: 'relative', padding: '8px 0' }}>
-            <div style={{ background: WHITE, border: `1px solid ${LINE}`, borderRadius: '24px', padding: '24px', boxShadow: '0 22px 56px rgba(30,19,32,0.12)' }}>
+            <div style={{ background: SURFACE, border: `1px solid ${LINE}`, borderRadius: '24px', padding: '24px', boxShadow: '0 22px 56px rgba(30,19,32,0.12)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                 <span style={{ fontSize: '0.72rem', fontWeight: '800', color: RED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tin tuyển dụng</span>
-                <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#1f7a4d', background: '#e6f4ec', borderRadius: '999px', padding: '4px 10px' }}>Đang mở</span>
+                <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--success)', background: 'rgba(34,197,94,0.14)', borderRadius: '999px', padding: '4px 10px' }}>Đang mở</span>
               </div>
               <div style={{ fontSize: '1.25rem', fontWeight: '800', color: INK, lineHeight: 1.15, marginBottom: '6px' }}>Thực tập Thiết kế UI/UX</div>
               <div style={{ fontSize: '0.84rem', color: MUTED, marginBottom: '16px' }}>Campus Tech · TP. HCM · Remote</div>
@@ -238,13 +267,13 @@ export function BusinessLandingPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '16px', borderTop: `1px solid ${LINE}` }}>
                 <div>
                   <div style={{ fontSize: '0.72rem', color: MUTED, fontWeight: '600' }}>Thù lao</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1f7a4d' }}>3.000.000đ</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--success)' }}>3.000.000đ</div>
                 </div>
-                <span style={{ background: INK, color: WHITE, borderRadius: '999px', padding: '10px 20px', fontWeight: '700', fontSize: '0.86rem' }}>Đăng tin</span>
+                <span style={{ background: BTN_BG, color: BTN_TEXT, borderRadius: '999px', padding: '10px 20px', fontWeight: '700', fontSize: '0.86rem' }}>Đăng tin</span>
               </div>
             </div>
             {/* Floating applicant notification */}
-            <div style={{ position: 'absolute', left: '-18px', bottom: '-22px', background: WHITE, border: `1px solid ${LINE}`, borderRadius: '14px', boxShadow: '0 16px 36px rgba(30,19,32,0.14)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px', maxWidth: '230px' }}>
+            <div style={{ position: 'absolute', left: '-18px', bottom: '-22px', background: SURFACE, border: `1px solid ${LINE}`, borderRadius: '14px', boxShadow: '0 16px 36px rgba(30,19,32,0.14)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px', maxWidth: '230px' }}>
               <span style={{ width: '34px', height: '34px', borderRadius: '50%', background: PINK, color: RED, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.78rem', flexShrink: 0 }}>MA</span>
               <div>
                 <div style={{ fontSize: '0.82rem', fontWeight: '700', color: INK }}>Minh Anh vừa ứng tuyển</div>
@@ -299,12 +328,12 @@ export function BusinessLandingPage() {
             </div>
           </Reveal>
           <Reveal>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridAutoRows: 'minmax(160px, auto)', gap: '16px' }}>
+            <div className="npb-bento" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridAutoRows: 'minmax(160px, auto)', gap: '16px' }}>
               {/* Big card — dashboard */}
-              <div style={{ gridColumn: 'span 2', gridRow: 'span 2', background: WHITE, border: `1px solid ${LINE}`, borderRadius: '22px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ gridColumn: 'span 2', gridRow: 'span 2', background: SURFACE, border: `1px solid ${LINE}`, borderRadius: '22px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontWeight: '800', fontSize: '1.1rem', color: INK }}>Bảng điều khiển ứng viên</span>
-                  <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#1f7a4d', background: '#e6f4ec', borderRadius: '999px', padding: '4px 10px' }}>Đang mở</span>
+                  <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--success)', background: 'rgba(34,197,94,0.14)', borderRadius: '999px', padding: '4px 10px' }}>Đang mở</span>
                 </div>
                 <p style={{ fontSize: '0.94rem', color: MUTED, margin: '0 0 16px', lineHeight: 1.55 }}>Quản lý tin đăng, ứng viên và trạng thái — tất cả ở một nơi.</p>
                 <div style={{ marginTop: 'auto', background: PINK_CARD, borderRadius: '14px', padding: '8px 14px' }}>
@@ -316,13 +345,13 @@ export function BusinessLandingPage() {
 
               {/* Wide card */}
               <div style={{ gridColumn: 'span 2', background: GREEN_SOFT, borderRadius: '22px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <span style={{ width: '46px', height: '46px', borderRadius: '50%', background: WHITE, color: RED, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>{GLYPHS.post}</span>
+                <span style={{ width: '46px', height: '46px', borderRadius: '50%', background: SURFACE, color: RED, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>{GLYPHS.post}</span>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: INK, margin: '0 0 6px' }}>Đăng tin & Quest trong vài phút</h3>
                 <p style={{ fontSize: '0.94rem', color: MUTED, margin: 0, lineHeight: 1.55 }}>Tạo Job hoặc Quest CLB chỉ với vài thao tác, không rườm rà.</p>
               </div>
 
               {/* Small card 1 */}
-              <div style={{ background: WHITE, border: `1px solid ${LINE}`, borderRadius: '22px', padding: '22px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ background: SURFACE, border: `1px solid ${LINE}`, borderRadius: '22px', padding: '22px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <span style={{ width: '44px', height: '44px', borderRadius: '50%', background: PINK, color: RED, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>{GLYPHS.filter}</span>
                 <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: INK, margin: '0 0 4px' }}>Lọc theo proof & RS</h3>
                 <p style={{ fontSize: '0.88rem', color: MUTED, margin: 0, lineHeight: 1.5 }}>Tìm đúng người theo minh chứng đã xác thực.</p>
@@ -331,7 +360,7 @@ export function BusinessLandingPage() {
               {/* Small card 2 */}
               <div style={{ background: PLUM, borderRadius: '22px', padding: '22px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <span style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', color: RED, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4l2.3 4.7 5.2.8-3.8 3.7.9 5.1L12 16.6l-4.6 1.7.9-5.1-3.8-3.7 5.2-.8z" stroke={WHITE} strokeWidth="1.8" strokeLinejoin="round" /><circle cx="12" cy="11" r="1.7" fill={RED} /></svg>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4l2.3 4.7 5.2.8-3.8 3.7.9 5.1L12 16.6l-4.6 1.7.9-5.1-3.8-3.7 5.2-.8z" stroke="#ffffff" strokeWidth="1.8" strokeLinejoin="round" /><circle cx="12" cy="11" r="1.7" style={fRed} /></svg>
                 </span>
                 <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: WHITE, margin: '0 0 4px' }}>Đánh giá & thưởng</h3>
                 <p style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.6)', margin: 0, lineHeight: 1.5 }}>Ứng viên 5 sao nhận thưởng NP.</p>
@@ -342,7 +371,7 @@ export function BusinessLandingPage() {
 
         {/* DARK SPOTLIGHT — sàng lọc bằng proof (Autopilot-style) */}
         <Reveal>
-          <section style={{ background: PLUM, borderRadius: '24px', padding: 'clamp(32px, 5vw, 60px)', display: 'grid', gridTemplateColumns: 'minmax(0,1.05fr) minmax(0,0.95fr)', gap: '44px', alignItems: 'center' }}>
+          <section className="npb-2col" style={{ background: PLUM, borderRadius: '24px', padding: 'clamp(32px, 5vw, 60px)', display: 'grid', gridTemplateColumns: 'minmax(0,1.05fr) minmax(0,0.95fr)', gap: '44px', alignItems: 'center' }}>
             <div>
               <p style={{ ...EYEBROW, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.8rem' }}>Sàng lọc thông minh</p>
               <h2 style={{ fontSize: 'clamp(2.1rem, 4.2vw, 3.3rem)', fontWeight: '800', lineHeight: 1.02, letterSpacing: '-0.04em', color: WHITE, margin: '0 0 16px' }}>Sàng lọc bằng proof, không bằng cảm tính</h2>
@@ -373,14 +402,14 @@ export function BusinessLandingPage() {
               <h2 style={{ ...H2, margin: '0 auto', maxWidth: '30rem' }}>Hồ sơ có proof, không phải CV tự khai</h2>
             </div>
           </Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div className="npb-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <Reveal style={{ height: '100%' }}>
-              <div style={{ height: '100%', background: WHITE, border: `1px solid ${LINE}`, borderRadius: '24px', padding: 'clamp(26px, 3vw, 38px)', boxSizing: 'border-box' }}>
+              <div style={{ height: '100%', background: SURFACE, border: `1px solid ${LINE}`, borderRadius: '24px', padding: 'clamp(26px, 3vw, 38px)', boxSizing: 'border-box' }}>
                 <div style={{ fontSize: '1.1rem', fontWeight: '800', color: MUTED, marginBottom: '20px' }}>CV truyền thống</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   {cvBad.map((t) => (
                     <div key={t} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                      <span style={{ flexShrink: 0, width: '26px', height: '26px', borderRadius: '50%', background: '#f0eeec', color: '#9b948f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={15} /></span>
+                      <span style={{ flexShrink: 0, width: '26px', height: '26px', borderRadius: '50%', background: 'var(--lp-line)', color: 'var(--lp-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={15} /></span>
                       <span style={{ fontSize: '0.96rem', color: MUTED }}>{t}</span>
                     </div>
                   ))}
@@ -409,10 +438,10 @@ export function BusinessLandingPage() {
             <p style={{ ...EYEBROW, color: INK }}>Từ đối tác</p>
             <h2 style={{ ...H2, marginBottom: '26px' }}>Doanh nghiệp & CLB nói gì</h2>
           </Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          <div className="npb-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
             {testimonials.map((t, i) => (
               <Reveal key={t.name} delay={i * 130} style={{ height: '100%' }}>
-                <div style={{ height: '100%', background: PINK_CARD, borderRadius: '20px', padding: '26px', boxSizing: 'border-box' }}>
+                <div className="np-card" style={{ height: '100%', background: PINK_CARD, borderRadius: '20px', padding: '26px', boxSizing: 'border-box' }}>
                   <span style={{ display: 'inline-flex', width: '42px', height: '42px', borderRadius: '50%', background: PINK, color: RED, alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}><Quote size={20} /></span>
                   <p style={{ fontSize: '0.98rem', lineHeight: 1.6, color: INK, margin: '0 0 18px' }}>{t.quote}</p>
                   <div style={{ fontWeight: '700', color: INK, fontSize: '0.9rem' }}>{t.name}</div>
@@ -428,14 +457,14 @@ export function BusinessLandingPage() {
           <section style={{ background: PLUM, borderRadius: '24px', padding: 'clamp(36px, 5vw, 60px)', textAlign: 'center' }}>
             <h2 style={{ ...H2, color: WHITE, marginBottom: '10px' }}>Sẵn sàng tuyển nhân tài thực chất?</h2>
             <p style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,0.65)', margin: '0 auto 26px', maxWidth: '34rem' }}>Tạo tài khoản đối tác, đăng tin và tiếp cận ứng viên đã được xác minh ngay hôm nay.</p>
-            <Link to="/business/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 30px', borderRadius: '999px', background: WHITE, color: INK, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
+            <Link to="/business/register" className="np-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 30px', borderRadius: '999px', background: '#fff', color: 'var(--lp-plum)', fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
               Đăng tin tuyển dụng <ArrowRight size={18} />
             </Link>
           </section>
         </Reveal>
 
         {/* FOOTER */}
-        <footer style={{ borderTop: `1px solid ${LINE}`, marginTop: '12px', paddingTop: '28px', display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '24px' }}>
+        <footer className="npb-footer" style={{ borderTop: `1px solid ${LINE}`, marginTop: '12px', paddingTop: '28px', display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '24px' }}>
           <div>
             <strong style={{ fontSize: '1.2rem', color: INK }}>next please<span style={{ color: RED }}>:</span></strong>
             <p style={{ fontSize: '0.9rem', color: MUTED, lineHeight: 1.6, margin: '8px 0 0', maxWidth: '24rem' }}>

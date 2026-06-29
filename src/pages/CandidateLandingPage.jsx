@@ -5,18 +5,19 @@ import {
   Wallet, ShieldCheck, TrendingUp, MousePointerClick, Target,
 } from 'lucide-react';
 
-/* Wellfound-faithful palette (fixed light) */
-const INK = '#1d1320';
-const MUTED = '#6e6470';
-const RED = '#e5533f';
-const PLUM = '#1e1320';
-const PINK = '#fdeeeb';
-const PINK_CARD = '#fbf3f1';
-const GREEN_SOFT = '#e3f3ea';
-const CREAM_SOFT = '#fbf1d6';
-const BLUE_SOFT = '#eceffb';
-const LINE = '#ece6e2';
-const WHITE = '#ffffff';
+/* Wellfound palette — theme-aware via CSS variables (see --lp-* in index.css). */
+const INK = 'var(--lp-ink)';
+const MUTED = 'var(--lp-muted)';
+const RED = 'var(--lp-red)';
+const PLUM = 'var(--lp-plum)';
+const PINK = 'var(--lp-pink)';
+const PINK_CARD = 'var(--lp-pink-card)';
+const GREEN_SOFT = 'var(--lp-green-soft)';
+const CREAM_SOFT = 'var(--lp-cream-soft)';
+const BLUE_SOFT = 'var(--lp-blue-soft)';
+const LINE = 'var(--lp-line)';
+const WHITE = '#ffffff';            /* literal white — for text/elements on dark fills */
+const SURFACE = 'var(--lp-surface)'; /* page & card backgrounds that flip with the theme */
 
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 
@@ -24,50 +25,55 @@ const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 function Svg({ children }) {
   return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>;
 }
+/* stroke/fill via `style` so CSS-variable colors resolve on SVG. */
+const sInk = { stroke: INK };
+const sRed = { stroke: RED };
+const fRed = { fill: RED };
+const hollow = { fill: 'var(--lp-surface)' };
 const GLYPHS = {
   click: (
     <Svg>
-      <path d="M6 4.2v12l3-2.6 1.9 4.2 2.1-1-1.9-4.1H15z" stroke={INK} strokeWidth="1.8" />
-      <path d="M17 6l1.7-1.7M18.6 11H21M17 16l1.7 1.7" stroke={RED} strokeWidth="1.8" />
+      <path d="M6 4.2v12l3-2.6 1.9 4.2 2.1-1-1.9-4.1H15z" style={sInk} strokeWidth="1.8" />
+      <path d="M17 6l1.7-1.7M18.6 11H21M17 16l1.7 1.7" style={sRed} strokeWidth="1.8" />
     </Svg>
   ),
   sliders: (
     <Svg>
-      <line x1="4" y1="8" x2="20" y2="8" stroke={INK} strokeWidth="1.8" />
-      <line x1="4" y1="16" x2="20" y2="16" stroke={INK} strokeWidth="1.8" />
-      <circle cx="9" cy="8" r="2.6" fill={WHITE} stroke={RED} strokeWidth="1.8" />
-      <circle cx="15" cy="16" r="2.6" fill={WHITE} stroke={INK} strokeWidth="1.8" />
+      <line x1="4" y1="8" x2="20" y2="8" style={sInk} strokeWidth="1.8" />
+      <line x1="4" y1="16" x2="20" y2="16" style={sInk} strokeWidth="1.8" />
+      <circle cx="9" cy="8" r="2.6" style={{ ...hollow, stroke: 'var(--lp-red)' }} strokeWidth="1.8" />
+      <circle cx="15" cy="16" r="2.6" style={{ ...hollow, stroke: 'var(--lp-ink)' }} strokeWidth="1.8" />
     </Svg>
   ),
   tag: (
     <Svg>
-      <rect x="4" y="5" width="16" height="14" rx="2.6" stroke={INK} strokeWidth="1.8" />
-      <path d="M12 8.4v7.2M13.9 10.1c-.6-.8-3.8-1-3.8.9 0 1.9 3.8 1 3.8 3 0 1.9-3.2 1.7-3.8.9" stroke={RED} strokeWidth="1.6" />
+      <rect x="4" y="5" width="16" height="14" rx="2.6" style={sInk} strokeWidth="1.8" />
+      <path d="M12 8.4v7.2M13.9 10.1c-.6-.8-3.8-1-3.8.9 0 1.9 3.8 1 3.8 3 0 1.9-3.2 1.7-3.8.9" style={sRed} strokeWidth="1.6" />
     </Svg>
   ),
   filter: (
     <Svg>
-      <path d="M4 5h16l-6.2 7.2V18l-3.6 2v-7.8z" stroke={INK} strokeWidth="1.8" />
-      <circle cx="18" cy="6.4" r="2.3" fill={RED} />
+      <path d="M4 5h16l-6.2 7.2V18l-3.6 2v-7.8z" style={sInk} strokeWidth="1.8" />
+      <circle cx="18" cy="6.4" r="2.3" style={fRed} />
     </Svg>
   ),
   star: (
     <Svg>
-      <path d="M12 4l2.3 4.7 5.2.8-3.8 3.7.9 5.1L12 16.6l-4.6 1.7.9-5.1-3.8-3.7 5.2-.8z" stroke={INK} strokeWidth="1.8" />
-      <circle cx="12" cy="11" r="1.7" fill={RED} />
+      <path d="M12 4l2.3 4.7 5.2.8-3.8 3.7.9 5.1L12 16.6l-4.6 1.7.9-5.1-3.8-3.7 5.2-.8z" style={sInk} strokeWidth="1.8" />
+      <circle cx="12" cy="11" r="1.7" style={fRed} />
     </Svg>
   ),
   people: (
     <Svg>
-      <circle cx="9.5" cy="8" r="3" stroke={INK} strokeWidth="1.8" />
-      <path d="M3.8 19c0-3.1 2.6-5 5.7-5s5.7 1.9 5.7 5" stroke={INK} strokeWidth="1.8" />
-      <circle cx="18" cy="9.5" r="2.4" stroke={RED} strokeWidth="1.8" />
+      <circle cx="9.5" cy="8" r="3" style={sInk} strokeWidth="1.8" />
+      <path d="M3.8 19c0-3.1 2.6-5 5.7-5s5.7 1.9 5.7 5" style={sInk} strokeWidth="1.8" />
+      <circle cx="18" cy="9.5" r="2.4" style={sRed} strokeWidth="1.8" />
     </Svg>
   ),
   send: (
     <Svg>
-      <path d="M21 4L3.5 11l6 2.3L12 20l3.2-5.7z" stroke={INK} strokeWidth="1.8" />
-      <path d="M21 4l-11.5 9.3" stroke={RED} strokeWidth="1.8" />
+      <path d="M21 4L3.5 11l6 2.3L12 20l3.2-5.7z" style={sInk} strokeWidth="1.8" />
+      <path d="M21 4l-11.5 9.3" style={sRed} strokeWidth="1.8" />
     </Svg>
   ),
 };
@@ -109,7 +115,7 @@ function LogoItem(p) {
     );
   }
   if (p.slug) {
-    if (failed) return <span style={{ ...WORDMARK, color: '#4a434f' }}>{p.name}</span>;
+    if (failed) return <span style={{ ...WORDMARK, color: 'var(--lp-muted)' }}>{p.name}</span>;
     return (
       <img src={`https://cdn.simpleicons.org/${p.slug}`} alt={p.name} onError={() => setFailed(true)} style={{ height: '34px', width: 'auto', objectFit: 'contain' }} />
     );
@@ -189,7 +195,7 @@ function FaqSection() {
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px',
                 padding: '18px 20px', borderRadius: '16px', cursor: 'pointer', textAlign: 'left', font: 'inherit',
-                background: on ? PINK : WHITE, border: `1.5px solid ${on ? RED : LINE}`,
+                background: on ? PINK : SURFACE, border: `1.5px solid ${on ? RED : LINE}`,
               }}
             >
               <span style={{ fontWeight: '700', color: on ? RED : INK, fontSize: '1rem' }}>{f.q}</span>
@@ -270,7 +276,7 @@ function FeatureSection({ reverse, eyebrow, title, points, cta, media }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '28px' }}>
         {points.map((p) => <PointRow key={p.title} {...p} />)}
       </div>
-      <Link to={cta.to} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.94rem', textDecoration: 'none' }}>
+      <Link to={cta.to} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: 'var(--lp-btn-bg)', color: 'var(--lp-btn-text)', fontWeight: '700', fontSize: '0.94rem', textDecoration: 'none' }}>
         {cta.label} <ArrowRight size={18} />
       </Link>
     </div>
@@ -288,7 +294,7 @@ function FeatureSection({ reverse, eyebrow, title, points, cta, media }) {
 function MediaPanel({ bg, children }) {
   return (
     <div className="np-card" style={{ background: bg, borderRadius: '24px', padding: 'clamp(28px, 4vw, 48px)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '320px' }}>
-      <div style={{ width: '100%', maxWidth: '360px', background: WHITE, borderRadius: '18px', boxShadow: '0 16px 40px rgba(30,19,32,0.10)', padding: '20px' }}>
+      <div style={{ width: '100%', maxWidth: '360px', background: SURFACE, borderRadius: '18px', boxShadow: '0 16px 40px rgba(30,19,32,0.10)', padding: '20px' }}>
         {children}
       </div>
     </div>
@@ -297,7 +303,7 @@ function MediaPanel({ bg, children }) {
 
 export function CandidateLandingPage() {
   return (
-    <div style={{ background: WHITE, color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", paddingBottom: '48px' }}>
+    <div style={{ background: 'var(--lp-bg)', color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", paddingBottom: '48px' }}>
 
       {/* Global interaction + entrance styles */}
       <style>{`
@@ -355,10 +361,10 @@ export function CandidateLandingPage() {
             Tạo hồ sơ nêu bật kỹ năng và mong muốn của bạn, gom proof thật — rồi ứng tuyển mọi cơ hội chỉ với một chạm.
           </p>
           <div className="np-in" style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', animationDelay: '0.24s' }}>
-            <Link to="/candidate/register" className="np-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: INK, color: WHITE, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
+            <Link to="/candidate/register" className="np-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: 'var(--lp-btn-bg)', color: 'var(--lp-btn-text)', fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
               Tạo hồ sơ <ArrowRight size={18} />
             </Link>
-            <Link to="/candidate/login" className="np-cta np-cta-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: WHITE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
+            <Link to="/candidate/login" className="np-cta np-cta-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: SURFACE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
               Tôi đã có tài khoản
             </Link>
           </div>
@@ -377,7 +383,7 @@ export function CandidateLandingPage() {
           <div className="np-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
             {steps.map((s, i) => (
               <Reveal key={s.title} delay={i * 120} style={{ height: '100%' }}>
-                <div className="np-card" style={{ height: '100%', background: WHITE, border: `1px solid ${LINE}`, borderRadius: '20px', padding: '26px', boxSizing: 'border-box' }}>
+                <div className="np-card" style={{ height: '100%', background: SURFACE, border: `1px solid ${LINE}`, borderRadius: '20px', padding: '26px', boxSizing: 'border-box' }}>
                   <span style={{ display: 'inline-flex', width: '40px', height: '40px', borderRadius: '12px', background: PINK, color: RED, alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.05rem', marginBottom: '16px' }}>{i + 1}</span>
                   <div style={{ fontWeight: '800', color: INK, fontSize: '1.08rem', marginBottom: '6px' }}>{s.title}</div>
                   <p style={{ margin: 0, fontSize: '0.94rem', lineHeight: 1.55, color: MUTED }}>{s.desc}</p>
@@ -421,21 +427,21 @@ export function CandidateLandingPage() {
           media={(
             <MediaPanel bg={GREEN_SOFT}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-                <span style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#eee7e2', border: `1.5px dashed ${LINE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#c4bcb6' }}>
+                <span style={{ width: '40px', height: '40px', borderRadius: '50%', background: LINE, border: `1.5px dashed ${LINE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED }}>
                   <Plus size={18} />
                 </span>
                 <div>
-                  <div style={{ height: '10px', width: '120px', borderRadius: '6px', background: '#e7e0db', marginBottom: '7px' }} />
-                  <div style={{ height: '8px', width: '74px', borderRadius: '6px', background: '#eee7e2' }} />
+                  <div style={{ height: '10px', width: '120px', borderRadius: '6px', background: LINE, marginBottom: '7px' }} />
+                  <div style={{ height: '8px', width: '74px', borderRadius: '6px', background: LINE }} />
                 </div>
-                <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: '700', color: '#b0a8a2', background: '#f1ece8', padding: '3px 9px', borderRadius: '999px' }}>Chưa khai báo</span>
+                <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: '700', color: MUTED, background: LINE, padding: '3px 9px', borderRadius: '999px' }}>Chưa khai báo</span>
               </div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                <span style={{ fontSize: '0.74rem', fontWeight: '600', color: '#b0a8a2', background: '#f1ece8', border: `1px dashed ${LINE}`, borderRadius: '8px', padding: '4px 12px' }}>+ Thêm kỹ năng</span>
-                <span style={{ height: '24px', width: '52px', borderRadius: '8px', background: '#f1ece8' }} />
-                <span style={{ height: '24px', width: '40px', borderRadius: '8px', background: '#f1ece8' }} />
+                <span style={{ fontSize: '0.74rem', fontWeight: '600', color: MUTED, background: LINE, border: `1px dashed ${LINE}`, borderRadius: '8px', padding: '4px 12px' }}>+ Thêm kỹ năng</span>
+                <span style={{ height: '24px', width: '52px', borderRadius: '8px', background: LINE }} />
+                <span style={{ height: '24px', width: '40px', borderRadius: '8px', background: LINE }} />
               </div>
-              <div style={{ background: '#efe9e4', color: '#a79f99', borderRadius: '12px', padding: '12px', textAlign: 'center', fontWeight: '700', fontSize: '0.9rem', border: `1px dashed ${LINE}` }}>Hoàn thiện hồ sơ để bắt đầu</div>
+              <div style={{ background: LINE, color: MUTED, borderRadius: '12px', padding: '12px', textAlign: 'center', fontWeight: '700', fontSize: '0.9rem', border: `1px dashed ${LINE}` }}>Hoàn thiện hồ sơ để bắt đầu</div>
             </MediaPanel>
           )}
         />
@@ -461,7 +467,7 @@ export function CandidateLandingPage() {
                 <div style={{ fontWeight: '800', fontSize: '0.92rem' }}>Thực tập Thiết kế UI/UX</div>
                 <div style={{ fontSize: '0.78rem', color: MUTED, margin: '2px 0 8px' }}>Campus Tech · TP. HCM</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: '800', color: '#1f7a4d', fontSize: '0.88rem' }}>3.000.000đ</span>
+                  <span style={{ fontWeight: '800', color: 'var(--success)', fontSize: '0.88rem' }}>3.000.000đ</span>
                   <span style={{ fontSize: '0.72rem', fontWeight: '700', color: INK, background: PINK, borderRadius: '8px', padding: '3px 9px' }}>RS 60+</span>
                 </div>
               </div>
@@ -481,7 +487,7 @@ export function CandidateLandingPage() {
           media={(
             <MediaPanel bg={BLUE_SOFT}>
               <div style={{ background: PINK_CARD, borderRadius: '12px', padding: '10px 12px', fontSize: '0.84rem', color: INK, marginBottom: '10px', maxWidth: '85%' }}>Hồ sơ của bạn rất ấn tượng! Mời bạn ứng tuyển nhé.</div>
-              <div style={{ background: INK, color: WHITE, borderRadius: '12px', padding: '10px 12px', fontSize: '0.84rem', marginLeft: 'auto', marginBottom: '12px', maxWidth: '70%' }}>Cảm ơn anh/chị ạ!</div>
+              <div style={{ background: 'var(--lp-btn-bg)', color: 'var(--lp-btn-text)', borderRadius: '12px', padding: '10px 12px', fontSize: '0.84rem', marginLeft: 'auto', marginBottom: '12px', maxWidth: '70%' }}>Cảm ơn anh/chị ạ!</div>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.76rem', fontWeight: '700', color: RED, background: PINK, borderRadius: '999px', padding: '5px 12px' }}><Sparkles size={13} /> Được đề xuất nổi bật</span>
             </MediaPanel>
           )}

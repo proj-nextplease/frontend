@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const INK = '#1d1320';
-const MUTED = '#6e6470';
-const RED = '#e5533f';
-const BG = '#fbf2ef';
-const CIRCLE = '#f8e3dc';
+const INK = 'var(--lp-ink)';
+const MUTED = 'var(--lp-muted)';
+const RED = 'var(--lp-red)';
+const BG = 'var(--lp-pink-card)';
+const CIRCLE = 'var(--lp-pink)';
 
 const features = [
   'Dựng hồ sơ & tích proof hoàn toàn miễn phí',
@@ -38,7 +38,7 @@ function CheckBadge() {
 function Logo({ p }) {
   const [failed, setFailed] = useState(false);
   if (p.vn || failed) {
-    return <span style={{ fontSize: '1.05rem', fontWeight: '800', letterSpacing: '-0.02em', color: '#6b6470', whiteSpace: 'nowrap' }}>{p.name}</span>;
+    return <span style={{ fontSize: '1.05rem', fontWeight: '800', letterSpacing: '-0.02em', color: 'var(--lp-muted)', whiteSpace: 'nowrap' }}>{p.name}</span>;
   }
   return <img src={`https://cdn.simpleicons.org/${p.slug}/6b6470`} alt={p.name} onError={() => setFailed(true)} style={{ height: '26px', width: 'auto', objectFit: 'contain', opacity: 0.9 }} />;
 }

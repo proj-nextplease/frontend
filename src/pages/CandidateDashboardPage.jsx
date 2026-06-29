@@ -56,6 +56,8 @@ import {
   unlockTheme,
   selectTheme
 } from '../api/premiumApi.js';
+import { getGamification, pingGamification, claimQuest, recordGamificationEvent } from '../api/gamificationApi.js';
+import { Flame, Target, Gift } from 'lucide-react';
 
 const CATEGORY_MAP = {
   TECH: {
@@ -359,6 +361,58 @@ function ApplyModal({
   );
 }
 
+/* Daily / weekly quest panel — Duolingo-style task list with claimable EXP rewards. */
+function QuestPanel({ title, subtitle, icon, accent, accentSoft, quests, scope, onClaim, claiming }) {
+  const doneCount = quests.filter((q) => q.completed).length;
+  return (
+    <section className="np-quest-card">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '9px', fontSize: '1.02rem', fontWeight: '800', color: 'var(--ink)' }}>
+          <span className="np-quest-icon" style={{ background: accentSoft, color: accent, width: '32px', height: '32px' }}>{icon}</span>
+          {title}
+        </span>
+        <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--muted)' }}>{doneCount}/{quests.length} · {subtitle}</span>
+      </div>
+      <div>
+        {quests.map((q) => {
+          const pct = Math.min(100, Math.round((q.progress / Math.max(1, q.target)) * 100));
+          const ready = q.completed && !q.claimed;
+          return (
+            <div key={q.key} className="np-quest-row">
+              <span className="np-quest-icon" style={{ background: q.completed ? '#e7f6ec' : accentSoft, color: q.completed ? '#16a34a' : accent }}>
+                {q.completed ? <Check size={18} /> : <Target size={17} />}
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--ink)' }}>{q.title}</span>
+                  {q.target > 1 && (
+                    <span style={{ fontSize: '0.74rem', fontWeight: '800', color: q.completed ? '#16a34a' : accent }}>{Math.min(q.progress, q.target)}/{q.target}</span>
+                  )}
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{q.desc}</div>
+                {!q.completed && q.target > 1 && (
+                  <div className="np-quest-prog"><span style={{ width: `${pct}%`, background: accent }} /></div>
+                )}
+              </div>
+              <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                {q.claimed ? (
+                  <span className="np-quest-claim claimed"><Check size={14} /> +{q.exp}</span>
+                ) : ready ? (
+                  <button className="np-quest-claim ready" disabled={claiming === q.key} onClick={() => onClaim(scope, q.key)}>
+                    <Gift size={14} /> {claiming === q.key ? '...' : `Nhận +${q.exp}`}
+                  </button>
+                ) : (
+                  <span className="np-quest-claim locked">+{q.exp} EXP</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export function CandidateDashboardPage({ initialPortfolio }) {
   const navigate = useNavigate();
   const { tabSlug } = useParams();
@@ -373,11 +427,47 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [myAppsClubSearch, setMyAppsClubSearch] = useState('');
   const [myAppsClubStatusFilter, setMyAppsClubStatusFilter] = useState('');
 
-  // Candidate dashboard is light-only (warm flat language).
+  // Gamification: streak + daily/weekly quests. Ping once on mount to roll the streak.
+  const [gamification, setGamification] = useState(null);
+  const [claimingQuest, setClaimingQuest] = useState(null);
   useEffect(() => {
-    document.documentElement.dataset.theme = 'light';
-    document.documentElement.style.colorScheme = 'light';
+    let mounted = true;
+    pingGamification()
+      .then((data) => { if (mounted) setGamification(data); })
+      .catch(() => getGamification().then((d) => { if (mounted) setGamification(d); }).catch(() => {}));
+    return () => { mounted = false; };
   }, []);
+
+  // Advance quests tied to a real activity, then refresh the panel.
+  const bumpQuest = async (event, amount = 1) => {
+    try {
+      const data = await recordGamificationEvent(event, amount);
+      setGamification(data);
+    } catch { /* non-blocking — gamification must never break a core flow */ }
+  };
+
+  // "Khám phá 3 cơ hội" counts 3 DISTINCT opportunities per day — re-opening the
+  // same job/Quest doesn't add a view (dedup by id, scoped to today, in localStorage).
+  const viewOpportunityOnce = (oppId) => {
+    if (!oppId) return;
+    const today = new Date().toLocaleDateString('en-CA'); // local YYYY-MM-DD
+    const key = `nextplease:viewed-opps:${today}`;
+    let seen = [];
+    try { seen = JSON.parse(localStorage.getItem(key) || '[]'); } catch { seen = []; }
+    if (seen.includes(String(oppId))) return; // already counted today
+    seen.push(String(oppId));
+    try { localStorage.setItem(key, JSON.stringify(seen)); } catch { /* best-effort */ }
+    bumpQuest('VIEW_OPPORTUNITY');
+  };
+
+  const handleClaimQuest = async (scope, key) => {
+    setClaimingQuest(key);
+    try {
+      const data = await claimQuest(scope, key);
+      setGamification(data);
+    } catch { /* keep silent; UI stays in pre-claim state */ }
+    finally { setClaimingQuest(null); }
+  };
 
   // Sidebar collapse state
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
@@ -835,6 +925,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         appliedAt: new Date().toISOString(),
       }]);
       setQuestApplySuccess(`Đã nộp đơn Quest "${selectedQuestForApply.title}" thành công!`);
+      bumpQuest('APPLY');
       setShowQuestApplyModal(false);
       setSelectedQuestForApply(null);
       setQuestCoverNote('');
@@ -924,6 +1015,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     try {
       await submitCredential(credentialForm);
       setCredentialFormSuccess('Nộp minh chứng thành công! Hệ thống sẽ xem xét và phản hồi trong 1-3 ngày làm việc.');
+      bumpQuest('SUBMIT_PROOF');
       setCredentialForm({ projectName: '', position: '', category: 'CLUB_SMALL', roleLevel: 'MEMBER', description: '', proofLink: '', proofImages: [], startedAt: '', endedAt: '' });
       setShowCredentialForm(false);
       const data = await getMyCredentialSubmissions();
@@ -967,6 +1059,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   }
 
   function handleApplyJob(job) {
+    viewOpportunityOnce(job.id || job.jobId);
     setSelectedJobForApply(job);
     setApplyModalError('');
     setApplyFormFields([]);
@@ -997,6 +1090,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       // Reload real applications list
       const data = await getMyApplications();
       setAppliedJobs(data || []);
+      bumpQuest('APPLY');
       setShowApplyModal(false);
       setSelectedJobForApply(null);
       setApplySuccessMsg(`Ứng tuyển thành công vị trí "${selectedJobForApply.title}"! Nhà tuyển dụng sẽ xem xét trong thời gian sớm nhất.`);
@@ -1166,11 +1260,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     }
   }
 
-  // Level & EXP calculations
-  const currentLevel = portfolio?.currentLevel || 1;
-  const currentExp = portfolio?.totalExp || 0;
-  const nextLevelExp = currentLevel * 1000;
-  const expPercentage = Math.min(100, Math.round((currentExp / nextLevelExp) * 100));
+  // Level & EXP calculations — prefer real gamification data (matches backend threshold 100·N^1.2).
+  const currentLevel = gamification?.level ?? portfolio?.currentLevel ?? 1;
+  const currentExp = gamification?.expIntoLevel ?? portfolio?.totalExp ?? 0;
+  const nextLevelExp = gamification?.expForNextLevel ?? (currentLevel * 1000);
+  const expPercentage = Math.min(100, Math.round((currentExp / Math.max(1, nextLevelExp)) * 100));
+  const streak = gamification?.currentStreak ?? 0;
+  const dailyQuests = gamification?.dailyQuests ?? [];
+  const weeklyQuests = gamification?.weeklyQuests ?? [];
 
   // Checklist verification states
   const has3D = portfolio?.onboardingCompleted === true;
@@ -1505,6 +1602,26 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         {/* 1. OVERVIEW VIEW */}
         {activeView === 'OVERVIEW' && (
           <div className="np-view">
+            <style>{`
+              @keyframes npStreakPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+              @keyframes npQuestPop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+              @keyframes npBarFill { from { width: 0; } }
+              @keyframes npFloatUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+              .np-streak-flame { animation: npStreakPulse 1.8s ease-in-out infinite; }
+              .np-quest-card { background:var(--card-bg-strong); border:1px solid var(--c-line); border-radius:16px; padding:16px 18px; display:flex; flex-direction:column; gap:14px; animation: npFloatUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+              .np-quest-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--c-line); }
+              .np-quest-row:last-child { border-bottom:none; }
+              .np-quest-icon { flex-shrink:0; width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; }
+              .np-quest-prog { height:7px; border-radius:999px; background:var(--c-line); overflow:hidden; margin-top:6px; }
+              .np-quest-prog > span { display:block; height:100%; border-radius:999px; transition: width 0.6s cubic-bezier(0.22,1,0.36,1); }
+              .np-quest-claim { border:none; cursor:pointer; font-weight:800; font-size:0.8rem; padding:7px 14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
+              .np-quest-claim:hover { transform: translateY(-2px); box-shadow:0 10px 22px rgba(229,83,63,0.25); }
+              .np-quest-claim:active { transform: scale(0.96); }
+              .np-quest-claim.ready { background:#e5533f; color:#fff; animation: npQuestPop 0.4s ease both; }
+              .np-quest-claim.claimed { background:#e7f6ec; color:#16a34a; cursor:default; }
+              .np-quest-claim.locked { background:var(--c-line); color:var(--c-muted); cursor:default; }
+              @media (prefers-reduced-motion: reduce) { .np-streak-flame, .np-quest-card, .np-quest-claim.ready { animation:none !important; } }
+            `}</style>
             <header className="candidate-overview-header">
               <div className="candidate-overview-title">
                 <span style={{
@@ -1513,10 +1630,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   gap: '6px',
                   fontSize: '0.82rem',
                   fontWeight: '900',
-                  color: 'var(--primary)',
+                  color: 'var(--c-red)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05rem',
-                  background: 'rgba(37, 99, 235, 0.08)',
+                  background: 'var(--c-red-soft)',
                   padding: '6px 12px',
                   borderRadius: '999px',
                   marginBottom: '10px'
@@ -1548,19 +1665,28 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       <span className="exp-level-label">Cấp độ tài năng</span>
                       <span className="exp-level-badge">LV. {currentLevel}</span>
                     </div>
-                    <span style={{ fontSize: '0.88rem', fontWeight: '800', color: 'var(--ink)' }}>
-                      Tích lũy: <strong style={{ color: 'var(--primary)' }}>{currentExp}</strong> / {nextLevelExp} EXP
-                    </span>
+                    {/* Streak — prominent flame counter (Duolingo-style) */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(249,115,22,0.1)', padding: '6px 14px', borderRadius: '999px' }} title={`Chuỗi dài nhất: ${gamification?.longestStreak ?? 0} ngày`}>
+                      <Flame className="np-streak-flame" size={20} color="#f97316" fill={streak > 0 ? '#f97316' : 'none'} />
+                      <span style={{ fontSize: '1.05rem', fontWeight: '900', color: '#f97316' }}>{streak}</span>
+                      <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#c2410c' }}>ngày streak</span>
+                    </div>
                   </div>
 
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '14px 0 6px' }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--muted)' }}>Tiến độ lên cấp {currentLevel + 1}</span>
+                    <span style={{ fontSize: '0.88rem', fontWeight: '800', color: 'var(--ink)' }}>
+                      <strong style={{ color: 'var(--primary)' }}>{Number(currentExp).toLocaleString('vi-VN')}</strong> / {Number(nextLevelExp).toLocaleString('vi-VN')} EXP
+                    </span>
+                  </div>
                   <div className="exp-bar-wrapper">
-                    <div className="exp-bar-fill-glow" style={{ width: `${expPercentage}%` }}>
+                    <div className="exp-bar-fill-glow" style={{ width: `${expPercentage}%`, animation: 'npBarFill 0.9s cubic-bezier(0.22,1,0.36,1)' }}>
                       <div className="exp-bar-shine" />
                     </div>
                   </div>
                   <p style={{ margin: '12px 0 0', fontSize: '0.85rem', color: 'var(--muted)', lineHeight: 1.4 }}>
                     <Zap size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom', color: 'var(--primary)' }} />
-                    Hoàn thành các mốc checklist hồ sơ hoặc được phê duyệt chứng chỉ để nhận thêm EXP thăng cấp!
+                    Hoàn thành nhiệm vụ hằng ngày & tuần bên dưới để nhận EXP và giữ chuỗi streak!
                   </p>
                 </section>
 
@@ -1654,6 +1780,34 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </div>
             </div>
 
+            {/* Daily & weekly quests */}
+            {gamification && (
+              <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', marginTop: '4px' }}>
+                <QuestPanel
+                  title="Nhiệm vụ hằng ngày"
+                  subtitle="đặt lại mỗi ngày"
+                  icon={<Target size={17} />}
+                  accent="#e5533f"
+                  accentSoft="rgba(229,83,63,0.1)"
+                  quests={dailyQuests}
+                  scope="DAILY"
+                  onClaim={handleClaimQuest}
+                  claiming={claimingQuest}
+                />
+                <QuestPanel
+                  title="Nhiệm vụ tuần"
+                  subtitle="đặt lại mỗi tuần"
+                  icon={<Award size={17} />}
+                  accent="#7c3aed"
+                  accentSoft="rgba(124,58,237,0.1)"
+                  quests={weeklyQuests}
+                  scope="WEEKLY"
+                  onClaim={handleClaimQuest}
+                  claiming={claimingQuest}
+                />
+              </section>
+            )}
+
             {/* Metrics cards grid */}
             <section className="candidate-metrics-grid np-stagger">
               <div className="candidate-metric-box" style={{ cursor: 'pointer' }} onClick={() => setShowTopUpModal(true)} title="Nhấn để nạp NP">
@@ -1706,7 +1860,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 2. OPPORTUNITIES VIEW */}
         {activeView === 'OPPORTUNITIES' && (
-          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: '#fff', borderRadius: '20px', padding: '24px' }}>
+          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderRadius: '20px', padding: '24px' }}>
             {/* Header */}
             <div style={{ marginBottom: '20px' }}>
               <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '800', color: 'var(--c-red)', letterSpacing: '0.06em', margin: '0 0 6px' }}>Bảng cơ hội</p>
@@ -1720,7 +1874,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 onChange={e => { setFilterSearch(e.target.value); updateSearchUrl('q', e.target.value); }}
                 placeholder="Tìm vị trí tuyển dụng, kỹ năng, hoặc tên công ty..."
                 className="np-candf"
-                style={{ width: '100%', padding: '13px 40px 13px 46px', borderRadius: '12px', border: '1.5px solid var(--c-line)', background: '#fff', color: 'var(--c-ink)', fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }}
+                style={{ width: '100%', padding: '13px 40px 13px 46px', borderRadius: '12px', border: '1.5px solid var(--c-line)', background: 'var(--c-surface)', color: 'var(--c-ink)', fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }}
               />
               {filterSearch && (
                 <button type="button" onClick={() => { setFilterSearch(''); updateSearchUrl('q', ''); }}
@@ -1731,7 +1885,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             {/* 2-col layout: filter sidebar + list */}
             <div style={{ display: 'grid', gridTemplateColumns: '230px 1fr', gap: '20px', alignItems: 'start' }}>
               {/* LEFT FILTER PANEL */}
-              <div style={{ background: '#faf7f5', border: '1px solid var(--c-line)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '20px' }}>
+              <div style={{ background: 'var(--c-surface-soft)', border: '1px solid var(--c-line)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <strong style={{ fontSize: '0.84rem', fontWeight: '900', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '6px' }}><SlidersHorizontal size={14} /> Bộ lọc</strong>
                   {(filterCategory || filterSpecialty || filterJobType || filterIsRemote || filterCanApply) && (
@@ -1749,7 +1903,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       return (
                         <button key={opt.value} type="button"
                           onClick={() => { const next = active ? '' : opt.value; setFilterJobType(next); updateSearchUrl('t', next); }}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 11px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: active ? '750' : '600', border: active ? '1.5px solid var(--primary)' : '1.5px solid var(--c-line)', background: active ? 'var(--primary)' : '#fff', color: active ? '#fff' : 'var(--ink)', transition: 'all 0.15s' }}>
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 11px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: active ? '750' : '600', border: active ? '1.5px solid var(--primary)' : '1.5px solid var(--c-line)', background: active ? 'var(--primary)' : 'var(--c-surface)', color: active ? '#fff' : 'var(--ink)', transition: 'all 0.15s' }}>
                           {opt.label}
                           {opt.exp && <span style={{ fontSize: '0.66rem', fontWeight: '800', opacity: active ? 0.85 : 1, color: active ? '#fff' : '#f59e0b' }}>+{opt.exp}</span>}
                         </button>
@@ -1784,7 +1938,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     const TIcon = t.icon;
                     return (
                       <button key={i} type="button" onClick={t.toggle}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: t.on ? '750' : '600', border: t.on ? '1.5px solid var(--primary)' : '1.5px solid var(--c-line)', background: t.on ? 'var(--primary)' : '#fff', color: t.on ? '#fff' : 'var(--ink)', transition: 'all 0.15s' }}>
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: t.on ? '750' : '600', border: t.on ? '1.5px solid var(--primary)' : '1.5px solid var(--c-line)', background: t.on ? 'var(--primary)' : 'var(--c-surface)', color: t.on ? '#fff' : 'var(--ink)', transition: 'all 0.15s' }}>
                         {TIcon && <TIcon size={13} color={t.on ? '#fff' : 'var(--primary)'} />} {t.label}
                       </button>
                     );
@@ -1826,12 +1980,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       const typeLabel = JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType;
                       const typeExp = JOB_TYPES.find(t => t.value === job.jobType)?.exp;
                       return (
-                        <article key={job.id} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '18px', border: '1px solid var(--line)', background: '#fff', transition: 'box-shadow 0.2s, border-color 0.2s' }}
+                        <article key={job.id} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '18px', border: '1px solid var(--line)', background: 'var(--c-surface)', transition: 'box-shadow 0.2s, border-color 0.2s' }}
                           onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--c-red)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(229,83,63,0.08)'; }}
                           onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--line)'; e.currentTarget.style.boxShadow = 'none'; }}
                         >
                           {/* Logo */}
-                          <div style={{ width: '56px', height: '56px', borderRadius: '14px', border: '1px solid var(--c-line)', background: '#faf7f5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                          <div style={{ width: '56px', height: '56px', borderRadius: '14px', border: '1px solid var(--c-line)', background: 'var(--c-surface-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
                             {job.companyLogo ? <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={22} style={{ color: 'var(--c-muted)' }} />}
                           </div>
 
@@ -1876,7 +2030,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
                               <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer"
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--c-line)', background: '#fff', color: 'var(--c-ink)', textDecoration: 'none' }}>
+                                onClick={() => viewOpportunityOnce(job.id)}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', color: 'var(--c-ink)', textDecoration: 'none' }}>
                                 Xem chi tiết
                               </a>
                               <button type="button" disabled={isLocked || alreadyApplied} onClick={() => handleApplyJob(job)}
@@ -1897,7 +2052,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 2b. QUEST BOARD — dedicated QUESTS tab */}
         {activeView === 'QUESTS' && (
-          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: '#fff', borderRadius: '20px', padding: '24px' }}>
+          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderRadius: '20px', padding: '24px' }}>
             {questApplySuccess && <div className="alert-banner success" style={{ marginBottom: '16px' }}>{questApplySuccess}</div>}
 
             {/* Header */}
@@ -1912,7 +2067,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               <input type="text" value={questSearchFilter} onChange={e => setQuestSearchFilter(e.target.value)}
                 placeholder="Tìm tên Quest, CLB, hoặc mô tả..."
                 className="np-candf"
-                style={{ width: '100%', padding: '13px 40px 13px 46px', borderRadius: '12px', border: '1.5px solid var(--c-line)', background: '#fff', color: 'var(--c-ink)', fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }} />
+                style={{ width: '100%', padding: '13px 40px 13px 46px', borderRadius: '12px', border: '1.5px solid var(--c-line)', background: 'var(--c-surface)', color: 'var(--c-ink)', fontSize: '0.94rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' }} />
               {questSearchFilter && (
                 <button type="button" onClick={() => setQuestSearchFilter('')}
                   style={{ position: 'absolute', right: '14px', top: '13px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', padding: '2px', display: 'flex' }} aria-label="Xóa tìm kiếm"><X size={16} /></button>
@@ -1922,7 +2077,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             {/* 2-col layout */}
             <div style={{ display: 'grid', gridTemplateColumns: '230px 1fr', gap: '20px', alignItems: 'start' }}>
               {/* LEFT FILTER PANEL */}
-              <div style={{ background: '#faf7f5', border: '1px solid var(--c-line)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '20px' }}>
+              <div style={{ background: 'var(--c-surface-soft)', border: '1px solid var(--c-line)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <strong style={{ fontSize: '0.84rem', fontWeight: '800', color: 'var(--c-ink)', display: 'flex', alignItems: 'center', gap: '6px' }}><SlidersHorizontal size={14} /> Bộ lọc</strong>
                   {questCategoryFilter && (
@@ -1945,7 +2100,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       return (
                         <button key={opt.value} type="button"
                           onClick={() => setQuestCategoryFilter(active ? '' : opt.value)}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 11px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: active ? '750' : '600', border: active ? `1.5px solid ${opt.color}` : '1.5px solid var(--c-line)', background: active ? opt.color : '#fff', color: active ? '#fff' : 'var(--ink)', transition: 'all 0.15s' }}>
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 11px', borderRadius: '999px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: active ? '750' : '600', border: active ? `1.5px solid ${opt.color}` : '1.5px solid var(--c-line)', background: active ? opt.color : 'var(--c-surface)', color: active ? '#fff' : 'var(--ink)', transition: 'all 0.15s' }}>
                           {opt.label}
                           <span style={{ fontSize: '0.66rem', fontWeight: '800', color: active ? '#fff' : '#f59e0b', opacity: active ? 0.85 : 1 }}>+{opt.exp}</span>
                         </button>
@@ -1977,9 +2132,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
                       const categoryMeta = { SMALL_EVENT: { label: 'Sự kiện nhỏ', color: '#8b5cf6' }, SCHOOL_CAMPAIGN: { label: 'Chiến dịch trường', color: '#0ea5e9' }, COMPANY_PROJECT: { label: 'Dự án DN', color: '#f59e0b' }, SHORT_INTERNSHIP: { label: 'Thực tập ngắn', color: '#10b981' }, FREELANCE_GIG: { label: 'Freelance', color: '#ec4899' } }[quest.category] || { label: quest.category, color: 'var(--primary)' };
                       return (
-                        <article key={quest.id} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '18px', border: '1px solid var(--c-line)', background: '#fff', borderLeftWidth: '4px', borderLeftColor: categoryMeta.color, transition: 'box-shadow 0.2s, border-color 0.2s', opacity: isLocked ? 0.75 : 1 }}
-                          onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 4px 20px ${categoryMeta.color}20`; }}
-                          onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
+                        <article key={quest.id} style={{ display: 'flex', gap: '16px', padding: '18px 20px', borderRadius: '18px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderLeftWidth: '4px', borderLeftColor: categoryMeta.color, transition: 'box-shadow 0.25s, border-color 0.2s, transform 0.25s cubic-bezier(0.22,1,0.36,1)', opacity: isLocked ? 0.75 : 1 }}
+                          onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 10px 28px ${categoryMeta.color}26`; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
                         >
                           {/* Icon */}
                           <div style={{ width: '56px', height: '56px', borderRadius: '14px', border: `1px solid ${categoryMeta.color}30`, background: `${categoryMeta.color}10`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -2012,12 +2167,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
                               <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer"
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--c-line)', background: '#fff', color: 'var(--c-ink)', textDecoration: 'none' }}>
+                                onClick={() => viewOpportunityOnce(quest.id)}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', color: 'var(--c-ink)', textDecoration: 'none' }}>
                                 Xem chi tiết
                               </a>
                               <button type="button" disabled={isLocked || alreadyApplied}
                                 onClick={() => { setSelectedQuestForApply(quest); setQuestCoverNote(''); setQuestAnswers({}); setQuestApplyError(''); setShowQuestApplyModal(true); }}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (alreadyApplied || isLocked) ? '#f3ede9' : categoryMeta.color, color: (alreadyApplied || isLocked) ? 'var(--c-muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (alreadyApplied || isLocked) ? 'var(--c-disabled)' : categoryMeta.color, color: (alreadyApplied || isLocked) ? 'var(--c-muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
                                 {alreadyApplied ? <><Check size={12} /> Đã đăng ký</> : isLocked ? <><LockKeyhole size={12} /> Cần RS</> : <><Zap size={12} /> Tham gia</>}
                               </button>
                             </div>
@@ -2052,7 +2208,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           });
 
           return (
-            <section className="np-view" style={{ border: '1px solid var(--c-line)', background: '#fff', borderRadius: '20px', padding: '28px' }}>
+            <section className="np-view" style={{ border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderRadius: '20px', padding: '28px' }}>
               {/* Header */}
               <div style={{ marginBottom: '24px' }}>
                 <p style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '800', color: 'var(--c-red)', letterSpacing: '0.06em', margin: '0 0 6px' }}>Theo dõi ứng tuyển</p>
@@ -2060,7 +2216,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </div>
 
               {/* Sub-tabs */}
-              <div style={{ display: 'flex', background: '#faf7f5', border: '1px solid var(--c-line)', padding: '4px', borderRadius: '12px', gap: '4px', marginBottom: '24px', width: 'fit-content' }}>
+              <div style={{ display: 'flex', background: 'var(--c-surface-soft)', border: '1px solid var(--c-line)', padding: '4px', borderRadius: '12px', gap: '4px', marginBottom: '24px', width: 'fit-content' }}>
                 {[
                   { key: 'BUSINESS', icon: <Building size={15} />, label: 'Doanh nghiệp', count: appliedJobs.length },
                   { key: 'CLUB', icon: <Zap size={15} />, label: 'CLB / Quest', count: questApplications.length },
@@ -2323,7 +2479,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 2d. PERSONALIZED AI RECOMMENDATIONS VIEW */}
         {activeView === 'RECOMMENDATIONS' && (
-          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: '#fff', borderRadius: '20px', padding: '28px' }}>
+          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderRadius: '20px', padding: '28px' }}>
             {/* Header */}
             <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
               <div>
@@ -2343,7 +2499,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
             {!wallet?.hasJobMatchAlert ? (
               /* Subscribed Paywall Gate */
-              <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', background: 'linear-gradient(135deg, #faf7f5 0%, #fffbf0 100%)', border: '1.5px dashed #f59e0b', padding: '40px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+              <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', background: 'var(--c-surface-soft)', border: '1.5px dashed #f59e0b', padding: '40px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                 <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', marginBottom: '8px' }}>
                   <LockKeyhole size={28} />
                 </div>
@@ -2397,9 +2553,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         const typeLabel = JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType;
                         const matchCount = job.match_count || 0;
                         return (
-                          <article key={job.id} style={{ display: 'flex', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1.5px solid #f59e0b', background: 'linear-gradient(to right, #fffdf8, #fff)', transition: 'box-shadow 0.2s' }}>
+                          <article key={job.id} style={{ display: 'flex', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1.5px solid #f59e0b', background: 'var(--c-surface)', transition: 'box-shadow 0.2s' }}>
                             {/* Logo */}
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', border: '1px solid var(--c-line)', background: '#faf7f5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', border: '1px solid var(--c-line)', background: 'var(--c-surface-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
                               {job.companyLogo ? <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={20} style={{ color: 'var(--c-muted)' }} />}
                             </div>
 
@@ -2428,7 +2584,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                               <strong style={{ fontSize: '0.9rem', color: '#16a34a', fontWeight: '800' }}>{compensationText}</strong>
                               <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
                                 <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer"
-                                  style={{ padding: '5px 10px', fontSize: '0.76rem', fontWeight: '700', borderRadius: '8px', border: '1px solid var(--c-line)', background: '#fff', color: 'var(--c-ink)', textDecoration: 'none' }}>
+                                  style={{ padding: '5px 10px', fontSize: '0.76rem', fontWeight: '700', borderRadius: '8px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', color: 'var(--c-ink)', textDecoration: 'none' }}>
                                   Xem chi tiết
                                 </a>
                                 <button type="button" disabled={alreadyApplied} onClick={() => handleApplyJob(job)}
@@ -2455,9 +2611,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
                         const matchCount = quest.match_count || 0;
                         return (
-                          <article key={quest.id} style={{ display: 'flex', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1.5px solid #2563eb', background: 'linear-gradient(to right, #f8faff, #fff)', transition: 'box-shadow 0.2s' }}>
+                          <article key={quest.id} style={{ display: 'flex', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1.5px solid #2563eb', background: 'var(--c-surface)', transition: 'box-shadow 0.2s' }}>
                             {/* Logo */}
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', border: '1px solid var(--c-line)', background: '#faf7f5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', border: '1px solid var(--c-line)', background: 'var(--c-surface-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
                               {quest.companyLogo ? <img src={quest.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={20} style={{ color: 'var(--c-muted)' }} />}
                             </div>
 
@@ -2916,7 +3072,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 3. ORGANIZATIONS VIEW (DIRECTORY) */}
         {activeView === 'ORGANIZATIONS' && (
-          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: '#fff', borderRadius: '20px', padding: '24px' }}>
+          <section className="np-view" style={{ border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderRadius: '20px', padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <div>
                 <p className="eyebrow" style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em', margin: 0 }}>Partners Directory</p>
@@ -3377,12 +3533,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 </div>
                                 <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
                                   <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer"
-                                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--c-line)', background: '#fff', color: 'var(--c-ink)', textDecoration: 'none' }}>
+                                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', color: 'var(--c-ink)', textDecoration: 'none' }}>
                                     Chi tiết
                                   </a>
                                   <button type="button" disabled={isLocked || alreadyApplied}
                                     onClick={() => { setSelectedQuestForApply(quest); setQuestCoverNote(''); setQuestAnswers({}); setQuestApplyError(''); setShowQuestApplyModal(true); }}
-                                    style={{ flex: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (alreadyApplied || isLocked) ? '#f3ede9' : categoryMeta.color, color: (alreadyApplied || isLocked) ? 'var(--c-muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
+                                    style={{ flex: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (alreadyApplied || isLocked) ? 'var(--c-disabled)' : categoryMeta.color, color: (alreadyApplied || isLocked) ? 'var(--c-muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
                                     {alreadyApplied ? 'Đã đăng ký' : isLocked ? 'Cần RS' : 'Tham gia'}
                                   </button>
                                 </div>
@@ -3401,7 +3557,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
         {/* 4. ROADMAP VIEW */}
         {activeView === 'ROADMAP' && (
-          <section className="candidate-profile-summary np-view" style={{ border: '1px solid var(--c-line)', background: '#fff', borderRadius: '20px' }}>
+          <section className="candidate-profile-summary np-view" style={{ border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderRadius: '20px' }}>
             <div className="candidate-panel-heading">
               <div>
                 <p className="eyebrow" style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em' }}>Talent Roadmap</p>
@@ -3472,7 +3628,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       border: '1px solid var(--c-line)',
                       borderRadius: '16px',
                       padding: '16px',
-                      background: '#fff',
+                      background: 'var(--c-surface)',
                       display: 'flex',
                       gap: '12px',
                       alignItems: 'flex-start'
@@ -4007,7 +4163,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </div>
 
               {/* Total applicants (Teaser, always unlocked) */}
-              <div style={{ background: '#f8f6f5', borderRadius: '12px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', border: '1px solid var(--c-line)' }}>
+              <div style={{ background: 'var(--c-surface-soft)', borderRadius: '12px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', border: '1px solid var(--c-line)' }}>
                 <span style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--c-ink)' }}>Tổng số ứng viên ứng tuyển:</span>
                 <strong style={{ fontSize: '1.1rem', color: 'var(--c-red)', fontWeight: '900' }}>
                   {insightData?.totalApplicants ?? 0}
@@ -4016,26 +4172,26 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
                 {/* Avg RS */}
-                <div style={{ background: '#fff', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '14px', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
+                <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '14px', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
                   <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: '750', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Trung bình RS</span>
                   <div style={{ filter: !insightData?.unlocked ? 'blur(4px)' : 'none', fontSize: '1.4rem', fontWeight: '900', color: 'var(--c-ink)' }}>
                     {insightData?.unlocked ? insightData.averageRs : 99}
                   </div>
                   {!insightData?.unlocked && (
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.4)' }}>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--c-veil)' }}>
                       <LockKeyhole size={16} color="var(--c-muted)" />
                     </div>
                   )}
                 </div>
 
                 {/* My Rank */}
-                <div style={{ background: '#fff', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '14px', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
+                <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '14px', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
                   <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: '750', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Hạng của bạn</span>
                   <div style={{ filter: !insightData?.unlocked ? 'blur(4px)' : 'none', fontSize: '1.4rem', fontWeight: '900', color: 'var(--c-ink)' }}>
                     {insightData?.unlocked ? `${insightData.myRank} / ${insightData.totalApplicants}` : '7 / 42'}
                   </div>
                   {!insightData?.unlocked && (
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.4)' }}>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--c-veil)' }}>
                       <LockKeyhole size={16} color="var(--c-muted)" />
                     </div>
                   )}
@@ -4043,7 +4199,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </div>
 
               {/* Percentile visual indicator */}
-              <div style={{ background: '#fff', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden', marginBottom: '20px' }}>
+              <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden', marginBottom: '20px' }}>
                 <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: '750', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px', textAlign: 'center' }}>Tỷ lệ phần trăm cạnh tranh</span>
                 <div style={{ filter: !insightData?.unlocked ? 'blur(4px)' : 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                   <strong style={{ fontSize: '1.6rem', fontWeight: '950', color: '#7c3aed' }}>
@@ -4057,7 +4213,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   </span>
                 </div>
                 {!insightData?.unlocked && (
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.4)' }}>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--c-veil)' }}>
                     <LockKeyhole size={20} color="var(--c-muted)" />
                   </div>
                 )}
@@ -4108,7 +4264,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <p style={{ margin: '0 0 18px', fontSize: '0.88rem', color: 'var(--muted)', lineHeight: 1.6 }}>
                   Vị trí tuyển dụng này hiện đang trong thời gian <strong>Early Access (12 giờ đầu)</strong> dành riêng cho các thành viên đã đăng ký gói Job Match Alert.
                 </p>
-                <div style={{ background: '#faf7f5', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '14px', textAlign: 'left', fontSize: '0.84rem', color: 'var(--ink)', lineHeight: 1.4 }}>
+                <div style={{ background: 'var(--c-surface-soft)', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '14px', textAlign: 'left', fontSize: '0.84rem', color: 'var(--ink)', lineHeight: 1.4 }}>
                   <p style={{ margin: '0 0 6px', fontWeight: '800' }}>Quyền lợi khi đăng ký Job Match Alert:</p>
                   <div>⌛ Xem sớm & nộp hồ sơ trước các ứng viên khác 12h.</div>
                   <div>✨ Mở khóa bảng Gợi ý việc làm & thử thách CLB cá nhân hóa.</div>

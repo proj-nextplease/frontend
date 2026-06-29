@@ -426,12 +426,6 @@ export function AdminB2bReviewPage() {
     }
   }, []);
 
-  // Admin portal is light-only (Wellfound-flat language).
-  useEffect(() => {
-    document.documentElement.dataset.theme = 'light';
-    document.documentElement.style.colorScheme = 'light';
-  }, []);
-
   useEffect(() => {
     let isMounted = true;
     async function fetchSidebarCounts() {

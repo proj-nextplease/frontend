@@ -7,16 +7,18 @@ import { setRemember, setStoredToken, clearStoredAuth, rememberLastEmail, getLas
 import { BusinessAuthPanel } from '../components/BusinessAuthPanel.jsx';
 import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
 
-const INK = '#101828';
-const MUTED = '#5b6472';
-const BLUE = '#2563eb';
-const NAVY = '#0d1b33';
-const LINE = '#e3e8ef';
+const INK = 'var(--ink)';
+const MUTED = 'var(--muted)';
+const BLUE = 'var(--primary)';
+const NAVY = 'var(--lp-btn-bg)';
+const LINE = 'var(--line)';
 const WHITE = '#ffffff';
+const SURFACE = 'var(--surface)';
+const BTN_TEXT = 'var(--lp-btn-text)';
 
 const FIELD = {
   width: '100%', padding: '14px 14px 14px 44px', borderRadius: '10px',
-  border: `1.5px solid ${LINE}`, background: WHITE, color: INK,
+  border: `1.5px solid ${LINE}`, background: SURFACE, color: INK,
   fontSize: '0.98rem', boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit',
 };
 
@@ -87,7 +89,7 @@ export function BusinessLoginPage() {
   }
 
   return (
-    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 0.95fr)', background: WHITE, color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
+    <div className="np-auth" style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'grid', gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 0.95fr)', background: 'var(--bg)', color: INK, fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
       <style>{`
         @keyframes npBrandInR { from { opacity:0; transform: translateX(48px);} to { opacity:1; transform:none; } }
         @keyframes npFormIn { from { opacity:0; transform: translateY(22px);} to { opacity:1; transform:none; } }
@@ -135,11 +137,11 @@ export function BusinessLoginPage() {
           />
 
           <button type="submit" disabled={status.type === 'loading'}
-            style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '10px', background: NAVY, color: WHITE, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: status.type === 'loading' ? 'default' : 'pointer', opacity: status.type === 'loading' ? 0.7 : 1 }}>
+            style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '15px', borderRadius: '10px', background: NAVY, color: BTN_TEXT, fontWeight: '700', fontSize: '0.98rem', border: 'none', cursor: status.type === 'loading' ? 'default' : 'pointer', opacity: status.type === 'loading' ? 0.7 : 1 }}>
             {status.type === 'loading' ? 'Đang đăng nhập...' : 'Vào trang đối tác'} <ArrowRight size={18} />
           </button>
 
-          <div style={{ marginTop: '22px', padding: '14px 16px', borderRadius: '12px', background: '#f3f6fb', border: `1px solid ${LINE}`, fontSize: '0.84rem', lineHeight: 1.55, color: MUTED }}>
+          <div style={{ marginTop: '22px', padding: '14px 16px', borderRadius: '12px', background: 'var(--surface-soft)', border: `1px solid ${LINE}`, fontSize: '0.84rem', lineHeight: 1.55, color: MUTED }}>
             <strong style={{ color: INK }}>Được mời vào tổ chức?</strong> Hãy đăng nhập tại đây để tham gia — không cần đăng ký mới.
           </div>
 
