@@ -12629,3 +12629,6 @@ p { text-wrap: pretty; }
 .adm-action-body p { margin:0; font-size:.84rem; color:var(--muted); line-height:1.5; }
 .adm-action-arrow { color:var(--muted); flex-shrink:0; transition:transform .18s ease, color .18s ease; }
 .adm-action:hover .adm-action-arrow { transform:translateX(4px); color:var(--ink); }
+
+/* Admin: cờ nghi ngờ nội dung */
+.admin-flag-badge { display:inline-flex; align-items:center; gap:4px; font-size:0.68rem; font-weight:800; padding:2px 8px; border-radius:999px; background:rgba(245,158,11,0.14); color:#b45309; border:1px solid rgba(245,158,11,0.3); }
