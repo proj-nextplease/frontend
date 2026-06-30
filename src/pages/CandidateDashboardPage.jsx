@@ -7,7 +7,6 @@ import {
   BriefcaseBusiness,
   CheckCircle2,
   Clock3,
-  Compass,
   Crown,
   FileText,
   LockKeyhole,
@@ -57,7 +56,7 @@ import {
   selectTheme
 } from '../api/premiumApi.js';
 import { getGamification, pingGamification, claimQuest, recordGamificationEvent } from '../api/gamificationApi.js';
-import { Flame, Target, Gift, ChevronDown } from 'lucide-react';
+import { Flame, Target, Gift, ChevronDown, ChevronLeft, ChevronRight, TrendingUp, Eye } from 'lucide-react';
 
 const CATEGORY_MAP = {
   TECH: {
@@ -220,12 +219,6 @@ const JOB_TYPES = [
   { value: 'MICRO_INTERNSHIP', label: 'Thực tập ngắn hạn / Dự án (Micro-internship)' },
 ];
 
-function getCategoryTone(category) {
-  if (category === 'BUSINESS' || category === 'LANGUAGE') return 'green';
-  if (category === 'DESIGN' || category === 'MEDIA') return 'pink';
-  return ''; // default blue
-}
-
 function getCompanyGradient(name) {
   const hash = Array.from(name || '').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const gradients = [
@@ -240,6 +233,17 @@ function getCompanyGradient(name) {
 }
 
 const defaultMockOrganizations = [];
+
+/* Hạn nộp/kết thúc dạng đếm ngược "còn N ngày". */
+function deadlineLabel(dateStr, prefix = 'Còn') {
+  if (!dateStr) return null;
+  const end = new Date(dateStr);
+  if (Number.isNaN(end.getTime())) return null;
+  const days = Math.ceil((end - new Date()) / 86400000);
+  if (days < 0) return { text: 'Đã hết hạn', tone: 'expired' };
+  if (days === 0) return { text: 'Hết hạn hôm nay', tone: 'soon' };
+  return { text: `${prefix} ${days} ngày`, tone: days <= 7 ? 'soon' : 'normal' };
+}
 
 /* ─── Apply modal: candidate profile snapshot ─────────────────────────────── */
 function CandidateProfilePreview({ portfolio, candidateRs, currentLevel, currentExp }) {
@@ -300,12 +304,17 @@ function ApplyModal({
   error, loading, onClose, onSubmit, submitLabel,
 }) {
   const Icon = icon;
-  const fieldStyle = { padding: '11px 13px', borderRadius: '11px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem', color: 'var(--ink)', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', width: '100%' };
+  const isAnswered = (f) => (answers[f.id] ?? '').toString().trim().length > 0;
+  const requiredFields = fields.filter((f) => f.required);
+  const answeredRequired = requiredFields.filter(isAnswered).length;
+  const allRequiredDone = answeredRequired === requiredFields.length;
+  const COVER_MAX = 1000;
+
   return (
     <div className="glass-modal-overlay" onClick={onClose}>
-      <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+      <div className="glass-modal-content apply-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px', '--apply-accent': accent }}>
         <div className="glass-modal-header" style={{ borderTop: `3px solid ${accent}`, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit' }}>
-          <span style={{ display: 'inline-flex', width: '34px', height: '34px', borderRadius: '10px', alignItems: 'center', justifyContent: 'center', background: `${accent}14`, color: accent }}>
+          <span className="apply-head-icon" style={{ background: `${accent}14`, color: accent }}>
             <Icon size={19} />
           </span>
           <h2>{title}</h2>
@@ -314,32 +323,45 @@ function ApplyModal({
           {infoCard}
           <CandidateProfilePreview {...profileProps} />
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.84rem', fontWeight: '700', color: 'var(--ink)' }}>{coverLabel}</label>
-            <textarea value={coverNote} onChange={(e) => setCoverNote(e.target.value)} placeholder={coverPlaceholder} rows={3}
-              style={{ ...fieldStyle, resize: 'vertical' }} />
+          <div className="apply-group">
+            <div className="apply-label-row">
+              <label className="apply-label">{coverLabel}</label>
+              <span className="apply-counter">{(coverNote || '').length}/{COVER_MAX}</span>
+            </div>
+            <textarea className="apply-field" value={coverNote} maxLength={COVER_MAX} onChange={(e) => setCoverNote(e.target.value)} placeholder={coverPlaceholder} rows={3} style={{ resize: 'vertical' }} />
           </div>
 
           {fields.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '13px' }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: '800', color: accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{fieldsTitle}</span>
-              {fields.map((f) => (
-                <div key={f.id} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--ink)' }}>
-                    {f.label} {f.required && <span style={{ color: '#dc2626' }}>*</span>}
-                  </label>
-                  {f.fieldType === 'TEXTAREA' ? (
-                    <textarea rows={3} value={answers[f.id] || ''} onChange={(e) => setAnswers((p) => ({ ...p, [f.id]: e.target.value }))} style={{ ...fieldStyle, resize: 'vertical' }} />
-                  ) : f.fieldType === 'SELECT' ? (
-                    <select value={answers[f.id] || ''} onChange={(e) => setAnswers((p) => ({ ...p, [f.id]: e.target.value }))} style={{ ...fieldStyle, cursor: 'pointer' }}>
-                      <option value="">— Chọn —</option>
-                      {(f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  ) : (
-                    <input value={answers[f.id] || ''} onChange={(e) => setAnswers((p) => ({ ...p, [f.id]: e.target.value }))} style={fieldStyle} />
-                  )}
-                </div>
-              ))}
+            <div className="apply-questions">
+              <div className="apply-questions-head">
+                <span className="apply-questions-title" style={{ color: accent }}>{fieldsTitle}</span>
+                {requiredFields.length > 0 && (
+                  <span className={`apply-req-progress ${allRequiredDone ? 'done' : ''}`}>
+                    {allRequiredDone ? <><Check size={12} /> Đã đủ</> : `${answeredRequired}/${requiredFields.length} bắt buộc`}
+                  </span>
+                )}
+              </div>
+              {fields.map((f) => {
+                const done = isAnswered(f);
+                return (
+                  <div key={f.id} className="apply-group">
+                    <label className="apply-label">
+                      {f.label} {f.required && <span className="apply-req-star">*</span>}
+                      {f.required && done && <Check size={13} className="apply-field-check" />}
+                    </label>
+                    {f.fieldType === 'TEXTAREA' ? (
+                      <textarea className="apply-field" rows={3} value={answers[f.id] || ''} onChange={(e) => setAnswers((p) => ({ ...p, [f.id]: e.target.value }))} style={{ resize: 'vertical' }} />
+                    ) : f.fieldType === 'SELECT' ? (
+                      <select className="apply-field" value={answers[f.id] || ''} onChange={(e) => setAnswers((p) => ({ ...p, [f.id]: e.target.value }))} style={{ cursor: 'pointer' }}>
+                        <option value="">— Chọn —</option>
+                        {(f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    ) : (
+                      <input className="apply-field" value={answers[f.id] || ''} onChange={(e) => setAnswers((p) => ({ ...p, [f.id]: e.target.value }))} />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -350,11 +372,16 @@ function ApplyModal({
             </div>
           )}
         </div>
-        <div className="glass-modal-footer">
-          <button className="button secondary-button" onClick={onClose} type="button" disabled={loading}>Hủy bỏ</button>
-          <button className="button primary-button" onClick={onSubmit} type="button" disabled={loading}>
-            {loading ? 'Đang nộp...' : submitLabel}
-          </button>
+        <div className="glass-modal-footer apply-footer">
+          {requiredFields.length > 0 && !allRequiredDone ? (
+            <span className="apply-foot-hint"><AlertTriangle size={13} /> Còn {requiredFields.length - answeredRequired} câu bắt buộc</span>
+          ) : <span className="apply-foot-hint ok"><Check size={13} /> Sẵn sàng nộp đơn</span>}
+          <div className="apply-foot-actions">
+            <button className="button secondary-button" onClick={onClose} type="button" disabled={loading}>Hủy bỏ</button>
+            <button className="button primary-button apply-submit" onClick={onSubmit} type="button" disabled={loading || !allRequiredDone} style={{ background: accent, borderColor: 'transparent' }}>
+              {loading ? <><RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} /> Đang nộp...</> : submitLabel}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -641,7 +668,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   useEffect(() => {
     if (tabSlug) {
       const upperTab = tabSlug.toUpperCase();
-      if (['OVERVIEW', 'OPPORTUNITIES', 'QUESTS', 'ROADMAP', 'CREDENTIALS', 'ORGANIZATIONS', 'MY_APPLICATIONS', 'RECOMMENDATIONS', 'PREMIUM_STORE'].includes(upperTab)) {
+      if (['OVERVIEW', 'OPPORTUNITIES', 'QUESTS', 'CREDENTIALS', 'ORGANIZATIONS', 'MY_APPLICATIONS', 'RECOMMENDATIONS', 'PREMIUM_STORE'].includes(upperTab)) {
         setActiveView(upperTab);
         setSelectedOrg(null);
       } else if (tabSlug.startsWith('org-')) {
@@ -721,7 +748,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         }
         
         try {
-          const jobs = await getJobs({ companyId: orgId });
+          const jobs = await getJobs({ companyId: orgId, limit: 200 });
           if (isMounted) {
             setSelectedOrgJobs(jobs || []);
           }
@@ -795,7 +822,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         setJobsLoading(true);
       }
       try {
-        const filters = {};
+        const filters = { limit: 200 };
         if (filterSearch.trim()) filters.query = filterSearch.trim();
         if (filterCategory) filters.category = filterCategory;
         if (filterSpecialty) filters.specialty = filterSpecialty;
@@ -1016,7 +1043,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     try {
       await submitCredential(credentialForm);
       setCredentialFormSuccess('Nộp minh chứng thành công! Hệ thống sẽ xem xét và phản hồi trong 1-3 ngày làm việc.');
-      bumpQuest('SUBMIT_PROOF');
+      // Nhiệm vụ "minh chứng được duyệt" chỉ tính khi admin DUYỆT (bắn từ backend), không tính lúc nộp.
       setCredentialForm({ projectName: '', position: '', category: 'CLUB_SMALL', roleLevel: 'MEMBER', description: '', proofLink: '', proofImages: [], startedAt: '', endedAt: '' });
       setShowCredentialForm(false);
       const data = await getMyCredentialSubmissions();
@@ -1276,28 +1303,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const hasCredentials = portfolio?.credentials && portfolio.credentials.length > 0;
   const hasApplications = appliedJobs.length > 0;
 
-  const timeline = [
-    {
-      title: 'Tạo tài khoản ứng viên',
-      detail: 'Đã xác thực email và đồng bộ vào hệ thống.',
-      state: 'done'
-    },
-    {
-      title: 'Dựng Portfolio 3D',
-      detail: has3D ? 'Đã kích hoạt Portfolio 3D' : 'Cần bổ sung kỹ năng, học văn & thiết kế avatar nhân vật.',
-      state: has3D ? 'done' : 'current'
-    },
-    {
-      title: 'Xác thực & Tích lũy RS',
-      detail: hasCredentials ? 'Đã tải chứng chỉ & nhận RS xác thực.' : 'Nộp bằng chứng (proof) chứng chỉ để nâng Reputation Score.',
-      state: hasCredentials ? 'done' : (has3D ? 'current' : 'next')
-    },
-    {
-      title: 'Nộp đơn ứng tuyển Quest',
-      detail: hasApplications ? 'Đã gửi hồ sơ ứng tuyển Quest.' : 'Tương tác ứng tuyển quest đầu tiên trên Bảng cơ hội.',
-      state: hasApplications ? 'done' : (hasCredentials ? 'current' : 'next')
-    },
-  ];
 
   // Filters candidates jobs by RS threshold if checked
   const candidateRs = portfolio?.reputationScore || 0;
@@ -1307,6 +1312,35 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     }
     return true;
   });
+
+  // Pagination (Bảng cơ hội + Quest) — ~18 tin / trang
+  const OPP_PAGE_SIZE = 18;
+  const [jobsPage, setJobsPage] = useState(1);
+  const [questsPage, setQuestsPage] = useState(1);
+  const [orgJobsPage, setOrgJobsPage] = useState(1);
+  const [orgQuestsPage, setOrgQuestsPage] = useState(1);
+  const ORG_PAGE_SIZE = 6;
+  useEffect(() => { setJobsPage(1); }, [filterCategory, filterSpecialty, filterJobType, filterIsRemote, filterCanApply, filterSearch]);
+  useEffect(() => { setQuestsPage(1); }, [questSearchFilter, questCategoryFilter]);
+  useEffect(() => { setOrgJobsPage(1); }, [selectedOrg?.id, selectedOrgTab]);
+  useEffect(() => { setOrgQuestsPage(1); }, [selectedOrg?.id, selectedOrgTab]);
+  const pagedJobs = filteredJobs.slice((jobsPage - 1) * OPP_PAGE_SIZE, jobsPage * OPP_PAGE_SIZE);
+  const pagedQuests = questsList.slice((questsPage - 1) * OPP_PAGE_SIZE, questsPage * OPP_PAGE_SIZE);
+  const renderPager = (total, page, setPage, pageSize = OPP_PAGE_SIZE) => {
+    const pageCount = Math.ceil(total / pageSize);
+    if (pageCount <= 1) return null;
+    const nums = Array.from({ length: pageCount }, (_, i) => i + 1);
+    const scrollUp = () => document.querySelector('.candidate-portal-main')?.scrollTo({ top: 0, behavior: 'smooth' });
+    return (
+      <div className="np-pager">
+        <button type="button" className="np-pager-btn" disabled={page === 1} onClick={() => { setPage(p => Math.max(1, p - 1)); scrollUp(); }} aria-label="Trang trước"><ChevronLeft size={16} /></button>
+        {nums.map(n => (
+          <button type="button" key={n} className={`np-pager-num ${n === page ? 'active' : ''}`} onClick={() => { setPage(n); scrollUp(); }}>{n}</button>
+        ))}
+        <button type="button" className="np-pager-btn" disabled={page === pageCount} onClick={() => { setPage(p => Math.min(pageCount, p + 1)); scrollUp(); }} aria-label="Trang sau"><ChevronRight size={16} /></button>
+      </div>
+    );
+  };
 
   // Filter organizations based on category/search input
   const filteredOrgs = allOrganizations.filter(org => {
@@ -1501,15 +1535,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   )}
                 </span>
               )}
-            </button>
-
-            <button
-              className={`candidate-portal-nav-item ${activeView === 'ROADMAP' ? 'active' : ''}`}
-              onClick={() => handleTabChange('ROADMAP')}
-              type="button"
-            >
-              <Compass size={18} />
-              {!isSidebarCollapsed && <span>Lộ trình phát triển</span>}
             </button>
 
             <button
@@ -1765,7 +1790,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             <div className="np-jobs-hero">
               <p className="np-jobs-eyebrow">{jobsList.length}+ cơ hội việc làm & Quest đang mở</p>
               <h2 className="np-jobs-title">Tìm bước tiếp theo</h2>
-              <div className="np-search-bar">
+            </div>
+            <div className="np-search-bar">
                 <div className="np-sb-seg">
                   <button type="button" className="np-sb-trigger accent" onClick={() => setSearchMenu(searchMenu === 'cat' ? null : 'cat')}>
                     <SlidersHorizontal size={16} /> {filterCategory ? CATEGORY_MAP[filterCategory].label : 'Danh mục'} <ChevronDown size={15} />
@@ -1808,40 +1834,32 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <button type="button" onClick={() => { setFilterCategory(''); setFilterSpecialty(''); setFilterJobType(''); setFilterIsRemote(false); setFilterCanApply(false); setFilterSearch(''); }}
                   style={{ display: 'block', margin: '14px auto 0', fontSize: '0.82rem', color: 'var(--c-muted)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700' }}>Xóa tất cả bộ lọc</button>
               )}
-            </div>
 
             {/* FEATURED COMPANIES */}
             {(() => {
               const byCo = new Map();
-              jobsList.forEach(j => { const key = j.companyId || j.companyName; if (!key) return; if (!byCo.has(key)) byCo.set(key, { key, name: j.companyName, logo: j.companyLogo, count: 0 }); byCo.get(key).count += 1; });
-              const featured = [...byCo.values()].sort((a, b) => b.count - a.count).slice(0, 4);
+              jobsList.forEach(j => { const key = j.companyId || j.companyName; if (!key) return; if (!byCo.has(key)) byCo.set(key, { key, companyId: j.companyId, name: j.companyName, logo: j.companyLogo, count: 0 }); byCo.get(key).count += 1; });
+              const totalCo = byCo.size;
+              const featured = [...byCo.values()].sort((a, b) => b.count - a.count).slice(0, 8);
               if (featured.length === 0) return null;
-              const info = {}; companiesList.forEach(c => { info[(c.name || '').toLowerCase()] = c; });
               return (
                 <div className="np-jobs-section">
                   <div className="np-jobs-section-head">
-                    <h3>Đối tác đang tuyển</h3>
+                    <h3>Đối tác đang tuyển <span className="np-head-count">{totalCo}</span></h3>
                     <button type="button" onClick={() => handleTabChange('ORGANIZATIONS')} style={{ fontSize: '0.86rem', fontWeight: '700', color: 'var(--c-red)', background: 'none', border: 'none', cursor: 'pointer' }}>Xem tất cả</button>
                   </div>
-                  <div className="np-co-grid">
-                    {featured.map(co => {
-                      const meta = info[(co.name || '').toLowerCase()];
-                      return (
-                        <div key={co.key} className="np-co-card" onClick={() => { setFilterSearch(co.name); updateSearchUrl('q', co.name); }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div className="np-job-logo">
-                              {co.logo ? <img src={co.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={20} style={{ color: 'var(--c-muted)' }} />}
-                            </div>
-                            <div style={{ minWidth: 0 }}>
-                              <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--c-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{co.name || 'Đối tác'}</div>
-                              {meta?.type && <div style={{ fontSize: '0.76rem', color: 'var(--c-muted)' }}>{meta.type === 'BUSINESS' ? 'Doanh nghiệp' : 'CLB / Tổ chức'}</div>}
-                            </div>
-                          </div>
-                          <p style={{ fontSize: '0.84rem', color: 'var(--c-muted)', margin: '12px 0 0', lineHeight: 1.5, height: '42px', overflow: 'hidden' }}>{meta?.description || 'Đối tác trên nền tảng next please.'}</p>
-                          <div className="np-co-foot">{co.count} vị trí đang mở <ArrowRight size={13} /></div>
+                  <div className="np-co-strip">
+                    {featured.map(co => (
+                      <button type="button" key={co.key} className="np-co-chip" onClick={() => { if (co.companyId) { handleTabChange(`org-${co.companyId}`); } else { setFilterSearch(co.name); updateSearchUrl('q', co.name); } }}>
+                        <div className="np-job-logo">
+                          {co.logo ? <img src={co.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={18} style={{ color: 'var(--c-muted)' }} />}
                         </div>
-                      );
-                    })}
+                        <div style={{ minWidth: 0 }}>
+                          <div className="np-co-chip-name">{co.name || 'Đối tác'}</div>
+                          <div className="np-co-chip-sub">{co.count} vị trí đang mở</div>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
               );
@@ -1869,8 +1887,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--c-muted)' }}>Thử bỏ bớt bộ lọc để xem thêm kết quả.</p></div>
                 </div>
               ) : (
-                <div className="np-joblist np-stagger">
-                  {filteredJobs.map(job => {
+                <div className="np-joblist np-stagger" key={`jobs-${jobsPage}`}>
+                  {pagedJobs.map(job => {
                     const isLocked = candidateRs < job.minReqRs;
                     const isEarlyAccess = job.createdAt && (new Date() - new Date(job.createdAt)) < (premiumConfig.earlyAccessHours * 60 * 60 * 1000);
                     const userHasEarlyAccess = wallet?.isPremium || wallet?.hasJobMatchAlert;
@@ -1896,7 +1914,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                             <span style={{ color: '#16a34a', fontWeight: '700' }}>{compensationText}</span>
                             {typeLabel && <span>{typeLabel}</span>}
                             {typeExp && <span style={{ color: '#f59e0b', fontWeight: '700' }}>+{typeExp} EXP</span>}
-                            {job.deadlineAt && <span>HSD {new Date(job.deadlineAt).toLocaleDateString('vi-VN')}</span>}
+                            {(() => { const d = deadlineLabel(job.deadlineAt); return d ? <span style={{ color: d.tone === 'expired' ? '#dc2626' : (d.tone === 'soon' ? '#ea580c' : undefined), fontWeight: d.tone !== 'normal' ? '700' : undefined }} title={`Hạn nộp ${new Date(job.deadlineAt).toLocaleDateString('vi-VN')}`}>{d.text}</span> : null; })()}
                           </div>
                         </div>
                         <div className="np-job-actions">
@@ -1911,6 +1929,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   })}
                 </div>
               )}
+              {!jobsLoading && !jobsError && renderPager(filteredJobs.length, jobsPage, setJobsPage)}
             </div>
           </section>
         )}
@@ -1922,15 +1941,17 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             {(() => {
               const CAT = { SMALL_EVENT: { label: 'Sự kiện nhỏ', color: '#8b5cf6' }, SCHOOL_CAMPAIGN: { label: 'Chiến dịch trường', color: '#0ea5e9' }, COMPANY_PROJECT: { label: 'Dự án DN', color: '#f59e0b' }, SHORT_INTERNSHIP: { label: 'Thực tập ngắn', color: '#10b981' }, FREELANCE_GIG: { label: 'Freelance', color: '#ec4899' } };
               const byCo = new Map();
-              questsList.forEach(q => { const key = q.companyId || q.companyName; if (!key) return; if (!byCo.has(key)) byCo.set(key, { key, name: q.companyName, count: 0 }); byCo.get(key).count += 1; });
-              const featured = [...byCo.values()].sort((a, b) => b.count - a.count).slice(0, 4);
+              questsList.forEach(q => { const key = q.companyId || q.companyName; if (!key) return; if (!byCo.has(key)) byCo.set(key, { key, companyId: q.companyId, name: q.companyName, count: 0 }); byCo.get(key).count += 1; });
+              const totalClubs = byCo.size;
+              const featured = [...byCo.values()].sort((a, b) => b.count - a.count).slice(0, 8);
               return (
                 <>
                   {/* HERO SEARCH */}
                   <div className="np-jobs-hero">
                     <p className="np-jobs-eyebrow">{questsList.length}+ Quest & chiến dịch từ câu lạc bộ</p>
                     <h2 className="np-jobs-title">Tham gia Quest CLB</h2>
-                    <div className="np-search-bar">
+                  </div>
+                  <div className="np-search-bar">
                       <div className="np-sb-seg">
                         <button type="button" className="np-sb-trigger accent" onClick={() => setSearchMenu(searchMenu === 'cat' ? null : 'cat')}>
                           <SlidersHorizontal size={16} /> {questCategoryFilter ? (CAT[questCategoryFilter]?.label || 'Danh mục') : 'Danh mục'} <ChevronDown size={15} />
@@ -1956,26 +1977,22 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                           style={{ fontSize: '0.8rem', color: 'var(--c-red)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '800', padding: '6px 8px' }}>Xóa lọc</button>
                       </div>
                     )}
-                  </div>
 
                   {/* FEATURED CLUBS */}
                   {featured.length > 0 && (
                     <div className="np-jobs-section">
                       <div className="np-jobs-section-head">
-                        <h3>CLB đang mở Quest</h3>
+                        <h3>CLB đang mở Quest <span className="np-head-count">{totalClubs}</span></h3>
                       </div>
-                      <div className="np-co-grid">
+                      <div className="np-co-strip">
                         {featured.map(co => (
-                          <div key={co.key} className="np-co-card" onClick={() => setQuestSearchFilter(co.name)}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                              <div className="np-job-logo"><Building size={20} style={{ color: 'var(--c-muted)' }} /></div>
-                              <div style={{ minWidth: 0 }}>
-                                <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--c-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{co.name || 'CLB'}</div>
-                                <div style={{ fontSize: '0.76rem', color: 'var(--c-muted)' }}>CLB / Tổ chức</div>
-                              </div>
+                          <button type="button" key={co.key} className="np-co-chip" onClick={() => { if (co.companyId) { handleTabChange(`org-${co.companyId}`); } else { setQuestSearchFilter(co.name); } }}>
+                            <div className="np-job-logo"><Building size={18} style={{ color: 'var(--c-muted)' }} /></div>
+                            <div style={{ minWidth: 0 }}>
+                              <div className="np-co-chip-name">{co.name || 'CLB'}</div>
+                              <div className="np-co-chip-sub">{co.count} Quest đang mở</div>
                             </div>
-                            <div className="np-co-foot">{co.count} Quest đang mở <ArrowRight size={13} /></div>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -1998,8 +2015,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         <p style={{ margin: 0, color: 'var(--c-muted)', fontWeight: '600' }}>Chưa có Quest nào đang mở. Quay lại sau nhé!</p>
                       </div>
                     ) : (
-                      <div className="np-joblist np-stagger">
-                        {questsList.map(quest => {
+                      <div className="np-joblist np-stagger" key={`quests-${questsPage}`}>
+                        {pagedQuests.map(quest => {
                           const isLocked = candidateRs < (quest.minReqRs || 0);
                           const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
                           const meta = CAT[quest.category] || { label: quest.category, color: 'var(--primary)' };
@@ -2018,7 +2035,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                   <span style={{ color: '#f59e0b', fontWeight: '700' }}>+{quest.expReward} EXP</span>
                                   {quest.npReward > 0 && <span style={{ color: '#10b981', fontWeight: '700' }}>+{quest.npReward} NP</span>}
                                   {quest.capacity > 0 && <span>{quest.capacity - (quest.applicantCount || 0)}/{quest.capacity} chỗ</span>}
-                                  {quest.endsAt && <span>HSD {new Date(quest.endsAt).toLocaleDateString('vi-VN')}</span>}
+                                  {(() => { const d = deadlineLabel(quest.endsAt); return d ? <span style={{ color: d.tone === 'expired' ? '#dc2626' : (d.tone === 'soon' ? '#ea580c' : undefined), fontWeight: d.tone !== 'normal' ? '700' : undefined }} title={`Kết thúc ${new Date(quest.endsAt).toLocaleDateString('vi-VN')}`}>{d.text}</span> : null; })()}
                                 </div>
                               </div>
                               <div className="np-job-actions">
@@ -2033,6 +2050,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         })}
                       </div>
                     )}
+                    {!questsLoading && questsList.length > 0 && renderPager(questsList.length, questsPage, setQuestsPage)}
                   </div>
                 </>
               );
@@ -2059,165 +2077,134 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             return matchSearch && matchStatus;
           });
 
+          const bizCount = (s) => appliedJobs.filter(a => (a.status || 'SUBMITTED') === s).length;
+          const clubCount = (s) => questApplications.filter(a => a.status === s).length;
+          const statCards = myAppsTab === 'BUSINESS'
+            ? [
+                { label: 'Tổng đơn', val: appliedJobs.length, color: 'var(--c-ink)' },
+                { label: 'Đang chờ', val: bizCount('SUBMITTED') + bizCount('VIEWED'), color: '#d97706' },
+                { label: 'Vào vòng tiếp', val: bizCount('SHORTLISTED'), color: '#7c3aed' },
+                { label: 'Chấp thuận', val: bizCount('ACCEPTED'), color: '#16a34a' },
+                { label: 'Hoàn thành', val: bizCount('COMPLETED'), color: '#0ea5e9' },
+                { label: 'Từ chối', val: bizCount('REJECTED'), color: '#dc2626' },
+              ]
+            : [
+                { label: 'Tổng đơn', val: questApplications.length, color: 'var(--c-ink)' },
+                { label: 'Đã nộp', val: clubCount('SUBMITTED'), color: '#d97706' },
+                { label: 'Chấp thuận', val: clubCount('ACCEPTED'), color: '#16a34a' },
+                { label: 'Hoàn thành', val: clubCount('COMPLETED'), color: '#2563eb' },
+                { label: 'Từ chối', val: clubCount('REJECTED'), color: '#dc2626' },
+              ];
+
           return (
-            <section className="np-view">
-              {/* Header */}
-              <div style={{ marginBottom: '22px' }}>
+            <section className="np-view apptrack">
+              <div style={{ marginBottom: '20px' }}>
                 <h2 style={{ margin: '0 0 4px', fontSize: 'clamp(1.6rem, 2.4vw, 2rem)', fontWeight: '800', letterSpacing: '-0.035em', color: 'var(--c-ink)' }}>Theo dõi ứng tuyển</h2>
                 <p style={{ margin: 0, fontSize: '0.96rem', color: 'var(--c-muted)' }}>Trạng thái các đơn ứng tuyển việc làm và Quest của bạn.</p>
               </div>
 
-              {/* Sub-tabs */}
-              <div style={{ display: 'flex', background: 'var(--c-surface-soft)', border: '1px solid var(--c-line)', padding: '4px', borderRadius: '12px', gap: '4px', marginBottom: '24px', width: 'fit-content' }}>
+              <div className="apptrack-stats">
+                {statCards.map(s => (
+                  <div className="apptrack-stat" key={s.label}>
+                    <div className="apptrack-stat-val" style={{ color: s.color }}>{s.val}</div>
+                    <div className="apptrack-stat-label">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="apptrack-tabs">
                 {[
                   { key: 'BUSINESS', icon: <Building size={15} />, label: 'Doanh nghiệp', count: appliedJobs.length },
                   { key: 'CLUB', icon: <Zap size={15} />, label: 'CLB / Quest', count: questApplications.length },
                 ].map(tab => (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setMyAppsTab(tab.key)}
-                    style={{ padding: '9px 18px', borderRadius: '9px', border: 0, fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', background: myAppsTab === tab.key ? 'var(--c-red)' : 'transparent', color: myAppsTab === tab.key ? '#fff' : 'var(--c-muted)' }}
-                  >
-                    {tab.icon}{tab.label}
-                    <span style={{ fontSize: '0.72rem', fontWeight: '800', background: myAppsTab === tab.key ? 'rgba(255,255,255,0.25)' : 'var(--c-line)', color: myAppsTab === tab.key ? '#fff' : 'var(--c-muted)', borderRadius: '20px', padding: '1px 7px' }}>
-                      {tab.count}
-                    </span>
+                  <button key={tab.key} type="button" onClick={() => setMyAppsTab(tab.key)} className={`apptrack-tab ${myAppsTab === tab.key ? 'active' : ''}`}>
+                    {tab.icon}{tab.label}<span className="apptrack-tab-count">{tab.count}</span>
                   </button>
                 ))}
               </div>
 
-              {/* Withdraw error */}
               {withdrawError && (
-                <div style={{ padding: '10px 14px', background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: '10px', color: '#dc2626', fontSize: '0.85rem', fontWeight: '600', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>{withdrawError}</span>
-                  <button onClick={() => setWithdrawError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', display: 'flex', padding: '2px' }} aria-label="Đóng"><X size={15} /></button>
+                <div className="apptrack-error">
+                  <span><AlertTriangle size={15} /> {withdrawError}</span>
+                  <button onClick={() => setWithdrawError('')} aria-label="Đóng"><X size={15} /></button>
                 </div>
               )}
 
-              {/* Filters */}
               {myAppsTab === 'BUSINESS' ? (
                 <>
-                  <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                    <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
-                      <Search size={15} style={{ position: 'absolute', left: '12px', top: '11px', color: 'var(--muted)' }} />
-                      <input type="text" value={myAppsSearch} onChange={e => setMyAppsSearch(e.target.value)}
-                        placeholder="Tìm vị trí hoặc công ty..." style={{ width: '100%', padding: '10px 12px 10px 36px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', color: 'var(--ink)', boxSizing: 'border-box', outline: 'none' }} />
+                  <div className="apptrack-filters">
+                    <div className="apptrack-search">
+                      <Search size={16} />
+                      <input type="text" value={myAppsSearch} onChange={e => setMyAppsSearch(e.target.value)} placeholder="Tìm vị trí hoặc công ty..." />
                     </div>
-                    <select value={myAppsStatusFilter} onChange={e => setMyAppsStatusFilter(e.target.value)}
-                      style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', color: 'var(--ink)', cursor: 'pointer' }}>
+                    <select className="apptrack-select" value={myAppsStatusFilter} onChange={e => setMyAppsStatusFilter(e.target.value)}>
                       <option value="">Tất cả trạng thái</option>
                       {Object.entries(JOB_STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                     </select>
                     {(myAppsSearch || myAppsStatusFilter) && (
-                      <button type="button" onClick={() => { setMyAppsSearch(''); setMyAppsStatusFilter(''); }}
-                        style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.84rem', color: 'var(--muted)', cursor: 'pointer', fontWeight: '700' }}>
-                        Xóa bộ lọc
-                      </button>
+                      <button type="button" className="apptrack-btn" onClick={() => { setMyAppsSearch(''); setMyAppsStatusFilter(''); }}>Xóa bộ lọc</button>
                     )}
                   </div>
 
                   {applicationsLoading ? (
-                    <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>Đang tải...</div>
+                    <div className="apptrack-state"><RefreshCw size={20} style={{ color: 'var(--primary)', animation: 'spin 1.4s linear infinite' }} /><p>Đang tải hồ sơ ứng tuyển...</p></div>
                   ) : filteredBizApps.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '60px 20px', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
-                      <BriefcaseBusiness size={28} style={{ color: 'var(--muted)', marginBottom: '10px' }} />
-                      <p style={{ margin: 0, color: 'var(--muted)', fontWeight: '600' }}>
-                        {myAppsSearch || myAppsStatusFilter ? 'Không tìm thấy hồ sơ phù hợp.' : 'Bạn chưa ứng tuyển vị trí nào từ doanh nghiệp.'}
-                      </p>
-                    </div>
+                    <div className="apptrack-empty"><BriefcaseBusiness size={28} /><p>{myAppsSearch || myAppsStatusFilter ? 'Không tìm thấy hồ sơ phù hợp.' : 'Bạn chưa ứng tuyển vị trí nào từ doanh nghiệp.'}</p></div>
                   ) : (
-                    <div className="np-stagger" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div className="np-stagger apptrack-list">
                       {filteredBizApps.map((app, idx) => {
                         const st = app.status || 'SUBMITTED';
                         const sc = JOB_STATUS_COLOR[st] || '#6b7280';
                         const sl = JOB_STATUS_LABEL[st] || st;
+                        const isBoosted = app.boostedUntil && new Date(app.boostedUntil) > new Date();
                         return (
-                          <div key={app.id || idx} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderLeftWidth: '4px', borderLeftColor: sc }}>
-                            <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'var(--surface-soft)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                              <Building size={20} style={{ color: 'var(--muted)' }} />
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <strong style={{ display: 'block', fontSize: '0.96rem', color: 'var(--ink)', marginBottom: '2px' }}>{app.job_title || app.title}</strong>
-                              <div style={{ fontSize: '0.82rem', color: 'var(--muted)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Building size={12} />{app.company_name || app.companyName || 'Đối tác'}</span>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={12} />{app.applied_at ? new Date(app.applied_at).toLocaleDateString('vi-VN') : app.appliedAt || '—'}</span>
-                                <span style={{ padding: '2px 8px', borderRadius: '5px', background: 'var(--surface-soft)', fontWeight: '700', fontSize: '0.76rem' }}>
-                                  {JOB_TYPES.find(t => t.value === (app.job_type || app.jobType))?.label || app.job_type || app.jobType || '—'}
+                          <div className="appcard" key={app.id || idx} style={{ '--app-status': sc, '--app-status-soft': `${sc}1a` }}>
+                            <div className="appcard-logo"><Building size={20} style={{ color: 'var(--c-muted)' }} /></div>
+                            <div className="appcard-body">
+                              <div className="appcard-head">
+                                <div style={{ minWidth: 0 }}>
+                                  <div className="appcard-title">{app.job_title || app.title}</div>
+                                  <div className="appcard-meta">
+                                    <span><Building size={12} />{app.company_name || app.companyName || 'Đối tác'}</span>
+                                    <span><Calendar size={12} />{app.applied_at ? new Date(app.applied_at).toLocaleDateString('vi-VN') : app.appliedAt || '—'}</span>
+                                    <span><BriefcaseBusiness size={12} />{JOB_TYPES.find(t => t.value === (app.job_type || app.jobType))?.label || app.job_type || app.jobType || '—'}</span>
+                                  </div>
+                                </div>
+                                <span className="appcard-status">
+                                  {st === 'SUBMITTED' && <Clock3 size={13} />}
+                                  {(st === 'ACCEPTED' || st === 'SHORTLISTED') && <CheckCircle2 size={13} />}
+                                  {st === 'REJECTED' && <AlertTriangle size={13} />}
+                                  {sl}
                                 </span>
                               </div>
-                            </div>
-                            <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '8px', background: `${sc}15`, color: sc, fontWeight: '800', fontSize: '0.82rem' }}>
-                                {st === 'SUBMITTED' && <Clock3 size={12} />}
-                                {(st === 'ACCEPTED' || st === 'SHORTLISTED') && <CheckCircle2 size={12} />}
-                                {st === 'REJECTED' && <AlertTriangle size={12} />}
-                                {sl}
-                              </span>
                               {st === 'REJECTED' && (app.reject_reason || app.rejectionReason) && (
-                                <div style={{ fontSize: '0.76rem', color: '#dc2626', maxWidth: '200px', textAlign: 'right', fontWeight: '600' }}>
-                                  Lý do: {app.reject_reason || app.rejectionReason}
-                                </div>
+                                <div className="appcard-reject">Lý do từ chối: {app.reject_reason || app.rejectionReason}</div>
                               )}
                               {app.rating_score != null && (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', maxWidth: '220px' }}>
-                                  <div style={{ display: 'flex', gap: '2px' }}>
-                                    {[1, 2, 3, 4, 5].map(n => (
-                                      <Star key={n} size={14} fill={n <= app.rating_score ? '#f59e0b' : 'none'} color={n <= app.rating_score ? '#f59e0b' : 'var(--muted)'} />
-                                    ))}
-                                  </div>
-                                  {app.rating_comment && (
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'right', fontStyle: 'italic' }}>"{app.rating_comment}"</div>
-                                  )}
+                                <div className="appcard-rating">
+                                  <span className="appcard-stars">{[1, 2, 3, 4, 5].map(n => <Star key={n} size={15} fill={n <= app.rating_score ? '#f59e0b' : 'none'} color={n <= app.rating_score ? '#f59e0b' : 'var(--c-line-strong)'} />)}</span>
+                                  {app.rating_comment && <span className="appcard-ratenote">"{app.rating_comment}"</span>}
                                 </div>
                               )}
-                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                                <button
-                                  onClick={() => setViewingApp({ app, isQuest: false })}
-                                  style={{ fontSize: '0.76rem', fontWeight: '700', color: '#2563eb', background: 'none', border: '1px solid rgba(37,99,235,0.35)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
-                                  Xem chi tiết
-                                </button>
+                              <div className="appcard-actions">
+                                <button type="button" className="apptrack-btn" onClick={() => setViewingApp({ app, isQuest: false })}><Eye size={14} /> Chi tiết</button>
                                 {['SUBMITTED', 'VIEWED', 'SHORTLISTED'].includes(st) && (
-                                  <button
-                                    onClick={() => handleWithdrawJob(app.id)}
-                                    disabled={withdrawingId === app.id}
-                                    style={{ fontSize: '0.76rem', fontWeight: '700', color: '#6b7280', background: 'none', border: '1px solid var(--line)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
-                                    {withdrawingId === app.id ? 'Đang rút...' : 'Rút đơn'}
-                                  </button>
+                                  <button type="button" className="apptrack-btn" onClick={() => handleWithdrawJob(app.id)} disabled={withdrawingId === app.id}>{withdrawingId === app.id ? 'Đang rút...' : 'Rút đơn'}</button>
                                 )}
-                                
-                                {/* Insight Button */}
-                                <button
-                                  onClick={() => handleViewInsight(app)}
-                                  disabled={insightLoadingJobId === (app.job_id || app.id)}
-                                  style={{ fontSize: '0.76rem', fontWeight: '700', color: '#7c3aed', background: 'none', border: '1px solid rgba(124,58,237,0.35)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  {insightLoadingJobId === (app.job_id || app.id) ? '...' : '📊 Xem Insight'}
-                                </button>
-
-                                {/* Boost Button */}
-                                {(() => {
-                                  const isBoosted = app.boostedUntil && new Date(app.boostedUntil) > new Date();
-                                  if (isBoosted) {
-                                    return (
-                                      <span style={{ fontSize: '0.76rem', fontWeight: '800', background: '#d97706', color: '#fff', padding: '4px 11px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '5px' }} title={`Nổi bật đến ${new Date(app.boostedUntil).toLocaleString('vi-VN')}`}>
-                                        <Sparkles size={12} /> Đang nổi bật
-                                      </span>
-                                    );
-                                  }
-                                  if (['SUBMITTED', 'VIEWED'].includes(st)) {
-                                    return (
-                                      <button
-                                        onClick={() => handleBoostApplication(app.id)}
-                                        disabled={boostLoadingId === app.id}
-                                        style={{ fontSize: '0.76rem', fontWeight: '700', color: '#eab308', background: 'none', border: '1px solid rgba(234,179,8,0.35)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}
-                                        title={`Đẩy tin nổi bật trong ${premiumConfig.boostDurationHours}h với giá ${premiumConfig.boostPriceNp.toLocaleString()} NP`}
-                                      >
-                                        {boostLoadingId === app.id ? '...' : <><Sparkles size={12} /> Đẩy tin nổi bật</>}
-                                      </button>
-                                    );
-                                  }
-                                  return null;
-                                })()}
+                                {(() => { const ik = encodePremiumTarget('JOB', app.job_id || app.jobId || app.id); return (
+                                  <button type="button" className="apptrack-btn insight" onClick={() => handleViewInsight(app)} disabled={insightLoadingJobId === ik}>
+                                    <TrendingUp size={14} /> {insightLoadingJobId === ik ? '...' : 'Insight'}
+                                  </button>
+                                ); })()}
+                                {isBoosted ? (
+                                  <span className="apptrack-btn boosted" title={`Nổi bật đến ${new Date(app.boostedUntil).toLocaleString('vi-VN')}`}><Sparkles size={13} /> Đang nổi bật</span>
+                                ) : ['SUBMITTED', 'VIEWED'].includes(st) ? (
+                                  (() => { const bk = encodePremiumTarget('JOB', app.id); return (
+                                  <button type="button" className="apptrack-btn boost" onClick={() => handleBoostApplication(app.id, 'JOB')} disabled={boostLoadingId === bk} title={`Đẩy tin nổi bật ${premiumConfig.boostDurationHours}h · ${premiumConfig.boostPriceNp.toLocaleString()} NP`}>
+                                    {boostLoadingId === bk ? '...' : <><Sparkles size={13} /> Đẩy nổi bật</>}
+                                  </button>
+                                  ); })()
+                                ) : null}
                               </div>
                             </div>
                           </div>
@@ -2228,14 +2215,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 </>
               ) : (
                 <>
-                  <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                    <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
-                      <Search size={15} style={{ position: 'absolute', left: '12px', top: '11px', color: 'var(--muted)' }} />
-                      <input type="text" value={myAppsClubSearch} onChange={e => setMyAppsClubSearch(e.target.value)}
-                        placeholder="Tìm tên Quest hoặc CLB..." style={{ width: '100%', padding: '10px 12px 10px 36px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', color: 'var(--ink)', boxSizing: 'border-box', outline: 'none' }} />
+                  <div className="apptrack-filters">
+                    <div className="apptrack-search">
+                      <Search size={16} />
+                      <input type="text" value={myAppsClubSearch} onChange={e => setMyAppsClubSearch(e.target.value)} placeholder="Tìm tên Quest hoặc CLB..." />
                     </div>
-                    <select value={myAppsClubStatusFilter} onChange={e => setMyAppsClubStatusFilter(e.target.value)}
-                      style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.88rem', color: 'var(--ink)', cursor: 'pointer' }}>
+                    <select className="apptrack-select" value={myAppsClubStatusFilter} onChange={e => setMyAppsClubStatusFilter(e.target.value)}>
                       <option value="">Tất cả trạng thái</option>
                       <option value="SUBMITTED">Đã nộp</option>
                       <option value="ACCEPTED">Chấp thuận</option>
@@ -2244,78 +2229,67 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       <option value="WITHDRAWN">Rút đơn</option>
                     </select>
                     {(myAppsClubSearch || myAppsClubStatusFilter) && (
-                      <button type="button" onClick={() => { setMyAppsClubSearch(''); setMyAppsClubStatusFilter(''); }}
-                        style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid var(--line)', background: 'var(--bg)', fontSize: '0.84rem', color: 'var(--muted)', cursor: 'pointer', fontWeight: '700' }}>
-                        Xóa bộ lọc
-                      </button>
+                      <button type="button" className="apptrack-btn" onClick={() => { setMyAppsClubSearch(''); setMyAppsClubStatusFilter(''); }}>Xóa bộ lọc</button>
                     )}
                   </div>
 
                   {filteredClubApps.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '60px 20px', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
-                      <Zap size={28} style={{ color: 'var(--muted)', marginBottom: '10px' }} />
-                      <p style={{ margin: 0, color: 'var(--muted)', fontWeight: '600' }}>
-                        {myAppsClubSearch || myAppsClubStatusFilter ? 'Không tìm thấy Quest phù hợp.' : 'Bạn chưa tham gia Quest nào từ CLB.'}
-                      </p>
-                    </div>
+                    <div className="apptrack-empty"><Zap size={28} /><p>{myAppsClubSearch || myAppsClubStatusFilter ? 'Không tìm thấy Quest phù hợp.' : 'Bạn chưa tham gia Quest nào từ CLB.'}</p></div>
                   ) : (
-                    <div className="np-stagger" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div className="np-stagger apptrack-list">
                       {filteredClubApps.map((qa, idx) => {
                         const QUEST_SC = { SUBMITTED: '#d97706', ACCEPTED: '#16a34a', REJECTED: '#dc2626', COMPLETED: '#2563eb', WITHDRAWN: '#6b7280' };
                         const QUEST_SL = { SUBMITTED: 'Đã nộp', ACCEPTED: 'Chấp thuận', REJECTED: 'Từ chối', COMPLETED: 'Hoàn thành', WITHDRAWN: 'Rút đơn' };
                         const sc = QUEST_SC[qa.status] || '#6b7280';
                         const sl = QUEST_SL[qa.status] || qa.status;
                         return (
-                          <div key={qa.id || idx} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderLeftWidth: '4px', borderLeftColor: sc }}>
-                            <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                              <Zap size={20} style={{ color: '#f59e0b' }} />
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <strong style={{ display: 'block', fontSize: '0.96rem', color: 'var(--ink)', marginBottom: '2px' }}>{qa.questTitle}</strong>
-                              <div style={{ fontSize: '0.82rem', color: 'var(--muted)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Building size={12} />{qa.companyName || 'CLB'}</span>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={12} />{qa.appliedAt ? new Date(qa.appliedAt).toLocaleDateString('vi-VN') : '—'}</span>
-                                {qa.expReward > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '800', color: '#f59e0b' }}><Zap size={12} />+{qa.expReward} EXP</span>}
-                              </div>
-                            </div>
-                            <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '8px', background: `${sc}15`, color: sc, fontWeight: '800', fontSize: '0.82rem' }}>
-                                {qa.status === 'COMPLETED' && <CheckCircle2 size={12} />}
-                                {qa.status === 'REJECTED' && <AlertTriangle size={12} />}
-                                {qa.status === 'SUBMITTED' && <Clock3 size={12} />}
-                                {sl}
-                              </span>
-                              {qa.status === 'REJECTED' && qa.rejectReason && (
-                                <div style={{ fontSize: '0.76rem', color: '#dc2626', maxWidth: '200px', textAlign: 'right', fontWeight: '600' }}>
-                                  Lý do: {qa.rejectReason}
+                          <div className="appcard" key={qa.id || idx} style={{ '--app-status': sc, '--app-status-soft': `${sc}1a` }}>
+                            <div className="appcard-logo quest"><Zap size={20} style={{ color: '#f59e0b' }} /></div>
+                            <div className="appcard-body">
+                              <div className="appcard-head">
+                                <div style={{ minWidth: 0 }}>
+                                  <div className="appcard-title">{qa.questTitle}</div>
+                                  <div className="appcard-meta">
+                                    <span><Building size={12} />{qa.companyName || 'CLB'}</span>
+                                    <span><Calendar size={12} />{qa.appliedAt ? new Date(qa.appliedAt).toLocaleDateString('vi-VN') : '—'}</span>
+                                    {qa.expReward > 0 && <span style={{ color: '#f59e0b', fontWeight: '700' }}><Zap size={12} />+{qa.expReward} EXP</span>}
+                                  </div>
                                 </div>
+                                <span className="appcard-status">
+                                  {qa.status === 'COMPLETED' && <CheckCircle2 size={13} />}
+                                  {qa.status === 'REJECTED' && <AlertTriangle size={13} />}
+                                  {qa.status === 'SUBMITTED' && <Clock3 size={13} />}
+                                  {sl}
+                                </span>
+                              </div>
+                              {qa.status === 'REJECTED' && qa.rejectReason && (
+                                <div className="appcard-reject">Lý do từ chối: {qa.rejectReason}</div>
                               )}
                               {qa.ratingScore != null && (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', maxWidth: '220px' }}>
-                                  <div style={{ display: 'flex', gap: '2px' }}>
-                                    {[1, 2, 3, 4, 5].map(n => (
-                                      <Star key={n} size={14} fill={n <= qa.ratingScore ? '#f59e0b' : 'none'} color={n <= qa.ratingScore ? '#f59e0b' : 'var(--muted)'} />
-                                    ))}
-                                  </div>
-                                  {qa.ratingComment && (
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'right', fontStyle: 'italic' }}>"{qa.ratingComment}"</div>
-                                  )}
+                                <div className="appcard-rating">
+                                  <span className="appcard-stars">{[1, 2, 3, 4, 5].map(n => <Star key={n} size={15} fill={n <= qa.ratingScore ? '#f59e0b' : 'none'} color={n <= qa.ratingScore ? '#f59e0b' : 'var(--c-line-strong)'} />)}</span>
+                                  {qa.ratingComment && <span className="appcard-ratenote">"{qa.ratingComment}"</span>}
                                 </div>
                               )}
-                              <div style={{ display: 'flex', gap: '6px' }}>
-                                <button
-                                  onClick={() => setViewingApp({ app: qa, isQuest: true })}
-                                  style={{ fontSize: '0.76rem', fontWeight: '700', color: '#f59e0b', background: 'none', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
-                                  Xem chi tiết
-                                </button>
+                              <div className="appcard-actions">
+                                <button type="button" className="apptrack-btn" onClick={() => setViewingApp({ app: qa, isQuest: true })}><Eye size={14} /> Chi tiết</button>
                                 {qa.status === 'SUBMITTED' && (
-                                  <button
-                                    onClick={() => handleWithdrawQuest(qa.id)}
-                                    disabled={withdrawingId === qa.id}
-                                    style={{ fontSize: '0.76rem', fontWeight: '700', color: '#6b7280', background: 'none', border: '1px solid var(--line)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer' }}>
-                                    {withdrawingId === qa.id ? 'Đang rút...' : 'Rút đơn'}
-                                  </button>
+                                  <button type="button" className="apptrack-btn" onClick={() => handleWithdrawQuest(qa.id)} disabled={withdrawingId === qa.id}>{withdrawingId === qa.id ? 'Đang rút...' : 'Rút đơn'}</button>
                                 )}
+                                {(() => { const ik = encodePremiumTarget('QUEST', qa.questId); return (
+                                  <button type="button" className="apptrack-btn insight" onClick={() => handleViewInsight({ ...qa, applicationType: 'QUEST', targetId: qa.questId })} disabled={insightLoadingJobId === ik}>
+                                    <TrendingUp size={14} /> {insightLoadingJobId === ik ? '...' : 'Insight'}
+                                  </button>
+                                ); })()}
+                                {(qa.boostedUntil && new Date(qa.boostedUntil) > new Date()) ? (
+                                  <span className="apptrack-btn boosted" title={`Nổi bật đến ${new Date(qa.boostedUntil).toLocaleString('vi-VN')}`}><Sparkles size={13} /> Đang nổi bật</span>
+                                ) : qa.status === 'SUBMITTED' ? (
+                                  (() => { const bk = encodePremiumTarget('QUEST', qa.id); return (
+                                  <button type="button" className="apptrack-btn boost" onClick={() => handleBoostApplication(qa.id, 'QUEST')} disabled={boostLoadingId === bk} title={`Đẩy nổi bật ${premiumConfig.boostDurationHours}h · ${premiumConfig.boostPriceNp.toLocaleString()} NP`}>
+                                    {boostLoadingId === bk ? '...' : <><Sparkles size={13} /> Đẩy nổi bật</>}
+                                  </button>
+                                  ); })()
+                                ) : null}
                               </div>
                             </div>
                           </div>
@@ -2989,370 +2963,174 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               <p style={{ fontSize: '1rem', color: 'var(--muted)', fontWeight: 'bold' }}>Đang tải thông tin chi tiết đối tác...</p>
             </div>
           ) : (
-            <div className="org-detail-container">
-              {/* Hero Header */}
-              <div className="org-profile-hero" style={{ position: 'relative', height: '180px', borderRadius: '24px', display: 'flex', alignItems: 'flex-end', padding: '24px', overflow: 'visible', background: `linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%), var(--card-bg-strong)`, border: '1px solid var(--line)', marginBottom: '60px' }}>
-                <button
-                  className="button secondary-button"
-                  onClick={() => handleTabChange('organizations')}
-                  style={{
-                    position: 'absolute',
-                    top: '16px',
-                    left: '16px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '8px 14px',
-                    fontSize: '0.86rem',
-                    borderRadius: '10px',
-                    zIndex: 2
-                  }}
-                  type="button"
-                >
-                  <ArrowLeft size={14} /> Quay lại danh sách
-                </button>
-                
-                <div className="org-profile-logo-container" style={{
-                  position: 'absolute',
-                  bottom: '-40px',
-                  left: '24px',
-                  width: '88px',
-                  height: '88px',
-                  borderRadius: '20px',
-                  border: '4px solid var(--bg)',
-                  background: selectedOrg.logoUrl ? 'transparent' : selectedOrg.logoColor,
-                  boxShadow: 'var(--shadow)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                  zIndex: 3
-                }}>
-                  {selectedOrg.logoUrl ? (
-                    <img src={selectedOrg.logoUrl} alt={selectedOrg.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'white' }}>
-                      {selectedOrg.name.slice(0, 2).toUpperCase()}
-                    </span>
-                  )}
+            <div className="org-detail-container orgw">
+              <button className="org-back-btn" onClick={() => handleTabChange('organizations')} type="button">
+                <ArrowLeft size={16} /> Quay lại danh sách
+              </button>
+
+              {/* Hero */}
+              <div className="orgw-hero" style={{ '--org-accent': selectedOrg.type === 'CLUB' ? '#f97316' : '#2563eb' }}>
+                <div className="orgw-cover" />
+                <div className="orgw-hero-body">
+                  <div className="orgw-logo" style={{ background: selectedOrg.logoUrl ? 'var(--c-surface)' : selectedOrg.logoColor }}>
+                    {selectedOrg.logoUrl
+                      ? <img src={selectedOrg.logoUrl} alt={selectedOrg.name} />
+                      : <span>{selectedOrg.name.slice(0, 2).toUpperCase()}</span>}
+                  </div>
+                  <div className="orgw-title-row">
+                    <h1>{selectedOrg.name}</h1>
+                    {selectedOrg.verified && <span className="orgw-verify"><CheckCircle2 size={14} /> Đã xác thực</span>}
+                  </div>
+                </div>
+                <div className="orgw-sub">
+                  <span className="orgw-type-pill">{selectedOrg.type === 'CLUB' ? 'CLB / Tổ chức sinh viên' : 'Doanh nghiệp'}</span>
+                  <span className="orgw-dot" />
+                  {selectedOrg.type === 'CLUB'
+                    ? <span><strong>{selectedOrgQuests.length}</strong> Quest & hoạt động</span>
+                    : <span><strong>{selectedOrgJobs.length}</strong> tin tuyển dụng</span>}
                 </div>
               </div>
 
-              {/* Profile Details */}
-              <div className="org-profile-details" style={{ background: 'var(--bg)', borderRadius: '24px', border: '1px solid var(--line)', padding: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '14px' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                      <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: '900', color: 'var(--ink)' }}>{selectedOrg.name}</h2>
-                      {selectedOrg.verified && (
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          fontSize: '0.74rem',
-                          fontWeight: '800',
-                          padding: '3px 8px',
-                          borderRadius: '999px',
-                          background: 'rgba(34, 197, 94, 0.12)',
-                          color: '#22c55e'
-                        }}>
-                          <CheckCircle2 size={12} /> Đối tác đã xác thực
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Tag Classification & Location */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
-                      <span className={`org-badge-type ${selectedOrg.type.toLowerCase()}`} style={{ fontSize: '0.74rem', padding: '4px 10px', borderRadius: '6px', fontWeight: 'bold' }}>
-                        {selectedOrg.type === 'CLUB' ? 'CLB / Tổ chức sinh viên' : 'Doanh nghiệp'}
-                      </span>
-                      {selectedOrg.schoolName && (
-                        <span style={{ fontSize: '0.78rem', color: 'var(--muted)', background: 'var(--surface-soft)', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold' }}>
-                          {selectedOrg.schoolName}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* B2B Structural Fields Display */}
-                <h3 style={{ fontSize: '1.1rem', fontWeight: '850', color: 'var(--ink)', borderBottom: '1px solid var(--line)', paddingBottom: '8px', margin: '24px 0 14px' }}>
-                  Thông tin hồ sơ đối tác
-                </h3>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                  gap: '16px',
-                  marginBottom: '24px'
-                }}>
-                  {/* Specific Fields for CLUB/Organization */}
-                  {selectedOrg.type === 'CLUB' ? (
-                    <>
-                      <div style={{ padding: '14px', borderRadius: '12px', background: 'var(--surface-soft)', border: '1px solid var(--line)' }}>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', fontWeight: 'bold', textTransform: 'uppercase' }}>Trường liên kết</span>
-                        <strong style={{ fontSize: '0.88rem', color: 'var(--ink)', display: 'block', marginTop: '3px' }}>
-                          {selectedOrg.schoolName || 'Chưa liên kết trường'}
-                        </strong>
-                      </div>
-                      {selectedOrg.fanpageUrl && (
-                        <div style={{ padding: '14px', borderRadius: '12px', background: 'var(--surface-soft)', border: '1px solid var(--line)' }}>
-                          <span style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', fontWeight: 'bold', textTransform: 'uppercase' }}>Fanpage chính thức</span>
-                          <a href={selectedOrg.fanpageUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.88rem', color: 'var(--primary)', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '3px', textDecoration: 'none' }}>
-                            Xem Fanpage <ExternalLink size={12} />
-                          </a>
-                        </div>
-                      )}
-                      {/* Advisor contact details safely parsed */}
-                      {(() => {
-                        let advName = '';
-                        let advPhone = '';
-                        let advEmail = '';
-                        if (selectedOrg.advisorContact) {
-                          try {
-                            const adv = typeof selectedOrg.advisorContact === 'string' ? JSON.parse(selectedOrg.advisorContact) : selectedOrg.advisorContact;
-                            advName = adv.name || adv.advisor_name || '';
-                            advPhone = adv.phone || adv.advisor_phone || '';
-                            advEmail = adv.email || adv.advisor_email || '';
-                          } catch (e) {
-                            console.error(e);
-                          }
-                        }
-                        if (!advName) return null;
-                        return (
-                          <div style={{ padding: '14px', borderRadius: '12px', background: 'var(--surface-soft)', border: '1px solid var(--line)', gridColumn: '1 / -1' }}>
-                            <span style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', fontWeight: 'bold', textTransform: 'uppercase' }}>Giáo viên / Ban cố vấn CLB</span>
-                            <strong style={{ fontSize: '0.9rem', color: 'var(--ink)', display: 'block', marginTop: '3px' }}>{advName}</strong>
-                            <div style={{ display: 'flex', gap: '16px', marginTop: '4px', fontSize: '0.82rem', color: 'var(--muted)', flexWrap: 'wrap' }}>
-                              {advPhone && <span>SĐT: <strong>{advPhone}</strong></span>}
-                              {advEmail && <span>Email: <strong>{advEmail}</strong></span>}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </>
-                  ) : (
-                    /* Specific Fields for Enterprise */
-                    <>
-                      {selectedOrg.taxCode && (
-                        <div style={{ padding: '14px', borderRadius: '12px', background: 'var(--surface-soft)', border: '1px solid var(--line)' }}>
-                          <span style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', fontWeight: 'bold', textTransform: 'uppercase' }}>Mã số thuế (MST)</span>
-                          <strong style={{ fontSize: '0.9rem', color: 'var(--ink)', display: 'block', marginTop: '3px' }}>{selectedOrg.taxCode}</strong>
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {/* Common Fields */}
-                  <div style={{ padding: '14px', borderRadius: '12px', background: 'var(--surface-soft)', border: '1px solid var(--line)' }}>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', fontWeight: 'bold', textTransform: 'uppercase' }}>Người đại diện liên hệ</span>
-                    <strong style={{ fontSize: '0.88rem', color: 'var(--ink)', display: 'block', marginTop: '3px' }}>
-                      {selectedOrg.representativeName || 'Chưa cập nhật'}
-                    </strong>
-                  </div>
-                </div>
-
-                {/* Openings/Quests by this Org loaded dynamically from DB */}
-                <div style={{ borderTop: '1px solid var(--line)', paddingTop: '24px' }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '850', color: 'var(--ink)', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <BriefcaseBusiness size={20} color="var(--primary)" />
-                    Bài đăng của đối tác ({selectedOrgJobs.length + selectedOrgQuests.length})
-                  </h3>
-
-                  {/* Tab Selector */}
-                  <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid var(--line)', paddingBottom: '10px', marginBottom: '20px' }}>
-                    <button
-                      onClick={() => setSelectedOrgTab('JOBS')}
-                      style={{
-                        background: 'none',
-                        border: 0,
-                        borderBottom: selectedOrgTab === 'JOBS' ? '3px solid var(--primary)' : 'none',
-                        color: selectedOrgTab === 'JOBS' ? 'var(--primary)' : 'var(--muted)',
-                        fontWeight: 'bold',
-                        fontSize: '0.92rem',
-                        padding: '6px 12px',
-                        cursor: 'pointer'
-                      }}
-                      type="button"
-                    >
-                      Tin tuyển dụng ({selectedOrgJobs.length})
-                    </button>
-                    <button
-                      onClick={() => setSelectedOrgTab('QUESTS')}
-                      style={{
-                        background: 'none',
-                        border: 0,
-                        borderBottom: selectedOrgTab === 'QUESTS' ? '3px solid var(--primary)' : 'none',
-                        color: selectedOrgTab === 'QUESTS' ? 'var(--primary)' : 'var(--muted)',
-                        fontWeight: 'bold',
-                        fontSize: '0.92rem',
-                        padding: '6px 12px',
-                        cursor: 'pointer'
-                      }}
-                      type="button"
-                    >
-                      Quest & Hoạt động ({selectedOrgQuests.length})
-                    </button>
+              {/* Two-column layout */}
+              <div className="orgw-layout">
+                {/* MAIN */}
+                <div className="orgw-main">
+                  <div className="orgw-tabs">
+                    {selectedOrg.type === 'CLUB' ? (
+                      <span className="orgw-tab active">Quest & Hoạt động <span className="orgw-tab-count">{selectedOrgQuests.length}</span></span>
+                    ) : (
+                      <span className="orgw-tab active">Tin tuyển dụng <span className="orgw-tab-count">{selectedOrgJobs.length}</span></span>
+                    )}
                   </div>
 
                   {selectedOrgTab === 'JOBS' ? (
                     selectedOrgJobsLoading ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: '8px', background: 'var(--surface-soft)', borderRadius: '16px', border: '1px solid var(--line)' }}>
-                        <RefreshCw className="animate-spin" size={20} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
-                        <p style={{ fontSize: '0.85rem', color: 'var(--muted)', fontWeight: '600' }}>Đang nạp tin tuyển dụng...</p>
-                      </div>
+                      <div className="orgw-state"><RefreshCw size={20} style={{ color: 'var(--primary)', animation: 'spin 1.4s linear infinite' }} /><p>Đang nạp tin tuyển dụng...</p></div>
                     ) : selectedOrgJobs.length === 0 ? (
-                      <div style={{ padding: '30px 20px', textAlign: 'center', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
-                        <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>Đối tác hiện chưa có tin tuyển dụng nào.</p>
-                      </div>
+                      <div className="orgw-empty"><BriefcaseBusiness size={26} /><p>Đối tác hiện chưa có tin tuyển dụng nào.</p></div>
                     ) : (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-                        {selectedOrgJobs.map((job) => {
-                          const isLocked = candidateRs < job.minReqRs;
-                          const tone = getCategoryTone(job.category);
-                          const compText = job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận';
-                          return (
-                            <article className={`candidate-quest-item ${tone}`} key={job.id} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderLeftWidth: '5px', padding: '18px', height: '100%', margin: 0 }}>
-                              <div>
-                                <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                                  <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '850', padding: '3px 6px' }}>
-                                    {JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType}
-                                  </span>
-                                  {job.isRemote && (
-                                    <span style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', padding: '3px 6px' }}>
-                                      Remote
-                                    </span>
-                                  )}
+                      <>
+                        <div className="orgw-rows" key={`ojobs-${orgJobsPage}`}>
+                          {selectedOrgJobs.slice((orgJobsPage - 1) * ORG_PAGE_SIZE, orgJobsPage * ORG_PAGE_SIZE).map((job) => {
+                            const isLocked = candidateRs < job.minReqRs;
+                            const alreadyApplied = appliedJobs.some(a => (a.job_id || a.jobId) === job.id);
+                            const compText = job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận';
+                            return (
+                              <div className="orgw-row" key={job.id}>
+                                <div className="orgw-row-body">
+                                  <div className="orgw-row-tags">
+                                    <span className="orgw-tag">{JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType}</span>
+                                    {job.isRemote && <span className="orgw-tag remote">Remote</span>}
+                                    {isLocked && <span className="orgw-tag lock"><LockKeyhole size={10} /> Cần {job.minReqRs} RS</span>}
+                                  </div>
+                                  <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" className="orgw-row-title" onClick={() => viewOpportunityOnce(job.id)}>{job.title}</a>
+                                  <p className="orgw-row-desc">{job.description?.length > 150 ? `${job.description.slice(0, 150)}...` : job.description}</p>
+                                  <div className="orgw-row-meta">
+                                    <span className="pay">{compText}</span>
+                                    <span className="orgw-dot" />
+                                    <span>{job.isRemote ? 'Remote' : (job.location || 'Linh hoạt')}</span>
+                                    <span className="orgw-dot" />
+                                    <span>{job.minReqRs > 0 ? `Yêu cầu ${job.minReqRs} RS` : 'Không yêu cầu RS'}</span>
+                                  </div>
                                 </div>
-                                <h4 style={{ margin: '0 0 6px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)' }}>{job.title}</h4>
-                                <p style={{ fontSize: '0.84rem', color: 'var(--muted)', margin: '6px 0 12px', lineHeight: 1.45 }}>
-                                  {job.description?.length > 110 ? `${job.description.slice(0, 110)}...` : job.description}
-                                </p>
-                              </div>
-                              <div style={{ marginTop: '10px', borderTop: '1px solid var(--line)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem' }}>
-                                  <span style={{ color: 'var(--muted)' }}>Lương: <strong style={{ color: 'var(--primary)' }}>{compText}</strong></span>
-                                  <span style={{ color: 'var(--muted)' }}>Yêu cầu RS: <strong style={{ color: isLocked ? '#ef4444' : 'var(--ink)' }}>{job.minReqRs > 0 ? `${job.minReqRs} RS` : 'Không'}</strong></span>
+                                <div className="orgw-row-actions">
+                                  <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" className="orgw-detail" onClick={() => viewOpportunityOnce(job.id)}>Chi tiết</a>
+                                  <button type="button" className="orgw-apply" disabled={isLocked || alreadyApplied} onClick={() => handleApplyJob(job)}>
+                                    {alreadyApplied ? <><Check size={14} /> Đã ứng tuyển</> : isLocked ? 'Cần RS' : 'Ứng tuyển'}
+                                  </button>
                                 </div>
-                                <button
-                                  disabled={isLocked}
-                                  onClick={() => handleApplyJob(job)}
-                                  style={{ width: '100%', padding: '8px 12px', fontSize: '0.8rem', fontWeight: 'bold' }}
-                                  type="button"
-                                >
-                                  {isLocked ? 'Cần thêm RS' : 'Ứng tuyển'}
-                                </button>
                               </div>
-                            </article>
-                          );
-                        })}
-                      </div>
+                            );
+                          })}
+                        </div>
+                        {selectedOrgJobs.length > ORG_PAGE_SIZE && (
+                          <div className="orgw-pager">{renderPager(selectedOrgJobs.length, orgJobsPage, setOrgJobsPage, ORG_PAGE_SIZE)}</div>
+                        )}
+                      </>
                     )
                   ) : (
                     selectedOrgQuestsLoading ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: '8px', background: 'var(--surface-soft)', borderRadius: '16px', border: '1px solid var(--line)' }}>
-                        <RefreshCw className="animate-spin" size={20} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
-                        <p style={{ fontSize: '0.85rem', color: 'var(--muted)', fontWeight: '600' }}>Đang nạp các Quest...</p>
-                      </div>
+                      <div className="orgw-state"><RefreshCw size={20} style={{ color: 'var(--primary)', animation: 'spin 1.4s linear infinite' }} /><p>Đang nạp các Quest...</p></div>
                     ) : selectedOrgQuests.length === 0 ? (
-                      <div style={{ padding: '30px 20px', textAlign: 'center', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
-                        <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.9rem' }}>Đối tác hiện chưa có Quest nào.</p>
-                      </div>
+                      <div className="orgw-empty"><Zap size={26} /><p>Đối tác hiện chưa có Quest nào.</p></div>
                     ) : (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-                        {selectedOrgQuests.map((quest) => {
-                          const isLocked = candidateRs < (quest.minReqRs || 0);
-                          const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
-                          const categoryMeta = {
-                            SMALL_EVENT: { label: 'Sự kiện nhỏ', color: '#8b5cf6' },
-                            SCHOOL_CAMPAIGN: { label: 'Chiến dịch trường', color: '#0ea5e9' },
-                            COMPANY_PROJECT: { label: 'Dự án DN', color: '#f59e0b' },
-                            SHORT_INTERNSHIP: { label: 'Thực tập ngắn', color: '#10b981' },
-                            FREELANCE_GIG: { label: 'Freelance', color: '#ec4899' }
-                          }[quest.category] || { label: quest.category, color: 'var(--primary)' };
-                          return (
-                            <article className={`candidate-quest-item`} key={quest.id} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderLeftWidth: '5px', borderLeftColor: categoryMeta.color, padding: '18px', height: '100%', margin: 0 }}>
-                              <div>
-                                <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                  <span style={{ background: `${categoryMeta.color}15`, color: categoryMeta.color, borderRadius: '4px', fontSize: '0.7rem', fontWeight: '850', padding: '3px 6px' }}>
-                                    {categoryMeta.label}
-                                  </span>
-                                  {alreadyApplied && (
-                                    <span style={{ background: 'rgba(22, 163, 74, 0.1)', color: '#16a34a', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', padding: '3px 6px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                                      <Check size={10} /> Đăng ký
-                                    </span>
-                                  )}
+                      <>
+                        <div className="orgw-rows" key={`oquests-${orgQuestsPage}`}>
+                          {selectedOrgQuests.slice((orgQuestsPage - 1) * ORG_PAGE_SIZE, orgQuestsPage * ORG_PAGE_SIZE).map((quest) => {
+                            const isLocked = candidateRs < (quest.minReqRs || 0);
+                            const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
+                            const categoryMeta = {
+                              SMALL_EVENT: { label: 'Sự kiện nhỏ', color: '#8b5cf6' },
+                              SCHOOL_CAMPAIGN: { label: 'Chiến dịch trường', color: '#0ea5e9' },
+                              COMPANY_PROJECT: { label: 'Dự án DN', color: '#f59e0b' },
+                              SHORT_INTERNSHIP: { label: 'Thực tập ngắn', color: '#10b981' },
+                              FREELANCE_GIG: { label: 'Freelance', color: '#ec4899' }
+                            }[quest.category] || { label: quest.category, color: 'var(--primary)' };
+                            return (
+                              <div className="orgw-row" key={quest.id}>
+                                <div className="orgw-row-body">
+                                  <div className="orgw-row-tags">
+                                    <span className="orgw-tag" style={{ background: `${categoryMeta.color}1a`, color: categoryMeta.color }}>{categoryMeta.label}</span>
+                                    {alreadyApplied && <span className="orgw-tag applied"><Check size={10} /> Đã đăng ký</span>}
+                                    {isLocked && <span className="orgw-tag lock"><LockKeyhole size={10} /> Cần {quest.minReqRs} RS</span>}
+                                  </div>
+                                  <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer" className="orgw-row-title" onClick={() => viewOpportunityOnce(quest.id)}>{quest.title}</a>
+                                  <p className="orgw-row-desc">{quest.description?.length > 150 ? `${quest.description.slice(0, 150)}...` : quest.description}</p>
+                                  <div className="orgw-row-meta">
+                                    <span className="pay" style={{ color: '#f59e0b' }}>+{quest.expReward} EXP{quest.npReward > 0 ? ` · +${quest.npReward} NP` : ''}</span>
+                                    <span className="orgw-dot" />
+                                    <span>{quest.minReqRs > 0 ? `Yêu cầu ${quest.minReqRs} RS` : 'Không yêu cầu RS'}</span>
+                                  </div>
                                 </div>
-                                <h4 style={{ margin: '0 0 6px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)' }}>{quest.title}</h4>
-                                <p style={{ fontSize: '0.84rem', color: 'var(--muted)', margin: '6px 0 12px', lineHeight: 1.45 }}>
-                                  {quest.description?.length > 110 ? `${quest.description.slice(0, 110)}...` : quest.description}
-                                </p>
-                              </div>
-                              <div style={{ marginTop: '10px', borderTop: '1px solid var(--line)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem' }}>
-                                  <span style={{ color: 'var(--muted)' }}>Phần thưởng: <strong style={{ color: '#f59e0b' }}>+{quest.expReward} EXP</strong></span>
-                                  <span style={{ color: 'var(--muted)' }}>Yêu cầu RS: <strong style={{ color: isLocked ? '#ef4444' : 'var(--ink)' }}>{quest.minReqRs > 0 ? `${quest.minReqRs} RS` : 'Không'}</strong></span>
-                                </div>
-                                <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
-                                  <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer"
-                                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '700', borderRadius: '9px', border: '1px solid var(--c-line)', background: 'var(--c-surface)', color: 'var(--c-ink)', textDecoration: 'none' }}>
-                                    Chi tiết
-                                  </a>
-                                  <button type="button" disabled={isLocked || alreadyApplied}
-                                    onClick={() => { setSelectedQuestForApply(quest); setQuestCoverNote(''); setQuestAnswers({}); setQuestApplyError(''); setShowQuestApplyModal(true); }}
-                                    style={{ flex: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 12px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', background: (alreadyApplied || isLocked) ? 'var(--c-disabled)' : categoryMeta.color, color: (alreadyApplied || isLocked) ? 'var(--c-muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
+                                <div className="orgw-row-actions">
+                                  <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer" className="orgw-detail" onClick={() => viewOpportunityOnce(quest.id)}>Chi tiết</a>
+                                  <button type="button" className="orgw-apply" disabled={isLocked || alreadyApplied} onClick={() => { setSelectedQuestForApply(quest); setQuestCoverNote(''); setQuestAnswers({}); setQuestApplyError(''); setShowQuestApplyModal(true); }} style={{ background: (isLocked || alreadyApplied) ? undefined : categoryMeta.color }}>
                                     {alreadyApplied ? 'Đã đăng ký' : isLocked ? 'Cần RS' : 'Tham gia'}
                                   </button>
                                 </div>
                               </div>
-                            </article>
-                          );
-                        })}
-                      </div>
+                            );
+                          })}
+                        </div>
+                        {selectedOrgQuests.length > ORG_PAGE_SIZE && (
+                          <div className="orgw-pager">{renderPager(selectedOrgQuests.length, orgQuestsPage, setOrgQuestsPage, ORG_PAGE_SIZE)}</div>
+                        )}
+                      </>
                     )
                   )}
                 </div>
+
+                {/* SIDEBAR */}
+                <aside className="orgw-side">
+                  {selectedOrg.description && (
+                    <div className="orgw-card">
+                      <h3 className="orgw-card-title">Về {selectedOrg.name}</h3>
+                      <p className="orgw-card-desc">{selectedOrg.description}</p>
+                    </div>
+                  )}
+                  <div className="orgw-card">
+                    <h3 className="orgw-card-title">Thông tin đối tác</h3>
+                    <ul className="orgw-info">
+                      <li><span>Loại hình</span><strong>{selectedOrg.type === 'CLUB' ? 'CLB / Tổ chức' : 'Doanh nghiệp'}</strong></li>
+                      {selectedOrg.schoolName && <li><span>Trường liên kết</span><strong>{selectedOrg.schoolName}</strong></li>}
+                      {selectedOrg.representativeName && <li><span>Người đại diện</span><strong>{selectedOrg.representativeName}</strong></li>}
+                      {selectedOrg.taxCode && <li><span>Mã số thuế</span><strong>{selectedOrg.taxCode}</strong></li>}
+                      {selectedOrg.type === 'CLUB'
+                        ? <li><span>Quest & hoạt động</span><strong>{selectedOrgQuests.length}</strong></li>
+                        : <li><span>Tin tuyển dụng</span><strong>{selectedOrgJobs.length}</strong></li>}
+                      <li><span>Trạng thái</span><strong className="orgw-ok">Đã xác thực</strong></li>
+                    </ul>
+                    {selectedOrg.fanpageUrl && (
+                      <a href={selectedOrg.fanpageUrl} target="_blank" rel="noopener noreferrer" className="orgw-side-link"><ExternalLink size={14} /> Fanpage chính thức</a>
+                    )}
+                    {selectedOrg.website && !/seed:|nextplease\.net/.test(selectedOrg.website) && (
+                      <a href={selectedOrg.website} target="_blank" rel="noopener noreferrer" className="orgw-side-link"><ExternalLink size={14} /> Truy cập website</a>
+                    )}
+                  </div>
+                </aside>
               </div>
             </div>
           )
-        )}
-
-        {/* 4. ROADMAP VIEW */}
-        {activeView === 'ROADMAP' && (
-          <section className="candidate-profile-summary np-view" style={{ border: '1px solid var(--c-line)', background: 'var(--c-surface)', borderRadius: '20px' }}>
-            <div className="candidate-panel-heading">
-              <div>
-                <p className="eyebrow" style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '850', color: 'var(--muted)', letterSpacing: '0.05em' }}>Talent Roadmap</p>
-                <h2>Lộ trình phát triển năng lực số</h2>
-              </div>
-            </div>
-
-            <div className="road-map-flow">
-              {timeline.map((item, index) => (
-                <article className={`road-map-node ${item.state}`} key={index}>
-                  <div className="road-map-dot">
-                    {item.state === 'done' && <Check size={12} color="#fff" />}
-                  </div>
-                  <div className="road-map-card" style={{ borderLeft: item.state === 'done' ? '4px solid #22c55e' : (item.state === 'current' ? '4px solid var(--primary)' : '1px solid var(--line)') }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <h3>Bước {index + 1}: {item.title}</h3>
-                      <span style={{
-                        fontSize: '0.7rem',
-                        fontWeight: '800',
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        background: item.state === 'done' ? 'rgba(34, 197, 94, 0.12)' : (item.state === 'current' ? 'rgba(37, 99, 235, 0.12)' : 'var(--surface-soft)'),
-                        color: item.state === 'done' ? '#22c55e' : (item.state === 'current' ? 'var(--primary)' : 'var(--muted)')
-                      }}>
-                        {item.state === 'done' ? 'Hoàn thành' : (item.state === 'current' ? 'Đang thực hiện' : 'Chưa mở khóa')}
-                      </span>
-                    </div>
-                    <p>{item.detail}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
         )}
 
         {/* 5. CREDENTIALS & STATUS VIEW */}
