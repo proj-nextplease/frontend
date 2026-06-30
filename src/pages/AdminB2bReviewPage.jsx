@@ -54,6 +54,9 @@ import {
   ListFilter,
   CheckCircle,
   Activity,
+  PieChart,
+  TrendingUp,
+  ArrowRight,
   Server,
   Settings,
   Save,
@@ -304,6 +307,94 @@ function ProvisionPanel() {
         </button>
       </form>
     </div>
+  );
+}
+
+/* ── Lightweight inline SVG charts (no external lib) ── */
+function DonutChart({ data, size = 168, thickness = 26, centerValue, centerLabel }) {
+  const total = data.reduce((s, d) => s + (d.value || 0), 0);
+  const r = (size - thickness) / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+  const circ = 2 * Math.PI * r;
+  let offset = 0;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <g transform={`rotate(-90 ${cx} ${cy})`}>
+        <circle cx={cx} cy={cy} r={r} fill="none" style={{ stroke: 'var(--line)' }} strokeWidth={thickness} opacity="0.45" />
+        {total > 0 && data.map((d, i) => {
+          const len = ((d.value || 0) / total) * circ;
+          const el = (
+            <circle key={i} cx={cx} cy={cy} r={r} fill="none" style={{ stroke: d.color }} strokeWidth={thickness}
+              strokeDasharray={`${len} ${circ - len}`} strokeDashoffset={-offset} />
+          );
+          offset += len;
+          return el;
+        })}
+      </g>
+      <text x={cx} y={cy - 3} textAnchor="middle" style={{ fontSize: '1.6rem', fontWeight: 800, fill: 'var(--ink)' }}>{centerValue ?? total}</text>
+      <text x={cx} y={cy + 17} textAnchor="middle" style={{ fontSize: '0.72rem', fontWeight: 600, fill: 'var(--muted)' }}>{centerLabel}</text>
+    </svg>
+  );
+}
+
+function ChartLegend({ data }) {
+  const total = data.reduce((s, d) => s + (d.value || 0), 0) || 1;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {data.map((d) => (
+        <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.88rem' }}>
+          <span style={{ width: '11px', height: '11px', borderRadius: '3px', background: d.color, flexShrink: 0 }} />
+          <span style={{ color: 'var(--muted)', flex: 1 }}>{d.label}</span>
+          <strong style={{ color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{d.value}</strong>
+          <span style={{ color: 'var(--muted)', fontSize: '0.76rem', fontVariantNumeric: 'tabular-nums', minWidth: '38px', textAlign: 'right' }}>{Math.round(((d.value || 0) / total) * 100)}%</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BarList({ data }) {
+  const max = Math.max(1, ...data.map((d) => d.value || 0));
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '13px' }}>
+      {data.map((d) => (
+        <div key={d.label}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '5px' }}>
+            <span style={{ color: 'var(--muted)' }}>{d.label}</span>
+            <strong style={{ color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>{d.value}</strong>
+          </div>
+          <div style={{ height: '9px', background: 'var(--surface-soft)', borderRadius: '6px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${((d.value || 0) / max) * 100}%`, background: d.color, borderRadius: '6px', transition: 'width 0.5s ease' }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TrendChart({ points, height = 150, color = '#2563eb' }) {
+  const width = 520;
+  const pad = 26;
+  const innerW = width - pad * 2;
+  const innerH = height - pad * 2;
+  const max = Math.max(1, ...points.map((p) => p.count || 0));
+  const stepX = points.length > 1 ? innerW / (points.length - 1) : 0;
+  const coords = points.map((p, i) => [pad + i * stepX, pad + innerH - ((p.count || 0) / max) * innerH]);
+  const line = coords.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c[0].toFixed(1)} ${c[1].toFixed(1)}`).join(' ');
+  const area = `${line} L ${pad + innerW} ${pad + innerH} L ${pad} ${pad + innerH} Z`;
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="none">
+      {[0.25, 0.5, 0.75].map((g) => (
+        <line key={g} x1={pad} x2={pad + innerW} y1={pad + innerH * g} y2={pad + innerH * g} style={{ stroke: 'var(--line)' }} strokeWidth="1" opacity="0.5" />
+      ))}
+      <path d={area} style={{ fill: color }} opacity="0.12" />
+      <path d={line} fill="none" style={{ stroke: color }} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      {coords.map((c, i) => <circle key={i} cx={c[0]} cy={c[1]} r="3.5" style={{ fill: color }} />)}
+      {points.map((p, i) => (
+        <text key={i} x={coords[i][0]} y={height - 7} textAnchor="middle" style={{ fontSize: '0.62rem', fill: 'var(--muted)' }}>{p.date.slice(5)}</text>
+      ))}
+    </svg>
   );
 }
 
@@ -744,6 +835,55 @@ export function AdminB2bReviewPage() {
     }
   }
 
+  /* Duyệt toàn bộ tin đang chờ của một nhóm DN/CLB */
+  function getGroupPendingJobs() {
+    if (!selectedJobGroup) return [];
+    return selectedJobGroup.jobs.filter((j) => {
+      const live = jobs.find((x) => x.id === j.id) || j;
+      const isPending = (j.status || '').toLowerCase() === 'pending';
+      const claimedByOther = !!live.claimedByAdminId && live.claimedByMe !== true;
+      return isPending && !claimedByOther;
+    });
+  }
+
+  function openApproveAllGroupConfirmation() {
+    const pendingJobs = getGroupPendingJobs();
+    if (pendingJobs.length === 0) {
+      setActionStatus({ type: 'error', message: 'Không có tin nào đang chờ duyệt (hoặc đã bị admin khác nhận).' });
+      return;
+    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Duyệt toàn bộ tin',
+      message: `Bạn có chắc chắn muốn phê duyệt tất cả ${pendingJobs.length} tin đang chờ của "${selectedJobGroup.companyName}"? Tất cả sẽ được hiển thị công khai cho ứng viên.`,
+      confirmText: `Duyệt tất cả (${pendingJobs.length})`,
+      confirmColor: '#16a34a',
+      onConfirm: () => handleApproveAllGroupExecute(pendingJobs),
+    });
+  }
+
+  async function handleApproveAllGroupExecute(pendingJobs) {
+    setActionStatus({ type: 'loading', message: `Đang duyệt ${pendingJobs.length} tin...` });
+    let ok = 0;
+    let fail = 0;
+    for (const job of pendingJobs) {
+      try {
+        await approveJob(job.id);
+        ok += 1;
+      } catch {
+        fail += 1;
+      }
+    }
+    setActionStatus({
+      type: fail === 0 ? 'success' : 'error',
+      message: fail === 0
+        ? `Đã duyệt toàn bộ ${ok} tin thành công!`
+        : `Đã duyệt ${ok} tin, ${fail} tin thất bại.`,
+    });
+    setSelectedJobGroup(null);
+    fetchTabData(activeTab);
+  }
+
   function openRejectJobConfirmation(jobId, jobTitle) {
     setRejectingJobItem({ id: jobId, title: jobTitle });
     setRejectJobReason('');
@@ -801,84 +941,141 @@ export function AdminB2bReviewPage() {
   function renderOverview() {
     if (!stats) return <p style={{ color: 'var(--muted)' }}>Không có số liệu tổng hợp.</p>;
 
+    const userComp = [
+      { label: 'Ứng viên', value: stats.totalCandidates || 0, color: '#2563eb' },
+      { label: 'Doanh nghiệp SME', value: stats.totalCompanies || 0, color: '#16a34a' },
+      { label: 'CLB & Tổ chức', value: stats.totalClubs || 0, color: '#ff7a1a' },
+    ];
+    const userTotal = userComp.reduce((s, d) => s + d.value, 0);
+    const contentComp = [
+      { label: 'Cơ hội việc làm', value: stats.totalJobs || 0, color: '#7c3aed' },
+      { label: 'Quest & chiến dịch', value: stats.totalQuests || 0, color: '#06b6d4' },
+    ];
+    const JOB_ST = {
+      DRAFT: { label: 'Nháp', color: '#9ca3af' },
+      PENDING: { label: 'Chờ duyệt', color: '#f59e0b' },
+      OPEN: { label: 'Đang mở', color: '#16a34a' },
+      REJECTED: { label: 'Từ chối', color: '#dc2626' },
+      CLOSED: { label: 'Đã đóng', color: '#6b7280' },
+      COMPLETED: { label: 'Hoàn thành', color: '#0ea5e9' },
+      CANCELLED: { label: 'Đã hủy', color: '#a3a3a3' },
+    };
+    const toStatusData = (obj) => obj && Object.keys(obj).length > 0
+      ? Object.entries(obj).map(([k, v]) => ({ label: JOB_ST[k]?.label || k, value: v, color: JOB_ST[k]?.color || '#6b7280' }))
+      : null;
+    const jobStatusData = toStatusData(stats.jobsByStatus);
+    const questStatusData = toStatusData(stats.questsByStatus);
+    const signups = Array.isArray(stats.signupsLast7Days) ? stats.signupsLast7Days : null;
+
     const statCards = [
-      { label: 'Ứng viên (Candidates)', value: stats.totalCandidates, icon: Users, color: '#2563eb', bg: 'rgba(37,99,235,0.08)' },
-      { label: 'Doanh nghiệp SME', value: stats.totalCompanies, icon: Building, color: '#16a34a', bg: 'rgba(22,163,74,0.08)' },
-      { label: 'Câu lạc bộ & Tổ chức', value: stats.totalClubs, icon: GraduationCap, color: '#ff7a1a', bg: 'rgba(255,122,26,0.08)' },
-      { label: 'Yêu cầu chờ duyệt B2B', value: stats.totalPendingB2b, icon: Clock, color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
-      { label: 'Cơ hội việc làm (Jobs)', value: stats.totalJobs, icon: FileText, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)' },
-      { label: 'Quests & Chiến dịch', value: stats.totalQuests, icon: Activity, color: '#06b6d4', bg: 'rgba(6,182,212,0.08)' },
-      { label: 'Số nhật ký hệ thống', value: stats.totalLogs, icon: ShieldCheck, color: '#dc2626', bg: 'rgba(220,38,38,0.08)' },
+      { label: 'Ứng viên', value: stats.totalCandidates, icon: Users, color: '#2563eb', bg: 'rgba(37,99,235,0.1)' },
+      { label: 'Doanh nghiệp SME', value: stats.totalCompanies, icon: Building, color: '#16a34a', bg: 'rgba(22,163,74,0.1)' },
+      { label: 'CLB & Tổ chức', value: stats.totalClubs, icon: GraduationCap, color: '#ff7a1a', bg: 'rgba(255,122,26,0.1)' },
+      { label: 'Chờ duyệt B2B', value: stats.totalPendingB2b, icon: Clock, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+      { label: 'Cơ hội việc làm', value: stats.totalJobs, icon: FileText, color: '#7c3aed', bg: 'rgba(124,58,237,0.1)' },
+      { label: 'Quest & Chiến dịch', value: stats.totalQuests, icon: Activity, color: '#06b6d4', bg: 'rgba(6,182,212,0.1)' },
+      { label: 'Nhật ký hệ thống', value: stats.totalLogs, icon: ShieldCheck, color: '#dc2626', bg: 'rgba(220,38,38,0.1)' },
     ];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-        {/* Stats Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+      <div className="adm-ov">
+        <div className="adm-kpis">
           {statCards.map((c) => {
             const Icon = c.icon;
             return (
-              <div key={c.label} className="admin-stat-card" style={{ borderColor: `${c.color}25` }}>
-                <div className="admin-stat-icon" style={{ color: c.color, background: c.bg }}>
-                  <Icon size={20} />
-                </div>
-                <div>
-                  <strong className="admin-stat-value">{c.value}</strong>
-                  <span className="admin-stat-label">{c.label}</span>
-                </div>
+              <div key={c.label} className="adm-kpi" style={{ '--kpi-color': c.color }}>
+                <span className="adm-kpi-icon" style={{ color: c.color, background: c.bg }}><Icon size={20} /></span>
+                <div className="adm-kpi-val">{c.value ?? 0}</div>
+                <span className="adm-kpi-label">{c.label}</span>
               </div>
             );
           })}
         </div>
 
-        {/* System Settings & Health Status Card */}
-        <div className="panel" style={{ borderRadius: '24px' }}>
-          <div className="panel-title" style={{ borderBottom: '1px solid var(--line)', paddingBottom: '16px', marginBottom: '16px' }}>
-            <Server size={20} style={{ color: '#2563eb' }} />
-            <h2 style={{ fontSize: '1.1rem', margin: 0 }}>Thông tin cấu hình & Sức khỏe hệ thống</h2>
+        <div className="adm-grid-2">
+          <div className="adm-card">
+            <div className="adm-card-head">
+              <span className="adm-card-ico" style={{ background: 'rgba(37,99,235,0.1)', color: '#2563eb' }}><PieChart size={17} /></span>
+              <h3>Cơ cấu người dùng & tổ chức</h3>
+            </div>
+            <div className="adm-donut-row">
+              <DonutChart data={userComp} centerValue={userTotal} centerLabel="Tài khoản" />
+              <div style={{ flex: 1, minWidth: '160px' }}><ChartLegend data={userComp} /></div>
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', fontSize: '0.9rem' }}>
-            <div>
-              <span style={{ color: 'var(--muted)', fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Trạng thái API</span>
-              <strong style={{ color: '#16a34a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <CheckCircle size={14} /> Hoạt động ổn định
-              </strong>
+          <div className="adm-card">
+            <div className="adm-card-head">
+              <span className="adm-card-ico" style={{ background: 'rgba(124,58,237,0.1)', color: '#7c3aed' }}><Activity size={17} /></span>
+              <h3>Nội dung hệ thống</h3>
             </div>
-            <div>
-              <span style={{ color: 'var(--muted)', fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Kết nối Database</span>
-              <strong>Remote Supabase Pooler</strong>
-            </div>
-            <div>
-              <span style={{ color: 'var(--muted)', fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Flyway Migration</span>
-              <strong style={{ color: '#2563eb' }}>Đã đồng bộ (V8__add_b2b...)</strong>
-            </div>
-            <div>
-              <span style={{ color: 'var(--muted)', fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Phiên bản Hệ thống</span>
-              <strong>v0.9.4-BETA</strong>
+            <div className="adm-donut-row">
+              <DonutChart data={contentComp} centerValue={(stats.totalJobs || 0) + (stats.totalQuests || 0)} centerLabel="Bài đăng" />
+              <div style={{ flex: 1, minWidth: '160px' }}><ChartLegend data={contentComp} /></div>
             </div>
           </div>
         </div>
 
-        {/* Action card linking to active sections */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-          <div className="panel" style={{ borderRadius: '20px', cursor: 'pointer' }} onClick={() => navigate(getAdminTabPath('B2B_REVIEWS'))}>
-            <h3 style={{ margin: '0 0 8px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Clock size={16} style={{ color: '#f59e0b' }} />
-              Duyệt hồ sơ chờ đối tác B2B
-            </h3>
-            <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--muted)' }}>
-              Có <strong>{stats.totalPendingB2b}</strong> hồ sơ đang chờ xét duyệt minh chứng đăng ký và quyết định thành lập.
-            </p>
+        {(jobStatusData || questStatusData || signups) && (
+          <div className="adm-grid-2">
+            {jobStatusData && (
+              <div className="adm-card">
+                <div className="adm-card-head">
+                  <span className="adm-card-ico" style={{ background: 'rgba(22,163,74,0.1)', color: '#16a34a' }}><BarChart2 size={17} /></span>
+                  <h3>Tin tuyển dụng theo trạng thái</h3>
+                </div>
+                <BarList data={jobStatusData} />
+              </div>
+            )}
+            {questStatusData && (
+              <div className="adm-card">
+                <div className="adm-card-head">
+                  <span className="adm-card-ico" style={{ background: 'rgba(6,182,212,0.1)', color: '#06b6d4' }}><BarChart2 size={17} /></span>
+                  <h3>Quest theo trạng thái</h3>
+                </div>
+                <BarList data={questStatusData} />
+              </div>
+            )}
+            {signups && (
+              <div className="adm-card" style={{ gridColumn: (jobStatusData && questStatusData) ? '1 / -1' : 'auto' }}>
+                <div className="adm-card-head">
+                  <span className="adm-card-ico" style={{ background: 'rgba(37,99,235,0.1)', color: '#2563eb' }}><TrendingUp size={17} /></span>
+                  <h3>Người dùng mới · 7 ngày gần nhất</h3>
+                </div>
+                <TrendChart points={signups} />
+              </div>
+            )}
           </div>
-          <div className="panel" style={{ borderRadius: '20px', cursor: 'pointer' }} onClick={() => navigate(getAdminTabPath('AUDIT_LOGS'))}>
-            <h3 style={{ margin: '0 0 8px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShieldCheck size={16} style={{ color: '#dc2626' }} />
-              Xem nhật ký hoạt động hệ thống
-            </h3>
-            <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--muted)' }}>
-              Theo dõi và ghi nhận lịch sử tương tác, thao tác của tất cả tài khoản người dùng và quản trị viên.
-            </p>
+        )}
+
+        <div className="adm-card">
+          <div className="adm-card-head">
+            <span className="adm-card-ico" style={{ background: 'rgba(22,163,74,0.1)', color: '#16a34a' }}><Server size={17} /></span>
+            <h3>Trạng thái hệ thống</h3>
           </div>
+          <div className="adm-status-strip">
+            <span className="adm-status-pill"><span className="adm-status-dot" style={{ background: '#16a34a' }} /> API hoạt động ổn định</span>
+            <span className="adm-status-pill"><span className="adm-status-dot" style={{ background: '#2563eb' }} /> Database: Supabase Pooler</span>
+            <span className="adm-status-pill"><span className="adm-status-dot" style={{ background: '#16a34a' }} /> Migration đã đồng bộ</span>
+          </div>
+        </div>
+
+        <div className="adm-actions">
+          <button type="button" className="adm-action" onClick={() => navigate(getAdminTabPath('B2B_REVIEWS'))}>
+            <span className="adm-action-ico" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}><Clock size={20} /></span>
+            <div className="adm-action-body">
+              <h4>Duyệt hồ sơ đối tác B2B</h4>
+              <p>Có <strong>{stats.totalPendingB2b}</strong> hồ sơ đang chờ xét duyệt.</p>
+            </div>
+            <ArrowRight size={18} className="adm-action-arrow" />
+          </button>
+          <button type="button" className="adm-action" onClick={() => navigate(getAdminTabPath('AUDIT_LOGS'))}>
+            <span className="adm-action-ico" style={{ background: 'rgba(220,38,38,0.1)', color: '#dc2626' }}><ShieldCheck size={20} /></span>
+            <div className="adm-action-body">
+              <h4>Nhật ký hoạt động hệ thống</h4>
+              <p>Theo dõi lịch sử thao tác của người dùng và quản trị viên.</p>
+            </div>
+            <ArrowRight size={18} className="adm-action-arrow" />
+          </button>
         </div>
       </div>
     );
@@ -2648,7 +2845,7 @@ export function AdminB2bReviewPage() {
 
       {/* ── Custom Confirm Modal ── */}
       {confirmModal.isOpen && (
-        <div className="modal-overlay" onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}>
+        <div className="modal-overlay" style={{ zIndex: 3000 }} onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}>
           <div className="custom-confirm-card" onClick={(e) => e.stopPropagation()}>
             <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(245,158,11,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b', marginBottom: '16px' }}>
               <AlertTriangle size={28} />
@@ -2684,7 +2881,7 @@ export function AdminB2bReviewPage() {
 
       {/* ── Rejection Reason Input Modal ── */}
       {rejectingItem && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setRejectingItem(null)}>
+        <div className="modal-overlay" style={{ zIndex: 3000 }} onClick={(e) => e.target === e.currentTarget && setRejectingItem(null)}>
           <form className="modal-card" onSubmit={handleRejectSubmit}>
             <div className="modal-header">
               <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626' }}>
@@ -2733,7 +2930,7 @@ export function AdminB2bReviewPage() {
 
       {/* ── Job/Quest Rejection Reason Input Modal ── */}
       {rejectingJobItem && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setRejectingJobItem(null)}>
+        <div className="modal-overlay" style={{ zIndex: 3000 }} onClick={(e) => e.target === e.currentTarget && setRejectingJobItem(null)}>
           <form className="modal-card" onSubmit={handleRejectJobSubmit}>
             <div className="modal-header">
               <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626' }}>
@@ -2847,6 +3044,17 @@ export function AdminB2bReviewPage() {
                   {selectedJobGroup.jobs.length} tin đăng trong nhóm này. Chọn một tin để xem chi tiết đầy đủ.
                 </p>
               </div>
+              {selectedJobGroup.jobs.some((j) => (j.status || '').toLowerCase() === 'pending') && (
+                <button
+                  type="button"
+                  className="button primary-button"
+                  style={{ background: '#16a34a', borderColor: 'transparent', cursor: 'pointer', whiteSpace: 'nowrap', alignSelf: 'flex-start' }}
+                  onClick={openApproveAllGroupConfirmation}
+                  disabled={actionStatus.type === 'loading'}
+                >
+                  <Check size={15} /> Duyệt toàn bộ
+                </button>
+              )}
               <button type="button" onClick={() => setSelectedJobGroup(null)} className="modal-close-btn">
                 <X size={18} />
               </button>
