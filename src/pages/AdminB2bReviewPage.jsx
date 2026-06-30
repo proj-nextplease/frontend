@@ -1780,6 +1780,7 @@ export function AdminB2bReviewPage() {
                                 <span className="verif-md-row-title">
                                   {c.project_name}
                                   {c.expressVerification && <span className="verif-md-express" title="Express">⚡</span>}
+                                  {c.contentFlag && <AlertTriangle size={12} style={{ color: '#d97706', marginLeft: '4px', flexShrink: 0 }} aria-label="Nghi ngờ nội dung" />}
                                 </span>
                                 <span className={`proof-status-badge ${cs.toLowerCase()}`}>{statusLabel(cs)}</span>
                               </span>
@@ -1808,10 +1809,18 @@ export function AdminB2bReviewPage() {
                             <span className={`proof-chip ${(activeCred.role_level || 'MEMBER').toLowerCase()}`}>{activeCred.role_level === 'LEADER' ? 'Trưởng nhóm' : 'Thành viên'}</span>
                             <span>{activeCred.position}</span>
                             <span>{activeCred.created_at ? new Date(activeCred.created_at).toLocaleDateString('vi-VN') : '—'}</span>
+                            {activeCred.contentFlag && <span className="admin-flag-badge"><AlertTriangle size={11} /> Nghi ngờ nội dung</span>}
                           </div>
                         </div>
                         <span className={`proof-status-badge ${status.toLowerCase()}`}>{statusLabel(status)}</span>
                       </div>
+
+                      {activeCred.contentFlag && (
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '12px 15px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.35)', color: '#b45309', marginTop: '14px', fontSize: '0.84rem' }}>
+                          <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: '1px' }} />
+                          <span><strong>Cảnh báo kiểm duyệt tự động:</strong> Tên hoạt động/mô tả minh chứng có thể chứa từ ngữ không phù hợp. Hãy đọc kỹ trước khi duyệt.</span>
+                        </div>
+                      )}
 
                       {activeCred.description && <p className="admin-subitem-desc" style={{ marginTop: '14px' }}>{activeCred.description}</p>}
 
@@ -3082,6 +3091,9 @@ export function AdminB2bReviewPage() {
                         </span>
                         <span>{job.jobType || '—'}</span>
                         <span>{job.createdAt ? new Date(job.createdAt).toLocaleDateString('vi-VN') : '—'}</span>
+                        {job.contentFlag && (
+                          <span className="admin-flag-badge" title="Hệ thống tự động phát hiện từ ngữ nghi ngờ — cần xem kỹ trước khi duyệt"><AlertTriangle size={11} /> Nghi ngờ nội dung</span>
+                        )}
                       </div>
                     </div>
                     <span className={`badge-status ${si.badge}`}>{si.text}</span>
@@ -3284,6 +3296,13 @@ export function AdminB2bReviewPage() {
                             </button>
                           )}
                         </div>
+                      </div>
+                    )}
+
+                    {selectedJobDetail.contentFlag && (
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '13px 16px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.35)', color: '#b45309', marginBottom: '18px', fontSize: '0.86rem' }}>
+                        <AlertTriangle size={17} style={{ flexShrink: 0, marginTop: '1px' }} />
+                        <span><strong>Cảnh báo kiểm duyệt tự động:</strong> Hệ thống phát hiện tiêu đề/mô tả có thể chứa từ ngữ không phù hợp. Vui lòng đọc kỹ nội dung trước khi quyết định duyệt hoặc từ chối.</span>
                       </div>
                     )}
 
