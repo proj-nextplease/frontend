@@ -17,7 +17,7 @@ function timeAgo(iso) {
  * In-app notification bell. Self-contained: polls every 30s, shows an unread
  * badge and a dropdown of recent notifications. accent defaults to candidate red.
  */
-export function NotificationBell({ accent = '#e5533f' }) {
+export function NotificationBell({ accent = '#e5533f', style, buttonStyle }) {
   const [items, setItems] = useState([]);
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
@@ -68,11 +68,17 @@ export function NotificationBell({ accent = '#e5533f' }) {
     markAllNotificationsRead().catch(() => {});
   }
 
+  const defaultContainerStyle = { position: 'fixed', top: '18px', right: '24px', zIndex: 4000 };
+  const mergedContainerStyle = { ...defaultContainerStyle, ...style };
+
+  const defaultButtonStyle = { position: 'relative', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--line)', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(15,23,42,0.10)', color: 'var(--ink)' };
+  const mergedButtonStyle = { ...defaultButtonStyle, ...buttonStyle };
+
   return (
-    <div ref={rootRef} style={{ position: 'fixed', top: '18px', right: '24px', zIndex: 4000 }}>
+    <div ref={rootRef} style={mergedContainerStyle}>
       <button type="button" onClick={() => setOpen((o) => !o)} aria-label="Thông báo"
-        style={{ position: 'relative', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--line)', background: 'var(--surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(15,23,42,0.10)', color: 'var(--ink)' }}>
-        <Bell size={20} />
+        style={mergedButtonStyle}>
+        <Bell size={buttonStyle?.width ? 16 : 20} />
         {unread > 0 && (
           <span style={{ position: 'absolute', top: '-2px', right: '-2px', minWidth: '18px', height: '18px', padding: '0 5px', borderRadius: '999px', background: accent, color: '#fff', fontSize: '0.66rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 2px var(--surface)' }}>
             {unread > 9 ? '9+' : unread}
@@ -81,7 +87,7 @@ export function NotificationBell({ accent = '#e5533f' }) {
       </button>
 
       {open && (
-        <div style={{ position: 'absolute', top: '52px', right: 0, width: '360px', maxWidth: 'calc(100vw - 48px)', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '16px', boxShadow: '0 20px 50px rgba(15,23,42,0.18)', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: buttonStyle?.height ? `${parseInt(buttonStyle.height) + 8}px` : '52px', right: 0, width: '360px', maxWidth: 'calc(100vw - 48px)', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '16px', boxShadow: '0 20px 50px rgba(15,23,42,0.18)', overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid var(--line)' }}>
             <strong style={{ fontSize: '0.95rem', color: 'var(--ink)' }}>Thông báo</strong>
             {unread > 0 && (

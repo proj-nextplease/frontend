@@ -16,6 +16,14 @@ export async function getPendingB2bRegistrations() {
   return response.data.data;
 }
 
+export async function getApprovedB2bRegistrations() {
+  const response = await httpClient.get('/admin/b2b/approved');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải danh sách đã phê duyệt.');
+  }
+  return response.data.data;
+}
+
 export async function approveB2bRegistration(companyId) {
   const response = await httpClient.post(`/admin/b2b/approve/${companyId}`);
   if (!response.data?.success) {

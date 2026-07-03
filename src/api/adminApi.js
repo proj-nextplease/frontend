@@ -8,6 +8,14 @@ export async function getAdminStats() {
   return response.data.data;
 }
 
+export async function getAdminHealth() {
+  const response = await httpClient.get('/admin/dashboard/health');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải trạng thái hệ thống.');
+  }
+  return response.data.data;
+}
+
 export async function getAdminUsers() {
   const response = await httpClient.get('/admin/dashboard/users');
   if (!response.data?.success) {
