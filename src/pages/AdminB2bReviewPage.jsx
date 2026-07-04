@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useEffect, useState, useRef, useLayoutEffect } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect, useId } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { NotificationBell } from '../components/NotificationBell.jsx';
 import { useTheme } from '../lib/themeContext.jsx';
@@ -573,20 +573,24 @@ function ProvisionPanel() {
     return nameMatch || emailMatch;
   });
 
+  // Snapshot "now" once per mount (the 7-day cutoff need not tick live) so the
+  // age filters below stay pure — no Date.now() called during render.
+  const [nowTs] = useState(() => Date.now());
+
   const activeInvites = queryFiltered.filter(
-    (item) => typeof item.id === 'number' && (Date.now() - item.id) <= SEVEN_DAYS_MS
+    (item) => typeof item.id === 'number' && (nowTs - item.id) <= SEVEN_DAYS_MS
   );
 
   const historyInvites = queryFiltered.filter(
-    (item) => typeof item.id !== 'number' || (Date.now() - item.id) > SEVEN_DAYS_MS
+    (item) => typeof item.id !== 'number' || (nowTs - item.id) > SEVEN_DAYS_MS
   );
 
   const totalActiveCount = recentProvisions.filter(
-    (item) => typeof item.id === 'number' && (Date.now() - item.id) <= SEVEN_DAYS_MS
+    (item) => typeof item.id === 'number' && (nowTs - item.id) <= SEVEN_DAYS_MS
   ).length;
 
   const totalHistoryCount = recentProvisions.filter(
-    (item) => typeof item.id !== 'number' || (Date.now() - item.id) > SEVEN_DAYS_MS
+    (item) => typeof item.id !== 'number' || (nowTs - item.id) > SEVEN_DAYS_MS
   ).length;
 
   const visibleList = provisionTab === 'active' ? activeInvites : historyInvites;
@@ -1319,7 +1323,7 @@ function TrendChart({ points, height = 210, color = '#0066cc', deltaPct }) {
   const [wrapRef, width] = useElementWidth(640);
   const [mounted, setMounted] = useState(false);
   const [hoverIdx, setHoverIdx] = useState(null);
-  const gradId = useRef(`admTrendGrad-${Math.random().toString(36).slice(2, 8)}`).current;
+  const gradId = `admTrendGrad-${useId().replace(/:/g, '')}`;
   useEffect(() => {
     const raf = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(raf);
@@ -2661,7 +2665,6 @@ export function AdminB2bReviewPage() {
             {filteredUsers.map((u, index) => {
               const rolesArray = (u.roles || '').split(', ');
               const rolesStr = (u.roles || '').toLowerCase();
-              const isAdm = rolesStr.includes('admin');
               const isCand = rolesStr.includes('candidate');
               const isPartner = rolesStr.includes('employer') || rolesStr.includes('organizer');
 
@@ -2794,7 +2797,6 @@ export function AdminB2bReviewPage() {
                 {paginatedUsers.map((u) => {
                   const rolesArray = (u.roles || '').split(', ');
                   const rolesStr = (u.roles || '').toLowerCase();
-                  const isAdm = rolesStr.includes('admin');
                   const isCand = rolesStr.includes('candidate');
                   const isPartner = rolesStr.includes('employer') || rolesStr.includes('organizer');
 
@@ -5960,7 +5962,6 @@ export function AdminB2bReviewPage() {
                 {paginatedB2b.map((item) => {
                   const isClub = item.companyType === 'CLUB';
                   const accentColor = isClub ? '#ff7a1a' : '#0066cc';
-                  const submittedDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : '—';
                   const isClaimedByMe = currentUser && item.claimedByAdminId && String(item.claimedByAdminId) === String(currentUser.id);
                   const isClaimedByOther = item.claimedByAdminId && (!currentUser || String(item.claimedByAdminId) !== String(currentUser.id));
                   const isUnclaimed = !item.claimedByAdminId;

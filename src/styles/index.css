@@ -14375,8 +14375,24 @@ p { text-wrap: pretty; }
   background: var(--surface-soft) !important;
   color: var(--ink) !important;
 }
-:root[data-theme='dark'] .adm-view-switcher-slider { background: var(--surface) !important; }
+:root[data-theme='dark'] .adm-view-switcher {
+  background: var(--surface-soft) !important;
+  border-color: var(--line) !important;
+}
+:root[data-theme='dark'] .adm-view-switcher-slider {
+  background: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+:root[data-theme='dark'] .adm-view-switcher-btn.active { color: var(--primary) !important; }
 :root[data-theme='dark'] .adm-stat-cell:hover { background: rgba(110, 168, 255, 0.06) !important; }
+
+/* Accent KPI card: keep it visually identical to the other KPI cards in dark
+   (the warm color-mix tint stood out as an odd brown). The amber icon chip is
+   enough to signal it as the pending/attention card. */
+:root[data-theme='dark'] .adm-kpi-card.accent {
+  background: var(--card-bg) !important;
+  border-color: var(--line) !important;
+}
 
 /* Secondary buttons */
 :root[data-theme='dark'] .secondary-button,
