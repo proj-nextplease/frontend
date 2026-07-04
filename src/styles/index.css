@@ -14451,6 +14451,39 @@ p { text-wrap: pretty; }
 }
 :root[data-theme='dark'] .cfg-search input { color: var(--ink); }
 
+/* Verification detail modal (credential review) */
+:root[data-theme='dark'] .verif-modal-header { border-bottom-color: var(--line) !important; }
+:root[data-theme='dark'] .verif-md-row {
+  background: var(--surface);
+  border-color: var(--line);
+}
+:root[data-theme='dark'] .verif-md-row:hover { border-color: rgba(148, 163, 184, 0.4); }
+:root[data-theme='dark'] .verif-md-detail {
+  background: var(--card-bg);
+  border-color: var(--line);
+}
+:root[data-theme='dark'] .verif-notes-textarea {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+:root[data-theme='dark'] .verif-notes-save {
+  background: var(--surface-soft);
+  color: var(--ink);
+}
+:root[data-theme='dark'] .verif-notes-save:hover { background: rgba(255, 255, 255, 0.08); }
+
+/* Slide-over detail panel (user account detail) */
+:root[data-theme='dark'] .admin-slideover-panel {
+  background: var(--bg);
+  border-left: 1px solid var(--line);
+}
+:root[data-theme='dark'] .admin-slideover-header { border-bottom-color: var(--line); }
+:root[data-theme='dark'] .admin-slideover-footer {
+  border-top-color: var(--line);
+  background: var(--surface);
+}
+
 /* Donut track hairline */
 :root[data-theme='dark'] .adm-donut-track { stroke: var(--line) !important; }
 
