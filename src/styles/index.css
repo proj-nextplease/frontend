@@ -12676,6 +12676,49 @@ img {
 :root { --lp-btn-bg: #1d1320; --lp-btn-text: #ffffff; }
 :root[data-theme='dark'] { --lp-btn-bg: #f2edef; --lp-btn-text: #16131a; }
 
+/* Swizzled Astryx Button (src/components/astryx/Button.jsx), re-skinned with
+   --lp-* tokens instead of Astryx's own theme vars. Plain CSS — no stylex. */
+.astryx-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 24px;
+  border: 0;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.96rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.18s cubic-bezier(0.22,1,0.36,1), box-shadow 0.22s ease, background-color 0.2s ease, color 0.2s ease;
+}
+.astryx-btn:active { transform: scale(0.98); }
+.astryx-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(30,19,32,0.18); }
+.astryx-btn:focus-visible { outline: 2px solid var(--lp-red); outline-offset: 3px; }
+.astryx-btn--sm { height: 32px; padding: 8px 16px; font-size: 0.86rem; }
+.astryx-btn--md { height: 44px; }
+.astryx-btn--lg { height: 52px; padding: 14px 28px; }
+.astryx-btn--icon-only { aspect-ratio: 1 / 1; padding-inline: 0; padding-block: 0; }
+.astryx-btn--disabled { cursor: not-allowed; opacity: 0.5; transform: none; box-shadow: none; }
+.astryx-btn--primary { background: var(--lp-btn-bg); color: var(--lp-btn-text); }
+.astryx-btn--primary:hover { background-image: linear-gradient(rgba(255,255,255,0.08), rgba(255,255,255,0.08)); }
+.astryx-btn--secondary { background: var(--lp-surface); color: var(--lp-ink); border: 1.5px solid var(--lp-ink); }
+.astryx-btn--secondary:hover { background: var(--lp-pink); border-color: var(--lp-red); color: var(--lp-red); }
+.astryx-btn--ghost { background: transparent; color: var(--lp-ink); }
+.astryx-btn--ghost:hover { background-image: linear-gradient(rgba(0,0,0,0.04), rgba(0,0,0,0.04)); }
+.astryx-btn--destructive { background: var(--lp-red); color: #ffffff; }
+.astryx-btn--destructive:hover { background-image: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0.1)); }
+.astryx-btn__content { display: contents; }
+.astryx-btn__content--hidden { color: transparent; }
+.astryx-btn__icon, .astryx-btn__end { display: inline-flex; align-items: center; flex-shrink: 0; color: inherit; }
+.astryx-btn__label { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.astryx-btn__spinner-overlay { position: absolute; inset: 0; display: grid; place-items: center; }
+@media (prefers-reduced-motion: reduce) { .astryx-btn { transition: none; } .astryx-btn:hover { transform: none; } }
+
 /* ============================================================
    Candidate portal — dark surfaces (cards/sidebar hardcode #fff).
    ============================================================ */
