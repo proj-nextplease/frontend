@@ -1,18 +1,9 @@
-import { useMemo, useState } from 'react';
-import { Award, BriefcaseBusiness, FileUp, ShieldCheck, Sparkles } from 'lucide-react';
+import { useMemo } from 'react';
+import { Sparkles } from 'lucide-react';
 import {
-  PortfolioAvatar3D,
   PORTFOLIO_PREVIEW_STORAGE_PREFIX,
 } from './CandidatePortfolioPage.jsx';
-import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
-import { EXPERIENCE_CATEGORY_OPTIONS, EXPERIENCE_ROLE_LEVEL_OPTIONS } from '../constants/experience.js';
-
-const CATEGORY_LABEL = Object.fromEntries(
-  EXPERIENCE_CATEGORY_OPTIONS.map((o) => [o.value, o.label.replace(/ \(\+.*$/, '')]),
-);
-const ROLE_LABEL = Object.fromEntries(
-  EXPERIENCE_ROLE_LEVEL_OPTIONS.map((o) => [o.value, o.label.replace(/ \(\+.*$/, '')]),
-);
+import { VerifiedPassport } from './CandidatePortfolioViewPage.jsx';
 
 function readPortfolioDraft() {
   const params = new URLSearchParams(window.location.search);
@@ -28,167 +19,49 @@ function readPortfolioDraft() {
   }
 }
 
+/**
+ * Draft preview, opened in a new tab from the editor (or the header dropdown)
+ * before anything is saved. Renders through the same `VerifiedPassport` used by
+ * the real public profile so a candidate previews exactly what recruiters will
+ * eventually see — just with `isDraft` toned down (no reputation stats yet,
+ * since those belong to the saved account, not an unsaved draft).
+ */
 export function CandidatePortfolioPreviewPage() {
   const draft = useMemo(() => readPortfolioDraft(), []);
-  const profile = draft?.profile || {};
-  const experiences = draft?.experiences || [];
-  const credentials = draft?.credentials || [];
-  const skills = (profile.skills || '')
-    .split(',')
-    .map((skill) => skill.trim())
-    .filter(Boolean);
-  const [preview, setPreview] = useState(null);
 
   if (!draft) {
     return (
-      <section className="portfolio-preview-page">
-        <div className="preview-empty-state">
-          <Sparkles size={30} />
-          <h1>Chưa có bản preview để hiển thị.</h1>
-          <p>Quay lại trang tạo Portfolio và bấm “Xem trước” để mở bản nháp mới.</p>
+      <section className="vp-page">
+        <div className="vp-loading">
+          <Sparkles size={28} />
+          <p style={{ fontWeight: 700 }}>Chưa có bản xem trước để hiển thị.</p>
+          <span>Quay lại trang tạo Portfolio và bấm "Xem trước" để mở bản nháp mới.</span>
         </div>
       </section>
     );
   }
 
-  return (
-    <section className="portfolio-preview-page">
-      <div className="public-portfolio-shell">
-        <aside className="public-avatar-panel">
-          <div className="avatar-stage">
-            <PortfolioAvatar3D avatar={draft.avatar || { gender: draft.gender || 'female' }} />
-          </div>
-          <div className="public-profile-card">
-            <span className="avatar-badge">
-              <ShieldCheck size={16} />
-              Portfolio draft
-            </span>
-            <h1>{profile.name || 'Tên ứng viên'}</h1>
-            <p>{profile.headline || 'Headline nghề nghiệp'}</p>
-            <div className="preview-meta">
-              <span>{profile.school || 'Trường học'}</span>
-              <span>{profile.location || 'Địa điểm'}</span>
-            </div>
-          </div>
-        </aside>
+  const draftProfile = draft.profile || {};
+  const skills = (draftProfile.skills || '')
+    .split(',')
+    .map((skill) => skill.trim())
+    .filter(Boolean);
 
-        <main className="public-portfolio-content">
-          <section className="public-section-card intro-card">
-            <div className="preview-subheading">
-              <Sparkles size={18} />
-              <h2>Giới thiệu</h2>
-            </div>
-            <p className={profile.bio ? 'candidate-bio' : 'candidate-bio muted-preview'}>
-              {profile.bio || 'Phần giới thiệu ngắn của ứng viên sẽ hiển thị tại đây sau khi nhập.'}
-            </p>
-            <div className="skill-cloud">
-              {skills.length ? (
-                skills.map((skill) => <span key={skill}>{skill}</span>)
-              ) : (
-                <span>Kỹ năng sẽ hiển thị tại đây</span>
-              )}
-            </div>
-          </section>
+  const normalizedProfile = {
+    name: draftProfile.name,
+    headline: draftProfile.headline,
+    school: draftProfile.school,
+    location: draftProfile.location,
+    bio: draftProfile.bio,
+    skills,
+    avatar: draft.avatar || { gender: draft.gender || 'female' },
+    experiences: draft.experiences || [],
+    credentials: draft.credentials || [],
+    openToWork: !!draftProfile.openToWork,
+    socialLinks: draftProfile.socialLinks || {},
+    // No reputationScore/currentLevel/totalExp: those are account-level growth
+    // values, not accurate for an unsaved draft, so the stat strip stays hidden.
+  };
 
-          <section className="public-section-card">
-            <div className="preview-subheading">
-              <BriefcaseBusiness size={18} />
-              <h2>Kinh nghiệm nổi bật</h2>
-            </div>
-            <div className="experience-preview-list">
-              {experiences.map((experience) => (
-                <article className="experience-preview-card" key={experience.id}>
-                  <span>
-                    {experience.organization || 'Tên tổ chức / dự án'}
-                    {(experience.startDate || experience.endDate) && ` (${experience.startDate || '?'}${experience.endDate ? ` - ${experience.endDate}` : ''})`}
-                  </span>
-                  <h3>{experience.title || 'Vai trò / vị trí'}</h3>
-                  {(experience.category || experience.roleLevel) && (
-                    <div className="experience-tag-row">
-                      {experience.category && CATEGORY_LABEL[experience.category] && (
-                        <span className="experience-tag category">{CATEGORY_LABEL[experience.category]}</span>
-                      )}
-                      {experience.roleLevel && ROLE_LABEL[experience.roleLevel] && (
-                        <span className="experience-tag role">{ROLE_LABEL[experience.roleLevel]}</span>
-                      )}
-                    </div>
-                  )}
-                  <p>
-                    {experience.detail ||
-                      'Mô tả kinh nghiệm, kết quả và bằng chứng xác thực sẽ hiển thị tại đây.'}
-                  </p>
-                  {experience.proofLink && (
-                    <a className="experience-proof-link" href={experience.proofLink} target="_blank" rel="noopener noreferrer">
-                      <FileUp size={14} /> Link minh chứng
-                    </a>
-                  )}
-                  {(experience.proofImages || []).length > 0 && (
-                    <div className="experience-proof-grid">
-                      {experience.proofImages.map((img, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setPreview({ src: img, fileName: `Minh chứng ${i + 1}` })}
-                          className="experience-proof-thumb"
-                        >
-                          <img src={img} alt="Ảnh minh chứng kinh nghiệm" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="public-section-card">
-            <div className="preview-subheading">
-              <Award size={18} />
-              <h2>Bằng cấp & chứng chỉ</h2>
-            </div>
-            <div className="credential-preview-list">
-              {credentials.map((credential) => (
-                <article className="credential-preview-card" key={credential.id}>
-                  <span>{credential.issuer || 'Đơn vị cấp'}</span>
-                  <h3>{credential.name || 'Tên bằng cấp / chứng chỉ'}</h3>
-                  <p>{credential.issuedAt || 'Thời gian cấp'}</p>
-                  {credential.fileName && credential.fileData ? (
-                    <button
-                      type="button"
-                      onClick={() => setPreview({ src: credential.fileData, fileName: credential.fileName })}
-                      className="credential-file-pill is-link"
-                    >
-                      <FileUp size={15} />
-                      Xem file: {credential.fileName}
-                    </button>
-                  ) : (
-                    <div className={credential.fileName ? 'credential-file-pill' : 'credential-file-pill muted'}>
-                      <FileUp size={15} />
-                      {credential.fileName || 'Chưa có file đính kèm'}
-                    </div>
-                  )}
-                  {credential.fileData && /^data:image\//.test(credential.fileData) && (
-                    <button
-                      type="button"
-                      onClick={() => setPreview({ src: credential.fileData, fileName: credential.fileName })}
-                      className="credential-file-preview"
-                    >
-                      <img src={credential.fileData} alt={credential.fileName} />
-                    </button>
-                  )}
-                </article>
-              ))}
-            </div>
-          </section>
-        </main>
-      </div>
-      {preview && (
-        <FilePreviewModal
-          src={preview.src}
-          fileName={preview.fileName}
-          onClose={() => setPreview(null)}
-        />
-      )}
-    </section>
-  );
+  return <VerifiedPassport profile={normalizedProfile} isDraft />;
 }

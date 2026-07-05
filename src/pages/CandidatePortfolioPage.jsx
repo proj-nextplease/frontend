@@ -16,6 +16,10 @@ import {
   ChevronDown,
   Link as LinkIcon,
   LockKeyhole,
+  Code2,
+  Link2,
+  Globe,
+  Mail,
 } from 'lucide-react';
 import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
@@ -395,6 +399,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     location: '',
     bio: '',
     skills: '',
+    openToWork: false,
+    socialLinks: { github: '', linkedin: '', website: '', email: '' },
   });
   const [experiences, setExperiences] = useState(defaultExperiences);
   const [credentials, setCredentials] = useState(defaultCredentials);
@@ -440,7 +446,11 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                 if (draft.profile.headline === "Ứng viên nextplease") {
                   draft.profile.headline = "";
                 }
-                setProfile(draft.profile);
+                setProfile({
+                  openToWork: false,
+                  ...draft.profile,
+                  socialLinks: { github: '', linkedin: '', website: '', email: '', ...(draft.profile.socialLinks || {}) },
+                });
               }
               // Merge experiences with the server copy so that rows the draft
               // never saw — e.g. proof-of-work submissions made via the dashboard
@@ -471,6 +481,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               location: data.location || '',
               bio: data.bio || '',
               skills: data.skills ? data.skills.join(', ') : '',
+              openToWork: !!data.openToWork,
+              socialLinks: { github: '', linkedin: '', website: '', email: '', ...(data.socialLinks || {}) },
             });
             if (data.experiences && data.experiences.length > 0) {
               setExperiences(data.experiences);
@@ -538,6 +550,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         avatar,
         experiences: experiences.filter(exp => exp.title.trim() || exp.organization.trim()),
         credentials: credentials.filter(cred => cred.name.trim() || cred.issuer.trim()),
+        openToWork: !!profile.openToWork,
+        socialLinks: profile.socialLinks || {},
       };
       
       await updateMyPortfolio(payload);
@@ -576,6 +590,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         avatar,
         experiences: experiences.filter(exp => exp.title.trim() || exp.organization.trim()),
         credentials: credentials.filter(cred => cred.name.trim() || cred.issuer.trim()),
+        openToWork: !!profile.openToWork,
+        socialLinks: profile.socialLinks || {},
       };
       
       await updateMyPortfolio(payload, true);
@@ -618,6 +634,16 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       delete next[name];
       return next;
     });
+  }
+
+  function toggleOpenToWork() {
+    markDirty();
+    setProfile((current) => ({ ...current, openToWork: !current.openToWork }));
+  }
+
+  function updateSocialLink(key, value) {
+    markDirty();
+    setProfile((current) => ({ ...current, socialLinks: { ...current.socialLinks, [key]: value } }));
   }
 
   function updateExperience(id, field, value) {
@@ -1082,12 +1108,10 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               Về trang chủ
             </button>
           )}
-          <p className="eyebrow">3D candidate portfolio</p>
-          <h1>Tạo Portfolio ứng viên bằng nhân vật 3D của riêng bạn.</h1>
+          <h1>Dựng hồ sơ năng lực của bạn.</h1>
           <p>
-            Thay vì bắt đầu bằng form đăng ký khô khan, ứng viên có thể dựng
-            một reputation passport sống động: chọn nhân vật, nhập thông tin
-            cơ bản, kỹ năng và kinh nghiệm nổi bật.
+            Chọn nhân vật, nhập thông tin và kinh nghiệm đã được xác thực.
+            Mọi thay đổi hiện ngay ở khung xem trước.
           </p>
         </div>
       </div>
@@ -1325,6 +1349,46 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                 placeholder="Ví dụ: Event Ops, Social Content, Community, Check-in QR"
                 value={profile.skills}
               />
+            </label>
+
+            <div className="full-field pf-avail-card">
+              <div className="pf-avail-text">
+                <span className="pf-avail-title"><BriefcaseBusiness size={16} /> Đang tìm việc</span>
+                <span className="pf-avail-sub">Hiển thị huy hiệu “Đang tìm việc” trên portfolio công khai để nhà tuyển dụng chú ý.</span>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={!!profile.openToWork}
+                className={`pf-switch ${profile.openToWork ? 'on' : ''}`}
+                onClick={toggleOpenToWork}
+              >
+                <span className="pf-switch-knob" />
+              </button>
+            </div>
+
+            <label className="full-field">
+              Liên kết liên hệ <span style={{ fontWeight: 500, color: 'var(--muted)' }}>(tuỳ chọn)</span>
+              <div className="pf-social-inputs">
+                {[
+                  { key: 'github', icon: Code2, ph: 'github.com/username' },
+                  { key: 'linkedin', icon: Link2, ph: 'linkedin.com/in/username' },
+                  { key: 'website', icon: Globe, ph: 'website-cua-ban.com' },
+                  { key: 'email', icon: Mail, ph: 'email@lienhe.com' },
+                ].map((f) => {
+                  const Icon = f.icon;
+                  return (
+                    <div className="pf-social-input" key={f.key}>
+                      <Icon size={16} />
+                      <input
+                        value={(profile.socialLinks && profile.socialLinks[f.key]) || ''}
+                        onChange={(e) => updateSocialLink(f.key, e.target.value)}
+                        placeholder={f.ph}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </label>
           </div>
 

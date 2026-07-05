@@ -87,6 +87,8 @@ export function Header() {
         location: portfolio.location || '',
         bio: portfolio.bio || '',
         skills: portfolio.skills ? portfolio.skills.join(', ') : '',
+        openToWork: !!portfolio.openToWork,
+        socialLinks: portfolio.socialLinks || {},
       },
       experiences: portfolio.experiences || [],
       credentials: portfolio.credentials || [],
