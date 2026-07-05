@@ -1,3 +1,9 @@
+/* Astryx design system (facebook/astryx) — pre-built CSS, no bundler plugin
+   needed. Import order matters: reset -> component base -> theme overrides. */
+@import '@astryxdesign/core/reset.css';
+@import '@astryxdesign/core/astryx.css';
+@import '@astryxdesign/theme-neutral/theme.css';
+
 :root {
   color-scheme: light;
   font-family:

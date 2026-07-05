@@ -8,9 +8,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "update-readme": "node scripts/update-readme-structure.mjs"
+    "update-readme": "node scripts/update-readme-structure.mjs",
+    "astryx": "node node_modules/@astryxdesign/cli/bin/astryx.mjs"
   },
   "dependencies": {
+    "@astryxdesign/core": "^0.1.3",
+    "@astryxdesign/theme-neutral": "^0.1.3",
+    "@stylexjs/stylex": "^0.18.3",
     "@supabase/supabase-js": "^2.86.2",
     "axios": "^1.16.1",
     "lucide-react": "^1.16.0",
@@ -20,6 +24,7 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "@astryxdesign/cli": "^0.1.3",
     "@vitejs/plugin-react": "^5.1.1",
     "eslint": "^9.39.2",
     "eslint-plugin-react-hooks": "^7.0.1",
