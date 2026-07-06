@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, GraduationCap, Search, Quote } from 'lucide-react';
+import { Button } from '../components/astryx/Button.jsx';
 
 /* Wellfound palette, now theme-aware via CSS variables (see --lp-* in index.css). */
 const INK = 'var(--lp-ink)';
@@ -267,7 +268,7 @@ export function HomePage() {
   }, []);
 
   return (
-    <div style={{ background: 'var(--lp-bg)', color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", paddingBottom: '48px' }}>
+    <div style={{ background: 'var(--lp-bg)', color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip', fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif", paddingBottom: '48px' }}>
 
       {/* Global interaction + responsive styles for nav, CTAs and hero */}
       <style>{`
@@ -316,9 +317,14 @@ export function HomePage() {
               <Link to="/businesses" className="np-navlink">Doanh nghiệp & CLB</Link>
               <a href="#about" className="np-navlink">Về chúng tôi</a>
             </div>
-            <Link to="/candidate/login" className="np-cta np-nav-cta" style={{ alignItems: 'center', gap: '6px', padding: '9px 18px', borderRadius: '999px', background: 'var(--lp-btn-bg)', color: 'var(--lp-btn-text)', fontWeight: '700', fontSize: '0.9rem', textDecoration: 'none' }}>
-              Đăng nhập <ArrowRight size={15} />
-            </Link>
+            <Button
+              className="np-nav-cta"
+              label="Đăng nhập"
+              href="/candidate/login"
+              variant="primary"
+              size="sm"
+              endContent={<ArrowRight size={15} />}
+            />
           </nav>
         </div>
       </div>
@@ -356,12 +362,18 @@ export function HomePage() {
         </p>
 
         <div className="np-hero-in" style={{ position: 'relative', zIndex: 5, display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap', justifyContent: 'center', animationDelay: '0.24s' }}>
-          <Link to="/candidates" className="np-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: 'var(--lp-btn-bg)', color: 'var(--lp-btn-text)', fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>
-            Tôi là ứng viên <ArrowRight size={18} />
-          </Link>
-          <Link to="/businesses" className="np-cta np-cta-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: SURFACE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.96rem', textDecoration: 'none' }}>
-            Tôi tuyển dụng <ArrowRight size={18} />
-          </Link>
+          <Button
+            label="Tôi là ứng viên"
+            href="/candidates"
+            variant="primary"
+            endContent={<ArrowRight size={18} />}
+          />
+          <Button
+            label="Tôi tuyển dụng"
+            href="/businesses"
+            variant="secondary"
+            endContent={<ArrowRight size={18} />}
+          />
         </div>
       </section>
 
@@ -463,9 +475,12 @@ export function HomePage() {
               <GraduationCap size={28} color={INK} />
               <h2 style={{ ...H2, margin: '18px 0 10px' }}>Sẵn sàng xây hồ sơ?</h2>
               <p style={{ fontSize: '1rem', color: 'var(--lp-cream-ink)', margin: '0 0 22px' }}>Tạo tài khoản ứng viên miễn phí và bắt đầu tích lũy uy tín.</p>
-              <Link to="/candidate/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: 'var(--lp-btn-bg)', color: 'var(--lp-btn-text)', fontWeight: '700', fontSize: '0.94rem', textDecoration: 'none' }}>
-                Tạo hồ sơ miễn phí <ArrowRight size={18} />
-              </Link>
+              <Button
+                label="Tạo hồ sơ miễn phí"
+                href="/candidate/register"
+                variant="primary"
+                endContent={<ArrowRight size={18} />}
+              />
             </div>
           </Reveal>
           <Reveal delay={120} style={{ height: '100%' }}>
@@ -473,9 +488,13 @@ export function HomePage() {
               <Search size={28} color={WHITE} />
               <h2 style={{ ...H2, color: WHITE, margin: '18px 0 10px' }}>Cần tuyển tài năng trẻ?</h2>
               <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.85)', margin: '0 0 22px' }}>Đăng tin, đăng Quest và tiếp cận ứng viên đã được xác minh.</p>
-              <Link to="/business/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: WHITE, color: MAUVE, fontWeight: '700', fontSize: '0.94rem', textDecoration: 'none' }}>
-                Đăng tin tuyển dụng <ArrowRight size={18} />
-              </Link>
+              <Button
+                label="Đăng tin tuyển dụng"
+                href="/business/register"
+                variant="secondary"
+                style={{ background: WHITE, color: MAUVE, border: 'none' }}
+                endContent={<ArrowRight size={18} />}
+              />
             </div>
           </Reveal>
         </section>

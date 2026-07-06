@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState, useRef, useLayoutEffect, useId } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { NotificationBell } from '../components/NotificationBell.jsx';
 import { useTheme } from '../lib/themeContext.jsx';
 import {
@@ -66,15 +66,13 @@ import {
   Server,
   Settings,
   Save,
-  ChevronsLeft,
-  ChevronsRight,
+  PanelLeftClose,
+  PanelLeftOpen,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Grid,
   List,
-  Sun,
-  Moon,
   Zap,
   Briefcase,
   Copy,
@@ -84,6 +82,18 @@ import {
   Wallet,
   GripVertical,
 } from 'lucide-react';
+import { Theme } from '@astryxdesign/core/theme';
+import { neutralTheme } from '@astryxdesign/theme-neutral';
+import { AppShell } from '@astryxdesign/core/AppShell';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { Breadcrumbs, BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
+import { IconButton } from '@astryxdesign/core/IconButton';
+import { ToggleButton } from '@astryxdesign/core/ToggleButton';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Spinner } from '@astryxdesign/core/Spinner';
+import { Skeleton } from '@astryxdesign/core/Skeleton';
+import { Card } from '@astryxdesign/core/Card';
+import { HStack, VStack } from '@astryxdesign/core/Layout';
 
 const ADMIN_BASE_PATH = '/nextplease-admin-portal/b2b-reviews';
 
@@ -1404,9 +1414,50 @@ function TrendChart({ points, height = 210, color = '#0066cc', deltaPct }) {
   );
 }
 
+/**
+ * Real Astryx Skeleton placeholder for the admin content pane — replaces the
+ * old blur-filter + top progress bar + floating glass pill treatment
+ * (2026-07-06 feedback: use Skeleton, astryx.atmeta.com/components/Skeleton,
+ * instead). Shape approximates the common tab layout: a KPI-card row + a few
+ * table-like rows below, per Skeleton's own guidance to preview the shape of
+ * the real content rather than a generic spinner.
+ */
+function AdminContentSkeleton() {
+  return (
+    <VStack gap={5}>
+      <HStack gap={4}>
+        {[0, 1, 2].map((i) => (
+          <Card key={i} padding={4} width="100%">
+            <VStack gap={2}>
+              <Skeleton width={90} height={12} index={i} />
+              <Skeleton width={60} height={26} index={i + 3} />
+              <Skeleton width="70%" height={10} index={i + 6} />
+            </VStack>
+          </Card>
+        ))}
+      </HStack>
+      <VStack gap={3}>
+        {[0, 1, 2, 3, 4].map((rowIndex) => (
+          <HStack key={rowIndex} gap={4} vAlign="center">
+            <Skeleton width={36} height={36} radius="rounded" index={rowIndex * 4 + 9} />
+            <Skeleton width={220} height={14} index={rowIndex * 4 + 10} />
+            <Skeleton width={120} height={14} index={rowIndex * 4 + 11} />
+            <Skeleton width={80} height={14} index={rowIndex * 4 + 12} />
+          </HStack>
+        ))}
+      </VStack>
+    </VStack>
+  );
+}
+
 export function AdminB2bReviewPage() {
   const navigate = useNavigate();
-  const { isDark, toggleTheme } = useTheme();
+  // Admin portal is light-only (no dark mode toggle) — force the app out of
+  // dark mode on entry so it never inherits a dark preference set elsewhere.
+  const { isDark, setTheme } = useTheme();
+  useEffect(() => {
+    if (isDark) setTheme('light');
+  }, [isDark, setTheme]);
   const { tabSlug = '', subTabSlug = '' } = useParams();
   const activeTab = ROUTE_TO_TAB[tabSlug] || 'OVERVIEW';
   const [jobsSubTab, setJobsSubTab] = useState('new');
@@ -1418,6 +1469,10 @@ export function AdminB2bReviewPage() {
   const [error, setError] = useState(null);
   const [actionStatus, setActionStatus] = useState({ type: 'idle', message: '' });
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  // Manually-toggled nav sections (chevron click). Keys present here override
+  // the route-derived default (expanded when its tab is the active section);
+  // keys absent fall back to that default.
+  const [manualNavExpand, setManualNavExpand] = useState(() => new Map());
 
   /* ─── State for B2B reviews ─── */
   const [pendingB2b, setPendingB2b] = useState([]);
@@ -6247,125 +6302,129 @@ export function AdminB2bReviewPage() {
      Main Return JSX Layout
   ─────────────────────────────────────────────── */
   return (
-    <div className={`admin-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      {/* Inline controls inside header navigation instead of fixed overlays */}
-      {/* ── Sidebar ── */}
-      <aside className="admin-sidebar">
-        <div className="admin-sidebar-header">
-          <div className="admin-sidebar-brand">
-            <span className="admin-sidebar-logo">next please<span className="np-dot">:</span></span>
-            <span className="admin-sidebar-tag">Admin</span>
-          </div>
-          <button
-            aria-label={isSidebarCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
-            className="admin-sidebar-toggle"
-            onClick={() => setIsSidebarCollapsed((current) => !current)}
-            title={isSidebarCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
-            type="button"
-          >
-            {isSidebarCollapsed ? <ChevronsRight size={17} /> : <ChevronsLeft size={17} />}
-          </button>
-        </div>
-
-        {/* Profile Info */}
-        <div className="admin-sidebar-profile">
-          <div className="admin-profile-avatar">
-            {(adminEmail || 'A').slice(0, 2).toUpperCase()}
-          </div>
-          <div className="admin-profile-info">
-            <span className="admin-profile-name" title={adminEmail || 'admin@nextplease.vn'}>
-              {adminEmail || 'admin@nextplease.vn'}
-            </span>
-            <span className="admin-profile-role">Administrator</span>
-          </div>
-        </div>
-
-        {/* Navigation Menu */}
-        <nav className="admin-nav-menu">
-          {SIDEBAR_TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.key;
-            const hasSubItems = tab.subItems && tab.subItems.length > 0;
-            const isExpanded = isActive && hasSubItems;
-            const pendingJobsCount = jobs.filter((j) => (j.status || '').toLowerCase() === 'pending').length;
-            const pendingVerifCount = verifQueue.filter((item) => ((item.verification_status || item.status || 'PENDING').toUpperCase()) === 'PENDING').length;
-            const badgeValue =
-              tab.key === 'B2B_REVIEWS'
-                ? b2bPendingCount
-                : tab.key === 'JOBS'
-                  ? pendingJobsCount
-                  : tab.key === 'VERIF_QUEUE'
-                    ? pendingVerifCount
-                    : 0;
-            const showBadge = tab.badgeCount && badgeValue > 0;
-
-            return (
-              <div key={tab.key}>
-                <button
-                  onClick={() => {
-                    if (hasSubItems) {
-                      // Navigate to the first sub-item by default
-                      navigate(getAdminTabPath(tab.key, tab.subItems[0].subRoute));
-                    } else {
-                      navigate(getAdminTabPath(tab.key));
-                    }
-                  }}
-                  className={`admin-nav-item ${isActive ? 'active' : ''}`}
-                  title={tab.label}
-                  type="button"
-                >
-                  <Icon size={18} />
-                  <span>{tab.label}</span>
-                  {showBadge && (
-                    <span className="admin-tab-count" style={{ marginLeft: 'auto', background: isActive ? '#dc2626' : 'var(--line)', color: isActive ? '#fff' : 'var(--muted)' }}>
-                      {badgeValue}
-                    </span>
+    <div className="admin-css-vars">
+    <Theme theme={neutralTheme} mode="light">
+      <AppShell
+        contentPadding={0}
+        height="fill"
+        variant="surface"
+        sideNav={
+          <div className="admin-sidenav-wrap">
+            <SideNav
+              resizable={{ defaultWidth: 274, minWidth: 220, maxWidth: 380, autoSaveId: 'admin-sidenav-width' }}
+              collapsible={{ isCollapsed: isSidebarCollapsed, onCollapsedChange: setIsSidebarCollapsed, hasButton: false }}
+              header={
+                <div className={`admin-sidenav-header${isSidebarCollapsed ? ' admin-sidenav-header--collapsed' : ''}`}>
+                  {!isSidebarCollapsed && (
+                    <Link to={ADMIN_BASE_PATH} className="admin-sidenav-brand">
+                      <span className="admin-sidenav-eyebrow">Admin</span>
+                      <span className="admin-sidenav-title">next please</span>
+                    </Link>
                   )}
-                  {hasSubItems && (
-                    <span style={{ marginLeft: showBadge ? '6px' : 'auto', display: 'flex', alignItems: 'center' }}>
-                      {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                    </span>
-                  )}
-                </button>
-
-                {/* Sub-items accordion */}
-                {isExpanded && (
-                  <div className="admin-subnav-menu">
-                    {tab.subItems.map((sub) => {
-                      const SubIcon = sub.icon;
-                      const currentSubRoute = tab.key === 'VERIF_QUEUE' ? verifSubTab : tab.key === 'JOBS' ? jobsSubTab : b2bSubTab;
-                      const isSubActive = currentSubRoute === sub.subRoute;
-                      return (
-                        <button
-                          key={sub.key}
-                          onClick={() => navigate(getAdminTabPath(tab.key, sub.subRoute))}
-                          className={`admin-subnav-item ${isSubActive ? 'active' : ''}`}
-                          title={sub.label}
-                          type="button"
-                        >
-                          <SubIcon size={14} />
-                          <span>{sub.label}</span>
-                        </button>
-                      );
-                    })}
+                  <ToggleButton
+                    label={isSidebarCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
+                    isIconOnly
+                    size="sm"
+                    isPressed={isSidebarCollapsed}
+                    onPressedChange={setIsSidebarCollapsed}
+                    icon={<PanelLeftClose size={16} />}
+                    pressedIcon={<PanelLeftOpen size={16} />}
+                  />
+                </div>
+              }
+              topContent={
+                <div className={`admin-sidebar-profile${isSidebarCollapsed ? ' admin-sidebar-profile--collapsed' : ''}`}>
+                  <div className="admin-profile-avatar" title={adminEmail || 'admin@nextplease.vn'}>
+                    {(adminEmail || 'A').slice(0, 2).toUpperCase()}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </nav>
+                  {!isSidebarCollapsed && (
+                    <div className="admin-profile-info">
+                      <span className="admin-profile-name" title={adminEmail || 'admin@nextplease.vn'}>
+                        {adminEmail || 'admin@nextplease.vn'}
+                      </span>
+                      <span className="admin-profile-role">Administrator</span>
+                    </div>
+                  )}
+                </div>
+              }
+              footerIcons={
+                <IconButton
+                  label="Đăng xuất"
+                  tooltip="Đăng xuất"
+                  variant="ghost"
+                  icon={<LogOut size={18} />}
+                  onClick={handleLogout}
+                />
+              }
+            >
+              <SideNavSection isHeaderHidden>
+                {SIDEBAR_TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.key;
+                const hasSubItems = tab.subItems && tab.subItems.length > 0;
+                const isExpanded = manualNavExpand.has(tab.key) ? manualNavExpand.get(tab.key) : (isActive && hasSubItems);
+                const pendingJobsCount = jobs.filter((j) => (j.status || '').toLowerCase() === 'pending').length;
+                const pendingVerifCount = verifQueue.filter((item) => ((item.verification_status || item.status || 'PENDING').toUpperCase()) === 'PENDING').length;
+                const badgeValue =
+                  tab.key === 'B2B_REVIEWS'
+                    ? b2bPendingCount
+                    : tab.key === 'JOBS'
+                      ? pendingJobsCount
+                      : tab.key === 'VERIF_QUEUE'
+                        ? pendingVerifCount
+                        : 0;
+                const showBadge = tab.badgeCount && badgeValue > 0;
+                const badge = showBadge ? <Badge label={badgeValue} variant={isActive ? 'error' : 'neutral'} /> : undefined;
 
-        {/* Logout at bottom */}
-        <div className="admin-sidebar-footer">
-          <button className="admin-nav-item admin-logout-item" onClick={handleLogout} title="Đăng xuất" type="button">
-            <LogOut size={18} />
-            <span>Đăng xuất</span>
-          </button>
-        </div>
-      </aside>
+                if (hasSubItems) {
+                  return (
+                    <SideNavItem
+                      key={tab.key}
+                      label={tab.label}
+                      icon={Icon}
+                      isSelected={isActive && !isExpanded}
+                      href={getAdminTabPath(tab.key, tab.subItems[0].subRoute)}
+                      collapsible={{
+                        isCollapsed: !isExpanded,
+                        onCollapsedChange: (isCollapsed) =>
+                          setManualNavExpand((prev) => new Map(prev).set(tab.key, !isCollapsed)),
+                      }}
+                      endContent={badge}
+                    >
+                      {tab.subItems.map((sub) => {
+                        const SubIcon = sub.icon;
+                        const currentSubRoute = tab.key === 'VERIF_QUEUE' ? verifSubTab : tab.key === 'JOBS' ? jobsSubTab : b2bSubTab;
+                        const isSubActive = currentSubRoute === sub.subRoute;
+                        return (
+                          <SideNavItem
+                            key={sub.key}
+                            label={sub.label}
+                            icon={SubIcon}
+                            isSelected={isSubActive}
+                            href={getAdminTabPath(tab.key, sub.subRoute)}
+                          />
+                        );
+                      })}
+                    </SideNavItem>
+                  );
+                }
 
-      {/* ── Main Panel ── */}
-      <main className="admin-main-container">
+                return (
+                  <SideNavItem
+                    key={tab.key}
+                    label={tab.label}
+                    icon={Icon}
+                    isSelected={isActive}
+                    href={getAdminTabPath(tab.key)}
+                    endContent={badge}
+                  />
+                );
+              })}
+            </SideNavSection>
+            </SideNav>
+          </div>
+        }
+      >
         <div className="admin-view-pane">
           {/* Top Compact Navigation Bar */}
           <div style={{
@@ -6376,17 +6435,16 @@ export function AdminB2bReviewPage() {
             borderBottom: '1px solid var(--line)',
             paddingBottom: '12px'
           }}>
-            <div className="adm-topbar-crumb" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '500' }}>
-              <span>Hệ thống</span>
-              <span className="adm-topbar-sep" style={{ color: 'var(--muted)' }}>/</span>
-              <span style={{ color: '#0066cc', fontWeight: '600' }}>
+            <Breadcrumbs variant="supporting">
+              <BreadcrumbItem href={ADMIN_BASE_PATH}>Hệ thống</BreadcrumbItem>
+              <BreadcrumbItem isCurrent>
                 {activeTab === 'JOBS'
                   ? 'Bài đăng'
                   : activeTab === 'VERIF_QUEUE'
                   ? 'Xác thực'
                   : SIDEBAR_TABS.find((t) => t.key === activeTab)?.label}
-              </span>
-            </div>
+              </BreadcrumbItem>
+            </Breadcrumbs>
 
             {/* Inline Controls Wrap (Bell, Theme, Reload) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -6399,10 +6457,10 @@ export function AdminB2bReviewPage() {
                   width: '38px',
                   height: '38px',
                   borderRadius: '50%',
-                  border: `1px solid ${isDark ? 'var(--line)' : 'var(--line)'}`,
-                  background: isDark ? 'var(--surface)' : 'var(--surface)',
-                  color: isDark ? 'var(--ink)' : '#1d1d1f',
-                  boxShadow: isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.04)',
+                  border: '1px solid var(--line)',
+                  background: 'var(--surface)',
+                  color: '#1d1d1f',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                   transition: 'all 200ms ease',
                   display: 'flex',
                   alignItems: 'center',
@@ -6410,39 +6468,6 @@ export function AdminB2bReviewPage() {
                   cursor: 'pointer'
                 }}
               />
-
-              {/* Localized Theme Switcher */}
-              <button
-                type="button"
-                onClick={(e) => toggleTheme(e)}
-                className="adm-theme-switch"
-                style={{
-                  border: '1px solid var(--line)',
-                  background: 'var(--surface)',
-                  color: 'var(--ink)',
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                  transition: 'all 200ms ease',
-                  padding: 0
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'var(--surface-soft)';
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'var(--surface)';
-                  e.currentTarget.style.transform = 'none';
-                }}
-                title={isDark ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
-              >
-                <span className="adm-theme-icon" key={isDark ? 'sun' : 'moon'}>{isDark ? <Sun size={15} /> : <Moon size={15} />}</span>
-              </button>
 
               {/* Tải lại Button */}
               <button
@@ -6468,7 +6493,7 @@ export function AdminB2bReviewPage() {
                 onMouseOver={(e) => e.currentTarget.style.background = 'var(--surface-soft)'}
                 onMouseOut={(e) => e.currentTarget.style.background = 'var(--surface)'}
               >
-                <RefreshCw size={14} className={loading ? 'adm-spin' : ''} />
+                {loading ? <Spinner size="sm" shade="inherit" /> : <RefreshCw size={14} />}
                 Tải lại
               </button>
 
@@ -6476,66 +6501,13 @@ export function AdminB2bReviewPage() {
           </div>
 
           {/* Tab Render Switcher */}
-          {loading && !stats && users.length === 0 && pendingB2b.length === 0 && jobs.length === 0 && logs.length === 0 ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', flexDirection: 'column', gap: '16px' }}>
-              <div className="adm-spin" style={{ color: '#0066cc' }}><RefreshCw size={36} /></div>
-              <span style={{ color: 'var(--muted)', fontWeight: '600' }}>Đang tải dữ liệu...</span>
-            </div>
+          {loading ? (
+            <AdminContentSkeleton />
           ) : (
             <div
               key={`${activeTab}-${jobsSubTab}-${verifSubTab}`}
               className="admin-view-anim"
-              style={{
-                position: 'relative',
-                filter: loading ? 'blur(4px) saturate(85%)' : 'none',
-                opacity: loading ? 0.9 : 1,
-                pointerEvents: loading ? 'none' : 'auto',
-                transition: 'all 300ms cubic-bezier(0.16, 1, 0.3, 1)'
-              }}
             >
-              {loading && (
-                <>
-                  {/* Top Glowing Linear Progress Bar */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '3px',
-                    zIndex: 100,
-                    overflow: 'hidden',
-                    borderRadius: '3px 3px 0 0'
-                  }}>
-                    <div className="adm-loading-bar" />
-                  </div>
-
-                  {/* Floating Glassmorphic Progress Pill */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 101,
-                    background: 'rgba(255, 255, 255, 0.85)',
-                    border: '1px solid rgba(0, 0, 0, 0.08)',
-                    borderRadius: '9999px',
-                    padding: '10px 20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
-                    backdropFilter: 'blur(20px)',
-                    animation: 'admPulse 1.5s infinite ease-in-out',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    <div className="adm-spin" style={{ color: '#0066cc', display: 'flex', alignItems: 'center' }}>
-                      <RefreshCw size={14} />
-                    </div>
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--ink)' }}>Đang cập nhật dữ liệu...</span>
-                  </div>
-                </>
-              )}
-
               {activeTab === 'OVERVIEW' && renderOverview()}
               {activeTab === 'USERS' && renderUsers()}
               {activeTab === 'B2B_REVIEWS' && renderB2bReviews()}
@@ -6548,7 +6520,7 @@ export function AdminB2bReviewPage() {
             </div>
           )}
         </div>
-      </main>
+      </AppShell>
 
       {/* ── Custom Confirm Modal ── */}
       {confirmModal.isOpen && (
@@ -7668,6 +7640,7 @@ export function AdminB2bReviewPage() {
           </button>
         </div>
       )}
+    </Theme>
     </div>
   );
 }
