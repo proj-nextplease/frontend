@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   ArrowRight,
@@ -25,8 +25,6 @@ import {
   Calendar,
   BadgeCheck,
   Check,
-  ChevronsLeft,
-  ChevronsRight,
   ExternalLink,
   ArrowLeft,
   X,
@@ -496,10 +494,19 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     finally { setClaimingQuest(null); }
   };
 
-  // Sidebar collapse state
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    return localStorage.getItem('nextplease:candidate-sidebar-collapsed') === 'true';
-  });
+  // Dock profile popover (wallet balance + logout), replaces the old sidebar footer.
+  const [showDockProfileMenu, setShowDockProfileMenu] = useState(false);
+  const dockProfileRef = useRef(null);
+  useEffect(() => {
+    if (!showDockProfileMenu) return undefined;
+    function handleClickOutside(e) {
+      if (dockProfileRef.current && !dockProfileRef.current.contains(e.target)) {
+        setShowDockProfileMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showDockProfileMenu]);
 
   // Application states
   const [appliedJobs, setAppliedJobs] = useState([]);
@@ -1371,228 +1378,192 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   }
 
   return (
-    <div className={`candidate-portal-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+    <div className="candidate-portal-layout">
       <NotificationBell accent="#e5533f" />
-      {/* ─── Sidebar Navigation ─── */}
-      <aside className="candidate-portal-sidebar">
-        <div className="candidate-portal-sidebar-top">
-          <div className="candidate-portal-brand">
-            <div className="candidate-portal-brand-inner">
-              <span className="candidate-portal-brand-logo">next please<span className="np-dot">:</span></span>
-              <span className="candidate-portal-brand-tag">Hub</span>
-            </div>
-            <button
-              aria-label={isSidebarCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
-              className="candidate-sidebar-toggle"
-              onClick={() => {
-                const nextVal = !isSidebarCollapsed;
-                setIsSidebarCollapsed(nextVal);
-                localStorage.setItem('nextplease:candidate-sidebar-collapsed', String(nextVal));
-              }}
-              title={isSidebarCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
-              type="button"
-            >
-              {isSidebarCollapsed ? <ChevronsRight size={17} /> : <ChevronsLeft size={17} />}
-            </button>
-          </div>
 
-          {/* Mini User Profile Card */}
-          <div className="candidate-portal-profile-card">
-            <div className="candidate-portal-profile-avatar">
-              {portfolio?.name ? portfolio.name.slice(0, 2).toUpperCase() : 'C'}
-            </div>
-            <div className="candidate-portal-profile-info">
-              <span className="candidate-portal-profile-name" title={portfolio?.name || 'Ứng viên'}>
-                {portfolio?.name || 'Ứng viên'}
-              </span>
-              <span className="candidate-portal-profile-level">Candidate Talent</span>
-              <span className="candidate-portal-profile-badge">Cấp độ {currentLevel}</span>
-            </div>
-          </div>
-
-          {/* Navigation Menu */}
-          <nav className="candidate-portal-nav" style={{ marginTop: isSidebarCollapsed ? '16px' : '0' }}>
-            <button
-              className={`candidate-portal-nav-item ${activeView === 'OVERVIEW' ? 'active' : ''}`}
-              onClick={() => handleTabChange('OVERVIEW')}
-              type="button"
-            >
-              <UserRound size={18} />
-              {!isSidebarCollapsed && <span>Tổng quan tài năng</span>}
-            </button>
-
-            <button
-              className={`candidate-portal-nav-item ${activeView === 'OPPORTUNITIES' ? 'active' : ''}`}
-              onClick={() => handleTabChange('OPPORTUNITIES')}
-              type="button"
-            >
-              <BriefcaseBusiness size={18} />
-              {!isSidebarCollapsed && <span>Bảng cơ hội</span>}
-            </button>
-
-            <button
-              className={`candidate-portal-nav-item ${activeView === 'QUESTS' ? 'active' : ''}`}
-              onClick={() => handleTabChange('QUESTS')}
-              type="button"
-            >
-              <Zap size={18} />
-              {!isSidebarCollapsed && <span>Quest</span>}
-            </button>
-
-            <button
-              className={`candidate-portal-nav-item ${activeView === 'RECOMMENDATIONS' ? 'active' : ''}`}
-              onClick={() => handleTabChange('RECOMMENDATIONS')}
-              type="button"
-            >
-              <Sparkles size={18} color={wallet?.hasJobMatchAlert ? '#facc15' : 'currentColor'} />
-              {!isSidebarCollapsed && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', justifyContent: 'space-between' }}>
-                  Gợi ý việc làm AI
-                  <span style={{ fontSize: '0.62rem', fontWeight: '800', background: '#d97706', color: '#fff', borderRadius: '4px', padding: '1px 5px', textTransform: 'uppercase' }}>NEW</span>
-                </span>
-              )}
-            </button>
-
-            <button
-              className={`candidate-portal-nav-item ${activeView === 'PREMIUM_STORE' ? 'active' : ''}`}
-              onClick={() => handleTabChange('PREMIUM_STORE')}
-              type="button"
-            >
-              <Crown size={18} color="#f59e0b" />
-              {!isSidebarCollapsed && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', justifyContent: 'space-between', color: '#f59e0b', fontWeight: '800' }}>
-                  Cửa hàng Premium
-                  <span style={{ fontSize: '0.62rem', fontWeight: '800', backgroundColor: '#f59e0b', color: '#fff', borderRadius: '4px', padding: '1px 5px', textTransform: 'uppercase' }}>HOT</span>
-                </span>
-              )}
-            </button>
-
-            <button
-              className={`candidate-portal-nav-item ${activeView === 'ORGANIZATIONS' ? 'active' : ''}`}
-              onClick={() => handleTabChange('ORGANIZATIONS')}
-              type="button"
-            >
-              <Building size={18} />
-              {!isSidebarCollapsed && <span>Doanh nghiệp & CLB</span>}
-            </button>
-
-            {/* Dynamic tabs spawned when viewing companies */}
-            {openOrgTabs.map((org) => {
-              const isActive = activeView === 'ORGANIZATION_DETAIL' && selectedOrg?.id === org.id;
-              return (
-                <button
-                  key={org.id}
-                  className={`candidate-portal-nav-item ${isActive ? 'active' : ''}`}
-                  onClick={() => handleTabChange(`org-${org.id}`)}
-                  type="button"
-                  title={`Chi tiết: ${org.name}`}
-                >
-                  <div className="candidate-org-tab-content">
-                    <div className="candidate-org-tab-logo" style={{
-                      width: '18px',
-                      height: '18px',
-                      borderRadius: '4px',
-                      background: org.logoUrl ? 'transparent' : org.logoColor,
-                      color: 'white',
-                      fontSize: '0.55rem',
-                      fontWeight: 'bold',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      overflow: 'hidden'
-                    }}>
-                      {org.logoUrl ? (
-                        <img src={org.logoUrl} alt={org.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        org.name.slice(0, 1).toUpperCase()
-                      )}
-                    </div>
-                    <span>{org.name}</span>
-                  </div>
-                  <X
-                    size={13}
-                    className="tab-close-icon"
-                    onClick={(e) => handleCloseOrgTab(e, org.id)}
-                  />
-                </button>
-              );
-            })}
-
-            <button
-              className={`candidate-portal-nav-item ${activeView === 'MY_APPLICATIONS' ? 'active' : ''}`}
-              onClick={() => handleTabChange('MY_APPLICATIONS')}
-              type="button"
-            >
-              <Clock3 size={18} />
-              {!isSidebarCollapsed && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', justifyContent: 'space-between' }}>
-                  Theo dõi ứng tuyển
-                  {(appliedJobs.length + questApplications.length) > 0 && (
-                    <span style={{ fontSize: '0.66rem', fontWeight: '900', background: 'var(--primary)', color: '#fff', borderRadius: '20px', padding: '1px 6px', minWidth: '18px', textAlign: 'center' }}>
-                      {appliedJobs.length + questApplications.length}
-                    </span>
-                  )}
-                </span>
-              )}
-            </button>
-
-            <button
-              className={`candidate-portal-nav-item ${activeView === 'CREDENTIALS' ? 'active' : ''}`}
-              onClick={() => handleTabChange('CREDENTIALS')}
-              type="button"
-            >
-              <Award size={18} />
-              {!isSidebarCollapsed && <span>Minh chứng & Trạng thái</span>}
-            </button>
-
-            {has3D ? (
-              <Link className="candidate-portal-nav-item" to="/portfolio/edit" target="_blank" rel="noopener noreferrer">
-                <FileText size={18} />
-                {!isSidebarCollapsed && <span>Chỉnh sửa Portfolio 3D</span>}
-              </Link>
-            ) : (
-              <Link className="candidate-portal-nav-item" to="/portfolio">
-                <FileText size={18} />
-                {!isSidebarCollapsed && <span>Khởi tạo Portfolio 3D</span>}
-              </Link>
-            )}
-          </nav>
-        </div>
-
-        {/* Sidebar Footer Controls */}
-        <div className="candidate-portal-sidebar-footer">
-          {/* NP Balance chip */}
-          {!isSidebarCollapsed && (
-            <button
-              type="button"
-              onClick={() => setShowTopUpModal(true)}
-              className={`candidate-wallet-chip ${wallet?.isPremium ? 'premium' : ''}`}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                <WalletCards size={15} color={wallet?.isPremium ? '#d97706' : 'var(--muted)'} />
-                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--ink)' }}>
-                  {walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString()} NP
-                </span>
-              </div>
-              {wallet?.isPremium
-                ? <Crown size={13} color="#d97706" />
-                : <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: '700' }}>Nạp</span>
-              }
-            </button>
-          )}
-
+      {/* ─── Bottom Dock Navigation (macOS-style) ─── */}
+      <nav className="np-dock" aria-label="Điều hướng chính">
+        <div className="np-dock-inner">
           <button
-            className="candidate-portal-nav-item"
-            onClick={handleLogout}
-            style={{ color: '#ef4444', marginTop: '4px', justifyContent: isSidebarCollapsed ? 'center' : 'flex-start' }}
+            className={`np-dock-item ${activeView === 'OVERVIEW' ? 'active' : ''}`}
+            onClick={() => handleTabChange('OVERVIEW')}
             type="button"
           >
-            <LogOut size={18} />
-            {!isSidebarCollapsed && <span>Đăng xuất</span>}
+            <UserRound size={22} />
+            <span className="np-dock-label">Tổng quan tài năng</span>
           </button>
+
+          <button
+            className={`np-dock-item ${activeView === 'OPPORTUNITIES' ? 'active' : ''}`}
+            onClick={() => handleTabChange('OPPORTUNITIES')}
+            type="button"
+          >
+            <BriefcaseBusiness size={22} />
+            <span className="np-dock-label">Bảng cơ hội</span>
+          </button>
+
+          <button
+            className={`np-dock-item ${activeView === 'QUESTS' ? 'active' : ''}`}
+            onClick={() => handleTabChange('QUESTS')}
+            type="button"
+          >
+            <Zap size={22} />
+            <span className="np-dock-label">Quest</span>
+          </button>
+
+          <button
+            className={`np-dock-item ${activeView === 'RECOMMENDATIONS' ? 'active' : ''}`}
+            onClick={() => handleTabChange('RECOMMENDATIONS')}
+            type="button"
+          >
+            <Sparkles size={22} color={wallet?.hasJobMatchAlert ? '#facc15' : 'currentColor'} />
+            <span className="np-dock-badge np-dock-badge-new">NEW</span>
+            <span className="np-dock-label">Gợi ý việc làm AI</span>
+          </button>
+
+          <button
+            className={`np-dock-item ${activeView === 'PREMIUM_STORE' ? 'active' : ''}`}
+            onClick={() => handleTabChange('PREMIUM_STORE')}
+            type="button"
+            style={{ color: '#f59e0b' }}
+          >
+            <Crown size={22} color="#f59e0b" />
+            <span className="np-dock-badge np-dock-badge-hot">HOT</span>
+            <span className="np-dock-label">Cửa hàng Premium</span>
+          </button>
+
+          <button
+            className={`np-dock-item ${activeView === 'ORGANIZATIONS' ? 'active' : ''}`}
+            onClick={() => handleTabChange('ORGANIZATIONS')}
+            type="button"
+          >
+            <Building size={22} />
+            <span className="np-dock-label">Doanh nghiệp & CLB</span>
+          </button>
+
+          {/* Dynamic tabs spawned when viewing companies */}
+          {openOrgTabs.length > 0 && <span className="np-dock-sep" />}
+          {openOrgTabs.map((org) => {
+            const isActive = activeView === 'ORGANIZATION_DETAIL' && selectedOrg?.id === org.id;
+            return (
+              <button
+                key={org.id}
+                className={`np-dock-item np-dock-org-tab ${isActive ? 'active' : ''}`}
+                onClick={() => handleTabChange(`org-${org.id}`)}
+                type="button"
+              >
+                <div className="np-dock-org-logo" style={{ background: org.logoUrl ? 'transparent' : org.logoColor }}>
+                  {org.logoUrl ? (
+                    <img src={org.logoUrl} alt={org.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    org.name.slice(0, 1).toUpperCase()
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="np-dock-tab-close"
+                  aria-label={`Đóng tab ${org.name}`}
+                  onClick={(e) => handleCloseOrgTab(e, org.id)}
+                >
+                  <X size={11} />
+                </button>
+                <span className="np-dock-label">{org.name}</span>
+              </button>
+            );
+          })}
+
+          <span className="np-dock-sep" />
+
+          <button
+            className={`np-dock-item ${activeView === 'MY_APPLICATIONS' ? 'active' : ''}`}
+            onClick={() => handleTabChange('MY_APPLICATIONS')}
+            type="button"
+          >
+            <Clock3 size={22} />
+            {(appliedJobs.length + questApplications.length) > 0 && (
+              <span className="np-dock-badge np-dock-badge-count">{appliedJobs.length + questApplications.length}</span>
+            )}
+            <span className="np-dock-label">Theo dõi ứng tuyển</span>
+          </button>
+
+          <button
+            className={`np-dock-item ${activeView === 'CREDENTIALS' ? 'active' : ''}`}
+            onClick={() => handleTabChange('CREDENTIALS')}
+            type="button"
+          >
+            <Award size={22} />
+            <span className="np-dock-label">Minh chứng & Trạng thái</span>
+          </button>
+
+          {has3D ? (
+            <Link className="np-dock-item" to="/portfolio/edit">
+              <FileText size={22} />
+              <span className="np-dock-label">Chỉnh sửa Portfolio 3D</span>
+            </Link>
+          ) : (
+            <Link className="np-dock-item" to="/portfolio">
+              <FileText size={22} />
+              <span className="np-dock-label">Khởi tạo Portfolio 3D</span>
+            </Link>
+          )}
+
+          <span className="np-dock-sep" />
+
+          {/* Profile — replaces the old sidebar's profile card + wallet chip + logout */}
+          <div className="np-dock-profile-wrap" ref={dockProfileRef}>
+            <button
+              className="np-dock-item np-dock-profile-trigger"
+              onClick={() => setShowDockProfileMenu((v) => !v)}
+              type="button"
+            >
+              <span className="np-dock-avatar">
+                {portfolio?.name ? portfolio.name.slice(0, 2).toUpperCase() : 'C'}
+              </span>
+              <span className="np-dock-label">Tài khoản</span>
+            </button>
+
+            {showDockProfileMenu && (
+              <div className="np-dock-profile-menu">
+                <div className="np-dock-profile-menu-header">
+                  <span className="np-dock-avatar np-dock-avatar-lg">
+                    {portfolio?.name ? portfolio.name.slice(0, 2).toUpperCase() : 'C'}
+                  </span>
+                  <div>
+                    <div className="np-dock-profile-menu-name">{portfolio?.name || 'Ứng viên'}</div>
+                    <div className="np-dock-profile-menu-level">Candidate Talent · Cấp độ {currentLevel}</div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setShowTopUpModal(true); setShowDockProfileMenu(false); }}
+                  className={`candidate-wallet-chip np-dock-profile-wallet ${wallet?.isPremium ? 'premium' : ''}`}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                    <WalletCards size={15} color={wallet?.isPremium ? '#d97706' : 'var(--muted)'} />
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--ink)' }}>
+                      {walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString()} NP
+                    </span>
+                  </div>
+                  {wallet?.isPremium
+                    ? <Crown size={13} color="#d97706" />
+                    : <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: '700' }}>Nạp</span>
+                  }
+                </button>
+
+                <button
+                  className="np-dock-profile-logout"
+                  onClick={handleLogout}
+                  type="button"
+                >
+                  <LogOut size={16} />
+                  <span>Đăng xuất</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </aside>
+      </nav>
 
       {/* ─── Main Workspace Content ─── */}
       <main className="candidate-portal-main">
@@ -1634,8 +1605,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               @keyframes npBarFill { from { width: 0; } }
               @keyframes npFloatUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
               .np-streak-flame { animation: npStreakPulse 1.8s ease-in-out infinite; }
-              .np-quest-card { background:var(--card-bg-strong); border:1px solid var(--c-line); border-radius:16px; padding:16px 18px; display:flex; flex-direction:column; gap:14px; animation: npFloatUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
-              .np-quest-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--c-line); }
+              .np-quest-card { background:var(--card-bg-strong); border:1px solid var(--c-line); border-radius:16px; padding:18px 20px; display:flex; flex-direction:column; gap:16px; animation: npFloatUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+              .np-quest-row { display:flex; align-items:center; gap:12px; padding:13px 0; border-bottom:1px solid var(--c-line); }
               .np-quest-row:last-child { border-bottom:none; }
               .np-quest-icon { flex-shrink:0; width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; }
               .np-quest-prog { height:7px; border-radius:999px; background:var(--c-line); overflow:hidden; margin-top:6px; }
@@ -1679,7 +1650,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 </div>
                 <div className="np-pp-expbar"><span style={{ width: `${expPercentage}%` }} /></div>
 
-                <Link to={has3D ? '/portfolio/edit' : '/portfolio'} {...(has3D ? { target: '_blank', rel: 'noopener noreferrer' } : {})} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', marginTop: '16px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '9px 16px', borderRadius: '999px', textDecoration: 'none' }}>
+                <Link to={has3D ? '/portfolio/edit' : '/portfolio'} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', marginTop: '16px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '9px 16px', borderRadius: '999px', textDecoration: 'none' }}>
                   <UserRound size={15} /> {has3D ? 'Chỉnh sửa Portfolio 3D' : 'Thiết lập Portfolio 3D'} <ArrowRight size={14} />
                 </Link>
               </div>
@@ -1700,7 +1671,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
             {/* Daily & weekly quests */}
             {gamification && (
-              <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', marginTop: '4px' }}>
+              <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', marginTop: '20px' }}>
                 <QuestPanel
                   title="Nhiệm vụ hằng ngày"
                   subtitle="đặt lại mỗi ngày"
@@ -1726,7 +1697,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </section>
             )}
 
-            <section className="candidate-checklist-card" style={{ marginTop: '4px' }}>
+            <section className="candidate-checklist-card" style={{ marginTop: '20px' }}>
               <h2 className="candidate-checklist-title">
                 <CheckCircle2 size={20} color="var(--primary)" />
                 Hành trình phát triển hồ sơ (Next Steps)
@@ -3145,7 +3116,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '850', color: 'var(--ink)' }}>Văn bằng & Chứng chỉ đã tải</h2>
                 </div>
                 {has3D ? (
-                  <Link className="button secondary-button" to="/portfolio/edit" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.8rem', padding: '6px 12px', borderRadius: '8px' }}>
+                  <Link className="button secondary-button" to="/portfolio/edit" style={{ fontSize: '0.8rem', padding: '6px 12px', borderRadius: '8px' }}>
                     Thêm chứng chỉ
                   </Link>
                 ) : (

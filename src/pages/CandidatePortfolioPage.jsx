@@ -984,11 +984,15 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   if (isSubmittedSuccessfully) {
     return (
       <section className="portfolio-success-page" style={{
-        minHeight: '80vh',
+        minHeight: '100dvh',
+        width: '100vw',
+        marginLeft: 'calc(50% - 50vw)',
+        marginTop: '-34px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '40px 20px',
+        boxSizing: 'border-box',
         background: 'var(--portfolio-bg)'
       }}>
         <div className="success-card" style={{

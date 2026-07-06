@@ -187,7 +187,10 @@ function ProtectedPortfolioRoute({ isEditing = false }) {
     );
   }
 
-  if (!session) {
+  // Fall back to the BE-issued token (same pattern as ProtectedBusinessRoute)
+  // in case the Supabase client session hasn't rehydrated yet — e.g. a stale
+  // in-memory-only session from a tab that predates a page reload.
+  if (!session && !getStoredToken()) {
     return <Navigate to="/candidate/login" replace />;
   }
 
