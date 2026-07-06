@@ -331,6 +331,14 @@ img {
   padding: 0;
 }
 
+/* Admin dashboard note (2026-07-05): AppShell's root always carries its own
+   `min-height: 100dvh` regardless of the `height` prop ("auto" only changes
+   internal scroll/sticky behavior, not this) — so overriding `.app-main`'s
+   flex/height here can't shrink it below viewport height. That's normal for
+   a dashboard shell (same as Slack/Notion/Linear): fixed by keeping
+   `height="fill"` + switching `variant` to "surface" in AdminB2bReviewPage.jsx
+   so short-content tabs don't look like a floating card abruptly ending. */
+
 .interactive-stage {
   position: relative;
   isolation: isolate;
@@ -7129,6 +7137,36 @@ img {
   --p-red: #dc2626;
 }
 
+/* `.admin-layout` (above) is no longer the actual page wrapper — the real
+   AppShell/SideNav rewrite (2026-07-05) replaced it, so this selector is now
+   an orphan and every --p-* var it defined silently resolved to nothing
+   everywhere else in the file. That's what caused the washed-out/invalid
+   colors reported 2026-07-06 (e.g. the profile avatar's gradient using
+   var(--p-navy) with no fallback → the whole background declaration became
+   invalid → transparent, leaving white text on a light card). Re-declare the
+   same tokens on `.admin-css-vars`, a thin wrapper kept around the whole
+   AppShell tree in AdminB2bReviewPage.jsx purely to restore this scope. */
+.admin-css-vars {
+  --p-navy: #0d1b33;
+  --p-blue: #2563eb;
+  --p-blue-soft: #eef3fb;
+  --p-line: #e3e8ef;
+  --p-line-strong: #cdd6e4;
+  --p-ink: #101828;
+  --p-muted: #5b6472;
+  --p-red: #dc2626;
+  --p-surface: #ffffff;
+}
+
+/* AppShell's "surface" variant gives the sidenav and content the SAME white
+   background (2026-07-06 feedback: sidebar blends into content). Tint the
+   sidenav panel a touch darker so it reads as a distinct rail, content stays
+   pure white. `astryx-app-shell-sidenav` is Astryx's documented theming
+   target class for exactly this area (see `astryx component AppShell`). */
+.astryx-app-shell-sidenav {
+  background-color: #f2f4f8 !important;
+}
+
 .admin-sidebar {
   width: 274px;
   flex-shrink: 0;
@@ -7207,50 +7245,79 @@ img {
 .admin-sidebar-profile {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 13px;
-  background: #f7f9fc;
-  border-radius: 14px;
-  margin-bottom: 22px;
+  gap: 11px;
+  padding: 10px;
+  background: var(--p-surface, #fff);
+  border-radius: 12px;
+  margin-bottom: 18px;
   border: 1px solid var(--p-line);
+  transition: background 180ms ease, border-color 180ms ease, padding 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.admin-sidebar-profile:hover {
+  background: #f1f4f9;
+  border-color: var(--p-line-strong, var(--p-line));
 }
 
 .admin-profile-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 13px;
-  background: var(--p-navy);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--p-navy), #22345c);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
   flex-shrink: 0;
+}
+
+/* Icon-rail collapsed mode (real Astryx SideNav, driven by isSidebarCollapsed
+   in AdminB2bReviewPage.jsx) — shrink the profile card to just the avatar so
+   it doesn't overflow the narrow rail. */
+.admin-sidebar-profile--collapsed {
+  padding: 8px 0;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  margin-bottom: 8px;
+}
+.admin-sidebar-profile--collapsed .admin-profile-avatar {
+  width: 30px;
+  height: 30px;
+  font-size: 0.7rem;
 }
 
 .admin-profile-info {
   display: flex;
   flex-direction: column;
+  gap: 4px;
   min-width: 0;
 }
 
 .admin-profile-name {
-  font-size: 0.92rem;
-  font-weight: 800;
+  font-size: 0.84rem;
+  font-weight: 700;
   color: var(--p-ink);
+  line-height: 1.15;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .admin-profile-role {
-  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-size: 0.6rem;
   color: var(--p-red);
+  background: rgba(220, 38, 38, 0.08);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin-top: 2px;
+  padding: 2px 6px;
+  border-radius: 5px;
 }
 
 .admin-nav-menu {
@@ -12719,6 +12786,129 @@ img {
 .astryx-btn__spinner-overlay { position: absolute; inset: 0; display: grid; place-items: center; }
 @media (prefers-reduced-motion: reduce) { .astryx-btn { transition: none; } .astryx-btn:hover { transform: none; } }
 
+/* Swizzled Astryx Banner (src/components/astryx/Banner.jsx) — plain CSS,
+   same reason as .astryx-btn (stylex.create() needs a build-time plugin this
+   project doesn't have). Only deliberate change from upstream: the header
+   row always vertically centers (icon/title/description vs. dismiss button),
+   instead of upstream's flex-start-when-there's-a-description behavior. */
+.astryx-banner { display: flex; flex-direction: column; font-family: inherit; }
+.astryx-banner__header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; }
+.astryx-banner__header--card-standalone { border-radius: 12px; }
+.astryx-banner__header--card-with-content { border-radius: 12px 12px 0 0; }
+/* Solid (non-translucent) status colors + explicit light text — the token
+   *-muted backgrounds are semi-transparent and were designed to sit on an
+   opaque card; here the card itself is a translucent glass panel
+   (rgba(18,18,20,0.86) + backdrop-blur), so a second translucent layer on
+   top washed out to near-unreadable low-contrast text. Solid colors sidestep
+   that regardless of what's behind the card. */
+.astryx-banner__header--info { background: #1c3a5e; }
+.astryx-banner__header--warning { background: #5c4413; }
+.astryx-banner__header--error { background: #5c2029; }
+.astryx-banner__header--success { background: #1d4a2a; }
+.astryx-banner__icon { display: flex; align-items: center; flex-shrink: 0; }
+.astryx-banner__content { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.astryx-banner__title { margin: 0; font-family: inherit; font-size: var(--text-label-size); font-weight: 600; line-height: var(--text-label-leading); color: #ffffff; }
+.astryx-banner__description { margin: 0; font-family: inherit; font-size: var(--text-supporting-size); font-weight: 400; line-height: var(--text-supporting-leading); color: rgba(255,255,255,0.78); }
+.astryx-banner__end { display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-inline-start: auto; }
+.astryx-banner__content-area { background: var(--color-background-card); padding: 12px 16px; border: var(--border-width) solid var(--color-border); border-top: 0; }
+.astryx-banner__content-area--card { border-radius: 0 0 12px 12px; }
+.astryx-banner__chevron { display: inline-flex; transition: transform 0.2s ease; }
+.astryx-banner__chevron--expanded { transform: rotate(180deg); }
+
+/* Real Astryx SideNav (AdminB2bReviewPage.jsx) — bump font/icon sizes per
+   user feedback (2026-07-05: "bố cục và font chữ đang hơi nhỏ"). !important
+   guards against source-order ties with Astryx's own runtime-injected CSS. */
+.astryx-side-nav-item { font-size: 15px !important; gap: 10px !important; padding-block: 4px !important; min-height: 38px !important; }
+.astryx-side-nav-item .astryx-icon { width: 19px !important; height: 19px !important; }
+.astryx-side-nav-heading { font-size: 1.08rem !important; }
+
+/* SideNav wrapper (2026-07-06): AppShell's sideNav slot isn't guaranteed to
+   be a flex/grid parent, so `align-self: stretch` alone doesn't reliably
+   give this wrapper (and SideNav inside it) full viewport height — pin it
+   explicitly so the footer (logout) stays flush at the very bottom instead
+   of floating right after the nav items with blank space beneath it. */
+.admin-sidenav-wrap { position: relative; display: flex; height: 100dvh; }
+
+/* Collapse toggle (2026-07-06, 2nd pass): a floating edge handle read as
+   "xấu, vị trí không phù hợp" — moved into a proper header row instead,
+   inline with the brand (matches Linear/Notion's inline collapse button
+   next to the workspace name, not a detached circle on the border). */
+.admin-sidenav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 14px;
+}
+.admin-sidenav-header--collapsed {
+  justify-content: center;
+  padding: 16px 8px;
+}
+.admin-sidenav-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  text-decoration: none;
+}
+.admin-sidenav-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--p-muted, #8a94a6);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.admin-sidenav-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--p-ink, #101828);
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Give the collapse toggle real button affordance (2026-07-06, 3rd pass:
+   "icon vẫn xấu") — by default ToggleButton renders transparent/borderless,
+   which reads as a stray floating icon rather than an actual control. */
+.admin-sidenav-header .astryx-toggle-button {
+  background: var(--p-surface, #fff) !important;
+  border: 1px solid var(--p-line, #e3e8ef) !important;
+  border-radius: 999px !important;
+  color: var(--p-muted, #5b6472) !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease !important;
+}
+.admin-sidenav-header .astryx-toggle-button:hover {
+  background: var(--p-blue-soft, #eef3fb) !important;
+  border-color: var(--p-blue, #2563eb) !important;
+  color: var(--p-blue, #2563eb) !important;
+  transform: translateY(-1px);
+}
+.admin-sidenav-header .astryx-toggle-button:active {
+  transform: translateY(0) scale(0.94);
+}
+/* Rotate the panel icon on toggle instead of an abrupt swap. */
+.admin-sidenav-header .astryx-toggle-button svg {
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.admin-sidenav-header .astryx-toggle-button[aria-pressed='true'] svg {
+  transform: rotate(180deg);
+}
+
+/* Smooth expand/collapse (2026-07-05 feedback: "animation phải mượt mà") —
+   the real SideNav sets width via inline style with no transition of its
+   own, so the width change on toggle is instant/jarring by default. */
+.astryx-side-nav {
+  transition: width 260ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+.astryx-side-nav-item {
+  transition: font-size 260ms cubic-bezier(0.22, 1, 0.36, 1), padding 260ms cubic-bezier(0.22, 1, 0.36, 1), gap 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.admin-sidebar-profile {
+  transition: padding 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 /* ============================================================
    Candidate portal — dark surfaces (cards/sidebar hardcode #fff).
    ============================================================ */
@@ -13974,40 +14164,6 @@ p { text-wrap: pretty; }
 .adm-detail-card:hover {
   border-color: rgba(0, 102, 204, 0.25) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.02) !important;
-}
-
-/* Linear Glowing Top Loading Bar */
-.adm-loading-bar {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, #0066cc 0%, #2997ff 50%, #0066cc 100%);
-  background-size: 200% 100%;
-  animation: adm-loading-bar-anim 1.2s infinite linear;
-}
-
-@keyframes adm-loading-bar-anim {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* Breathing loading pill animation */
-@keyframes admPulse {
-  0% {
-    transform: translate(-50%, -50%) scale(0.98);
-    opacity: 0.9;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.02);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(0.98);
-    opacity: 0.9;
-  }
 }
 
 /* Provisioning Page Animations & Effects */
