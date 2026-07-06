@@ -32,9 +32,11 @@ import {
   Users,
   ImagePlus,
   Palette,
+  Settings,
 } from 'lucide-react';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { logout } from '../api/httpClient.js';
+import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
 import { getJobs, getCompanies, getCompanyDetail, getJobDetail } from '../api/jobApi.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
@@ -507,6 +509,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDockProfileMenu]);
+
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Application states
   const [appliedJobs, setAppliedJobs] = useState([]);
@@ -1549,6 +1553,15 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     ? <Crown size={13} color="#d97706" />
                     : <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: '700' }}>Nạp</span>
                   }
+                </button>
+
+                <button
+                  className="np-dock-profile-settings"
+                  onClick={() => { setShowSettingsModal(true); setShowDockProfileMenu(false); }}
+                  type="button"
+                >
+                  <Settings size={16} />
+                  <span>Cài đặt tài khoản</span>
                 </button>
 
                 <button
@@ -3519,6 +3532,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           </div>
         );
       })()}
+
+      {/* ─── Account Settings Modal ─── */}
+      {showSettingsModal && (
+        <AccountSettingsModal
+          onClose={() => setShowSettingsModal(false)}
+          currentDisplayName={portfolio?.name}
+        />
+      )}
 
       {/* ─── Top-Up NP Modal ─── */}
       {showTopUpModal && (
