@@ -30,11 +30,21 @@ function isPasswordValid(password) {
   );
 }
 
-function PasswordRule({ ok, label, muted, accent }) {
+function PasswordGuide({ password, focused, ink, muted }) {
+  if (!focused && !password) return null;
+  const rules = [
+    { ok: password.length >= 6 && password.length <= 25, text: 'Từ 6 đến 25 ký tự' },
+    { ok: /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password), text: 'Có chữ hoa, chữ thường và số' },
+  ];
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem', color: ok ? accent : muted, fontWeight: ok ? 700 : 500 }}>
-      <CheckCircle2 size={13} /> {label}
-    </span>
+    <div style={{ background: '#fdf2ee', borderRadius: '12px', padding: '12px 14px', marginBottom: '2px' }}>
+      <p style={{ margin: '0 0 6px', fontSize: '0.78rem', fontWeight: '800', color: ink }}>Yêu cầu mật khẩu</p>
+      {rules.map((r) => (
+        <div key={r.text} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', marginBottom: '2px', color: !password ? muted : r.ok ? '#16a34a' : '#dc2626', fontWeight: !password ? 500 : 600 }}>
+          <span>{!password ? '•' : r.ok ? '✓' : '✗'}</span>{r.text}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -49,6 +59,7 @@ export function ResetPasswordPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [status, setStatus] = useState({ type: 'idle', message: '' });
 
   const FIELD = {
@@ -152,7 +163,7 @@ export function ResetPasswordPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '12px' }}>
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: t.muted, display: 'flex' }}><LockKeyhole size={18} /></span>
-            <input name="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mật khẩu mới" style={{ ...FIELD, paddingRight: '44px' }} autoFocus />
+            <input name="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} onFocus={() => setPasswordFocused(true)} onBlur={() => setPasswordFocused(false)} placeholder="Mật khẩu mới" style={{ ...FIELD, paddingRight: '44px' }} autoFocus />
             <button type="button" aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} onClick={() => setShowPassword((c) => !c)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: t.muted, cursor: 'pointer', display: 'flex' }}>
               {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
             </button>
@@ -163,10 +174,8 @@ export function ResetPasswordPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', marginBottom: '18px' }}>
-          <PasswordRule ok={password.length >= 6 && password.length <= 25} label="6–25 ký tự" muted={t.muted} accent={t.accent} />
-          <PasswordRule ok={/[a-z]/.test(password) && /[A-Z]/.test(password)} label="Chữ hoa & thường" muted={t.muted} accent={t.accent} />
-          <PasswordRule ok={/\d/.test(password)} label="Có chữ số" muted={t.muted} accent={t.accent} />
+        <div style={{ marginBottom: '18px' }}>
+          <PasswordGuide password={password} focused={passwordFocused} ink={t.ink} muted={t.muted} />
         </div>
 
         <AuthStatusCard

@@ -9087,6 +9087,25 @@ img {
 }
 .np-dock-profile-logout:hover { background: rgba(239, 68, 68, 0.16); }
 
+.np-dock-profile-settings {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: var(--c-disabled);
+  color: var(--c-ink);
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background-color 160ms ease;
+}
+.np-dock-profile-settings:hover { background: var(--c-line); }
+
 @media (max-width: 640px) {
   .np-dock { bottom: 10px; }
   .np-dock-inner { padding: 7px 9px; gap: 3px; }
@@ -13209,6 +13228,8 @@ img {
 :root[data-theme='dark'] .np-dock-sep { background: rgba(255, 255, 255, 0.12); }
 :root[data-theme='dark'] .np-dock-profile-menu { background: #181b21; border-color: rgba(255, 255, 255, 0.1); }
 :root[data-theme='dark'] .np-dock-profile-menu-header { border-color: rgba(255, 255, 255, 0.1); }
+:root[data-theme='dark'] .np-dock-profile-settings { background: rgba(255, 255, 255, 0.06); color: #e8ecf2; }
+:root[data-theme='dark'] .np-dock-profile-settings:hover { background: rgba(255, 255, 255, 0.12); }
 
 /* Candidate Premium store — dark surfaces + badge contrast. */
 :root[data-theme='dark'] .candidate-premium-pass-card,
