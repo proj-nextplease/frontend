@@ -1547,7 +1547,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             </button>
 
             {has3D ? (
-              <Link className="candidate-portal-nav-item" to="/portfolio/edit" target="_blank" rel="noopener noreferrer">
+              <Link className="candidate-portal-nav-item" to="/portfolio/edit">
                 <FileText size={18} />
                 {!isSidebarCollapsed && <span>Chỉnh sửa Portfolio 3D</span>}
               </Link>
@@ -1634,8 +1634,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               @keyframes npBarFill { from { width: 0; } }
               @keyframes npFloatUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
               .np-streak-flame { animation: npStreakPulse 1.8s ease-in-out infinite; }
-              .np-quest-card { background:var(--card-bg-strong); border:1px solid var(--c-line); border-radius:16px; padding:16px 18px; display:flex; flex-direction:column; gap:14px; animation: npFloatUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
-              .np-quest-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--c-line); }
+              .np-quest-card { background:var(--card-bg-strong); border:1px solid var(--c-line); border-radius:16px; padding:18px 20px; display:flex; flex-direction:column; gap:16px; animation: npFloatUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+              .np-quest-row { display:flex; align-items:center; gap:12px; padding:13px 0; border-bottom:1px solid var(--c-line); }
               .np-quest-row:last-child { border-bottom:none; }
               .np-quest-icon { flex-shrink:0; width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; }
               .np-quest-prog { height:7px; border-radius:999px; background:var(--c-line); overflow:hidden; margin-top:6px; }
@@ -1679,7 +1679,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 </div>
                 <div className="np-pp-expbar"><span style={{ width: `${expPercentage}%` }} /></div>
 
-                <Link to={has3D ? '/portfolio/edit' : '/portfolio'} {...(has3D ? { target: '_blank', rel: 'noopener noreferrer' } : {})} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', marginTop: '16px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '9px 16px', borderRadius: '999px', textDecoration: 'none' }}>
+                <Link to={has3D ? '/portfolio/edit' : '/portfolio'} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', marginTop: '16px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '9px 16px', borderRadius: '999px', textDecoration: 'none' }}>
                   <UserRound size={15} /> {has3D ? 'Chỉnh sửa Portfolio 3D' : 'Thiết lập Portfolio 3D'} <ArrowRight size={14} />
                 </Link>
               </div>
@@ -1700,7 +1700,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
             {/* Daily & weekly quests */}
             {gamification && (
-              <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', marginTop: '4px' }}>
+              <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', marginTop: '20px' }}>
                 <QuestPanel
                   title="Nhiệm vụ hằng ngày"
                   subtitle="đặt lại mỗi ngày"
@@ -1726,7 +1726,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </section>
             )}
 
-            <section className="candidate-checklist-card" style={{ marginTop: '4px' }}>
+            <section className="candidate-checklist-card" style={{ marginTop: '20px' }}>
               <h2 className="candidate-checklist-title">
                 <CheckCircle2 size={20} color="var(--primary)" />
                 Hành trình phát triển hồ sơ (Next Steps)
@@ -3145,7 +3145,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '850', color: 'var(--ink)' }}>Văn bằng & Chứng chỉ đã tải</h2>
                 </div>
                 {has3D ? (
-                  <Link className="button secondary-button" to="/portfolio/edit" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.8rem', padding: '6px 12px', borderRadius: '8px' }}>
+                  <Link className="button secondary-button" to="/portfolio/edit" style={{ fontSize: '0.8rem', padding: '6px 12px', borderRadius: '8px' }}>
                     Thêm chứng chỉ
                   </Link>
                 ) : (
