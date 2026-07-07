@@ -6,6 +6,15 @@ export async function getAccountSettings() {
   return response.data.data;
 }
 
+/** Resolves the current user's app_users id — needed to build the public /portfolio/view/:userId share link. */
+export async function getMyUserId() {
+  const response = await httpClient.get('/me');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể lấy thông tin tài khoản.');
+  }
+  return response.data.data.appUserId;
+}
+
 export async function updateDisplayName(displayName) {
   const response = await httpClient.put('/account/display-name', { displayName });
   if (!response.data?.success) {
