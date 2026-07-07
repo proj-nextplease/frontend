@@ -1,23 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Award, BriefcaseBusiness, ShieldCheck, ArrowLeft, GraduationCap,
-  MapPin, BadgeCheck, ExternalLink, Code2, Link2, Globe, Mail, Eye, FileUp,
+  MapPin, BadgeCheck, ExternalLink, Code2, Link2, Globe, Mail, Eye, FileUp, Download,
 } from 'lucide-react';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
 import { getPublicProfile } from '../api/portfolioApi.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
-
-/** Mirror of BE ExpService: advancing level N -> N+1 costs floor(100 * N^1.2) EXP. */
-function levelProgress(totalExp, level) {
-  const lvl = Math.max(1, level || 1);
-  const span = Math.floor(100 * Math.pow(lvl, 1.2));
-  let reached = 0;
-  for (let l = 1; l < lvl; l++) reached += Math.floor(100 * Math.pow(l, 1.2));
-  const into = Math.max(0, (totalExp || 0) - reached);
-  const pct = Math.min(100, Math.round((into / Math.max(1, span)) * 100));
-  return { into, span, pct };
-}
 
 const SOCIAL_META = {
   github: { icon: Code2, label: 'GitHub', href: (v) => (/^https?:/.test(v) ? v : `https://github.com/${v}`) },
@@ -75,9 +64,6 @@ export function VerifiedPassport({ profile, isDraft = false }) {
   const [preview, setPreview] = useState(null);
   const hasStats = typeof profile.reputationScore === 'number' && typeof profile.currentLevel === 'number';
   const rs = profile.reputationScore || 0;
-  const level = profile.currentLevel || 1;
-  const totalExp = profile.totalExp || 0;
-  const { pct } = useMemo(() => levelProgress(totalExp, level), [totalExp, level]);
   const verifiedCount = experiences.filter(e => e.verified).length;
 
   const socialEntries = Object.entries(socialLinks)
@@ -86,6 +72,18 @@ export function VerifiedPassport({ profile, isDraft = false }) {
 
   const themeClass = profile.selectedTheme && profile.selectedTheme !== 'DEFAULT' ? `theme-${profile.selectedTheme}` : '';
   const hasContent = profile.bio || skills.length || experiences.length || credentials.length;
+
+  // Exporting to PDF reuses the browser's native print pipeline (no extra
+  // dependency, and it renders the live WebGL avatar canvas correctly, unlike
+  // html2canvas-style screenshot libraries). Swap the tab title just for the
+  // print dialog so "Save as PDF" defaults to a sensible filename instead of
+  // the app's generic title.
+  function handleExportPdf() {
+    const previousTitle = document.title;
+    document.title = `Portfolio - ${profile.name || 'Ung vien'}`;
+    window.print();
+    setTimeout(() => { document.title = previousTitle; }, 500);
+  }
 
   return (
     <section className={`vp-page ${themeClass}`}>
@@ -96,6 +94,7 @@ export function VerifiedPassport({ profile, isDraft = false }) {
           {isDraft ? <Eye size={14} /> : <ShieldCheck size={14} />}
           {isDraft ? 'Bản xem trước Portfolio' : 'Hồ sơ đã xác thực'} · next please
         </span>
+        <button className="vp-close" onClick={handleExportPdf}><Download size={15} /> Xuất PDF</button>
       </div>
 
       <div className="vp-shell">
@@ -134,11 +133,6 @@ export function VerifiedPassport({ profile, isDraft = false }) {
         {hasStats && (
           <div className="vp-stats vp-reveal">
             <div className="vp-stat"><span className="vp-stat-label">Điểm uy tín</span><span className="vp-stat-value">{rs.toLocaleString('vi-VN')}</span></div>
-            <div className="vp-stat vp-stat-level">
-              <span className="vp-stat-label">Cấp độ</span>
-              <span className="vp-stat-value">{level}</span>
-              <span className="vp-stat-bar"><span style={{ width: `${pct}%` }} /></span>
-            </div>
             <div className="vp-stat"><span className="vp-stat-label">Minh chứng xác thực</span><span className="vp-stat-value">{verifiedCount}</span></div>
           </div>
         )}
@@ -248,6 +242,16 @@ function PassportThemeStyles() {
       .vp-page.theme-DARK_GOLD { --vp-accent:#c2831a; }
       .vp-page.theme-CYBERPUNK { --vp-accent:#c026d3; }
       .vp-page.theme-EMERALD_CLASSIC { --vp-accent:#047857; }
+      @media print {
+        .vp-topbar { display: none !important; }
+        .vp-cred-file { display: none !important; }
+        .vp-page {
+          background: #ffffff !important; color: #111111 !important;
+          width: auto !important; min-height: 0 !important; margin: 0 !important; padding: 0 24px !important;
+        }
+        .vp-shell { max-width: 100% !important; }
+        .vp-hero, .vp-stats, .vp-section, .vp-tl-item { break-inside: avoid; }
+      }
     `}</style>
   );
 }

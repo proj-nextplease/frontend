@@ -33,11 +33,13 @@ import {
   ImagePlus,
   Palette,
   Settings,
+  Copy,
 } from 'lucide-react';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { logout } from '../api/httpClient.js';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
+import { getMyUserId } from '../api/accountApi.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
 import { getJobs, getCompanies, getCompanyDetail, getJobDetail } from '../api/jobApi.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
@@ -605,6 +607,40 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   }, [showDockProfileMenu]);
 
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // Copy Portfolio share link (Overview hero) — fetch the app_users id lazily
+  // on first click rather than on every dashboard load, since it's only
+  // needed for this one action.
+  const [copyLinkStatus, setCopyLinkStatus] = useState('idle'); // idle | copying | done | error
+  async function handleCopyPortfolioLink() {
+    setCopyLinkStatus('copying');
+    try {
+      const userId = await getMyUserId();
+      const shareUrl = `${window.location.origin}/portfolio/view/${userId}`;
+      await navigator.clipboard.writeText(shareUrl);
+      setCopyLinkStatus('done');
+    } catch {
+      setCopyLinkStatus('error');
+    } finally {
+      setTimeout(() => setCopyLinkStatus('idle'), 2200);
+    }
+  }
+
+  // "Xuất PDF" — the real export button lives on the presentational
+  // /portfolio/view/:userId page (native window.print(), see
+  // CandidatePortfolioViewPage). This just navigates there in the same tab
+  // (no target="_blank" — a new tab wouldn't share sessionStorage, same bug
+  // class fixed earlier for the 3D editor link).
+  const [openingPdfView, setOpeningPdfView] = useState(false);
+  async function handleOpenPortfolioForPdf() {
+    setOpeningPdfView(true);
+    try {
+      const userId = await getMyUserId();
+      window.location.href = `/portfolio/view/${userId}`;
+    } catch {
+      setOpeningPdfView(false);
+    }
+  }
 
   // Application states
   const [appliedJobs, setAppliedJobs] = useState([]);
@@ -1748,9 +1784,35 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 </div>
                 <div className="np-pp-expbar"><span style={{ width: `${expPercentage}%` }} /></div>
 
-                <Link to={has3D ? '/portfolio/edit' : '/portfolio'} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', marginTop: '16px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '9px 16px', borderRadius: '999px', textDecoration: 'none' }}>
-                  <UserRound size={15} /> {has3D ? 'Chỉnh sửa Portfolio 3D' : 'Thiết lập Portfolio 3D'} <ArrowRight size={14} />
-                </Link>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
+                  <Link to={has3D ? '/portfolio/edit' : '/portfolio'} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '9px 16px', borderRadius: '999px', textDecoration: 'none' }}>
+                    <UserRound size={15} /> {has3D ? 'Chỉnh sửa Portfolio 3D' : 'Thiết lập Portfolio 3D'} <ArrowRight size={14} />
+                  </Link>
+                  {has3D && (
+                    <button
+                      type="button"
+                      onClick={handleCopyPortfolioLink}
+                      disabled={copyLinkStatus === 'copying'}
+                      title="Sao chép link Portfolio công khai để chia sẻ"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: copyLinkStatus === 'done' ? 'rgba(74,222,128,0.22)' : 'rgba(255,255,255,0.1)', border: 'none', padding: '9px 16px', borderRadius: '999px', cursor: copyLinkStatus === 'copying' ? 'default' : 'pointer' }}
+                    >
+                      <Copy size={15} />
+                      {copyLinkStatus === 'done' ? 'Đã sao chép!' : copyLinkStatus === 'error' ? 'Lỗi, thử lại' : 'Sao chép link Portfolio'}
+                    </button>
+                  )}
+                  {has3D && (
+                    <button
+                      type="button"
+                      onClick={handleOpenPortfolioForPdf}
+                      disabled={openingPdfView}
+                      title="Mở bản xem trước Portfolio để xuất PDF"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.1)', border: 'none', padding: '9px 16px', borderRadius: '999px', cursor: openingPdfView ? 'default' : 'pointer' }}
+                    >
+                      <FileText size={15} />
+                      Xuất Portfolio PDF
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="np-pp-stats">
