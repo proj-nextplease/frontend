@@ -1,8 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Route, Routes, Navigate } from 'react-router-dom';
+import { Route, Routes, Navigate, useParams } from 'react-router-dom';
 import { AppLayout } from '../components/layout/AppLayout.jsx';
 import { BusinessPage } from '../pages/BusinessPage.jsx';
-import { CandidateDashboardPage } from '../pages/CandidateDashboardPage.jsx';
+import { CandidateDashboardPage, CandidateContentSkeleton, skeletonVariantForTabSlug } from '../pages/CandidateDashboardPage.jsx';
 import { CandidateLandingPage } from '../pages/CandidateLandingPage.jsx';
 import { CandidateLoginPage } from '../pages/CandidateLoginPage.jsx';
 import { CandidateRegisterPage } from '../pages/CandidateRegisterPage.jsx';
@@ -38,6 +38,7 @@ const CandidatePortfolioPreviewPage = lazy(() =>
 );
 
 function ProtectedDashboardRoute() {
+  const { tabSlug } = useParams();
   const [session, setSession] = useState(null);
   const [portfolio, setPortfolio] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -107,17 +108,8 @@ function ProtectedDashboardRoute() {
 
   if (loading) {
     return (
-      <div className="route-loading" style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '60vh',
-        fontSize: '1.25rem',
-        fontWeight: '600',
-        color: 'var(--muted)',
-        background: 'var(--bg)',
-      }}>
-        Đang đồng bộ dữ liệu ứng viên...
+      <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+        <CandidateContentSkeleton variant={skeletonVariantForTabSlug(tabSlug)} />
       </div>
     );
   }

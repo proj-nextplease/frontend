@@ -51,6 +51,23 @@ export async function changePassword(email, currentPassword, newPassword) {
   return true;
 }
 
+export async function updatePrivacySettings({ isPublic, openToWork }) {
+  const response = await httpClient.put('/account/privacy', { isPublic, openToWork });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể cập nhật quyền riêng tư.');
+  }
+  return response.data.message;
+}
+
+/** Revokes every active session (all devices, including this one) via Supabase logout scope=global. */
+export async function signOutAllSessions() {
+  const response = await httpClient.post('/account/sign-out-all-sessions');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể đăng xuất khỏi tất cả thiết bị.');
+  }
+  return response.data.message;
+}
+
 /** Freezes the account (self-service deactivation) — requires current password. */
 export async function deactivateAccount(password) {
   const response = await httpClient.post('/account/deactivate', { password });

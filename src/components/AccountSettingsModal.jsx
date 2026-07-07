@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { X, User, Lock, Bell, ShieldAlert, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { X, User, Lock, Bell, ShieldAlert, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, Globe, Monitor } from 'lucide-react';
 import {
   getAccountSettings,
   updateDisplayName,
   updateNotificationPreferences,
+  updatePrivacySettings,
+  signOutAllSessions,
   changePassword,
   deactivateAccount,
 } from '../api/accountApi.js';
@@ -12,6 +14,8 @@ const SECTIONS = [
   { key: 'BASIC', label: 'Thông tin cơ bản', icon: User },
   { key: 'PASSWORD', label: 'Đổi mật khẩu', icon: Lock },
   { key: 'NOTIFICATIONS', label: 'Thông báo', icon: Bell },
+  { key: 'PRIVACY', label: 'Quyền riêng tư', icon: Globe },
+  { key: 'SESSIONS', label: 'Phiên đăng nhập', icon: Monitor },
   { key: 'DANGER', label: 'Khu vực nguy hiểm', icon: ShieldAlert },
 ];
 
@@ -82,6 +86,17 @@ export function AccountSettingsModal({ onClose, currentDisplayName, currentEmail
   const [notifStatus, setNotifStatus] = useState({ type: 'idle', message: '' });
   const [savingNotif, setSavingNotif] = useState(false);
 
+  // Privacy
+  const [isPublic, setIsPublic] = useState(true);
+  const [openToWork, setOpenToWork] = useState(false);
+  const [privacyStatus, setPrivacyStatus] = useState({ type: 'idle', message: '' });
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
+
+  // Sessions
+  const [sessionsStatus, setSessionsStatus] = useState({ type: 'idle', message: '' });
+  const [confirmSignOutAll, setConfirmSignOutAll] = useState(false);
+  const [signingOutAll, setSigningOutAll] = useState(false);
+
   // Danger zone
   const [deactivatePassword, setDeactivatePassword] = useState('');
   const [confirmDeactivate, setConfirmDeactivate] = useState(false);
@@ -98,6 +113,8 @@ export function AccountSettingsModal({ onClose, currentDisplayName, currentEmail
         setEmailEnabled(data.emailNotificationsEnabled);
         setPushEnabled(data.pushNotificationsEnabled);
         setInAppEnabled(data.inAppNotificationsEnabled);
+        setIsPublic(data.isPublic);
+        setOpenToWork(data.openToWork);
       })
       .catch(() => {})
       .finally(() => { if (isMounted) setLoading(false); });
@@ -168,6 +185,36 @@ export function AccountSettingsModal({ onClose, currentDisplayName, currentEmail
       setNotifStatus({ type: 'error', message: error.message || 'Không thể lưu.' });
     } finally {
       setSavingNotif(false);
+    }
+  }
+
+  async function handleSavePrivacy() {
+    setSavingPrivacy(true);
+    setPrivacyStatus({ type: 'idle', message: '' });
+    try {
+      await updatePrivacySettings({ isPublic, openToWork });
+      setPrivacyStatus({ type: 'success', message: 'Đã lưu quyền riêng tư.' });
+    } catch (error) {
+      setPrivacyStatus({ type: 'error', message: error.message || 'Không thể lưu.' });
+    } finally {
+      setSavingPrivacy(false);
+    }
+  }
+
+  async function handleSignOutAll() {
+    setSessionsStatus({ type: 'idle', message: '' });
+    if (!confirmSignOutAll) {
+      setSessionsStatus({ type: 'error', message: 'Vui lòng tick xác nhận bên dưới.' });
+      return;
+    }
+    setSigningOutAll(true);
+    try {
+      await signOutAllSessions();
+      setSessionsStatus({ type: 'success', message: 'Đã đăng xuất khỏi tất cả thiết bị. Đang chuyển hướng...' });
+      setTimeout(() => { window.location.href = '/candidate/login'; }, 1500);
+    } catch (error) {
+      setSessionsStatus({ type: 'error', message: error.message || 'Không thể đăng xuất khỏi tất cả thiết bị.' });
+      setSigningOutAll(false);
     }
   }
 
@@ -408,6 +455,72 @@ export function AccountSettingsModal({ onClose, currentDisplayName, currentEmail
                         <button type="button" className="np-settings-save-btn" style={saveButtonStyle} onClick={handleSaveNotifications} disabled={savingNotif}>
                           {savingNotif && <Loader2 size={14} className="np-settings-spin" />}
                           Lưu tùy chọn
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'PRIVACY' && (
+                  <div className="np-settings-section" key={activeSection}>
+                    <h3 style={{ margin: '0 0 4px', fontSize: '1.02rem', fontWeight: '800', color: 'var(--c-ink)' }}>Quyền riêng tư</h3>
+                    <p style={{ margin: '0 0 20px', fontSize: '0.86rem', color: 'var(--c-muted)' }}>Kiểm soát ai có thể xem Portfolio và mức độ sẵn sàng nhận cơ hội của bạn.</p>
+                    <StatusBanner status={privacyStatus} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                      {[
+                        { label: 'Công khai Portfolio', desc: 'Cho phép bất kỳ ai có link đều xem được Portfolio của bạn. Tắt đi để chỉ bạn và doanh nghiệp/CLB bạn đã ứng tuyển mới xem được.', value: isPublic, setValue: setIsPublic },
+                        { label: 'Đang mở cho cơ hội mới', desc: 'Hiện nhãn "Sẵn sàng nhận việc" trên Portfolio công khai của bạn.', value: openToWork, setValue: setOpenToWork },
+                      ].map((item) => (
+                        <div key={item.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                          <div>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--c-ink)' }}>{item.label}</div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--c-muted)', marginTop: '2px' }}>{item.desc}</div>
+                          </div>
+                          <button
+                            type="button"
+                            className="np-settings-switch"
+                            onClick={() => item.setValue((v) => !v)}
+                            aria-pressed={item.value}
+                            aria-label={item.label}
+                            style={{ background: item.value ? 'var(--c-red)' : 'var(--c-line-strong)' }}
+                          >
+                            <span className="np-settings-switch-knob" style={{ transform: item.value ? 'translateX(18px)' : 'translateX(0)' }} />
+                          </button>
+                        </div>
+                      ))}
+                      {!isPublic && (
+                        <div style={{ background: 'var(--c-red-soft)', borderRadius: '12px', padding: '12px 14px', fontSize: '0.82rem', color: 'var(--c-ink)' }}>
+                          Khi tắt công khai: chủ tài khoản (bạn) và các doanh nghiệp/CLB nhận đơn ứng tuyển từ bạn vẫn xem được Portfolio bình thường — chỉ người lạ có link chia sẻ mới không xem được nữa.
+                        </div>
+                      )}
+                      <div>
+                        <button type="button" className="np-settings-save-btn" style={saveButtonStyle} onClick={handleSavePrivacy} disabled={savingPrivacy}>
+                          {savingPrivacy && <Loader2 size={14} className="np-settings-spin" />}
+                          Lưu thay đổi
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === 'SESSIONS' && (
+                  <div className="np-settings-section" key={activeSection}>
+                    <h3 style={{ margin: '0 0 4px', fontSize: '1.02rem', fontWeight: '800', color: 'var(--c-ink)' }}>Phiên đăng nhập</h3>
+                    <p style={{ margin: '0 0 20px', fontSize: '0.86rem', color: 'var(--c-muted)' }}>nextplease hiện chưa lưu vết chi tiết từng thiết bị đăng nhập. Nếu bạn nghi ngờ tài khoản bị truy cập trái phép, hãy đăng xuất khỏi tất cả thiết bị (kể cả thiết bị này) rồi đổi mật khẩu ngay sau đó.</p>
+                    <StatusBanner status={sessionsStatus} />
+                    <div style={{ border: '1px solid var(--c-line)', borderRadius: '14px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', fontWeight: '700', color: 'var(--c-ink)' }}>
+                        <Monitor size={16} /> Phiên hiện tại
+                      </div>
+                      <div style={{ fontSize: '0.82rem', color: 'var(--c-muted)' }}>{email}</div>
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.84rem', color: 'var(--c-ink)', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={confirmSignOutAll} onChange={(e) => setConfirmSignOutAll(e.target.checked)} style={{ marginTop: '3px' }} />
+                        Tôi hiểu rằng thao tác này sẽ đăng xuất khỏi TẤT CẢ thiết bị, kể cả thiết bị này.
+                      </label>
+                      <div>
+                        <button type="button" className="np-settings-save-btn" style={{ ...saveButtonStyle, background: '#ef4444' }} onClick={handleSignOutAll} disabled={signingOutAll}>
+                          {signingOutAll && <Loader2 size={14} className="np-settings-spin" />}
+                          Đăng xuất khỏi tất cả thiết bị
                         </button>
                       </div>
                     </div>

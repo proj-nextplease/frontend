@@ -34,6 +34,7 @@ import {
   Palette,
   Settings,
 } from 'lucide-react';
+import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { logout } from '../api/httpClient.js';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
@@ -437,6 +438,99 @@ function QuestPanel({ title, subtitle, icon, accent, accentSoft, quests, scope, 
         })}
       </div>
     </section>
+  );
+}
+
+// Which tabSlug values (from the /candidates/dashboard/:tabSlug route) render
+// as a card grid (job/quest/company browsing) vs a flat list (applications,
+// submitted credentials) vs the overview stats layout. Used to pick a shape
+// that resembles the tab actually being loaded, instead of always showing the
+// same generic layout regardless of which tab the URL points to.
+const SKELETON_GRID_TABS = new Set(['opportunities', 'quests', 'recommendations', 'premium_store', 'organizations']);
+const SKELETON_LIST_TABS = new Set(['my_applications', 'credentials']);
+
+export function skeletonVariantForTabSlug(tabSlug) {
+  if (!tabSlug) return 'overview';
+  const slug = tabSlug.toLowerCase();
+  if (slug.startsWith('org-')) return 'grid';
+  if (SKELETON_GRID_TABS.has(slug)) return 'grid';
+  if (SKELETON_LIST_TABS.has(slug)) return 'list';
+  return 'overview';
+}
+
+/**
+ * Full-page loading placeholder shown on hard refresh / first load, before
+ * `portfolio` resolves. Replaces the old plain-text "Đang tải..." state with
+ * real Astryx `Skeleton` blocks. Shape varies by `variant` so the placeholder
+ * roughly resembles whichever tab the URL points to (2026-07-07 feedback: a
+ * single fixed shape looked "off" no matter which tab you refreshed on).
+ */
+export function CandidateContentSkeleton({ variant = 'overview' }) {
+  return (
+    <div style={{ width: '100%', maxWidth: '1180px', margin: '0 auto', padding: '48px 24px 140px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <Skeleton width={64} height={64} radius="rounded" index={0} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <Skeleton width={200} height={18} index={1} />
+          <Skeleton width={140} height={12} index={2} />
+        </div>
+      </div>
+
+      {variant === 'grid' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} style={{ border: '1px solid var(--line)', borderRadius: '16px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Skeleton width={36} height={36} radius="rounded" index={i * 3 + 3} />
+                <Skeleton width="60%" height={12} index={i * 3 + 4} />
+              </div>
+              <Skeleton width="90%" height={10} index={i * 3 + 5} />
+              <Skeleton width="40%" height={10} index={i * 3 + 6} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {variant === 'list' && (
+        <div style={{ border: '1px solid var(--line)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          {[0, 1, 2, 3, 4, 5].map((rowIndex) => (
+            <div key={rowIndex} style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <Skeleton width={40} height={40} radius="rounded" index={rowIndex * 3 + 3} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <Skeleton width="45%" height={13} index={rowIndex * 3 + 4} />
+                <Skeleton width="70%" height={10} index={rowIndex * 3 + 5} />
+              </div>
+              <Skeleton width={80} height={22} radius="rounded" index={rowIndex * 3 + 6} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {variant === 'overview' && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} style={{ border: '1px solid var(--line)', borderRadius: '16px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <Skeleton width={90} height={12} index={i + 3} />
+                <Skeleton width={70} height={26} index={i + 6} />
+                <Skeleton width="80%" height={10} index={i + 9} />
+              </div>
+            ))}
+          </div>
+
+          <div style={{ border: '1px solid var(--line)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <Skeleton width={160} height={14} index={12} />
+            {[0, 1, 2, 3].map((rowIndex) => (
+              <div key={rowIndex} style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <Skeleton width={32} height={32} radius="rounded" index={rowIndex * 3 + 13} />
+                <Skeleton width="55%" height={12} index={rowIndex * 3 + 14} />
+                <Skeleton width={70} height={12} index={rowIndex * 3 + 15} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -1366,17 +1460,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   if (loading && !portfolio) {
     return (
-      <div className="route-loading" style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        fontSize: '1.25rem',
-        fontWeight: '600',
-        color: 'var(--muted)',
-        background: 'var(--bg)',
-      }}>
-        Đang tải thông tin ứng viên...
+      <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+        <CandidateContentSkeleton variant={skeletonVariantForTabSlug(tabSlug)} />
       </div>
     );
   }
