@@ -33,6 +33,10 @@ import {
   ChevronsLeft,
   ChevronsRight,
   GripVertical,
+  Grid,
+  Compass,
+  Trophy,
+  Users,
 } from 'lucide-react';
 import {
   getCurrentUser,
@@ -65,13 +69,13 @@ const DASHBOARD_BASE_PATH = '/businesses/dashboard';
 const ACCOUNT_TAB = { key: 'account', route: 'account', label: 'Thông tin tài khoản', icon: UserRound, lockable: false };
 
 const SIDEBAR_TABS = [
-  { key: 'dashboard', route: '', label: 'Bảng điều khiển', icon: BriefcaseBusiness, lockable: false },
-  { key: 'create-job', route: 'create-job', label: 'Đăng tin tuyển dụng', icon: Plus, lockable: true },
-  { key: 'manage-jobs', route: 'manage-jobs', label: 'Quản lý tin đăng', icon: FileText, lockable: true },
-  { key: 'find-talent', route: 'find-talent', label: 'Tìm kiếm Talent', icon: Search, lockable: true },
-  { key: 'candidates', route: 'candidates', label: 'Quản lý ứng viên', icon: UsersRound, lockable: true },
-  { key: 'members', route: 'members', label: 'Thành viên & Phân quyền', icon: ShieldCheck, lockable: true },
-  { key: 'pipeline', route: 'pipeline', label: 'Quy trình tuyển dụng', icon: Filter, lockable: true },
+  { key: 'dashboard', route: '', label: 'Bảng điều khiển', icon: { business: BriefcaseBusiness, club: Grid }, lockable: false },
+  { key: 'create-job', route: 'create-job', label: 'Đăng tin tuyển dụng', icon: { business: Plus, club: Compass }, lockable: true },
+  { key: 'manage-jobs', route: 'manage-jobs', label: 'Quản lý tin đăng', icon: { business: FileText, club: Trophy }, lockable: true },
+  { key: 'find-talent', route: 'find-talent', label: 'Tìm kiếm Talent', icon: { business: Search, club: Sparkles }, lockable: true },
+  { key: 'candidates', route: 'candidates', label: 'Quản lý ứng viên', icon: { business: UsersRound, club: Users }, lockable: true },
+  { key: 'members', route: 'members', label: 'Thành viên & Phân quyền', icon: { business: ShieldCheck, club: GraduationCap }, lockable: true },
+  { key: 'pipeline', route: 'pipeline', label: 'Quy trình tuyển dụng', icon: { business: Filter, club: TrendingUp }, lockable: true },
 ];
 
 const ALL_TABS = [...SIDEBAR_TABS, ACCOUNT_TAB];
@@ -3251,11 +3255,13 @@ export function BusinessPage() {
     <div className={`partner-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <NotificationBell accent="#2563eb" />
       {/* ── Sidebar ── */}
-      <aside className="partner-sidebar">
+      <aside className={`partner-sidebar ${company?.companyType === 'CLUB' ? 'partner-sidebar--club' : 'partner-sidebar--business'}`}>
         <div className="partner-sidebar-header">
           <div className="partner-sidebar-brand">
             <span className="partner-sidebar-logo">next please<span className="np-dot">:</span></span>
-            <span className="partner-sidebar-tag">Partner</span>
+            <span className="partner-sidebar-tag">
+              {company?.companyType === 'CLUB' ? 'Club' : 'Business'}
+            </span>
           </div>
           <button
             aria-label={isSidebarCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
@@ -3270,7 +3276,7 @@ export function BusinessPage() {
 
         {/* Profile Card */}
         <div className="partner-sidebar-profile">
-          <div className="partner-profile-avatar" style={{ background: company?.companyType === 'CLUB' ? '#ff7a1a' : '#0d1b33' }}>
+          <div className="partner-profile-avatar" style={{ background: company?.companyType === 'CLUB' ? '#ff7a1a' : '#0066cc' }}>
             {(company?.name || 'P').slice(0, 2).toUpperCase()}
           </div>
           <div className="partner-profile-info">
@@ -3295,7 +3301,16 @@ export function BusinessPage() {
           {SIDEBAR_TABS
             .filter((tab) => !(tab.key === 'create-job' && company?.myRole === 'MEMBER'))
             .map((tab) => {
-            const Icon = tab.icon;
+            const isClub = company?.companyType === 'CLUB';
+            const Icon = typeof tab.icon === 'object' ? (isClub ? tab.icon.club : tab.icon.business) : tab.icon;
+            
+            let label = tab.label;
+            if (isClub) {
+              if (tab.key === 'create-job') label = 'Đăng Quest / Chiến dịch';
+              else if (tab.key === 'manage-jobs') label = 'Quản lý Quest';
+              else if (tab.key === 'pipeline') label = 'Quy trình thử thách';
+            }
+
             const isLocked = company?.verificationStatus !== 'APPROVED' && tab.lockable;
             const isActive = !isLocked && activeTab === tab.key;
 
@@ -3309,12 +3324,12 @@ export function BusinessPage() {
                   }
                   handleTabChange(tab.key);
                 }}
-                className={`partner-nav-item ${isActive ? 'active' : ''} ${isActive && company?.companyType === 'CLUB' ? 'club-active' : ''} ${isLocked ? 'locked' : ''}`}
+                className={`partner-nav-item ${isActive ? 'active' : ''} ${isActive && isClub ? 'club-active' : ''} ${isLocked ? 'locked' : ''}`}
                 style={{ position: 'relative' }}
-                title={tab.label}
+                title={label}
               >
                 <Icon size={18} />
-                <span>{tab.label}</span>
+                <span>{label}</span>
                 {isLocked && <Lock size={13} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />}
               </button>
             );
@@ -3338,6 +3353,7 @@ export function BusinessPage() {
           </button>
         </div>
       </aside>
+
 
       {/* ── Main Panel ── */}
       <main className="partner-main-container">

@@ -445,6 +445,8 @@ function ProvisionPanel() {
   const [provisionSearchQuery, setProvisionSearchQuery] = useState('');
   const [provisionTab, setProvisionTab] = useState('active');
   const [resendingId, setResendingId] = useState(null);
+  const [provisionErrors, setProvisionErrors] = useState({});
+
 
   const [recentProvisions, setRecentProvisions] = useState(() => {
     try {
@@ -466,7 +468,15 @@ function ProvisionPanel() {
   function update(event) {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
+    if (provisionErrors[name]) {
+      setProvisionErrors((current) => {
+        const copy = { ...current };
+        delete copy[name];
+        return copy;
+      });
+    }
   }
+
 
   function handleTypeSelect(typeKey) {
     setForm((current) => ({ ...current, companyType: typeKey }));
@@ -528,10 +538,21 @@ function ProvisionPanel() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (!form.name.trim() || !form.representativeEmail.trim()) {
-      setStatus({ type: 'error', message: 'Vui lòng nhập tên tổ chức và email người đại diện.' });
+    const validationErrors = {};
+    if (!form.name.trim()) {
+      validationErrors.name = 'Vui lòng điền vào tên tổ chức / đối tác.';
+    }
+    if (!form.representativeEmail.trim()) {
+      validationErrors.representativeEmail = 'Vui lòng điền vào email người đại diện.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.representativeEmail)) {
+      validationErrors.representativeEmail = 'Địa chỉ email không đúng định dạng.';
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setProvisionErrors(validationErrors);
       return;
     }
+    setProvisionErrors({});
     setStatus({ type: 'loading', message: 'Đang khởi tạo tổ chức và gửi lời mời qua email...' });
     setLastLink('');
     setCopiedLink(false);
@@ -567,6 +588,7 @@ function ProvisionPanel() {
       setStatus({ type: 'error', message: err.message || 'Cấp quyền tổ chức thất bại.' });
     }
   }
+
 
   // Stepper calculations
   const step1Active = form.name.trim().length > 0;
@@ -677,7 +699,7 @@ function ProvisionPanel() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
           {/* Organisation Name Input */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Tên tổ chức / Đối tác</label>
@@ -690,7 +712,8 @@ function ProvisionPanel() {
               style={{
                 padding: '12px 14px',
                 borderRadius: '10px',
-                border: '1.5px solid var(--line)',
+                border: provisionErrors.name ? '1.5px solid #dc2626' : '1.5px solid var(--line)',
+                boxShadow: provisionErrors.name ? '0 0 0 4px rgba(220, 38, 38, 0.15)' : 'none',
                 fontSize: '14px',
                 outline: 'none',
                 background: 'var(--surface)',
@@ -698,14 +721,29 @@ function ProvisionPanel() {
                 transition: 'all 200ms ease'
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = '#0066cc';
-                e.target.style.boxShadow = '0 0 0 4px rgba(0, 102, 204, 0.15)';
+                e.target.style.borderColor = provisionErrors.name ? '#dc2626' : '#0066cc';
+                e.target.style.boxShadow = provisionErrors.name ? '0 0 0 4px rgba(220, 38, 38, 0.15)' : '0 0 0 4px rgba(0, 102, 204, 0.15)';
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#e0e0e0';
-                e.target.style.boxShadow = 'none';
+                e.target.style.borderColor = provisionErrors.name ? '#dc2626' : '#e0e0e0';
+                e.target.style.boxShadow = provisionErrors.name ? '0 0 0 4px rgba(220, 38, 38, 0.15)' : 'none';
               }}
             />
+            {provisionErrors.name && (
+              <div style={{
+                color: '#dc2626',
+                fontSize: '12px',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                marginTop: '4px',
+                animation: 'admFadeIn 0.2s ease'
+              }}>
+                <AlertCircle size={14} />
+                <span>{provisionErrors.name}</span>
+              </div>
+            )}
           </div>
 
           {/* Grid-based Card Selector for Type */}
@@ -768,7 +806,7 @@ function ProvisionPanel() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Email người đại diện (Tài khoản sở hữu)</label>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <Mail size={16} style={{ position: 'absolute', left: '14px', color: 'var(--muted)' }} />
+              <Mail size={16} style={{ position: 'absolute', left: '14px', color: 'var(--muted)', zIndex: 1 }} />
               <input
                 name="representativeEmail"
                 type="email"
@@ -780,7 +818,8 @@ function ProvisionPanel() {
                   width: '100%',
                   padding: '12px 14px 12px 40px',
                   borderRadius: '10px',
-                  border: '1.5px solid var(--line)',
+                  border: provisionErrors.representativeEmail ? '1.5px solid #dc2626' : '1.5px solid var(--line)',
+                  boxShadow: provisionErrors.representativeEmail ? '0 0 0 4px rgba(220, 38, 38, 0.15)' : 'none',
                   fontSize: '14px',
                   outline: 'none',
                   background: 'var(--surface)',
@@ -788,16 +827,32 @@ function ProvisionPanel() {
                   transition: 'all 200ms ease'
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = '#0066cc';
-                  e.target.style.boxShadow = '0 0 0 4px rgba(0, 102, 204, 0.15)';
+                  e.target.style.borderColor = provisionErrors.representativeEmail ? '#dc2626' : '#0066cc';
+                  e.target.style.boxShadow = provisionErrors.representativeEmail ? '0 0 0 4px rgba(220, 38, 38, 0.15)' : '0 0 0 4px rgba(0, 102, 204, 0.15)';
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = '#e0e0e0';
-                  e.target.style.boxShadow = 'none';
+                  e.target.style.borderColor = provisionErrors.representativeEmail ? '#dc2626' : '#e0e0e0';
+                  e.target.style.boxShadow = provisionErrors.representativeEmail ? '0 0 0 4px rgba(220, 38, 38, 0.15)' : 'none';
                 }}
               />
             </div>
+            {provisionErrors.representativeEmail && (
+              <div style={{
+                color: '#dc2626',
+                fontSize: '12px',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                marginTop: '4px',
+                animation: 'admFadeIn 0.2s ease'
+              }}>
+                <AlertCircle size={14} />
+                <span>{provisionErrors.representativeEmail}</span>
+              </div>
+            )}
           </div>
+
 
           {/* Action button */}
           <button
@@ -1551,6 +1606,12 @@ export function AdminB2bReviewPage() {
   const [searchLogQuery, setSearchLogQuery] = useState('');
   const [expandedLogId, setExpandedLogId] = useState(null);
 
+  /* ─── State for Custom Validations ─── */
+  const [rejectReasonError, setRejectReasonError] = useState('');
+  const [rejectJobReasonError, setRejectJobReasonError] = useState('');
+
+
+
   /* ─── State for Verification Queue ─── */
   const [verifQueue, setVerifQueue] = useState([]);
   const [verifLoading, setVerifLoading] = useState(false);
@@ -1951,20 +2012,23 @@ export function AdminB2bReviewPage() {
   async function handleRejectSubmit(event) {
     event.preventDefault();
     if (!rejectReason.trim()) {
-      setActionStatus({ type: 'error', message: 'Vui lòng nhập lý do từ chối.' });
+      setRejectReasonError('Vui lòng nhập lý do từ chối phê duyệt.');
       return;
     }
+    setRejectReasonError('');
     setActionStatus({ type: 'loading', message: 'Đang gửi lý do từ chối...' });
     try {
       await rejectB2bRegistration(rejectingItem.id, rejectReason);
       setActionStatus({ type: 'success', message: `Đã từ chối phê duyệt "${rejectingItem.name}".` });
       setRejectingItem(null);
       setRejectReason('');
+      setRejectReasonError('');
       fetchTabData(activeTab);
     } catch (err) {
       setActionStatus({ type: 'error', message: err.message || 'Từ chối thất bại.' });
     }
   }
+
 
   function openApproveJobConfirmation(jobId, jobTitle) {
     setConfirmModal({
@@ -2045,20 +2109,23 @@ export function AdminB2bReviewPage() {
   async function handleRejectJobSubmit(event) {
     event.preventDefault();
     if (!rejectJobReason.trim()) {
-      setActionStatus({ type: 'error', message: 'Vui lòng nhập lý do từ chối.' });
+      setRejectJobReasonError('Vui lòng nhập lý do từ chối tin đăng.');
       return;
     }
+    setRejectJobReasonError('');
     setActionStatus({ type: 'loading', message: 'Đang gửi lý do từ chối...' });
     try {
       await rejectJob(rejectingJobItem.id, rejectJobReason);
       setActionStatus({ type: 'success', message: `Đã từ chối tin "${rejectingJobItem.title}".` });
       setRejectingJobItem(null);
       setRejectJobReason('');
+      setRejectJobReasonError('');
       fetchTabData(activeTab);
     } catch (err) {
       setActionStatus({ type: 'error', message: err.message || 'Từ chối thất bại.' });
     }
   }
+
 
   async function handleShowJobDetails(jobId) {
     setSelectedJobId(jobId);
@@ -6564,8 +6631,8 @@ export function AdminB2bReviewPage() {
 
       {/* ── Rejection Reason Input Modal ── */}
       {rejectingItem && (
-        <div className="modal-overlay" style={{ zIndex: 3000 }} onClick={(e) => e.target === e.currentTarget && setRejectingItem(null)}>
-          <form className="modal-card" onSubmit={handleRejectSubmit}>
+        <div className="modal-overlay" style={{ zIndex: 3000 }} onClick={(e) => e.target === e.currentTarget && (setRejectingItem(null) || setRejectReasonError(''))}>
+          <form className="modal-card" onSubmit={handleRejectSubmit} noValidate>
             <div className="modal-header">
               <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626' }}>
                 <AlertTriangle size={22} />
@@ -6576,7 +6643,7 @@ export function AdminB2bReviewPage() {
                   Gửi lý do từ chối tới <strong>{rejectingItem.name}</strong>
                 </p>
               </div>
-              <button type="button" onClick={() => setRejectingItem(null)} className="modal-close-btn">
+              <button type="button" onClick={() => { setRejectingItem(null); setRejectReasonError(''); }} className="modal-close-btn">
                 <X size={18} />
               </button>
             </div>
@@ -6586,16 +6653,37 @@ export function AdminB2bReviewPage() {
             </p>
 
             <textarea
-              required
               rows={4}
               value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
+              onChange={(e) => {
+                setRejectReason(e.target.value);
+                if (rejectReasonError) setRejectReasonError('');
+              }}
               placeholder="Ví dụ: Tài liệu minh chứng bị mờ, không khớp mã số thuế hoặc thông tin liên lạc..."
               className="admin-reject-textarea"
+              style={{
+                borderColor: rejectReasonError ? '#dc2626' : undefined,
+                boxShadow: rejectReasonError ? '0 0 0 4px rgba(220, 38, 38, 0.15)' : undefined
+              }}
             />
+            {rejectReasonError && (
+              <div style={{
+                color: '#dc2626',
+                fontSize: '12px',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                marginTop: '6px',
+                animation: 'admFadeIn 0.2s ease'
+              }}>
+                <AlertCircle size={14} />
+                <span>{rejectReasonError}</span>
+              </div>
+            )}
 
-            <div className="modal-footer">
-              <button type="button" className="button secondary-button" onClick={() => setRejectingItem(null)}>
+            <div className="modal-footer" style={{ marginTop: '16px' }}>
+              <button type="button" className="button secondary-button" onClick={() => { setRejectingItem(null); setRejectReasonError(''); }}>
                 Hủy
               </button>
               <button
@@ -6609,12 +6697,13 @@ export function AdminB2bReviewPage() {
             </div>
           </form>
         </div>
+
       )}
 
       {/* ── Job/Quest Rejection Reason Input Modal ── */}
       {rejectingJobItem && (
-        <div className="modal-overlay" style={{ zIndex: 3000 }} onClick={(e) => e.target === e.currentTarget && setRejectingJobItem(null)}>
-          <form className="modal-card" onSubmit={handleRejectJobSubmit}>
+        <div className="modal-overlay" style={{ zIndex: 3000 }} onClick={(e) => e.target === e.currentTarget && (setRejectingJobItem(null) || setRejectJobReasonError(''))}>
+          <form className="modal-card" onSubmit={handleRejectJobSubmit} noValidate>
             <div className="modal-header">
               <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626' }}>
                 <AlertTriangle size={22} />
@@ -6625,7 +6714,7 @@ export function AdminB2bReviewPage() {
                   Từ chối tin: <strong>{rejectingJobItem.title}</strong>
                 </p>
               </div>
-              <button type="button" onClick={() => setRejectingJobItem(null)} className="modal-close-btn">
+              <button type="button" onClick={() => { setRejectingJobItem(null); setRejectJobReasonError(''); }} className="modal-close-btn">
                 <X size={18} />
               </button>
             </div>
@@ -6635,16 +6724,37 @@ export function AdminB2bReviewPage() {
             </p>
 
             <textarea
-              required
               rows={4}
               value={rejectJobReason}
-              onChange={(e) => setRejectJobReason(e.target.value)}
+              onChange={(e) => {
+                setRejectJobReason(e.target.value);
+                if (rejectJobReasonError) setRejectJobReasonError('');
+              }}
               placeholder="Ví dụ: Thiếu mô tả chi tiết công việc, kỹ năng yêu cầu không khớp, thù lao không hợp lệ..."
               className="admin-reject-textarea"
+              style={{
+                borderColor: rejectJobReasonError ? '#dc2626' : undefined,
+                boxShadow: rejectJobReasonError ? '0 0 0 4px rgba(220, 38, 38, 0.15)' : undefined
+              }}
             />
+            {rejectJobReasonError && (
+              <div style={{
+                color: '#dc2626',
+                fontSize: '12px',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                marginTop: '6px',
+                animation: 'admFadeIn 0.2s ease'
+              }}>
+                <AlertCircle size={14} />
+                <span>{rejectJobReasonError}</span>
+              </div>
+            )}
 
-            <div className="modal-footer">
-              <button type="button" className="button secondary-button" onClick={() => setRejectingJobItem(null)}>
+            <div className="modal-footer" style={{ marginTop: '16px' }}>
+              <button type="button" className="button secondary-button" onClick={() => { setRejectingJobItem(null); setRejectJobReasonError(''); }}>
                 Hủy
               </button>
               <button
@@ -6658,6 +6768,7 @@ export function AdminB2bReviewPage() {
             </div>
           </form>
         </div>
+
       )}
 
       {/* ── Document Preview Modal ── */}
