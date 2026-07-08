@@ -102,3 +102,36 @@ export async function getQuestExpConfig() {
   }
   return response.data.data || {};
 }
+
+export async function getSavedQuestIds() {
+  const response = await httpClient.get('/me/saved-quests/ids');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải danh sách Quest đã lưu.');
+  }
+  return response.data.data || [];
+}
+
+export async function getSavedQuests() {
+  const response = await httpClient.get('/me/saved-quests');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải Quest đã lưu.');
+  }
+  return response.data.data || [];
+}
+
+export async function saveQuest(id) {
+  const response = await httpClient.post(`/quests/${id}/save`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Lưu Quest thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function unsaveQuest(id) {
+  const response = await httpClient.delete(`/quests/${id}/save`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Bỏ lưu Quest thất bại.');
+  }
+  return response.data.data;
+}
+

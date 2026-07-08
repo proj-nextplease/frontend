@@ -82,6 +82,40 @@ export async function getCompanyDetail(id) {
   return response.data.data;
 }
 
+/** Ids of jobs the current candidate saved (for rendering bookmark state on cards). */
+export async function getSavedJobIds() {
+  const response = await httpClient.get('/me/saved-jobs/ids');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải danh sách tin đã lưu.');
+  }
+  return response.data.data || [];
+}
+
+/** Full (still-open) saved job cards for the "Tin đã lưu" view. */
+export async function getSavedJobs() {
+  const response = await httpClient.get('/me/saved-jobs');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải tin đã lưu.');
+  }
+  return response.data.data || [];
+}
+
+export async function saveJob(id) {
+  const response = await httpClient.post(`/jobs/${id}/save`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Lưu tin thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function unsaveJob(id) {
+  const response = await httpClient.delete(`/jobs/${id}/save`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Bỏ lưu tin thất bại.');
+  }
+  return response.data.data;
+}
+
 /** Ids of the partners the current candidate follows (for rendering follow state). */
 export async function getFollowedCompanyIds() {
   const response = await httpClient.get('/me/followed-companies');

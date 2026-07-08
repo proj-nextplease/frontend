@@ -3426,14 +3426,18 @@ export function AdminB2bReviewPage() {
                       {jobsVisibleColumns.deadline && (
                         <td>
                           <span style={{ fontSize: '13px', color: '#555555' }}>
-                            {job.deadlineAt ? new Date(job.deadlineAt).toLocaleDateString('vi-VN') : 'Không giới hạn'}
+                            {job.deadlineAt
+                              ? new Date(job.deadlineAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                              : 'Không giới hạn'}
                           </span>
                         </td>
                       )}
                       {jobsVisibleColumns.date && (
                         <td>
                           <span style={{ fontSize: '13px', color: '#555555' }}>
-                            {job.createdAt ? new Date(job.createdAt).toLocaleDateString('vi-VN') : '—'}
+                            {job.createdAt
+                              ? new Date(job.createdAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                              : '—'}
                           </span>
                         </td>
                       )}
