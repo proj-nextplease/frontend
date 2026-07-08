@@ -13963,9 +13963,15 @@ p { text-wrap: pretty; }
   animation: tab-active-spring 250ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
 }
 
-/* Action Blue Button adjustments */
-.primary-button, 
-.button.primary-button {
+/* Action Blue Button adjustments — Admin-only "Apple Pill" skin. Scoped to
+   .admin-css-vars (Admin's current page wrapper): these selectors used to be
+   bare/global (.primary-button, .button.primary-button, ...), which leaked
+   this hardcoded Action Blue #0066cc onto every .primary-button/.secondary-button
+   across the whole app — including the Candidate Premium Store's "Nạp NP" /
+   "Kích hoạt Premium" buttons, clobbering their intended --primary coral via
+   !important (2026-07-07 feedback: "UI các button này ... đang xấu quá"). */
+.admin-css-vars .primary-button,
+.admin-css-vars .button.primary-button {
   background: #0066cc !important; /* Action Blue */
   color: #ffffff !important;
   border-radius: 9999px !important; /* Apple Pill */
@@ -13977,18 +13983,18 @@ p { text-wrap: pretty; }
   transition: all 180ms ease !important;
 }
 
-.primary-button:hover,
-.button.primary-button:hover {
+.admin-css-vars .primary-button:hover,
+.admin-css-vars .button.primary-button:hover {
   background: #0071e3 !important; /* Brightened Accent */
 }
 
-.primary-button:active,
-.button.primary-button:active {
+.admin-css-vars .primary-button:active,
+.admin-css-vars .button.primary-button:active {
   transform: scale(0.95) !important;
 }
 
-.secondary-button,
-.button.secondary-button {
+.admin-css-vars .secondary-button,
+.admin-css-vars .button.secondary-button {
   background: #fafafc !important; /* Pearl Button */
   color: #0066cc !important;
   border: 1px solid #e0e0e0 !important;
@@ -13999,14 +14005,14 @@ p { text-wrap: pretty; }
   transition: all 180ms ease !important;
 }
 
-.secondary-button:hover,
-.button.secondary-button:hover {
+.admin-css-vars .secondary-button:hover,
+.admin-css-vars .button.secondary-button:hover {
   background: #f5f5f7 !important;
   border-color: #cccccc !important;
 }
 
-.secondary-button:active,
-.button.secondary-button:active {
+.admin-css-vars .secondary-button:active,
+.admin-css-vars .button.secondary-button:active {
   transform: scale(0.95) !important;
 }
 

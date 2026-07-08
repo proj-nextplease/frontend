@@ -85,7 +85,23 @@ httpClient.interceptors.response.use(
 
       // Refresh failed or Supabase not configured – the session is dead. Clear
       // stale auth so guards bounce the user back to the appropriate login.
+      const hadToken = !!getStoredToken();
       clearStoredAuth();
+
+      // Route guards only re-run on navigation, so a dead session on a page
+      // that never navigates would just leave the user staring at error
+      // banners. If they were actually logged in (had a token), send them to
+      // the right login now — unless they're already on an auth/public page.
+      if (hadToken && typeof window !== 'undefined') {
+        const path = window.location.pathname;
+        const onAuthOrPublicPage = /\/(login|register|forgot-password|reset-password|portfolio\/view)/.test(path);
+        if (!onAuthOrPublicPage) {
+          let loginPath = '/candidate/login';
+          if (path.startsWith('/nextplease-admin-portal')) loginPath = '/nextplease-admin-portal/login';
+          else if (path.startsWith('/business')) loginPath = '/business/login';
+          window.location.assign(`${loginPath}?expired=1`);
+        }
+      }
     }
 
     const beMessage = error.response?.data?.message;
