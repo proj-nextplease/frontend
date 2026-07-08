@@ -34,6 +34,8 @@ import {
   Palette,
   Settings,
   Copy,
+  Bookmark,
+  BookmarkCheck,
 } from 'lucide-react';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { getMyPortfolio } from '../api/portfolioApi.js';
@@ -41,12 +43,12 @@ import { logout } from '../api/httpClient.js';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { getMyUserId } from '../api/accountApi.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
-import { getJobs, getCompanies, getCompanyDetail, getJobDetail, getFollowedCompanyIds, followCompany, unfollowCompany } from '../api/jobApi.js';
+import { getJobs, getCompanies, getCompanyDetail, getJobDetail, getFollowedCompanyIds, followCompany, unfollowCompany, getSavedJobIds, getSavedJobs, saveJob, unsaveJob } from '../api/jobApi.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
 import { applyToJob, getMyApplications, withdrawApplication } from '../api/applicationApi.js';
 import { NotificationBell } from '../components/NotificationBell.jsx';
 import { getWallet, topUp, buyPremium } from '../api/walletApi.js';
-import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication } from '../api/questApi.js';
+import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication, getSavedQuestIds, getSavedQuests, saveQuest, unsaveQuest } from '../api/questApi.js';
 import {
   boostApplication,
   unlockInsight,
@@ -773,6 +775,18 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   // DB companies (UUID id) can be followed — mock/seed orgs are excluded.
   const [followedCompanyIds, setFollowedCompanyIds] = useState(() => new Set());
   const [followBusyId, setFollowBusyId] = useState(null);
+  // Saved (bookmarked) jobs — ids for card state, full list for the "Đã lưu" view.
+  const [savedJobIds, setSavedJobIds] = useState(() => new Set());
+  const [savingJobId, setSavingJobId] = useState(null);
+  const [showSavedJobsOnly, setShowSavedJobsOnly] = useState(false);
+  const [savedJobsList, setSavedJobsList] = useState([]);
+  const [savedJobsLoading, setSavedJobsLoading] = useState(false);
+  // Saved (bookmarked) quests — ids for card state, full list for the "Đã lưu" view.
+  const [savedQuestIds, setSavedQuestIds] = useState(() => new Set());
+  const [savingQuestId, setSavingQuestId] = useState(null);
+  const [showSavedQuestsOnly, setShowSavedQuestsOnly] = useState(false);
+  const [savedQuestsList, setSavedQuestsList] = useState([]);
+  const [savedQuestsLoading, setSavedQuestsLoading] = useState(false);
   const [openOrgTabs, setOpenOrgTabs] = useState([]); // viewed company tabs spawned in Sidebar
   const [orgSearchQuery, setOrgSearchQuery] = useState('');
   const [orgTypeFilter, setOrgTypeFilter] = useState('ALL'); // ALL, BUSINESS, CLUB
@@ -847,6 +861,48 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .catch(err => console.error('Lỗi tải đối tác đang theo dõi:', err));
     return () => { isMounted = false; };
   }, [refreshKey]);
+
+  // Load the set of saved (bookmarked) job ids.
+  useEffect(() => {
+    let isMounted = true;
+    getSavedJobIds()
+      .then(ids => { if (isMounted) setSavedJobIds(new Set((ids || []).map(String))); })
+      .catch(err => console.error('Lỗi tải tin đã lưu:', err));
+    return () => { isMounted = false; };
+  }, [refreshKey]);
+
+  // Load full saved-job cards only while the "Đã lưu" view is active.
+  useEffect(() => {
+    if (activeView !== 'OPPORTUNITIES' || !showSavedJobsOnly) return undefined;
+    let isMounted = true;
+    setSavedJobsLoading(true);
+    getSavedJobs()
+      .then(list => { if (isMounted) setSavedJobsList(list || []); })
+      .catch(err => console.error('Lỗi tải tin đã lưu:', err))
+      .finally(() => { if (isMounted) setSavedJobsLoading(false); });
+    return () => { isMounted = false; };
+  }, [activeView, showSavedJobsOnly, savedJobIds, refreshKey]);
+
+  // Load the set of saved (bookmarked) quest ids.
+  useEffect(() => {
+    let isMounted = true;
+    getSavedQuestIds()
+      .then(ids => { if (isMounted) setSavedQuestIds(new Set((ids || []).map(String))); })
+      .catch(err => console.error('Lỗi tải quest đã lưu:', err));
+    return () => { isMounted = false; };
+  }, [refreshKey]);
+
+  // Load full saved-quest cards only while the "Đã lưu" view is active on Quests tab.
+  useEffect(() => {
+    if (activeView !== 'QUESTS' || !showSavedQuestsOnly) return undefined;
+    let isMounted = true;
+    setSavedQuestsLoading(true);
+    getSavedQuests()
+      .then(list => { if (isMounted) setSavedQuestsList(list || []); })
+      .catch(err => console.error('Lỗi tải quest đã lưu:', err))
+      .finally(() => { if (isMounted) setSavedQuestsLoading(false); });
+    return () => { isMounted = false; };
+  }, [activeView, showSavedQuestsOnly, savedQuestIds, refreshKey]);
 
   // Sync tabSlug to activeView
   useEffect(() => {
@@ -1247,18 +1303,79 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   // numeric ids and no backing row.
   const isRealCompany = (id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id));
 
+  async function toggleSaveJob(e, jobId) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (savingJobId) return;
+    const id = String(jobId);
+    const currentlySaved = savedJobIds.has(id);
+    setSavingJobId(id);
+    setSavedJobIds(prev => {
+      const next = new Set(prev);
+      if (currentlySaved) next.delete(id); else next.add(id);
+      return next;
+    });
+    // Keep the saved-view list in sync when un-saving from within it.
+    if (currentlySaved) setSavedJobsList(prev => prev.filter(j => String(j.id) !== id));
+    try {
+      if (currentlySaved) await unsaveJob(id);
+      else await saveJob(id);
+    } catch (err) {
+      console.error('Lỗi khi cập nhật lưu tin:', err);
+      setSavedJobIds(prev => {
+        const next = new Set(prev);
+        if (currentlySaved) next.add(id); else next.delete(id);
+        return next;
+      });
+    } finally {
+      setSavingJobId(null);
+    }
+  }
+
+  async function toggleSaveQuest(e, questId) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (savingQuestId) return;
+    const id = String(questId);
+    const currentlySaved = savedQuestIds.has(id);
+    setSavingQuestId(id);
+    setSavedQuestIds(prev => {
+      const next = new Set(prev);
+      if (currentlySaved) next.delete(id); else next.add(id);
+      return next;
+    });
+    // Keep the saved-view list in sync when un-saving from within it.
+    if (currentlySaved) setSavedQuestsList(prev => prev.filter(q => String(q.id) !== id));
+    try {
+      if (currentlySaved) await unsaveQuest(id);
+      else await saveQuest(id);
+    } catch (err) {
+      console.error('Lỗi khi cập nhật lưu Quest:', err);
+      setSavedQuestIds(prev => {
+        const next = new Set(prev);
+        if (currentlySaved) next.add(id); else next.delete(id);
+        return next;
+      });
+    } finally {
+      setSavingQuestId(null);
+    }
+  }
+
   async function toggleFollowCompany(e, orgId) {
     e.stopPropagation();
     if (!isRealCompany(orgId) || followBusyId) return;
     const id = String(orgId);
     const currentlyFollowing = followedCompanyIds.has(id);
     setFollowBusyId(id);
+    const delta = currentlyFollowing ? -1 : 1;
     // Optimistic update — revert on failure.
     setFollowedCompanyIds(prev => {
       const next = new Set(prev);
       if (currentlyFollowing) next.delete(id); else next.add(id);
       return next;
     });
+    // Keep the open org-detail's follower count in sync live.
+    bumpSelectedOrgFollowerCount(id, delta);
     try {
       if (currentlyFollowing) await unfollowCompany(id);
       else await followCompany(id);
@@ -1269,9 +1386,17 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         if (currentlyFollowing) next.add(id); else next.delete(id);
         return next;
       });
+      bumpSelectedOrgFollowerCount(id, -delta);
     } finally {
       setFollowBusyId(null);
     }
+  }
+
+  function bumpSelectedOrgFollowerCount(id, delta) {
+    setSelectedOrg(prev => {
+      if (!prev || String(prev.id) !== id || prev.followerCount == null) return prev;
+      return { ...prev, followerCount: Math.max(0, Number(prev.followerCount) + delta) };
+    });
   }
 
   const handleCloseOrgTab = (e, orgId) => {
@@ -1531,6 +1656,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     return true;
   });
 
+  // When "Đã lưu" is active, the board renders the dedicated saved-jobs list
+  // (fetched from BE) instead of the search results.
+  const jobsSource = showSavedJobsOnly ? savedJobsList : filteredJobs;
+
+  // When "Đã lưu" is active, the board renders the dedicated saved-quests list
+  // (fetched from BE) instead of the search results.
+  const questsSource = showSavedQuestsOnly ? savedQuestsList : questsList;
+
   // Pagination (Bảng cơ hội + Quest) — ~18 tin / trang
   const OPP_PAGE_SIZE = 18;
   const [jobsPage, setJobsPage] = useState(1);
@@ -1538,12 +1671,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [orgJobsPage, setOrgJobsPage] = useState(1);
   const [orgQuestsPage, setOrgQuestsPage] = useState(1);
   const ORG_PAGE_SIZE = 6;
-  useEffect(() => { setJobsPage(1); }, [filterCategory, filterSpecialty, filterJobType, filterIsRemote, filterCanApply, filterSearch]);
-  useEffect(() => { setQuestsPage(1); }, [questSearchFilter, questCategoryFilter]);
+  useEffect(() => { setJobsPage(1); }, [filterCategory, filterSpecialty, filterJobType, filterIsRemote, filterCanApply, filterSearch, showSavedJobsOnly]);
+  useEffect(() => { setQuestsPage(1); }, [questSearchFilter, questCategoryFilter, showSavedQuestsOnly]);
   useEffect(() => { setOrgJobsPage(1); }, [selectedOrg?.id, selectedOrgTab]);
   useEffect(() => { setOrgQuestsPage(1); }, [selectedOrg?.id, selectedOrgTab]);
-  const pagedJobs = filteredJobs.slice((jobsPage - 1) * OPP_PAGE_SIZE, jobsPage * OPP_PAGE_SIZE);
-  const pagedQuests = questsList.slice((questsPage - 1) * OPP_PAGE_SIZE, questsPage * OPP_PAGE_SIZE);
+  const pagedJobs = jobsSource.slice((jobsPage - 1) * OPP_PAGE_SIZE, jobsPage * OPP_PAGE_SIZE);
+  const pagedQuests = questsSource.slice((questsPage - 1) * OPP_PAGE_SIZE, questsPage * OPP_PAGE_SIZE);
   const renderPager = (total, page, setPage, pageSize = OPP_PAGE_SIZE) => {
     const pageCount = Math.ceil(total / pageSize);
     if (pageCount <= 1) return null;
@@ -2079,11 +2212,20 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
             {/* JOB LIST */}
             <div className="np-jobs-section">
-              <div className="np-jobs-section-head">
-                <h3>Cơ hội phù hợp</h3>
-                <span style={{ fontSize: '0.88rem', color: 'var(--c-muted)', fontWeight: '700' }}><strong style={{ color: 'var(--c-ink)' }}>{filteredJobs.length}</strong> kết quả</span>
+              <div className="np-jobs-section-head" style={{ flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ display: 'inline-flex', background: 'var(--c-surface-soft)', border: '1px solid var(--c-line)', padding: '4px', borderRadius: '10px', gap: '4px' }}>
+                  <button type="button" onClick={() => setShowSavedJobsOnly(false)}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '7px', border: 0, fontSize: '0.82rem', fontWeight: '800', cursor: 'pointer', background: !showSavedJobsOnly ? 'var(--c-red)' : 'transparent', color: !showSavedJobsOnly ? '#fff' : 'var(--c-muted)' }}>
+                    Cơ hội phù hợp
+                  </button>
+                  <button type="button" onClick={() => setShowSavedJobsOnly(true)}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '7px', border: 0, fontSize: '0.82rem', fontWeight: '800', cursor: 'pointer', background: showSavedJobsOnly ? 'var(--c-red)' : 'transparent', color: showSavedJobsOnly ? '#fff' : 'var(--c-muted)' }}>
+                    <Bookmark size={13} fill={showSavedJobsOnly ? 'currentColor' : 'none'} /> Đã lưu{savedJobIds.size > 0 ? ` (${savedJobIds.size})` : ''}
+                  </button>
+                </div>
+                <span style={{ fontSize: '0.88rem', color: 'var(--c-muted)', fontWeight: '700' }}><strong style={{ color: 'var(--c-ink)' }}>{jobsSource.length}</strong> kết quả</span>
               </div>
-              {jobsLoading ? (
+              {(showSavedJobsOnly ? savedJobsLoading : jobsLoading) ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '70px 20px', gap: '12px', background: 'var(--c-surface-soft)', borderRadius: '20px' }}>
                   <RefreshCw size={26} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
                   <p style={{ fontSize: '0.92rem', color: 'var(--c-muted)', fontWeight: '600', margin: 0 }}>Đang tải...</p>
@@ -2092,11 +2234,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '20px', background: 'rgba(220,38,38,0.05)', borderRadius: '16px', border: '1px solid rgba(220,38,38,0.2)', color: '#dc2626' }}>
                   <AlertTriangle size={20} /><p style={{ margin: 0, fontSize: '0.92rem', fontWeight: '600' }}>{jobsError}</p>
                 </div>
-              ) : filteredJobs.length === 0 ? (
+              ) : jobsSource.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '70px 20px', gap: '12px', background: 'var(--c-surface-soft)', borderRadius: '20px', border: '1px dashed var(--c-line)', textAlign: 'center' }}>
-                  <Search size={28} style={{ color: 'var(--c-muted)' }} />
-                  <div><h3 style={{ margin: '0 0 4px', color: 'var(--c-ink)' }}>Không tìm thấy cơ hội nào</h3>
-                  <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--c-muted)' }}>Thử bỏ bớt bộ lọc để xem thêm kết quả.</p></div>
+                  {showSavedJobsOnly ? <Bookmark size={28} style={{ color: 'var(--c-muted)' }} /> : <Search size={28} style={{ color: 'var(--c-muted)' }} />}
+                  <div>
+                    <h3 style={{ margin: '0 0 4px', color: 'var(--c-ink)' }}>{showSavedJobsOnly ? 'Chưa có tin nào được lưu' : 'Không tìm thấy cơ hội nào'}</h3>
+                    <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--c-muted)' }}>{showSavedJobsOnly ? 'Nhấn biểu tượng cờ lưu trên mỗi tin để lưu lại và xem ở đây.' : 'Thử bỏ bớt bộ lọc để xem thêm kết quả.'}</p>
+                  </div>
                 </div>
               ) : (
                 <div className="np-joblist np-stagger" key={`jobs-${jobsPage}`}>
@@ -2130,6 +2274,16 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                           </div>
                         </div>
                         <div className="np-job-actions">
+                          <button
+                            type="button"
+                            onClick={(e) => toggleSaveJob(e, job.id)}
+                            disabled={savingJobId === String(job.id)}
+                            title={savedJobIds.has(String(job.id)) ? 'Bỏ lưu tin này' : 'Lưu tin để xem lại sau'}
+                            aria-label={savedJobIds.has(String(job.id)) ? 'Bỏ lưu tin' : 'Lưu tin'}
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '9px', border: `1px solid ${savedJobIds.has(String(job.id)) ? 'var(--c-red)' : 'var(--c-line)'}`, background: savedJobIds.has(String(job.id)) ? 'var(--c-red-soft)' : 'transparent', color: savedJobIds.has(String(job.id)) ? 'var(--c-red)' : 'var(--c-muted)', cursor: savingJobId === String(job.id) ? 'default' : 'pointer', flexShrink: 0 }}
+                          >
+                            {savedJobIds.has(String(job.id)) ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+                          </button>
                           <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(job.id)} className="np-job-detail">Chi tiết</a>
                           <button type="button" disabled={isLocked || alreadyApplied} onClick={() => handleApplyJob(job)}
                             style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 16px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', whiteSpace: 'nowrap', background: (isLocked || alreadyApplied) ? 'var(--c-disabled)' : 'var(--c-red)', color: (isLocked || alreadyApplied) ? 'var(--c-muted)' : '#fff', cursor: (isLocked || alreadyApplied) ? 'not-allowed' : 'pointer' }}>
@@ -2141,7 +2295,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   })}
                 </div>
               )}
-              {!jobsLoading && !jobsError && renderPager(filteredJobs.length, jobsPage, setJobsPage)}
+              {!(showSavedJobsOnly ? savedJobsLoading : jobsLoading) && !jobsError && renderPager(jobsSource.length, jobsPage, setJobsPage)}
             </div>
           </section>
         )}
@@ -2213,19 +2367,33 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
                   {/* QUEST LIST */}
                   <div className="np-jobs-section">
-                    <div className="np-jobs-section-head">
-                      <h3>Quest phù hợp</h3>
-                      <span style={{ fontSize: '0.88rem', color: 'var(--c-muted)', fontWeight: '700' }}><strong style={{ color: 'var(--c-ink)' }}>{questsList.length}</strong> kết quả</span>
+                    <div className="np-jobs-section-head" style={{ flexWrap: 'wrap', gap: '10px' }}>
+                      <div style={{ display: 'inline-flex', background: 'var(--c-surface-soft)', border: '1px solid var(--c-line)', padding: '4px', borderRadius: '10px', gap: '4px' }}>
+                        <button type="button" onClick={() => setShowSavedQuestsOnly(false)}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '7px', border: 0, fontSize: '0.82rem', fontWeight: '800', cursor: 'pointer', background: !showSavedQuestsOnly ? '#8b5cf6' : 'transparent', color: !showSavedQuestsOnly ? '#fff' : 'var(--c-muted)' }}>
+                          Quest phù hợp
+                        </button>
+                        <button type="button" onClick={() => setShowSavedQuestsOnly(true)}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '7px', border: 0, fontSize: '0.82rem', fontWeight: '800', cursor: 'pointer', background: showSavedQuestsOnly ? '#8b5cf6' : 'transparent', color: showSavedQuestsOnly ? '#fff' : 'var(--c-muted)' }}>
+                          <Bookmark size={13} fill={showSavedQuestsOnly ? 'currentColor' : 'none'} /> Đã lưu{savedQuestIds.size > 0 ? ` (${savedQuestIds.size})` : ''}
+                        </button>
+                      </div>
+                      <span style={{ fontSize: '0.88rem', color: 'var(--c-muted)', fontWeight: '700' }}><strong style={{ color: 'var(--c-ink)' }}>{questsSource.length}</strong> kết quả</span>
                     </div>
-                    {questsLoading ? (
+                    {(showSavedQuestsOnly ? savedQuestsLoading : questsLoading) ? (
                       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '60px', gap: '12px', background: 'var(--c-surface-soft)', borderRadius: '20px' }}>
                         <RefreshCw size={22} style={{ color: 'var(--primary)', animation: 'spin 1.5s linear infinite' }} />
                         <span style={{ color: 'var(--c-muted)', fontWeight: '600' }}>Đang tải Quest...</span>
                       </div>
-                    ) : questsList.length === 0 ? (
+                    ) : questsSource.length === 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px', gap: '12px', background: 'var(--c-surface-soft)', borderRadius: '20px', border: '1px dashed var(--c-line)', textAlign: 'center' }}>
-                        <Sparkles size={28} style={{ color: 'var(--c-muted)' }} />
-                        <p style={{ margin: 0, color: 'var(--c-muted)', fontWeight: '600' }}>Chưa có Quest nào đang mở. Quay lại sau nhé!</p>
+                        {showSavedQuestsOnly ? <Bookmark size={28} style={{ color: 'var(--c-muted)' }} /> : <Sparkles size={28} style={{ color: 'var(--c-muted)' }} />}
+                        <div>
+                          <h3 style={{ margin: '0 0 4px', color: 'var(--c-ink)' }}>{showSavedQuestsOnly ? 'Chưa có Quest nào được lưu' : 'Không tìm thấy Quest nào'}</h3>
+                          <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--c-muted)' }}>
+                            {showSavedQuestsOnly ? 'Nhấn biểu tượng cờ lưu trên mỗi Quest để lưu lại và xem ở đây.' : 'Thử bỏ bớt bộ lọc để xem thêm kết quả.'}
+                          </p>
+                        </div>
                       </div>
                     ) : (
                       <div className="np-joblist np-stagger" key={`quests-${questsPage}`}>
@@ -2252,6 +2420,16 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 </div>
                               </div>
                               <div className="np-job-actions">
+                                <button
+                                  type="button"
+                                  onClick={(e) => toggleSaveQuest(e, quest.id)}
+                                  disabled={savingQuestId === String(quest.id)}
+                                  title={savedQuestIds.has(String(quest.id)) ? 'Bỏ lưu Quest này' : 'Lưu Quest để xem lại sau'}
+                                  aria-label={savedQuestIds.has(String(quest.id)) ? 'Bỏ lưu Quest' : 'Lưu Quest'}
+                                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '9px', border: `1px solid ${savedQuestIds.has(String(quest.id)) ? '#8b5cf6' : 'var(--c-line)'}`, background: savedQuestIds.has(String(quest.id)) ? 'rgba(139, 92, 246, 0.1)' : 'transparent', color: savedQuestIds.has(String(quest.id)) ? '#8b5cf6' : 'var(--c-muted)', cursor: savingQuestId === String(quest.id) ? 'default' : 'pointer', flexShrink: 0 }}
+                                >
+                                  {savedQuestIds.has(String(quest.id)) ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+                                </button>
                                 <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(quest.id)} className="np-job-detail">Chi tiết</a>
                                 <button type="button" disabled={isLocked || alreadyApplied} onClick={() => { setSelectedQuestForApply(quest); setQuestCoverNote(''); setQuestAnswers({}); setQuestApplyError(''); setShowQuestApplyModal(true); }}
                                   style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 16px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', whiteSpace: 'nowrap', background: (alreadyApplied || isLocked) ? 'var(--c-disabled)' : meta.color, color: (alreadyApplied || isLocked) ? 'var(--c-muted)' : '#fff', cursor: (alreadyApplied || isLocked) ? 'not-allowed' : 'pointer' }}>
@@ -2263,7 +2441,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         })}
                       </div>
                     )}
-                    {!questsLoading && questsList.length > 0 && renderPager(questsList.length, questsPage, setQuestsPage)}
+                    {!(showSavedQuestsOnly ? savedQuestsLoading : questsLoading) && renderPager(questsSource.length, questsPage, setQuestsPage)}
                   </div>
                 </>
               );
@@ -3260,6 +3438,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   {selectedOrg.type === 'CLUB'
                     ? <span><strong>{selectedOrgQuests.length}</strong> Quest & hoạt động</span>
                     : <span><strong>{selectedOrgJobs.length}</strong> tin tuyển dụng</span>}
+                  {selectedOrg.followerCount != null && (
+                    <>
+                      <span className="orgw-dot" />
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Star size={13} /> <strong>{Number(selectedOrg.followerCount).toLocaleString('vi-VN')}</strong> lượt theo dõi
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
 

@@ -1611,6 +1611,11 @@ function ApprovedView({ company, onTabChange }) {
               <span className="np-badge" style={{ background: 'rgba(22,163,74,0.1)', color: '#16a34a' }}>
                 <BadgeCheck size={13} /> Đã xác thực
               </span>
+              {company?.followerCount != null && (
+                <span className="np-badge" style={{ background: accentSoft, color: accent }} title="Số ứng viên đang theo dõi tổ chức của bạn">
+                  <Star size={13} /> {Number(company.followerCount).toLocaleString('vi-VN')} người theo dõi
+                </span>
+              )}
             </div>
             <h1>{company?.name}</h1>
             <div className="np-dash-meta">
