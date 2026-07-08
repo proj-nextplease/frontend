@@ -445,6 +445,8 @@ function ProvisionPanel() {
   const [provisionSearchQuery, setProvisionSearchQuery] = useState('');
   const [provisionTab, setProvisionTab] = useState('active');
   const [resendingId, setResendingId] = useState(null);
+  const [provisionErrors, setProvisionErrors] = useState({});
+
 
   const [recentProvisions, setRecentProvisions] = useState(() => {
     try {
@@ -1605,9 +1607,9 @@ export function AdminB2bReviewPage() {
   const [expandedLogId, setExpandedLogId] = useState(null);
 
   /* ─── State for Custom Validations ─── */
-  const [provisionErrors, setProvisionErrors] = useState({});
   const [rejectReasonError, setRejectReasonError] = useState('');
   const [rejectJobReasonError, setRejectJobReasonError] = useState('');
+
 
 
   /* ─── State for Verification Queue ─── */
