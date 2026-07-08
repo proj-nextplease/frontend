@@ -82,6 +82,31 @@ export async function getCompanyDetail(id) {
   return response.data.data;
 }
 
+/** Ids of the partners the current candidate follows (for rendering follow state). */
+export async function getFollowedCompanyIds() {
+  const response = await httpClient.get('/me/followed-companies');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải danh sách đối tác đang theo dõi.');
+  }
+  return response.data.data || [];
+}
+
+export async function followCompany(id) {
+  const response = await httpClient.post(`/companies/${id}/follow`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Theo dõi đối tác thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function unfollowCompany(id) {
+  const response = await httpClient.delete(`/companies/${id}/follow`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Bỏ theo dõi thất bại.');
+  }
+  return response.data.data;
+}
+
 export async function getJobApplications(jobId) {
   const response = await httpClient.get(`/organizer/jobs/${jobId}/applications`);
   if (!response.data?.success) {

@@ -41,7 +41,7 @@ import { logout } from '../api/httpClient.js';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { getMyUserId } from '../api/accountApi.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
-import { getJobs, getCompanies, getCompanyDetail, getJobDetail } from '../api/jobApi.js';
+import { getJobs, getCompanies, getCompanyDetail, getJobDetail, getFollowedCompanyIds, followCompany, unfollowCompany } from '../api/jobApi.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
 import { applyToJob, getMyApplications, withdrawApplication } from '../api/applicationApi.js';
 import { NotificationBell } from '../components/NotificationBell.jsx';
@@ -642,6 +642,34 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     }
   }
 
+  // "Tải lại" button shown on every tab except Overview and the Portfolio
+  // editor (per 2026-07-07 feedback — those two already have their own
+  // reload/save affordances). Bumping refreshKey re-runs the fetch effects
+  // for whichever tab-specific data includes it as a dependency, instead of
+  // a hard page reload (keeps scroll position, open modals, etc).
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isReloadingTab, setIsReloadingTab] = useState(false);
+  function handleReloadTab() {
+    setIsReloadingTab(true);
+    setRefreshKey((k) => k + 1);
+    setTimeout(() => setIsReloadingTab(false), 700);
+  }
+
+  function renderReloadButton() {
+    return (
+      <button
+        type="button"
+        onClick={handleReloadTab}
+        disabled={isReloadingTab}
+        title="Tải lại dữ liệu"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: '700', color: 'var(--c-ink)', background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '999px', padding: '8px 14px', cursor: isReloadingTab ? 'default' : 'pointer', flexShrink: 0 }}
+      >
+        <RefreshCw size={14} style={isReloadingTab ? { animation: 'spin 1s linear infinite' } : undefined} />
+        Tải lại
+      </button>
+    );
+  }
+
   // Application states
   const [appliedJobs, setAppliedJobs] = useState([]);
   const [applicationsLoading, setApplicationsLoading] = useState(true);
@@ -658,6 +686,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   // Withdraw states
   const [withdrawingId, setWithdrawingId] = useState(null);
   const [withdrawError, setWithdrawError] = useState('');
+  // Pending withdraw confirmation: { id, isQuest, title } or null.
+  const [withdrawConfirm, setWithdrawConfirm] = useState(null);
 
   // Wallet & Premium states
   const [wallet, setWallet] = useState(null);
@@ -739,6 +769,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   // DB Loaded Organizations States
   const [companiesList, setCompaniesList] = useState([]);
   const [companiesLoading, setCompaniesLoading] = useState(true);
+  // Set of company ids the candidate follows (bookmarked partners). Only real
+  // DB companies (UUID id) can be followed — mock/seed orgs are excluded.
+  const [followedCompanyIds, setFollowedCompanyIds] = useState(() => new Set());
+  const [followBusyId, setFollowBusyId] = useState(null);
   const [openOrgTabs, setOpenOrgTabs] = useState([]); // viewed company tabs spawned in Sidebar
   const [orgSearchQuery, setOrgSearchQuery] = useState('');
   const [orgTypeFilter, setOrgTypeFilter] = useState('ALL'); // ALL, BUSINESS, CLUB
@@ -803,7 +837,16 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     }
     fetchCompanies();
     return () => { isMounted = false; };
-  }, []);
+  }, [refreshKey]);
+
+  // Load the set of partners the candidate follows (bookmarks).
+  useEffect(() => {
+    let isMounted = true;
+    getFollowedCompanyIds()
+      .then(ids => { if (isMounted) setFollowedCompanyIds(new Set((ids || []).map(String))); })
+      .catch(err => console.error('Lỗi tải đối tác đang theo dõi:', err));
+    return () => { isMounted = false; };
+  }, [refreshKey]);
 
   // Sync tabSlug to activeView
   useEffect(() => {
@@ -919,7 +962,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       return () => { isMounted = false; };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabSlug, activeView, companiesLoading]);
+  }, [tabSlug, activeView, companiesLoading, refreshKey]);
 
   // Sync URL search queries to Opportunities filter states
   useEffect(() => {
@@ -995,7 +1038,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       isMounted = false;
       clearTimeout(delayDebounce);
     };
-  }, [filterSearch, filterCategory, filterSpecialty, filterJobType, filterIsRemote]);
+  }, [filterSearch, filterCategory, filterSpecialty, filterJobType, filterIsRemote, refreshKey]);
 
   // Fetch credential submissions when CREDENTIALS or PREMIUM_STORE tab is active
   useEffect(() => {
@@ -1007,7 +1050,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .catch(err => console.error('Lỗi tải minh chứng:', err))
       .finally(() => { if (isMounted) setCredentialSubmissionsLoading(false); });
     return () => { isMounted = false; };
-  }, [activeView]);
+  }, [activeView, refreshKey]);
 
   // Load real applications from API on mount AND when navigating to PREMIUM_STORE
   useEffect(() => {
@@ -1018,7 +1061,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .catch(err => console.error('Lỗi tải ứng tuyển:', err))
       .finally(() => { if (isMounted) setApplicationsLoading(false); });
     return () => { isMounted = false; };
-  }, [activeView]);
+  }, [activeView, refreshKey]);
 
   // Load wallet on mount
   useEffect(() => {
@@ -1029,14 +1072,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .catch(err => console.error('Lỗi tải ví:', err))
       .finally(() => { if (isMounted) setWalletLoading(false); });
     return () => { isMounted = false; };
-  }, []);
+  }, [refreshKey]);
 
   // Load premium config and recommendations on mount/update
   useEffect(() => {
     getPremiumConfig()
       .then(setPremiumConfig)
       .catch(err => console.error('Lỗi tải cấu hình premium:', err));
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
     if (!wallet || (!wallet.isPremium && !wallet.hasJobMatchAlert)) return;
@@ -1047,7 +1090,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .catch(err => console.error('Lỗi tải gợi ý cá nhân hóa:', err))
       .finally(() => { if (isMounted) setRecommendationsLoading(false); });
     return () => { isMounted = false; };
-  }, [wallet]);
+  }, [wallet, refreshKey]);
 
   // Load quests when OPPORTUNITIES tab opens (or on mount)
   useEffect(() => {
@@ -1058,7 +1101,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .catch(err => console.error('Lỗi tải Quest:', err))
       .finally(() => { if (isMounted) setQuestsLoading(false); });
     return () => { isMounted = false; };
-  }, [questSearchFilter, questCategoryFilter]);
+  }, [questSearchFilter, questCategoryFilter, refreshKey]);
 
   // Load my quest applications on mount
   useEffect(() => {
@@ -1069,7 +1112,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .catch(err => console.error('Lỗi tải đơn Quest:', err))
       .finally(() => { if (isMounted) setQuestApplicationsLoading(false); });
     return () => { isMounted = false; };
-  }, []);
+  }, [refreshKey]);
 
   async function handleApplyToQuest() {
     if (!selectedQuestForApply) return;
@@ -1199,6 +1242,37 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const handleTabChange = (viewName) => {
     navigate(`/candidates/dashboard/${viewName.toLowerCase()}`);
   };
+
+  // Only real DB partners (UUID id) are followable — mock/seed orgs have
+  // numeric ids and no backing row.
+  const isRealCompany = (id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id));
+
+  async function toggleFollowCompany(e, orgId) {
+    e.stopPropagation();
+    if (!isRealCompany(orgId) || followBusyId) return;
+    const id = String(orgId);
+    const currentlyFollowing = followedCompanyIds.has(id);
+    setFollowBusyId(id);
+    // Optimistic update — revert on failure.
+    setFollowedCompanyIds(prev => {
+      const next = new Set(prev);
+      if (currentlyFollowing) next.delete(id); else next.add(id);
+      return next;
+    });
+    try {
+      if (currentlyFollowing) await unfollowCompany(id);
+      else await followCompany(id);
+    } catch (err) {
+      console.error('Lỗi khi cập nhật theo dõi đối tác:', err);
+      setFollowedCompanyIds(prev => {
+        const next = new Set(prev);
+        if (currentlyFollowing) next.add(id); else next.delete(id);
+        return next;
+      });
+    } finally {
+      setFollowBusyId(null);
+    }
+  }
 
   const handleCloseOrgTab = (e, orgId) => {
     e.stopPropagation();
@@ -1401,29 +1475,32 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     });
   };
 
-  async function handleWithdrawJob(applicationId) {
-    setWithdrawingId(applicationId);
+  // Rút đơn là thao tác không hoàn tác (không tự nộp lại được) nên luôn hỏi
+  // xác nhận trước. Nút "Rút đơn" mở modal xác nhận; modal mới thực sự gọi API.
+  function requestWithdraw(id, isQuest, title) {
     setWithdrawError('');
-    try {
-      await withdrawApplication(applicationId);
-      const data = await getMyApplications();
-      setAppliedJobs(data || []);
-    } catch (err) {
-      setWithdrawError(err.message || 'Rút đơn thất bại.');
-    } finally {
-      setWithdrawingId(null);
-    }
+    setWithdrawConfirm({ id, isQuest, title });
   }
 
-  async function handleWithdrawQuest(applicationId) {
-    setWithdrawingId(applicationId);
+  async function confirmWithdraw() {
+    if (!withdrawConfirm) return;
+    const { id, isQuest } = withdrawConfirm;
+    setWithdrawingId(id);
     setWithdrawError('');
     try {
-      await withdrawQuestApplication(applicationId);
-      const data = await getMyQuestApplications();
-      setQuestApplications(data || []);
+      if (isQuest) {
+        await withdrawQuestApplication(id);
+        const data = await getMyQuestApplications();
+        setQuestApplications(data || []);
+      } else {
+        await withdrawApplication(id);
+        const data = await getMyApplications();
+        setAppliedJobs(data || []);
+      }
+      setWithdrawConfirm(null);
     } catch (err) {
       setWithdrawError(err.message || 'Rút đơn thất bại.');
+      setWithdrawConfirm(null);
     } finally {
       setWithdrawingId(null);
     }
@@ -1488,9 +1565,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     const matchesSearch = org.name.toLowerCase().includes(orgSearchQuery.toLowerCase()) ||
                           org.description.toLowerCase().includes(orgSearchQuery.toLowerCase()) ||
                           org.industry.toLowerCase().includes(orgSearchQuery.toLowerCase());
-    
-    const matchesType = orgTypeFilter === 'ALL' || org.type === orgTypeFilter;
-    
+
+    let matchesType;
+    if (orgTypeFilter === 'ALL') matchesType = true;
+    else if (orgTypeFilter === 'FOLLOWING') matchesType = followedCompanyIds.has(String(org.id));
+    else matchesType = org.type === orgTypeFilter;
+
     return matchesSearch && matchesType;
   });
 
@@ -1917,6 +1997,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         {/* 2. OPPORTUNITIES VIEW */}
         {activeView === 'OPPORTUNITIES' && (
           <section className="np-view">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>{renderReloadButton()}</div>
             {/* HERO SEARCH */}
             <div className="np-jobs-hero">
               <p className="np-jobs-eyebrow">{jobsList.length}+ cơ hội việc làm & Quest đang mở</p>
@@ -2077,6 +2158,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               const featured = [...byCo.values()].sort((a, b) => b.count - a.count).slice(0, 8);
               return (
                 <>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>{renderReloadButton()}</div>
                   {/* HERO SEARCH */}
                   <div className="np-jobs-hero">
                     <p className="np-jobs-eyebrow">{questsList.length}+ Quest & chiến dịch từ câu lạc bộ</p>
@@ -2229,9 +2311,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
           return (
             <section className="np-view apptrack">
-              <div style={{ marginBottom: '20px' }}>
-                <h2 style={{ margin: '0 0 4px', fontSize: 'clamp(1.6rem, 2.4vw, 2rem)', fontWeight: '800', letterSpacing: '-0.035em', color: 'var(--c-ink)' }}>Theo dõi ứng tuyển</h2>
-                <p style={{ margin: 0, fontSize: '0.96rem', color: 'var(--c-muted)' }}>Trạng thái các đơn ứng tuyển việc làm và Quest của bạn.</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '20px' }}>
+                <div>
+                  <h2 style={{ margin: '0 0 4px', fontSize: 'clamp(1.6rem, 2.4vw, 2rem)', fontWeight: '800', letterSpacing: '-0.035em', color: 'var(--c-ink)' }}>Theo dõi ứng tuyển</h2>
+                  <p style={{ margin: 0, fontSize: '0.96rem', color: 'var(--c-muted)' }}>Trạng thái các đơn ứng tuyển việc làm và Quest của bạn.</p>
+                </div>
+                {renderReloadButton()}
               </div>
 
               <div className="apptrack-stats">
@@ -2320,7 +2405,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                               <div className="appcard-actions">
                                 <button type="button" className="apptrack-btn" onClick={() => setViewingApp({ app, isQuest: false })}><Eye size={14} /> Chi tiết</button>
                                 {['SUBMITTED', 'VIEWED', 'SHORTLISTED'].includes(st) && (
-                                  <button type="button" className="apptrack-btn" onClick={() => handleWithdrawJob(app.id)} disabled={withdrawingId === app.id}>{withdrawingId === app.id ? 'Đang rút...' : 'Rút đơn'}</button>
+                                  <button type="button" className="apptrack-btn" onClick={() => requestWithdraw(app.id, false, app.job_title || app.title)} disabled={withdrawingId === app.id}>{withdrawingId === app.id ? 'Đang rút...' : 'Rút đơn'}</button>
                                 )}
                                 {(() => { const ik = encodePremiumTarget('JOB', app.job_id || app.jobId || app.id); return (
                                   <button type="button" className="apptrack-btn insight" onClick={() => handleViewInsight(app)} disabled={insightLoadingJobId === ik}>
@@ -2405,7 +2490,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                               <div className="appcard-actions">
                                 <button type="button" className="apptrack-btn" onClick={() => setViewingApp({ app: qa, isQuest: true })}><Eye size={14} /> Chi tiết</button>
                                 {qa.status === 'SUBMITTED' && (
-                                  <button type="button" className="apptrack-btn" onClick={() => handleWithdrawQuest(qa.id)} disabled={withdrawingId === qa.id}>{withdrawingId === qa.id ? 'Đang rút...' : 'Rút đơn'}</button>
+                                  <button type="button" className="apptrack-btn" onClick={() => requestWithdraw(qa.id, true, qa.questTitle)} disabled={withdrawingId === qa.id}>{withdrawingId === qa.id ? 'Đang rút...' : 'Rút đơn'}</button>
                                 )}
                                 {(() => { const ik = encodePremiumTarget('QUEST', qa.questId); return (
                                   <button type="button" className="apptrack-btn insight" onClick={() => handleViewInsight({ ...qa, applicationType: 'QUEST', targetId: qa.questId })} disabled={insightLoadingJobId === ik}>
@@ -2443,9 +2528,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <h2 style={{ margin: '0 0 4px', fontSize: 'clamp(1.6rem, 2.4vw, 2rem)', fontWeight: '800', letterSpacing: '-0.035em', color: 'var(--c-ink)' }}>Gợi ý dành riêng cho bạn</h2>
                 <p style={{ margin: 0, fontSize: '0.96rem', color: 'var(--c-muted)' }}>Hệ thống đối khớp kỹ năng đã xác thực của bạn với cơ hội phù hợp nhất.</p>
               </div>
-              {wallet?.hasJobMatchAlert && (
-                <span style={{ fontSize: '0.82rem', fontWeight: '700', color: '#16a34a', background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.25)', padding: '7px 13px', borderRadius: '999px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} /> Job Match Alert đang bật</span>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                {wallet?.hasJobMatchAlert && (
+                  <span style={{ fontSize: '0.82rem', fontWeight: '700', color: '#16a34a', background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.25)', padding: '7px 13px', borderRadius: '999px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} /> Job Match Alert đang bật</span>
+                )}
+                {renderReloadButton()}
+              </div>
             </div>
 
             {!wallet?.hasJobMatchAlert ? (
@@ -2566,6 +2654,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <h1>Cửa hàng Premium</h1>
                 <p>Nâng cấp trải nghiệm và tăng tốc hồ sơ bằng số dư NP.</p>
               </div>
+              {renderReloadButton()}
             </header>
 
             {buyPremiumError && (
@@ -2994,7 +3083,27 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 >
                   CLB & Tổ chức
                 </button>
+                <button
+                  onClick={() => setOrgTypeFilter('FOLLOWING')}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: 0,
+                    fontSize: '0.82rem',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    background: orgTypeFilter === 'FOLLOWING' ? 'var(--primary)' : 'transparent',
+                    color: orgTypeFilter === 'FOLLOWING' ? '#fff' : 'var(--nav-text)'
+                  }}
+                  type="button"
+                >
+                  <Star size={13} fill={orgTypeFilter === 'FOLLOWING' ? 'currentColor' : 'none'} /> Đang theo dõi
+                </button>
               </div>
+              {renderReloadButton()}
             </div>
 
             {/* Org search bar */}
@@ -3045,8 +3154,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </div>
             ) : filteredOrgs.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 20px', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
-                <Building size={32} color="var(--muted)" style={{ marginBottom: '8px' }} />
-                <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.92rem', fontWeight: 'bold' }}>Không tìm thấy Doanh nghiệp hoặc CLB nào phù hợp.</p>
+                {orgTypeFilter === 'FOLLOWING' ? <Star size={32} color="var(--muted)" style={{ marginBottom: '8px' }} /> : <Building size={32} color="var(--muted)" style={{ marginBottom: '8px' }} />}
+                <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.92rem', fontWeight: 'bold' }}>
+                  {orgTypeFilter === 'FOLLOWING'
+                    ? 'Bạn chưa theo dõi đối tác nào. Nhấn "Theo dõi" trên thẻ đối tác để lưu lại.'
+                    : 'Không tìm thấy Doanh nghiệp hoặc CLB nào phù hợp.'}
+                </p>
               </div>
             ) : (
               <div className="org-directory-grid">
@@ -3073,9 +3186,22 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         {org.description || 'Đối tác chưa cung cấp thông tin mô tả chi tiết.'}
                       </p>
                     </div>
-                    <div style={{ borderTop: '1px solid var(--line)', paddingTop: '12px', marginTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{org.location}</span>
-                      <span style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ borderTop: '1px solid var(--line)', paddingTop: '12px', marginTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                      {isRealCompany(org.id) ? (
+                        <button
+                          type="button"
+                          onClick={(e) => toggleFollowCompany(e, org.id)}
+                          disabled={followBusyId === String(org.id)}
+                          title={followedCompanyIds.has(String(org.id)) ? 'Bỏ theo dõi đối tác này' : 'Theo dõi để lưu đối tác này'}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', fontWeight: '800', padding: '6px 12px', borderRadius: '999px', cursor: followBusyId === String(org.id) ? 'default' : 'pointer', border: `1px solid ${followedCompanyIds.has(String(org.id)) ? 'var(--primary)' : 'var(--line)'}`, background: followedCompanyIds.has(String(org.id)) ? 'color-mix(in srgb, var(--primary) 12%, transparent)' : 'transparent', color: followedCompanyIds.has(String(org.id)) ? 'var(--primary)' : 'var(--muted)' }}
+                        >
+                          <Star size={13} fill={followedCompanyIds.has(String(org.id)) ? 'currentColor' : 'none'} />
+                          {followedCompanyIds.has(String(org.id)) ? 'Đang theo dõi' : 'Theo dõi'}
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{org.location}</span>
+                      )}
+                      <span style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                         Mở hồ sơ <ArrowRight size={13} />
                       </span>
                     </div>
@@ -3095,9 +3221,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             </div>
           ) : (
             <div className="org-detail-container orgw">
-              <button className="org-back-btn" onClick={() => handleTabChange('organizations')} type="button">
-                <ArrowLeft size={16} /> Quay lại danh sách
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                <button className="org-back-btn" onClick={() => handleTabChange('organizations')} type="button">
+                  <ArrowLeft size={16} /> Quay lại danh sách
+                </button>
+                {renderReloadButton()}
+              </div>
 
               {/* Hero */}
               <div className="orgw-hero" style={{ '--org-accent': selectedOrg.type === 'CLUB' ? '#f97316' : '#2563eb' }}>
@@ -3111,6 +3240,18 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <div className="orgw-title-row">
                     <h1>{selectedOrg.name}</h1>
                     {selectedOrg.verified && <span className="orgw-verify"><CheckCircle2 size={14} /> Đã xác thực</span>}
+                    {isRealCompany(selectedOrg.id) && (
+                      <button
+                        type="button"
+                        onClick={(e) => toggleFollowCompany(e, selectedOrg.id)}
+                        disabled={followBusyId === String(selectedOrg.id)}
+                        title={followedCompanyIds.has(String(selectedOrg.id)) ? 'Bỏ theo dõi đối tác này' : 'Theo dõi để lưu đối tác này'}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: '800', padding: '7px 14px', borderRadius: '999px', cursor: followBusyId === String(selectedOrg.id) ? 'default' : 'pointer', border: `1.5px solid ${followedCompanyIds.has(String(selectedOrg.id)) ? '#fff' : 'rgba(255,255,255,0.5)'}`, background: followedCompanyIds.has(String(selectedOrg.id)) ? '#fff' : 'rgba(255,255,255,0.15)', color: followedCompanyIds.has(String(selectedOrg.id)) ? 'var(--org-accent, #2563eb)' : '#fff' }}
+                      >
+                        <Star size={14} fill={followedCompanyIds.has(String(selectedOrg.id)) ? 'currentColor' : 'none'} />
+                        {followedCompanyIds.has(String(selectedOrg.id)) ? 'Đang theo dõi' : 'Theo dõi'}
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="orgw-sub">
@@ -3267,6 +3408,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         {/* 5. CREDENTIALS & STATUS VIEW */}
         {activeView === 'CREDENTIALS' && (
           <div className="candidate-credentials-workspace np-view">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>{renderReloadButton()}</div>
 
             {/* Certifications & Diplomas Grid (My Credentials) */}
             <section className="credentials-list-section">
@@ -3686,6 +3828,31 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           onClose={() => setShowSettingsModal(false)}
           currentDisplayName={portfolio?.name}
         />
+      )}
+
+      {/* ─── Withdraw Confirmation Modal ─── */}
+      {withdrawConfirm && (
+        <div className="glass-modal-overlay" onClick={() => { if (!withdrawingId) setWithdrawConfirm(null); }}>
+          <div className="glass-modal-content" style={{ maxWidth: '420px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px', padding: '24px' }}>
+              <span style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(220,38,38,0.1)', color: '#dc2626', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AlertTriangle size={26} />
+              </span>
+              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: 'var(--ink)' }}>Rút đơn ứng tuyển?</h2>
+              <p style={{ margin: 0, fontSize: '0.92rem', color: 'var(--muted)', lineHeight: 1.5 }}>
+                Bạn có chắc muốn rút đơn{withdrawConfirm.title ? <> cho <strong style={{ color: 'var(--ink)' }}>"{withdrawConfirm.title}"</strong></> : ''}? Thao tác này không thể hoàn tác — nếu muốn tham gia lại bạn sẽ phải nộp đơn mới.
+              </p>
+              <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '6px' }}>
+                <button type="button" className="button secondary-button" style={{ flex: 1, minHeight: '44px' }} onClick={() => setWithdrawConfirm(null)} disabled={!!withdrawingId}>
+                  Giữ lại
+                </button>
+                <button type="button" className="button" style={{ flex: 1, minHeight: '44px', background: '#dc2626', color: '#fff', border: 'none' }} onClick={confirmWithdraw} disabled={!!withdrawingId}>
+                  {withdrawingId ? 'Đang rút...' : 'Rút đơn'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ─── Top-Up NP Modal ─── */}

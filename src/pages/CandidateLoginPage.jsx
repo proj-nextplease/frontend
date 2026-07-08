@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Mail, LockKeyhole } from 'lucide-react';
 import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
@@ -42,11 +42,17 @@ const FIELD = {
 
 export function CandidateLoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get('expired') === '1';
   const [loginData, setLoginData] = useState({ email: getLastEmail(), password: '' });
   // Candidate: keep signed in by default (consumer-friendly).
   const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [status, setStatus] = useState({ type: 'idle', message: '' });
+  const [status, setStatus] = useState(
+    sessionExpired
+      ? { type: 'error', message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' }
+      : { type: 'idle', message: '' }
+  );
   const isSupabaseConfigured = Boolean(supabase);
 
   function updateField(event) {
