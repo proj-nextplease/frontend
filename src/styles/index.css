@@ -15364,3 +15364,239 @@ p { text-wrap: pretty; }
 .vp-cred { position:relative; }
 .vp-cred-file { margin-left:auto; display:inline-flex; align-items:center; gap:6px; font-size:0.86rem; font-weight:650; color:var(--vp-accent); background:none; border:1px solid var(--line); border-radius:999px; padding:7px 13px; cursor:pointer; flex-shrink:0; transition:border-color .16s ease; }
 .vp-cred-file:hover { border-color:var(--vp-accent); }
+
+/* Custom scale-up of admin font size to make it more legible and custom warning animation */
+@keyframes admFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-css-vars {
+  font-size: 16px !important;
+}
+
+.admin-css-vars button,
+.admin-css-vars input,
+.admin-css-vars textarea,
+.admin-css-vars select {
+  font-size: 16px !important;
+}
+
+.admin-css-vars table,
+.admin-css-vars th,
+.admin-css-vars td {
+  font-size: 15px !important;
+}
+
+.admin-css-vars .admin-sidebar-logo {
+  font-size: 1.35rem !important;
+}
+
+.admin-css-vars .admin-sidenav-title {
+  font-size: 1.2rem !important;
+}
+
+.admin-css-vars .admin-sidenav-eyebrow {
+  font-size: 0.78rem !important;
+}
+
+.admin-css-vars .admin-profile-name {
+  font-size: 1.05rem !important;
+}
+
+.admin-css-vars .admin-profile-role {
+  font-size: 0.8rem !important;
+}
+
+.admin-css-vars .astryx-side-nav-item {
+  font-size: 16.5px !important;
+  min-height: 42px !important;
+}
+
+.admin-css-vars .astryx-side-nav-item .astryx-icon {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.admin-css-vars .astryx-side-nav-heading {
+  font-size: 1.15rem !important;
+}
+
+.admin-css-vars label {
+  font-size: 13.5px !important;
+}
+
+.admin-css-vars h3 {
+  font-size: 1.2rem !important;
+}
+
+.admin-css-vars .admin-section-label {
+  font-size: 1.05rem !important;
+}
+
+.admin-css-vars .adm-kpi-label {
+  font-size: 1rem !important;
+}
+
+.admin-css-vars .adm-kpi-value {
+  font-size: 2.45rem !important;
+}
+
+.admin-css-vars .adm-kpi-hint {
+  font-size: 0.92rem !important;
+}
+
+.admin-css-vars p {
+  font-size: 15px !important;
+}
+
+/* ============================================================
+   PARTNER SIDEBAR STYLE OVERRIDES (Club vs. Business Theme)
+   ============================================================ */
+
+/* ── Club SideNav (Warm-Light theme) ── */
+.partner-sidebar.partner-sidebar--club {
+  background: #fdfaf7 !important;
+  border-right: 1px solid #f2e3d5 !important;
+}
+
+.partner-sidebar.partner-sidebar--club .partner-sidebar-logo {
+  color: #2d231d !important;
+}
+
+.partner-sidebar.partner-sidebar--club .partner-sidebar-logo .np-dot {
+  color: #ff7a1a !important;
+}
+
+.partner-sidebar.partner-sidebar--club .partner-sidebar-tag {
+  background: rgba(255, 122, 26, 0.05) !important;
+  border: 1px solid rgba(255, 122, 26, 0.3) !important;
+  color: #ff7a1a !important;
+}
+
+.partner-sidebar.partner-sidebar--club .partner-sidebar-toggle {
+  background: #f5e6da !important;
+  border: 1px solid #e8d2c2 !important;
+  color: #706053 !important;
+}
+
+.partner-sidebar.partner-sidebar--club .partner-sidebar-toggle:hover {
+  background: #eedacb !important;
+  color: #ff7a1a !important;
+  border-color: #dcbfa8 !important;
+}
+
+.partner-sidebar.partner-sidebar--club .partner-sidebar-profile {
+  background: #f7eee6 !important;
+  border: 1px solid #e8d2c2 !important;
+}
+
+.partner-sidebar.partner-sidebar--club .partner-profile-name {
+  color: #2d231d !important;
+}
+
+.partner-sidebar.partner-sidebar--club .partner-profile-role {
+  color: #ff7a1a !important;
+}
+
+.partner-sidebar.partner-sidebar--club .partner-nav-item {
+  color: #706053 !important;
+}
+
+.partner-sidebar.partner-sidebar--club .partner-nav-item:hover {
+  background: #f9ede4 !important;
+  color: #2d231d !important;
+}
+
+.partner-sidebar.partner-sidebar--club .partner-nav-item.active {
+  background: #fff1e6 !important;
+  color: #ff7a1a !important;
+  border-color: rgba(255, 122, 26, 0.22) !important;
+}
+
+.partner-sidebar.partner-sidebar--club .partner-sidebar-footer {
+  border-top: 1px solid #f2e3d5 !important;
+}
+
+
+/* ── Business SideNav (Sophisticated Corporate Dark theme) ── */
+.partner-sidebar.partner-sidebar--business {
+  background: #0f172a !important; /* deep dark slate */
+  border-right: 1px solid #1e293b !important;
+}
+
+.partner-sidebar.partner-sidebar--business .partner-sidebar-logo {
+  color: #f8fafc !important; /* white-slate */
+}
+
+.partner-sidebar.partner-sidebar--business .partner-sidebar-logo .np-dot {
+  color: #3b82f6 !important; /* corporate blue */
+}
+
+.partner-sidebar.partner-sidebar--business .partner-sidebar-tag {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  color: #60a5fa !important;
+}
+
+.partner-sidebar.partner-sidebar--business .partner-sidebar-toggle {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #94a3b8 !important;
+}
+
+.partner-sidebar.partner-sidebar--business .partner-sidebar-toggle:hover {
+  background: #334155 !important;
+  color: #3b82f6 !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+.partner-sidebar.partner-sidebar--business .partner-sidebar-profile {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+
+.partner-sidebar.partner-sidebar--business .partner-profile-name {
+  color: #f8fafc !important;
+}
+
+.partner-sidebar.partner-sidebar--business .partner-profile-role {
+  color: #60a5fa !important;
+}
+
+.partner-sidebar.partner-sidebar--business .partner-nav-item {
+  color: #94a3b8 !important;
+}
+
+.partner-sidebar.partner-sidebar--business .partner-nav-item:hover {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+.partner-sidebar.partner-sidebar--business .partner-nav-item.active {
+  background: rgba(37, 99, 235, 0.16) !important;
+  color: #3b82f6 !important;
+  border-color: rgba(37, 99, 235, 0.3) !important;
+}
+
+.partner-sidebar.partner-sidebar--business .partner-sidebar-footer {
+  border-top: 1px solid #1e293b !important;
+}
+
+.partner-sidebar.partner-sidebar--business .partner-logout-item {
+  color: #ef4444 !important; /* brighter red for dark theme logout */
+}
+
+.partner-sidebar.partner-sidebar--business .partner-logout-item:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #fca5a5 !important;
+}
+
+
+
