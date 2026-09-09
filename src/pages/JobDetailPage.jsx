@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   MapPin, Clock, Building, Shield, Zap, Award, LockKeyhole,
   ArrowLeft, Users, Calendar, Briefcase, CheckCircle2, Star,
@@ -31,6 +31,7 @@ const CATEGORY_COLOR = {
 
 export function JobDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const isQuestPage = window.location.pathname.startsWith('/quests/');
 
   const [job, setJob] = useState(null);
@@ -40,9 +41,17 @@ export function JobDetailPage() {
   const [portfolio, setPortfolio] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [coverNote, setCoverNote] = useState('');
+  const [answers, setAnswers] = useState({});
   const [applyLoading, setApplyLoading] = useState(false);
   const [applyError, setApplyError] = useState('');
   const [applySuccess, setApplySuccess] = useState('');
+
+  // Back navigation that also works for directly-opened / shared links, where
+  // window.close() is a silent no-op (the tab wasn't opened by script).
+  function goBack() {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/candidates');
+  }
 
   useEffect(() => {
     async function load() {
@@ -60,13 +69,27 @@ export function JobDetailPage() {
   }, [id]);
 
   async function handleApply() {
+    // Guard required custom questions before hitting the API.
+    const fields = job.formFields || [];
+    const missing = fields.find((f) => f.required && !(answers[f.id] || '').trim());
+    if (missing) {
+      setApplyError(`Vui lòng trả lời câu hỏi bắt buộc: ${missing.label}`);
+      return;
+    }
+    // Denormalize into { fieldId: value }, dropping empty answers (BE keys by field id).
+    const answersPayload = fields.length
+      ? Object.fromEntries(
+          fields.map((f) => [f.id, (answers[f.id] || '').trim()]).filter(([, v]) => v),
+        )
+      : null;
+
     setApplyLoading(true);
     setApplyError('');
     try {
       if (job.postType === 'QUEST' || isQuestPage) {
-        await applyToQuest(id, coverNote);
+        await applyToQuest(id, coverNote, answersPayload);
       } else {
-        await applyToJob(id, coverNote);
+        await applyToJob(id, coverNote, answersPayload);
       }
       setApplySuccess('Nộp đơn thành công! Nhà tuyển dụng sẽ liên hệ sớm.');
       setShowApplyModal(false);
@@ -97,7 +120,7 @@ export function JobDetailPage() {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg, #f8fafc)' }}>
         <div style={{ textAlign: 'center' }}>
           <p style={{ color: '#dc2626', marginBottom: '16px' }}>{error || 'Không tìm thấy bài đăng.'}</p>
-          <button onClick={() => window.close()} style={{ padding: '8px 20px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', cursor: 'pointer' }}>Đóng tab</button>
+          <button onClick={goBack} style={{ padding: '8px 20px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', cursor: 'pointer' }}>Quay lại</button>
         </div>
       </div>
     );
@@ -108,6 +131,10 @@ export function JobDetailPage() {
   const rs = portfolio?.reputationScore || 0;
   const isLocked = rs < (job.minReqRs || 0);
   const typeLabel = JOB_TYPE_LABELS[job.jobType] || job.jobType || (isQuest ? 'Quest' : 'Job');
+  const formFields = job.formFields || [];
+  const requiredFields = formFields.filter((f) => f.required);
+  const answeredRequired = requiredFields.filter((f) => (answers[f.id] || '').trim()).length;
+  const allRequiredDone = answeredRequired === requiredFields.length;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg, #f8fafc)', fontFamily: 'var(--font-sans, system-ui, sans-serif)' }}>
@@ -137,10 +164,10 @@ export function JobDetailPage() {
         {/* Back button */}
         <div style={{ position: 'relative', zIndex: 1, maxWidth: '860px', margin: '0 auto', padding: '0 24px' }}>
           <button
-            onClick={() => window.close()}
+            onClick={goBack}
             style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '600', marginBottom: '24px', padding: 0 }}
           >
-            <ArrowLeft size={15} /> Đóng tab
+            <ArrowLeft size={15} /> Quay lại
           </button>
         </div>
 
@@ -195,7 +222,7 @@ export function JobDetailPage() {
       </div>
 
       {/* ── Body ── */}
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', alignItems: 'start' }}>
+      <div className="job-detail-body" style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', alignItems: 'start' }}>
 
         {/* LEFT */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -309,7 +336,7 @@ export function JobDetailPage() {
         </div>
 
         {/* RIGHT sidebar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '24px' }}>
+        <div className="job-detail-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '24px' }}>
 
           {/* Compensation / Reward */}
           <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '22px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
@@ -455,6 +482,42 @@ export function JobDetailPage() {
                 />
               </div>
 
+              {/* Custom application questions */}
+              {formFields.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '800', color: accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Câu hỏi khi {isQuest ? 'tham gia' : 'ứng tuyển'}
+                    </span>
+                    {requiredFields.length > 0 && (
+                      <span style={{ fontSize: '0.72rem', fontWeight: '800', color: allRequiredDone ? '#16a34a' : 'var(--muted)' }}>
+                        {allRequiredDone ? '✓ Đã đủ' : `${answeredRequired}/${requiredFields.length} bắt buộc`}
+                      </span>
+                    )}
+                  </div>
+                  {formFields.map((f, idx) => {
+                    const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem', color: 'var(--ink)', outline: 'none', boxSizing: 'border-box' };
+                    return (
+                      <div key={f.id || idx}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.86rem', fontWeight: '700', color: 'var(--ink)' }}>
+                          {f.label} {f.required && <span style={{ color: '#dc2626' }}>*</span>}
+                        </label>
+                        {f.fieldType === 'TEXTAREA' ? (
+                          <textarea rows={3} value={answers[f.id] || ''} onChange={e => setAnswers(p => ({ ...p, [f.id]: e.target.value }))} style={{ ...inputStyle, resize: 'vertical' }} />
+                        ) : f.fieldType === 'SELECT' ? (
+                          <select value={answers[f.id] || ''} onChange={e => setAnswers(p => ({ ...p, [f.id]: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
+                            <option value="">— Chọn —</option>
+                            {(f.options || '').split(/[\n,]/).map(o => o.trim()).filter(Boolean).map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        ) : (
+                          <input value={answers[f.id] || ''} onChange={e => setAnswers(p => ({ ...p, [f.id]: e.target.value }))} style={inputStyle} />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {applyError && (
                 <div className="alert-banner error">
                   <AlertTriangle size={15} style={{ flexShrink: 0 }} />
@@ -465,7 +528,7 @@ export function JobDetailPage() {
 
             <div className="glass-modal-footer">
               <button className="button secondary-button" onClick={() => setShowApplyModal(false)} type="button" disabled={applyLoading}>Hủy bỏ</button>
-              <button className="button primary-button" onClick={handleApply} type="button" disabled={applyLoading}>
+              <button className="button primary-button" onClick={handleApply} type="button" disabled={applyLoading || !allRequiredDone}>
                 {applyLoading ? 'Đang nộp...' : (isQuest ? 'Xác nhận tham gia' : 'Xác nhận nộp đơn')}
               </button>
             </div>
@@ -473,7 +536,13 @@ export function JobDetailPage() {
         </div>
       )}
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 768px) {
+          .job-detail-body { grid-template-columns: 1fr !important; padding-left: 16px !important; padding-right: 16px !important; }
+          .job-detail-sidebar { position: static !important; top: auto !important; }
+        }
+      `}</style>
     </div>
   );
 }
