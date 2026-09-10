@@ -43,6 +43,7 @@ import { logout } from '../api/httpClient.js';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
 import { ApplicationTimeline } from '../components/ApplicationTimeline.jsx';
+import { InlineStatusTimeline } from '../components/InlineStatusTimeline.jsx';
 import { getMyUserId } from '../api/accountApi.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
 import { getJobs, getCompanies, getCompanyDetail, getJobDetail, getFollowedCompanyIds, followCompany, unfollowCompany, getSavedJobIds, getSavedJobs, saveJob, unsaveJob } from '../api/jobApi.js';
@@ -2582,7 +2583,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       {filteredBizApps.map((app, idx) => {
                         const st = app.status || 'SUBMITTED';
                         const sc = JOB_STATUS_COLOR[st] || '#6b7280';
-                        const sl = JOB_STATUS_LABEL[st] || st;
                         const isBoosted = app.boostedUntil && new Date(app.boostedUntil) > new Date();
                         return (
                           <div className="appcard" key={app.id || idx} style={{ '--app-status': sc, '--app-status-soft': `${sc}1a` }}>
@@ -2597,13 +2597,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                     <span><BriefcaseBusiness size={12} />{JOB_TYPES.find(t => t.value === (app.job_type || app.jobType))?.label || app.job_type || app.jobType || '—'}</span>
                                   </div>
                                 </div>
-                                <span className="appcard-status">
-                                  {st === 'SUBMITTED' && <Clock3 size={13} />}
-                                  {(st === 'ACCEPTED' || st === 'SHORTLISTED') && <CheckCircle2 size={13} />}
-                                  {st === 'REJECTED' && <AlertTriangle size={13} />}
-                                  {sl}
-                                </span>
                               </div>
+                              <InlineStatusTimeline status={st} appliedAt={app.applied_at || app.appliedAt} updatedAt={app.updated_at || app.updatedAt} color={sc} history={app.statusHistory} />
                               {st === 'REJECTED' && (app.reject_reason || app.rejectionReason) && (
                                 <div className="appcard-reject">Lý do từ chối: {app.reject_reason || app.rejectionReason}</div>
                               )}
@@ -2666,9 +2661,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     <div className="np-stagger apptrack-list">
                       {filteredClubApps.map((qa, idx) => {
                         const QUEST_SC = { SUBMITTED: '#d97706', ACCEPTED: '#16a34a', REJECTED: '#dc2626', COMPLETED: '#2563eb', WITHDRAWN: '#6b7280' };
-                        const QUEST_SL = { SUBMITTED: 'Đã nộp', ACCEPTED: 'Chấp thuận', REJECTED: 'Từ chối', COMPLETED: 'Hoàn thành', WITHDRAWN: 'Rút đơn' };
                         const sc = QUEST_SC[qa.status] || '#6b7280';
-                        const sl = QUEST_SL[qa.status] || qa.status;
                         return (
                           <div className="appcard" key={qa.id || idx} style={{ '--app-status': sc, '--app-status-soft': `${sc}1a` }}>
                             <div className="appcard-logo quest"><Zap size={20} style={{ color: '#f59e0b' }} /></div>
@@ -2682,13 +2675,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                     {qa.expReward > 0 && <span style={{ color: '#f59e0b', fontWeight: '700' }}><Zap size={12} />+{qa.expReward} EXP</span>}
                                   </div>
                                 </div>
-                                <span className="appcard-status">
-                                  {qa.status === 'COMPLETED' && <CheckCircle2 size={13} />}
-                                  {qa.status === 'REJECTED' && <AlertTriangle size={13} />}
-                                  {qa.status === 'SUBMITTED' && <Clock3 size={13} />}
-                                  {sl}
-                                </span>
                               </div>
+                              <InlineStatusTimeline status={qa.status} appliedAt={qa.appliedAt} updatedAt={qa.updatedAt} color={sc} isQuest history={qa.statusHistory} />
                               {qa.status === 'REJECTED' && qa.rejectReason && (
                                 <div className="appcard-reject">Lý do từ chối: {qa.rejectReason}</div>
                               )}
