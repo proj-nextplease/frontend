@@ -57,7 +57,7 @@ import { logout } from '../api/httpClient.js';
 import { supabase } from '../services/supabaseClient.js';
 import { JobPostForm } from '../components/JobPostForm.jsx';
 import { QuestPostForm } from '../components/QuestPostForm.jsx';
-import { getOrganizerJobs, getOrganizerJobById, closeJob, deleteJob, getJobDetail, getJobApplications, updateApplicationStatus, getOrgPipeline, saveOrgPipeline } from '../api/jobApi.js';
+import { getOrganizerJobs, getOrganizerJobById, closeJob, deleteJob, getJobDetail, getJobApplications, updateApplicationStatus, markApplicationViewed, getOrgPipeline, saveOrgPipeline } from '../api/jobApi.js';
 import { NotificationBell } from '../components/NotificationBell.jsx';
 import { getOrganizerQuests, getOrganizerQuestById, closeQuest, deleteQuest, getQuestApplicants, updateQuestApplicationStatus } from '../api/questApi.js';
 import { getRating, createRating, updateRating } from '../api/ratingApi.js';
@@ -145,6 +145,21 @@ function CandidatesView() {
       })
       .catch(err => console.error('Lỗi tải ứng viên:', err))
       .finally(() => setApplicantsLoading(false));
+  }
+
+  // Open an applicant's detail. For a JOB applicant still at SUBMITTED, auto-advance
+  // to VIEWED (optimistic + best-effort) so the candidate's timeline shows "Đã xem".
+  // Quests have no VIEWED stage, so they are opened as-is.
+  function openApplicant(app) {
+    setSelectedApplicant(app);
+    setShowRejectInput(false);
+    setRejectReason('');
+    const isJob = selectedPosting?.postType !== 'QUEST';
+    if (isJob && app.status === 'SUBMITTED') {
+      setApplicants(prev => prev.map(a => a.id === app.id ? { ...a, status: 'VIEWED' } : a));
+      setSelectedApplicant(prev => (prev?.id === app.id ? { ...prev, status: 'VIEWED' } : prev));
+      markApplicationViewed(app.id).catch(err => console.error('Không thể đánh dấu đã xem:', err));
+    }
   }
 
   async function handleAction(appId, status, reason) {
@@ -387,7 +402,7 @@ function CandidatesView() {
                 const sColor = colorOf(app.status);
                 const boosted = isBoosted(app);
                 return (
-                  <div key={app.id} className="np-cand-row" onClick={() => { setSelectedApplicant(app); setShowRejectInput(false); setRejectReason(''); }}
+                  <div key={app.id} className="np-cand-row" onClick={() => openApplicant(app)}
                     style={{ border: `1.5px solid ${isSelected ? accent : boosted ? '#f59e0b' : 'var(--p-line)'}`, borderRadius: '14px', padding: '14px 16px', background: isSelected ? `${accent}08` : boosted ? 'linear-gradient(90deg, rgba(245,158,11,0.10), var(--p-surface) 42%)' : 'var(--p-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', animationDelay: `${Math.min(idx * 0.04, 0.3)}s`, boxShadow: isSelected ? `0 0 0 3px ${accent}1a` : boosted ? '0 4px 16px rgba(245,158,11,0.1)' : 'none' }}
                     onMouseEnter={e => { if (!isSelected) e.currentTarget.style.borderColor = accent + '55'; }}
                     onMouseLeave={e => { if (!isSelected) e.currentTarget.style.borderColor = boosted ? '#f59e0b' : 'var(--p-line)'; }}

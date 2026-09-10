@@ -41,6 +41,8 @@ import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { logout } from '../api/httpClient.js';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
+import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
+import { ApplicationTimeline } from '../components/ApplicationTimeline.jsx';
 import { getMyUserId } from '../api/accountApi.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
 import { getJobs, getCompanies, getCompanyDetail, getJobDetail, getFollowedCompanyIds, followCompany, unfollowCompany, getSavedJobIds, getSavedJobs, saveJob, unsaveJob } from '../api/jobApi.js';
@@ -555,11 +557,32 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   // Gamification: streak + daily/weekly quests. Ping once on mount to roll the streak.
   const [gamification, setGamification] = useState(null);
   const [claimingQuest, setClaimingQuest] = useState(null);
+  // Reward "juice": full-screen celebration on level-up / EXP gain.
+  const [celebration, setCelebration] = useState(null);
+  const gamificationRef = useRef(null);
+
+  // Apply a fresh gamification snapshot and fire a celebration when it represents
+  // a level-up or an EXP gain versus the previous snapshot. The first snapshot
+  // (ref still null) never celebrates, so a page load stays quiet.
+  const applyGamification = (next) => {
+    const prev = gamificationRef.current;
+    if (prev && next) {
+      if ((next.level ?? 0) > (prev.level ?? 0)) {
+        setCelebration({ kind: 'levelup', title: `Lên Cấp ${next.level}!`, subtitle: 'Bạn vừa thăng hạng — tiếp tục phát huy nhé!' });
+      } else if ((next.totalExp ?? 0) > (prev.totalExp ?? 0)) {
+        const gained = (next.totalExp ?? 0) - (prev.totalExp ?? 0);
+        setCelebration({ kind: 'exp', title: `+${gained.toLocaleString('vi-VN')} EXP`, subtitle: 'Điểm kinh nghiệm đã được cộng!', duration: 2200 });
+      }
+    }
+    gamificationRef.current = next;
+    setGamification(next);
+  };
+
   useEffect(() => {
     let mounted = true;
     pingGamification()
-      .then((data) => { if (mounted) setGamification(data); })
-      .catch(() => getGamification().then((d) => { if (mounted) setGamification(d); }).catch(() => {}));
+      .then((data) => { if (mounted) applyGamification(data); })
+      .catch(() => getGamification().then((d) => { if (mounted) applyGamification(d); }).catch(() => {}));
     return () => { mounted = false; };
   }, []);
 
@@ -567,7 +590,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const bumpQuest = async (event, amount = 1) => {
     try {
       const data = await recordGamificationEvent(event, amount);
-      setGamification(data);
+      applyGamification(data);
     } catch { /* non-blocking — gamification must never break a core flow */ }
   };
 
@@ -589,9 +612,25 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     setClaimingQuest(key);
     try {
       const data = await claimQuest(scope, key);
-      setGamification(data);
+      applyGamification(data);
     } catch { /* keep silent; UI stays in pre-claim state */ }
     finally { setClaimingQuest(null); }
+  };
+
+  // Open the "Chi tiết ứng tuyển" tracking modal and silently refetch so the
+  // timeline reflects the latest status (e.g. the organizer just marked it "Đã xem")
+  // without the candidate needing to reload the page.
+  const openAppDetail = (app, isQuest) => {
+    setViewingApp({ app, isQuest });
+    const fetcher = isQuest ? getMyQuestApplications : getMyApplications;
+    fetcher()
+      .then((data) => {
+        const list = data || [];
+        if (isQuest) setQuestApplications(list); else setAppliedJobs(list);
+        const fresh = list.find((x) => x.id === app.id);
+        if (fresh) setViewingApp((cur) => (cur && cur.app?.id === app.id ? { app: fresh, isQuest } : cur));
+      })
+      .catch(() => { /* keep the cached view on failure */ });
   };
 
   // Dock profile popover (wallet balance + logout), replaces the old sidebar footer.
@@ -1467,9 +1506,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       if (err.errorCode === 'PREMIUM_REQUIRED') {
         setShowApplyModal(false);
         setShowPremiumPaywall(true);
-      } else if (err.errorCode === 'EARLY_ACCESS_REQUIRED') {
-        setShowApplyModal(false);
-        setShowMatchAlertModal(true);
       } else {
         setApplyModalError(err.message || 'Ứng tuyển thất bại. Vui lòng thử lại.');
       }
@@ -1984,7 +2020,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                   <span className="np-pp-name">{portfolio?.name || 'Ứng viên'}</span>
-                  <span className="exp-level-badge">LV. {currentLevel}</span>
+                  <span className="exp-level-badge">LV. <CountUp value={currentLevel} format={(n) => Math.round(n).toString()} /></span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(249,115,22,0.18)', padding: '5px 12px', borderRadius: '999px', fontSize: '0.8rem', fontWeight: '800', color: '#fb923c' }} title={`Chuỗi dài nhất: ${gamification?.longestStreak ?? 0} ngày`}>
                     <Flame className="np-streak-flame" size={15} color="#fb923c" fill={streak > 0 ? '#fb923c' : 'none'} /> {streak} ngày streak
                   </span>
@@ -1993,7 +2029,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '18px 0 7px' }}>
                   <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'rgba(255,255,255,0.6)' }}>Tiến độ lên cấp {currentLevel + 1}</span>
-                  <span style={{ fontSize: '0.85rem', fontWeight: '800' }}><span style={{ color: '#f6845f' }}>{Number(currentExp).toLocaleString('vi-VN')}</span> / {Number(nextLevelExp).toLocaleString('vi-VN')} EXP</span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '800' }}><span style={{ color: '#f6845f' }}><CountUp value={Number(currentExp)} /></span> / {Number(nextLevelExp).toLocaleString('vi-VN')} EXP</span>
                 </div>
                 <div className="np-pp-expbar"><span style={{ width: `${expPercentage}%` }} /></div>
 
@@ -2030,12 +2066,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
               <div className="np-pp-stats">
                 <button type="button" onClick={() => setShowTopUpModal(true)} title="Nhấn để nạp NP" className="np-pp-stat" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', padding: 0, textAlign: 'left' }}>
-                  <div className="np-pp-stat-val" style={{ color: '#4ade80' }}>{walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString('vi-VN')}</div>
+                  <div className="np-pp-stat-val" style={{ color: '#4ade80' }}>{walletLoading ? '...' : <CountUp value={wallet?.npBalance ?? 0} />}</div>
                   <div className="np-pp-stat-label"><WalletCards size={13} /> Ví NP {wallet?.isPremium && <Crown size={11} color="#fbbf24" style={{ marginLeft: '2px' }} />}</div>
                 </button>
                 <div className="np-pp-divider" />
                 <div className="np-pp-stat">
-                  <div className="np-pp-stat-val" style={{ color: '#c4b5fd' }}>{portfolio?.reputationScore ?? 0}</div>
+                  <div className="np-pp-stat-val" style={{ color: '#c4b5fd' }}><CountUp value={portfolio?.reputationScore ?? 0} format={(n) => Math.round(n).toString()} /></div>
                   <div className="np-pp-stat-label"><ShieldCheck size={13} /> Trust Score (RS)</div>
                 </div>
               </div>
@@ -2246,8 +2282,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <div className="np-joblist np-stagger" key={`jobs-${jobsPage}`}>
                   {pagedJobs.map(job => {
                     const isLocked = candidateRs < job.minReqRs;
-                    const isEarlyAccess = job.createdAt && (new Date() - new Date(job.createdAt)) < (premiumConfig.earlyAccessHours * 60 * 60 * 1000);
-                    const userHasEarlyAccess = wallet?.isPremium || wallet?.hasJobMatchAlert;
                     const alreadyApplied = appliedJobs.some(a => (a.job_id || a.jobId) === job.id);
                     const compensationText = job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận';
                     const typeLabel = JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType;
@@ -2261,7 +2295,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                             <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(job.id)} className="np-role-title">{job.title}</a>
                             {job.requiresPremium && <span className="np-role-badge" style={{ color: '#d97706', background: 'rgba(245,158,11,0.14)' }}><Crown size={9} /> Premium</span>}
-                            {isEarlyAccess && <span className="np-role-badge" style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)' }}><Clock3 size={9} /> {userHasEarlyAccess ? 'Xem sớm' : 'Xem sớm'}</span>}
                             {isLocked && <span className="np-role-badge" style={{ color: '#dc2626', background: 'rgba(220,38,38,0.08)' }}><LockKeyhole size={9} /> Cần {job.minReqRs} RS</span>}
                           </div>
                           <div className="np-job-meta">
@@ -2581,7 +2614,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 </div>
                               )}
                               <div className="appcard-actions">
-                                <button type="button" className="apptrack-btn" onClick={() => setViewingApp({ app, isQuest: false })}><Eye size={14} /> Chi tiết</button>
+                                <button type="button" className="apptrack-btn" onClick={() => openAppDetail(app, false)}><Eye size={14} /> Chi tiết</button>
                                 {['SUBMITTED', 'VIEWED', 'SHORTLISTED'].includes(st) && (
                                   <button type="button" className="apptrack-btn" onClick={() => requestWithdraw(app.id, false, app.job_title || app.title)} disabled={withdrawingId === app.id}>{withdrawingId === app.id ? 'Đang rút...' : 'Rút đơn'}</button>
                                 )}
@@ -2666,7 +2699,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 </div>
                               )}
                               <div className="appcard-actions">
-                                <button type="button" className="apptrack-btn" onClick={() => setViewingApp({ app: qa, isQuest: true })}><Eye size={14} /> Chi tiết</button>
+                                <button type="button" className="apptrack-btn" onClick={() => openAppDetail(qa, true)}><Eye size={14} /> Chi tiết</button>
                                 {qa.status === 'SUBMITTED' && (
                                   <button type="button" className="apptrack-btn" onClick={() => requestWithdraw(qa.id, true, qa.questTitle)} disabled={withdrawingId === qa.id}>{withdrawingId === qa.id ? 'Đang rút...' : 'Rút đơn'}</button>
                                 )}
@@ -3975,6 +4008,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   )}
                 </div>
 
+                <ApplicationTimeline status={app.status} isQuest={isQuest} />
+
                 <CandidateProfilePreview portfolio={portfolio} candidateRs={candidateRs} currentLevel={currentLevel} currentExp={currentExp} />
 
                 <div>
@@ -4362,6 +4397,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           <button type="button" onClick={() => setToast(null)} aria-label="Đóng"><X size={15} /></button>
         </div>
       )}
+
+      {/* Reward celebration overlay (level-up / EXP gain) */}
+      <CelebrationLayer celebration={celebration} onDone={() => setCelebration(null)} />
     </div>
   );
 }
