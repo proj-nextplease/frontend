@@ -149,6 +149,15 @@ export async function getJobApplications(jobId) {
   return response.data.data;
 }
 
+/** Auto-mark an applicant as seen when the organizer opens their detail (SUBMITTED → VIEWED). Best-effort. */
+export async function markApplicationViewed(applicationId) {
+  const response = await httpClient.patch(`/organizer/applications/${applicationId}/viewed`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể đánh dấu đã xem.');
+  }
+  return response.data.data;
+}
+
 export async function updateApplicationStatus(applicationId, status, rejectReason = null) {
   const response = await httpClient.patch(`/organizer/applications/${applicationId}/status`, { status, rejectReason });
   if (!response.data?.success) {
