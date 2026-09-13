@@ -4,6 +4,7 @@ import { AppLayout } from '../components/layout/AppLayout.jsx';
 import { BusinessPage } from '../pages/BusinessPage.jsx';
 import { CandidateDashboardPage, CandidateContentSkeleton, skeletonVariantForTabSlug } from '../pages/CandidateDashboardPage.jsx';
 import { CandidateLandingPage } from '../pages/CandidateLandingPage.jsx';
+import { JobsPage } from '../pages/JobsPage.jsx';
 import { CandidateLoginPage } from '../pages/CandidateLoginPage.jsx';
 import { CandidateRegisterPage } from '../pages/CandidateRegisterPage.jsx';
 import { HomePage } from '../pages/HomePage.jsx';
@@ -344,6 +345,7 @@ export function AppRouter() {
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="/candidates" element={<CandidateLandingPage />} />
+        <Route path="/jobs" element={<JobsPage />} />
         <Route path="/candidates/dashboard" element={<ProtectedDashboardRoute />} />
         <Route path="/candidates/dashboard/:tabSlug" element={<ProtectedDashboardRoute />} />
         <Route path="/candidate/dashboard" element={<Navigate to="/candidates/dashboard/overview" replace />} />
