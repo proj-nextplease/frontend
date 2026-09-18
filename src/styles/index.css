@@ -8880,6 +8880,45 @@ img {
   overflow: visible;
 }
 
+/* ── Dock trên màn hẹp ──
+   Bản gốc để flex-wrap: wrap với max-width: calc(100vw - 24px). Ở 375px thì
+   9 mục x 50px không đủ chỗ nên nó gập thành một khối 188x201px nổi GIỮA màn
+   hình, đè lên thanh EXP và cả ba nút hành động của hero — người dùng điện
+   thoại không bấm được "Chỉnh sửa Portfolio 3D" / "Sao chép link" / "Xuất PDF".
+
+   Ở đây đổi thành một thanh ngang sát đáy, cuộn ngang. Ghi chú phía trên cảnh
+   báo overflow-x sẽ cắt hiệu ứng nhấc lên và tooltip — đúng, nhưng cả hai đều
+   là hiệu ứng hover, mà màn cảm ứng thì không có hover. */
+@media (max-width: 900px) {
+  .np-dock {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    max-width: 100%;
+  }
+
+  .np-dock-inner {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    border-radius: 18px 18px 0 0;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .np-dock-inner::-webkit-scrollbar { display: none; }
+
+  /* Hiệu ứng hover vô nghĩa trên cảm ứng, và bị overflow cắt mất. */
+  .np-dock-item:hover { transform: none; box-shadow: none; background: rgba(255, 255, 255, 0.65); }
+  .np-dock-label { display: none; }
+
+  /* Thanh dock giờ thấp hơn khối gập cũ nên đệm đáy giảm theo. */
+  .candidate-portal-main { padding-bottom: 96px; }
+}
+
 .np-dock-item {
   position: relative;
   display: flex;
