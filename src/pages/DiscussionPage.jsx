@@ -11,6 +11,8 @@ import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
 import { getStoredToken } from '../lib/authStorage.js';
+import { UserAvatar } from '../components/UserAvatar.jsx';
+import { useMyProfile } from '../lib/useMyProfile.js';
 import {
   getTopics, toggleFollowTopic, getPosts, createPost as apiCreatePost,
   toggleLikePost, votePoll as apiVotePoll, getComments, addComment as apiAddComment,
@@ -315,6 +317,8 @@ export function DiscussionPage() {
 
   const { openLoginModal } = useAuthModal();
   const storedToken = getStoredToken();
+  const { profile: myProfile } = useMyProfile();
+  const myName = myProfile?.name?.trim() || 'Bạn';
 
   const feedKey = `${selectedTopicId || ''}|${filterMode}|${storedToken ? 'auth' : 'guest'}`;
   const posts = feed.rows;
@@ -675,26 +679,8 @@ export function DiscussionPage() {
                   marginBottom: 16,
                 }}
               >
-                {/* User Avatar Circle */}
-                <div
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: '50%',
-                    background: '#e0e7ff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                    <circle cx="16" cy="16" r="14" fill="#c7d2fe" />
-                    <circle cx="16" cy="12" r="5" fill="#6366f1" />
-                    <path d="M7 26C7 21 11 19 16 19C21 19 25 21 25 26" fill="#6366f1" />
-                  </svg>
-                </div>
+                {/* Avatar của chính người đang đăng nhập */}
+                <UserAvatar src={myProfile?.avatarUrl} name={myName} size={42} />
 
                 {/* Input Trigger Field */}
                 <div
@@ -869,20 +855,7 @@ export function DiscussionPage() {
                   marginBottom: 16,
                 }}
               >
-                <div
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: '50%',
-                    background: '#e0e7ff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  <User size={22} color="#6366f1" />
-                </div>
+                <UserAvatar src={myProfile?.avatarUrl} name={myName} size={42} />
                 <div
                   onClick={() => {
                     setNewPostTopic(currentTopic.id);
@@ -1024,31 +997,13 @@ export function DiscussionPage() {
                     {/* Post Author Header */}
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 14 }}>
                       {/* Avatar */}
-                      {post.author.avatarUrl ? (
-                        <img
-                          src={post.author.avatarUrl}
-                          alt={post.author.name}
-                          style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: '50%',
-                            background: post.author.avatarBg || '#3b82f6',
-                            color: '#fff',
-                            fontWeight: 700,
-                            fontSize: '1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {post.author.initials}
-                        </div>
-                      )}
+                      <UserAvatar
+                        src={post.author.avatarUrl}
+                        name={post.author.name}
+                        size={44}
+                        background={post.author.avatarBg}
+                        style={{ color: '#0f172a' }}
+                      />
 
                       {/* Author Info */}
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -1355,23 +1310,13 @@ export function DiscussionPage() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
                             {post.comments.map((comment) => (
                               <div key={comment.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                                <div
-                                  style={{
-                                    width: 32,
-                                    height: 32,
-                                    borderRadius: '50%',
-                                    background: comment.avatarBg || '#e2e8f0',
-                                    color: '#0f172a',
-                                    fontWeight: 700,
-                                    fontSize: '0.8rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    flexShrink: 0,
-                                  }}
-                                >
-                                  {comment.author[0]}
-                                </div>
+                                <UserAvatar
+                                  src={comment.avatarUrl}
+                                  name={comment.author}
+                                  size={32}
+                                  background={comment.avatarBg}
+                                  style={{ color: '#0f172a' }}
+                                />
                                 <div style={{ background: '#f8fafc', borderRadius: 12, padding: '10px 14px', flex: 1, border: '1px solid #f1f5f9' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
                                     <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0f172a' }}>{comment.author}</span>

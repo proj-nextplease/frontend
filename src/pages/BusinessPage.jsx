@@ -38,6 +38,7 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
+import { UserAvatar } from '../components/UserAvatar.jsx';
 import {
   getCurrentUser,
   getMyCompany,
@@ -408,7 +409,7 @@ function CandidatesView() {
                     onMouseLeave={e => { if (!isSelected) e.currentTarget.style.borderColor = boosted ? '#f59e0b' : 'var(--p-line)'; }}
                   >
                     <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.05rem', color: accent, flexShrink: 0, overflow: 'hidden' }}>
-                      {app.avatar_url ? <img src={app.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (getName(app)[0]?.toUpperCase() || 'U')}
+                      <UserAvatar src={app.avatar_url} name={getName(app)} size={42} background="transparent" style={{ color: accent, fontWeight: 800 }} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '3px', flexWrap: 'wrap' }}>
@@ -452,7 +453,7 @@ function CandidatesView() {
               {/* Avatar + name block */}
               <div className="np-di" style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px' }}>
                 <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '1.5rem', color: accent, flexShrink: 0, overflow: 'hidden', border: `2px solid ${accent}30` }}>
-                  {selectedApplicant.avatar_url ? <img src={selectedApplicant.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (getName(selectedApplicant)[0]?.toUpperCase() || 'U')}
+                  <UserAvatar src={selectedApplicant.avatar_url} name={getName(selectedApplicant)} size={60} background="transparent" style={{ color: accent, fontWeight: 900 }} />
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <strong style={{ fontSize: '1.08rem', display: 'block', color: 'var(--ink)', marginBottom: '2px' }}>{getName(selectedApplicant)}</strong>

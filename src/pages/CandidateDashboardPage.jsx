@@ -1070,6 +1070,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       setFilterJobType(searchParams.get('t') || '');
       setFilterIsRemote(searchParams.get('r') === 'true');
       setFilterCanApply(searchParams.get('fit') === 'true');
+      // ?saved=1 mở thẳng danh sách "Đã lưu" — menu tài khoản trên header dẫn vào đây.
+      setShowSavedJobsOnly(searchParams.get('saved') === '1');
     }
   }, [location.search, activeView]);
 

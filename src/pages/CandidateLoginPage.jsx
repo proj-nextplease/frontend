@@ -5,6 +5,7 @@ import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { setRemember, setStoredToken, rememberLastEmail, getLastEmail } from '../lib/authStorage.js';
+import { consumeReturnTo, peekReturnTo } from '../lib/returnTo.js';
 import { AuthBrandPanel } from '../components/AuthBrandPanel.jsx';
 import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
 
@@ -63,12 +64,15 @@ export function CandidateLoginPage() {
   async function handleSocialLogin(provider) {
     setStatus({ type: 'loading', message: `Đang mở đăng nhập bằng ${provider}...` });
     if (!isSupabaseConfigured) {
-      navigate('/candidates/dashboard');
+      navigate(consumeReturnTo('/candidates/dashboard/overview'));
       return;
     }
+    // Google rời khỏi trang rồi quay lại, nên đích phải nằm ngay trong URL.
+    const redirectPath = peekReturnTo() || '/candidates/dashboard/overview';
+    consumeReturnTo();
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}/candidates/dashboard` },
+      options: { redirectTo: `${window.location.origin}${redirectPath}` },
     });
     if (error) setStatus({ type: 'error', message: error.message });
   }
@@ -83,7 +87,7 @@ export function CandidateLoginPage() {
     }
     if (!isSupabaseConfigured) {
       setStatus({ type: 'success', message: 'Đăng nhập mô phỏng thành công. Đang mở Candidate Hub...' });
-      navigate('/candidates/dashboard');
+      navigate(consumeReturnTo('/candidates/dashboard/overview'));
       return;
     }
     try {
@@ -105,9 +109,16 @@ export function CandidateLoginPage() {
         setStatus({ type: 'error', message: error.message || 'Không thể thiết lập phiên đăng nhập.' });
         return;
       }
+      // Nếu họ đang xem một trang rồi mới bấm đăng nhập thì trả về đúng trang
+      // đó. Chỉ khi vào thẳng trang đăng nhập mới áp luật onboarding.
+      const returnTo = consumeReturnTo();
+      if (returnTo) {
+        navigate(returnTo);
+        return;
+      }
       try {
         const portfolio = await getMyPortfolio();
-        if (portfolio && portfolio.onboardingCompleted) navigate('/candidates/dashboard');
+        if (portfolio && portfolio.onboardingCompleted) navigate('/candidates/dashboard/overview');
         else navigate('/portfolio');
       } catch (err) {
         console.error('Không thể kiểm tra trạng thái onboarding:', err);

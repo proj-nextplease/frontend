@@ -4,6 +4,7 @@ import { X, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
 import { setRemember, setStoredToken, rememberLastEmail, getLastEmail } from '../lib/authStorage.js';
+import { consumeReturnTo, peekReturnTo } from '../lib/returnTo.js';
 
 export function LoginModal({ isOpen, role = 'candidate', onClose }) {
   const navigate = useNavigate();
@@ -19,6 +20,21 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
 
   const isSupabaseConfigured = Boolean(supabase);
 
+  /**
+   * Nơi đến sau khi đăng nhập.
+   *
+   * Ứng viên: quay về trang họ đang xem lúc bấm đăng nhập (đọc/thích một bài
+   * Thảo Luận xong vẫn ở lại Thảo Luận). Không có điểm quay lại thì mới vào
+   * "Khu vực của tôi".
+   *
+   * Doanh nghiệp: luôn vào workspace — đó là back-office, họ đăng nhập để làm
+   * việc chứ không phải để đọc tiếp trang marketing.
+   */
+  function destinationAfterLogin() {
+    if (currentRole === 'business') return '/businesses/dashboard';
+    return consumeReturnTo('/candidates/dashboard/overview');
+  }
+
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 150);
@@ -32,11 +48,17 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
       setTimeout(() => {
         setLoading(false);
         onClose();
-        navigate(currentRole === 'business' ? '/businesses/dashboard' : '/candidates/dashboard');
+        navigate(destinationAfterLogin());
       }, 600);
       return;
     }
-    const redirectPath = currentRole === 'business' ? '/businesses/dashboard' : '/candidates/dashboard';
+    // Google rời khỏi trang rồi quay lại, nên đích phải nằm ngay trong URL
+    // redirectTo — không thể quyết định sau khi quay về.
+    const redirectPath = currentRole === 'business'
+      ? '/businesses/dashboard'
+      : (peekReturnTo() || '/candidates/dashboard/overview');
+    // Đích đã nằm trong redirectTo; xoá để lần đăng nhập sau không dùng lại.
+    consumeReturnTo();
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: `${window.location.origin}${redirectPath}` },
@@ -65,7 +87,7 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
       setTimeout(() => {
         setLoading(false);
         onClose();
-        navigate(currentRole === 'business' ? '/businesses/dashboard' : '/candidates/dashboard');
+        navigate(destinationAfterLogin());
       }, 500);
       return;
     }
@@ -87,7 +109,7 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
       }
 
       onClose();
-      navigate(currentRole === 'business' ? '/businesses/dashboard' : '/candidates/dashboard');
+      navigate(destinationAfterLogin());
     } catch (err) {
       setErrorMsg(err.message || 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại.');
     } finally {

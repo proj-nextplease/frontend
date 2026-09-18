@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { LoginModal } from '../components/LoginModal.jsx';
+import { rememberReturnTo } from '../lib/returnTo.js';
 
 const AuthModalContext = createContext({
   isOpen: false,
@@ -13,6 +14,8 @@ export function AuthModalProvider({ children }) {
   const [role, setRole] = useState('candidate'); // 'candidate' | 'business'
 
   const openLoginModal = useCallback((targetRole = 'candidate') => {
+    // Ghi lại trang đang xem trước khi mở form, để đăng nhập xong quay về đây.
+    rememberReturnTo();
     setRole(targetRole);
     setIsOpen(true);
   }, []);
