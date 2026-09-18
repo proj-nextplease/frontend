@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  ArrowRight, House, BriefcaseBusiness, MessagesSquare, FileText,
+  ArrowRight, House, BriefcaseBusiness, MessagesSquare, FileText, FileSignature,
   Compass, Bookmark, ClipboardCheck, WalletCards, ChevronDown, LogOut,
 } from 'lucide-react';
 import { Button } from '../astryx/Button.jsx';
@@ -106,6 +106,7 @@ export function SiteHeader() {
   const homeActive = pathname === '/';
   const jobsActive = pathname === '/jobs';
   const discussionActive = pathname === '/thao-luan';
+  const cvActive = pathname === '/tao-cv';
 
   return (
     <div style={{
@@ -165,6 +166,7 @@ export function SiteHeader() {
             <Link to="/jobs" className={`nph-navlink${jobsActive ? ' active' : ''}`}><BriefcaseBusiness size={17} /> Việc làm</Link>
             <Link to="/thao-luan" className={`nph-navlink${discussionActive ? ' active' : ''}`}><MessagesSquare size={17} /> Thảo luận</Link>
             <Link to="/portfolio" className="nph-navlink" onClick={handlePortfolioClick}><FileText size={17} /> Tạo portfolio</Link>
+            <Link to="/tao-cv" className={`nph-navlink${cvActive ? ' active' : ''}`}><FileSignature size={17} /> Tạo CV</Link>
           </div>
           <div className="nph-actions">
             <Link to="/businesses" target="_blank" rel="noopener noreferrer" className="nph-navlink nph-nav-recruiter">Dành cho nhà tuyển dụng</Link>
