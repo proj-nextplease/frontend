@@ -25,7 +25,6 @@ import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
 import { CoverBannerEditor } from '../components/CoverBannerEditor.jsx';
 import { EXPERIENCE_CATEGORY_OPTIONS, EXPERIENCE_ROLE_LEVEL_OPTIONS } from '../constants/experience.js';
-import { supabase } from '../services/supabaseClient.js';
 
 export const PORTFOLIO_PREVIEW_STORAGE_PREFIX = 'nextplease:portfolio-preview:';
 
@@ -607,9 +606,6 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       localStorage.removeItem('nextplease:portfolio-draft');
       setIsDraftDirty(false);
       setShowExitWarningModal(false);
-      if (supabase) {
-        await supabase.auth.signOut();
-      }
       navigate('/');
     } catch (err) {
       console.error(err);
@@ -1080,18 +1076,16 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     );
   }
 
-  const handleExitClick = async (e) => {
+  // Rời trang dựng portfolio CHỈ là điều hướng, không phải đăng xuất.
+  // Ba chỗ thoát ở đây từng gọi supabase.auth.signOut() — di sản từ thời
+  // portfolio là bước bắt buộc ngay sau khi đăng ký, nên "thoát" bị hiểu là
+  // bỏ dở việc tạo tài khoản. Giờ nó là một trang bình thường, đăng xuất
+  // người dùng khi họ bấm "Về trang chủ" là sai.
+  const handleExitClick = (e) => {
     if (e) e.preventDefault();
     if (isDraftDirty) {
       setShowExitWarningModal(true);
     } else {
-      if (supabase) {
-        try {
-          await supabase.auth.signOut();
-        } catch (err) {
-          console.error('Lỗi khi đăng xuất:', err);
-        }
-      }
       navigate('/');
     }
   };
@@ -1911,17 +1905,10 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               </button>
               <button
                 className="button secondary-button"
-                onClick={async () => {
+                onClick={() => {
                   localStorage.removeItem('nextplease:portfolio-draft');
                   setIsDraftDirty(false);
                   setShowExitWarningModal(false);
-                  if (supabase) {
-                    try {
-                      await supabase.auth.signOut();
-                    } catch (err) {
-                      console.error('Lỗi khi đăng xuất:', err);
-                    }
-                  }
                   navigate('/');
                 }}
                 type="button"
