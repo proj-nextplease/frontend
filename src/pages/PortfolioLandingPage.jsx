@@ -4,6 +4,7 @@ import {
   ArrowRight, ShieldCheck, Sparkles, Award, BriefcaseBusiness,
   ChevronDown, CircleCheck, Layers, Clock,
 } from 'lucide-react';
+import { Mascot } from 'page-mascot';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
@@ -23,27 +24,33 @@ const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 /* Ba lợi ích, xen kẽ trái/phải như bố cục tham chiếu. */
 const BENEFITS = [
   {
-    kicker: 'BẠN SẼ ĐƯỢC #1',
+    no: 1,
     title: 'Minh chứng do tổ chức xác nhận, không phải lời tự khai',
     body: 'Mỗi công việc hay Quest bạn hoàn thành qua nextplease đều được chính tổ chức đó xác nhận '
         + 'và cấp Verified Proof of Work. Nhà tuyển dụng bấm vào là thấy ai xác nhận, xác nhận khi nào.',
     icon: ShieldCheck,
+    caption: 'Thực tập sinh Marketing · F-Code',
+    chips: ['Đã xác thực', '+120 EXP'],
     points: ['Dấu xác thực gắn với từng kinh nghiệm', 'Điểm uy tín RS tăng theo việc đã làm', 'Kiểm chứng được trong một chạm'],
   },
   {
-    kicker: 'BẠN SẼ ĐƯỢC #2',
+    no: 2,
     title: 'Một trang mang cá tính của riêng bạn',
     body: 'Nhân vật 3D bạn tự tạo, ảnh bìa bạn tự chọn, và một đường dẫn mang tên bạn. '
         + 'Không phải một mẫu hồ sơ ai cũng giống ai.',
     icon: Sparkles,
+    caption: 'nextplease.vn/p/ten-cua-ban',
+    chips: ['Nhân vật 3D', 'Ảnh bìa riêng'],
     points: ['Nhân vật 3D tuỳ chỉnh', 'Ảnh bìa tự căn khung', 'Đường dẫn riêng dạng /p/ten-cua-ban'],
   },
   {
-    kicker: 'BẠN SẼ ĐƯỢC #3',
+    no: 3,
     title: 'Dựng một lần, dùng ở mọi nơi',
     body: 'Chia sẻ bằng link để người đọc thấy bản sống luôn cập nhật, hoặc xuất PDF khi cần nộp '
         + 'qua email. Ứng tuyển trong hệ thống thì chỉ một chạm, không phải đính kèm gì thêm.',
     icon: Layers,
+    caption: 'Một hồ sơ, mọi nơi đều dùng được',
+    chips: ['Link chia sẻ', 'PDF'],
     points: ['Ứng tuyển một chạm', 'Xuất PDF khi cần tệp', 'Sửa một nơi, mọi nơi đều đúng'],
   },
 ];
@@ -108,6 +115,78 @@ function FaqItem({ item, open, onToggle }) {
           {item.a}
         </p>
       )}
+    </div>
+  );
+}
+
+/**
+ * Minh hoạ cho mỗi khối lợi ích: linh vật đứng cạnh một tấm thẻ nói đúng nội
+ * dung của khối đó.
+ *
+ * Trang tham chiếu dùng nhân vật thương hiệu tương tác với một tờ CV ở mỗi
+ * mục; ta có sẵn linh vật con cóc nên dùng lại, vừa thống nhất với trang chủ
+ * vừa khỏi phải thuê vẽ minh hoạ.
+ */
+function BenefitArt({ icon, caption, chips, mascot = false }) {
+  const Icon = icon;
+  return (
+    <div className="cv-benefit-art" style={{
+      position: 'relative', display: 'grid', placeItems: 'center',
+      minHeight: 280, padding: '28px 24px', borderRadius: 28,
+      background: 'linear-gradient(150deg, #ecfdf5 0%, #f0fdfa 60%, #eff6ff 100%)',
+      border: `1px solid ${LINE}`, overflow: 'hidden',
+    }}>
+      {/* Đốm sáng trang trí phía sau, bo tròn mềm cho đỡ phẳng */}
+      <span aria-hidden="true" style={{
+        position: 'absolute', width: 220, height: 220, borderRadius: '50%',
+        background: 'rgba(16,185,129,0.14)', filter: 'blur(6px)', top: -60, right: -40,
+      }} />
+
+      <div style={{ position: 'relative', display: 'grid', gap: 14, justifyItems: 'center', width: '100%' }}>
+        {/* Tấm thẻ nói nội dung của khối */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12, width: 'min(300px, 100%)',
+          padding: '14px 16px', borderRadius: 16, background: '#fff',
+          boxShadow: '0 16px 36px rgba(4,47,42,0.12)',
+        }}>
+          <span style={{
+            display: 'grid', placeItems: 'center', width: 42, height: 42, flex: 'none',
+            borderRadius: 12, background: MINT, color: TEAL,
+          }}>
+            <Icon size={21} strokeWidth={2} />
+          </span>
+          <span style={{ fontSize: '0.9rem', fontWeight: 800, color: INK, lineHeight: 1.35 }}>{caption}</span>
+        </div>
+
+        {/* Hai nhãn nhỏ nổi quanh, gợi cảm giác trang đang "sống" */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {chips.map((c) => (
+            <span key={c} style={{
+              padding: '5px 12px', borderRadius: 999, background: '#fff',
+              border: `1px solid ${LINE}`, fontSize: '0.74rem', fontWeight: 800, color: TEAL,
+            }}>{c}</span>
+          ))}
+        </div>
+
+        {/* Chỉ một khối có linh vật: ta chỉ có một bộ sprite nên ba con giống
+            hệt nhau trên cùng một trang sẽ thành lặp. Khối còn lại dùng huy
+            hiệu icon để nhịp trang có thay đổi. */}
+        {mascot ? (
+          <Mascot
+            directions="/mascots/frog-directions.webp"
+            reactions="/mascots/frog-reactions.webp"
+            size={116}
+            label="Linh vật nextplease"
+          />
+        ) : (
+          <span style={{
+            display: 'grid', placeItems: 'center', width: 96, height: 96, borderRadius: '50%',
+            background: '#fff', boxShadow: '0 14px 32px rgba(4,47,42,0.12)', color: TEAL,
+          }}>
+            <Icon size={42} strokeWidth={1.6} />
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -189,13 +268,26 @@ export function PortfolioLandingPage() {
         .cv-cta.ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.55); }
         .cv-hero { display:grid; grid-template-columns: 1.05fr 0.95fr; gap:48px; align-items:center;
                    padding: clamp(48px, 7vw, 86px) 0; }
-        .cv-benefit { display:grid; grid-template-columns: 1fr 1fr; gap:clamp(28px, 5vw, 72px); align-items:center;
-                      padding: clamp(40px, 6vw, 72px) 0; }
+        .cv-benefit { display:grid; grid-template-columns: 1fr 1fr; gap:clamp(28px, 5vw, 80px); align-items:center;
+                      padding: clamp(52px, 8vw, 104px) 0; }
         .cv-benefit.flip .cv-benefit-art { order:-1; }
+
+        /* Nhãn "BẠN SẼ ĐƯỢC #n" dạng chip viền, số dùng màu nhấn — dễ nhận ra
+           đây là một chuỗi có thứ tự hơn là mấy chữ nhỏ trôi nổi. */
+        .cv-kicker { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:999px;
+                     border:1px solid ${LINE}; background:#fff; font-size:0.74rem; font-weight:800;
+                     letter-spacing:0.1em; color:${MUTED}; }
+        .cv-kicker b { color:${EMERALD}; font-weight:900; }
+
+        /* Dải nền xen kẽ để mỗi lợi ích là một chặng riêng, thay vì một mảng
+           trắng dài liền mạch. */
+        .cv-band { width:100%; }
+        .cv-band.tint { background:linear-gradient(180deg, #f4fbf8 0%, #ffffff 100%); }
         .cv-faq-grid { display:grid; grid-template-columns: 0.8fr 1.2fr; gap:clamp(24px, 4vw, 56px); align-items:start; }
         @media (max-width: 900px) {
           .cv-hero, .cv-benefit, .cv-faq-grid { grid-template-columns: 1fr; }
           .cv-benefit.flip .cv-benefit-art { order:0; }
+          .cv-benefit { padding: clamp(36px, 9vw, 56px) 0; }
         }
       `}</style>
 
@@ -247,41 +339,34 @@ export function PortfolioLandingPage() {
         </div>
       </section>
 
-      {/* ── Ba lợi ích ── */}
-      <section style={{ ...INNER, padding: 'clamp(40px, 6vw, 72px) 20px 0' }}>
-        {BENEFITS.map((b, i) => {
-          const Icon = b.icon;
-          return (
-            <div key={b.kicker} className={`cv-benefit${i % 2 === 1 ? ' flip' : ''}`}>
+      {/* ── Ba lợi ích: mỗi khối là một dải riêng, nền xen kẽ ── */}
+      {BENEFITS.map((b, i) => (
+        <section key={b.no} className={`cv-band${i % 2 === 1 ? ' tint' : ''}`}>
+          <div style={{ ...INNER }}>
+            <div className={`cv-benefit${i % 2 === 1 ? ' flip' : ''}`}>
               <div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.12em', color: EMERALD }}>
-                  {b.kicker}
-                </span>
-                <h2 style={{ margin: '12px 0 14px', fontSize: 'clamp(1.4rem, 2.6vw, 2rem)', fontWeight: 800, lineHeight: 1.22, letterSpacing: '-0.01em', color: INK }}>
+                <span className="cv-kicker">BẠN SẼ ĐƯỢC <b>#{b.no}</b></span>
+
+                <h2 style={{ margin: '16px 0 14px', fontSize: 'clamp(1.6rem, 3.1vw, 2.45rem)', fontWeight: 800, lineHeight: 1.18, letterSpacing: '-0.02em', color: INK }}>
                   {b.title}
                 </h2>
-                <p style={{ margin: '0 0 18px', color: MUTED, fontSize: '1rem', lineHeight: 1.75, maxWidth: '52ch' }}>
+                <p style={{ margin: '0 0 22px', color: MUTED, fontSize: 'clamp(1rem, 1.2vw, 1.06rem)', lineHeight: 1.78, maxWidth: '50ch' }}>
                   {b.body}
                 </p>
-                <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 10 }}>
+                <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 12 }}>
                   {b.points.map((p) => (
-                    <li key={p} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.94rem', fontWeight: 600 }}>
-                      <CircleCheck size={17} style={{ color: EMERALD, flex: 'none' }} /> {p}
+                    <li key={p} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.96rem', fontWeight: 600, color: INK }}>
+                      <CircleCheck size={18} style={{ color: EMERALD, flex: 'none' }} /> {p}
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="cv-benefit-art" style={{
-                display: 'grid', placeItems: 'center', minHeight: 220, borderRadius: 24,
-                background: MINT, border: `1px solid ${LINE}`,
-              }}>
-                <Icon size={76} strokeWidth={1.3} style={{ color: TEAL }} />
-              </div>
+              <BenefitArt icon={b.icon} caption={b.caption} chips={b.chips} mascot={b.no === 2} />
             </div>
-          );
-        })}
-      </section>
+          </div>
+        </section>
+      ))}
 
       {/* ── Dải nhấn: khác biệt so với CV thường ── */}
       <section style={{ background: INK, color: '#fff', marginTop: 'clamp(32px, 5vw, 56px)' }}>
