@@ -32,13 +32,18 @@ import {
   ImagePlus,
   Palette,
   Settings,
+  House,
+  MessagesSquare,
+  LogOut,
   Copy,
   Bookmark,
   BookmarkCheck, Link2,} from 'lucide-react';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { getMyPortfolio, updateMySlug } from '../api/portfolioApi.js';
 import { WaveBg } from '../components/WaveBg.jsx';
-import { SiteHeader } from '../components/layout/SiteHeader.jsx';
+import { UserAvatar } from '../components/UserAvatar.jsx';
+import { clearMyProfileCache } from '../lib/useMyProfile.js';
+import { logout } from '../api/httpClient.js';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
 import { ApplicationTimeline } from '../components/ApplicationTimeline.jsx';
@@ -706,6 +711,20 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       })
       .catch(() => { /* keep the cached view on failure */ });
   };
+
+  // Menu tài khoản ở cuối thanh dock — thay cho menu avatar của SiteHeader.
+  const [showDockProfileMenu, setShowDockProfileMenu] = useState(false);
+  const dockProfileRef = useRef(null);
+  useEffect(() => {
+    if (!showDockProfileMenu) return undefined;
+    function handleClickOutside(e) {
+      if (dockProfileRef.current && !dockProfileRef.current.contains(e.target)) {
+        setShowDockProfileMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showDockProfileMenu]);
 
   /* Trên màn hẹp thanh tab cuộn ngang (9 pill ~1030px so với 373px), nên tab
      đang mở có thể nằm ngoài tầm nhìn. Kéo nó vào giữa mỗi khi đổi tab. */
@@ -1533,6 +1552,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     navigate(`/candidates/dashboard/opportunities?${searchParams.toString()}`, { replace: true });
   };
 
+  async function handleLogout() {
+    clearMyProfileCache();
+    await logout();
+    navigate('/');
+  }
+
   function handleApplyJob(job) {
     viewOpportunityOnce(job.id || job.jobId);
     setSelectedJobForApply(job);
@@ -1834,18 +1859,20 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   return (
     <div className="candidate-portal-layout">
-      {/* Trang này trước đây KHÔNG có header site nào — đó là lý do cái dock
-          phải gánh cả điều hướng toàn trang lẫn điều hướng nội bộ. Đưa
-          SiteHeader vào để cấp site dùng chung một thanh với mọi trang khác;
-          dock chỉ còn lo các mục bên trong Khu vực của tôi. */}
-      <SiteHeader />
+      <NotificationBell accent="#e5533f" />
 
-      {/* Đẩy xuống dưới SiteHeader: header cao 68px và dính trên cùng, để mặc
-          định top 18px thì chuông đè lên menu tài khoản ở góc phải. */}
-      <NotificationBell accent="#e5533f" style={{ top: '84px' }} />
-
-      {/* ─── Bottom Dock Navigation (macOS-style) ─── */}
+      {/* ─── Thanh điều hướng duy nhất của trang ───
+          Ở đây CỐ TÌNH không dùng SiteHeader: hai thanh điều hướng cùng lúc
+          là thừa. Nhưng như vậy thanh này phải gánh cả ba thứ chỉ header mới
+          có — đường về trang chủ, avatar thật, và nút đăng xuất — nếu không
+          thì vào dashboard là không còn lối ra. Vì vậy: logo ở đầu thanh,
+          menu tài khoản ở cuối thanh, các tab khu vực nằm giữa. */}
       <nav className="np-dock" aria-label="Điều hướng chính">
+        <Link to="/" className="np-dock-brand" aria-label="Về trang chủ nextplease">
+          <span className="np-dock-brand-word">nextplease</span>
+          <span className="np-dock-brand-colon">:</span>
+        </Link>
+
         <div className="np-dock-inner" ref={dockRef}>
           <button
             className={`np-dock-item ${activeView === 'OVERVIEW' ? 'active' : ''}`}
@@ -1970,6 +1997,59 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             </Link>
           )}
 
+        </div>
+
+          {/* Menu tài khoản — thay cho menu avatar của SiteHeader. */}
+        <div className="np-dock-acct" ref={dockProfileRef}>
+          <button
+            type="button"
+            className="np-dock-item np-dock-acct-btn"
+            aria-haspopup="menu"
+            aria-expanded={showDockProfileMenu}
+            aria-label="Menu tài khoản"
+            onClick={() => setShowDockProfileMenu((v) => !v)}
+          >
+            <UserAvatar src={portfolio?.avatarUrl} name={portfolio?.name || 'Ứng viên'} size={26} />
+            <ChevronDown size={14} />
+          </button>
+
+          {showDockProfileMenu && (
+            <div className="np-dock-acct-menu" role="menu">
+              <div className="np-dock-acct-head">
+                <UserAvatar src={portfolio?.avatarUrl} name={portfolio?.name || 'Ứng viên'} size={38} />
+                <div style={{ minWidth: 0 }}>
+                  <div className="np-dock-acct-name">{portfolio?.name || 'Ứng viên'}</div>
+                  <div className="np-dock-acct-sub">Candidate Talent · Cấp độ {currentLevel}</div>
+                </div>
+              </div>
+
+              <div className="np-dock-acct-sep" />
+
+              <Link className="np-dock-acct-item" role="menuitem" to="/" onClick={() => setShowDockProfileMenu(false)}>
+                <House size={16} /> Trang chủ
+              </Link>
+              <Link className="np-dock-acct-item" role="menuitem" to="/jobs" onClick={() => setShowDockProfileMenu(false)}>
+                <BriefcaseBusiness size={16} /> Việc làm
+              </Link>
+              <Link className="np-dock-acct-item" role="menuitem" to="/thao-luan" onClick={() => setShowDockProfileMenu(false)}>
+                <MessagesSquare size={16} /> Thảo luận
+              </Link>
+
+              <div className="np-dock-acct-sep" />
+
+              <button
+                type="button"
+                role="menuitem"
+                className="np-dock-acct-item"
+                onClick={() => { setShowSettingsModal(true); setShowDockProfileMenu(false); }}
+              >
+                <Settings size={16} /> Cài đặt tài khoản
+              </button>
+              <button type="button" role="menuitem" className="np-dock-acct-item danger" onClick={handleLogout}>
+                <LogOut size={16} /> Đăng xuất
+              </button>
+            </div>
+          )}
         </div>
       </nav>
 
@@ -2101,16 +2181,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       Xuất Portfolio PDF
                     </button>
                   )}
-                  {/* Cài đặt tài khoản: trước đây nằm trong popover của dock.
-                      Dock giờ chỉ còn điều hướng, nên nút này về với hero. */}
-                  <button
-                    type="button"
-                    onClick={() => setShowSettingsModal(true)}
-                    title="Cài đặt tài khoản"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.1)', border: 'none', padding: '9px 16px', borderRadius: '999px', cursor: 'pointer' }}
-                  >
-                    <Settings size={15} /> Cài đặt
-                  </button>
                 </div>
 
                 <PublicLinkEditor

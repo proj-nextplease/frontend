@@ -8856,6 +8856,10 @@ img {
    động trên cảm ứng. Bảng màu lấy từ SiteHeader (teal/mint) để
    header và thanh tab đọc như một hệ.
    ============================================================ */
+/* Vỏ kính là .np-dock; chỉ phần tab ở giữa (.np-dock-inner) mới cuộn.
+   Logo và menu tài khoản CỐ TÌNH nằm ngoài vùng cuộn: theo spec CSS, khi
+   một trục là auto/scroll thì trục kia cũng thành auto, nên popover tài
+   khoản đặt bên trong vùng cuộn sẽ bị cắt mất. */
 .np-dock {
   position: fixed;
   left: 50%;
@@ -8863,13 +8867,8 @@ img {
   transform: translateX(-50%);
   z-index: 600;
   max-width: calc(100vw - 24px);
-}
-
-.np-dock-inner {
   display: flex;
   align-items: center;
-  flex-wrap: nowrap;
-  justify-content: center;
   gap: 2px;
   padding: 7px 9px;
   border-radius: 999px;
@@ -8878,8 +8877,15 @@ img {
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid #e2efe9;
   box-shadow: 0 18px 40px rgba(15, 46, 43, 0.16), 0 2px 6px rgba(15, 46, 43, 0.06);
-  /* Cuộn ngang khi có nhiều tab tổ chức được mở. Không còn hiệu ứng
-     nhấc lên hay tooltip nào để bị overflow cắt nữa. */
+}
+
+.np-dock-inner {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 2px;
+  min-width: 0;
+  /* Cuộn ngang khi hẹp hoặc khi có nhiều tab tổ chức được mở. */
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
@@ -8993,11 +8999,10 @@ img {
     bottom: 0;
     transform: none;
     max-width: 100%;
-  }
-
-  .np-dock-inner {
-    justify-content: flex-start;
     border-radius: 16px 16px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
     padding: 7px 10px calc(7px + env(safe-area-inset-bottom));
     background: rgba(255, 255, 255, 0.95);
   }
@@ -13106,7 +13111,7 @@ img {
 :root[data-theme='dark'] .checklist-item:hover { border-color: rgba(255, 111, 89, 0.35); }
 
 /* Thanh tab khu vực — kính tối thay vì kính sáng. */
-:root[data-theme='dark'] .np-dock-inner {
+:root[data-theme='dark'] .np-dock {
   background: rgba(24, 28, 27, 0.82);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
@@ -13116,7 +13121,7 @@ img {
 :root[data-theme='dark'] .np-dock-item.active { background: #0d9488; color: #041c1a; }
 :root[data-theme='dark'] .np-dock-sep { background: rgba(255, 255, 255, 0.12); }
 @media (max-width: 900px) {
-  :root[data-theme='dark'] .np-dock-inner { background: rgba(20, 24, 23, 0.96); }
+  :root[data-theme='dark'] .np-dock { background: rgba(20, 24, 23, 0.96); }
   :root[data-theme='dark'] .np-dock-item:hover { background: transparent; color: #b9c9c5; }
   :root[data-theme='dark'] .np-dock-item.active:hover { background: #0d9488; color: #041c1a; }
 }
@@ -15559,3 +15564,88 @@ p { text-wrap: pretty; }
     bottom: calc(74px + env(safe-area-inset-bottom));
   }
 }
+
+/* ── Logo + menu tài khoản trong thanh dock ──
+   Trang này không dùng SiteHeader (hai thanh điều hướng là thừa), nên thanh
+   dock phải mang luôn logo về trang chủ và menu tài khoản. */
+.np-dock-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  padding: 0 10px 0 6px;
+  flex-shrink: 0;
+  text-decoration: none;
+  font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.np-dock-brand-word { font-weight: 700; letter-spacing: -0.01em; color: #059669; }
+.np-dock-brand-colon { font-weight: 800; color: #f59e0b; }
+
+.np-dock-acct { position: relative; flex-shrink: 0; }
+.np-dock-acct-btn { gap: 5px; padding: 0 9px 0 6px; }
+.np-dock-acct-btn[aria-expanded='true'] { background: #e7f7f0; color: #0f766e; }
+
+.np-dock-acct-menu {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  right: 0;
+  width: 236px;
+  padding: 8px;
+  border-radius: 16px;
+  background: var(--c-surface);
+  border: 1px solid #e2efe9;
+  box-shadow: 0 24px 48px rgba(15, 46, 43, 0.22);
+  animation: npDockMenuIn 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes npDockMenuIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+.np-dock-acct-head { display: flex; align-items: center; gap: 10px; padding: 6px 8px 10px; }
+.np-dock-acct-name {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--c-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.np-dock-acct-sub { font-size: 0.74rem; color: var(--c-muted); margin-top: 2px; }
+.np-dock-acct-sep { height: 1px; background: #e2efe9; margin: 4px 0; }
+
+.np-dock-acct-item {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--c-ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.np-dock-acct-item:hover { background: #e7f7f0; color: #0f766e; }
+.np-dock-acct-item.danger { color: #dc2626; }
+.np-dock-acct-item.danger:hover { background: rgba(220, 38, 38, 0.1); color: #b91c1c; }
+
+/* Logo chiếm chỗ quý giá trên màn hẹp, mà menu tài khoản đã có mục
+   "Trang chủ" rồi — bỏ logo đi, giữ lại menu. */
+@media (max-width: 900px) {
+  .np-dock-brand { display: none; }
+  .np-dock-brand + .np-dock-sep { display: none; }
+}
+
+:root[data-theme='dark'] .np-dock-acct-menu { background: #181b21; border-color: rgba(255, 255, 255, 0.1); }
+:root[data-theme='dark'] .np-dock-acct-sep { background: rgba(255, 255, 255, 0.1); }
+:root[data-theme='dark'] .np-dock-acct-item { color: #e8ecf2; }
+:root[data-theme='dark'] .np-dock-acct-item:hover { background: rgba(13, 148, 136, 0.22); color: #5eead4; }
+:root[data-theme='dark'] .np-dock-acct-btn[aria-expanded='true'] { background: rgba(13, 148, 136, 0.22); color: #5eead4; }
