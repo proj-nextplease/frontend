@@ -38,6 +38,7 @@ import {
   BookmarkCheck, Link2,} from 'lucide-react';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { getMyPortfolio, updateMySlug } from '../api/portfolioApi.js';
+import { WaveBg } from '../components/WaveBg.jsx';
 import { logout } from '../api/httpClient.js';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
@@ -2090,6 +2091,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
             {/* Reputation Passport - hero focal point */}
             <section className="np-passport">
+              {/* Cùng hoạ tiết sóng với hero trang chủ. Quy tắc
+                  `.np-passport > * { z-index: 1 }` áp cho cả svg này, nên nó
+                  nằm cùng tầng với nội dung và thứ tự DOM quyết định — đặt đầu
+                  tiên là nó ở dưới. */}
+              <WaveBg variant="emerald" pattern="waves" />
+
               <div className="np-pp-avatar">
                 <div className="avatar-3d-glow-frame">
                   <PortfolioAvatar3D avatar={portfolio?.avatar} />
@@ -2150,12 +2157,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
               <div className="np-pp-stats">
                 <button type="button" onClick={() => setShowTopUpModal(true)} title="Nhấn để nạp NP" className="np-pp-stat" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', padding: 0, textAlign: 'left' }}>
-                  <div className="np-pp-stat-val" style={{ color: '#4ade80' }}>{walletLoading ? '...' : <CountUp value={wallet?.npBalance ?? 0} />}</div>
+                  <div className="np-pp-stat-val" style={{ color: '#fff' }}>{walletLoading ? '...' : <CountUp value={wallet?.npBalance ?? 0} />}</div>
                   <div className="np-pp-stat-label"><WalletCards size={13} /> Ví NP {wallet?.isPremium && <Crown size={11} color="#fbbf24" style={{ marginLeft: '2px' }} />}</div>
                 </button>
                 <div className="np-pp-divider" />
                 <div className="np-pp-stat">
-                  <div className="np-pp-stat-val" style={{ color: '#c4b5fd' }}><CountUp value={portfolio?.reputationScore ?? 0} format={(n) => Math.round(n).toString()} /></div>
+                  <div className="np-pp-stat-val" style={{ color: '#fff' }}><CountUp value={portfolio?.reputationScore ?? 0} format={(n) => Math.round(n).toString()} /></div>
                   <div className="np-pp-stat-label"><ShieldCheck size={13} /> Trust Score (RS)</div>
                 </div>
               </div>

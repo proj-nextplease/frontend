@@ -13395,8 +13395,10 @@ p { text-wrap: pretty; }
    Reputation Passport — the Overview focal point (replaces the
    scattered exp card + avatar card + bottom metric boxes).
    ============================================================ */
-.candidate-portal-layout { --np-passport: #1e1320; }
-:root[data-theme='dark'] .candidate-portal-layout { --np-passport: #221c2b; }
+/* Nền hero lấy đúng WAVE_BASE.emerald của hero trang chủ (WaveBg.jsx), để
+   bước từ trang chủ vào Khu vực của tôi không thấy như đổi sản phẩm. */
+.candidate-portal-layout { --np-passport: linear-gradient(158deg, #0f766e 0%, #0d9488 52%, #115e59 100%); }
+:root[data-theme='dark'] .candidate-portal-layout { --np-passport: linear-gradient(160deg, #0b5f58 0%, #0e857a 55%, #0a4f48 100%); }
 
 .np-passport {
   position: relative;
@@ -13419,26 +13421,38 @@ p { text-wrap: pretty; }
   right: -8%;
   width: 360px;
   height: 360px;
-  background: radial-gradient(circle, rgba(229, 83, 63, 0.26), transparent 68%);
+  background: radial-gradient(circle, rgba(167, 243, 208, 0.28), transparent 68%);
   pointer-events: none;
 }
+/* Lớp phủ tối nhẹ: emerald #0d9488 là tông trung, chữ trắng trên nó chỉ đạt
+   tương phản 3.74 — không đủ 4.5 của WCAG AA cho chữ nhỏ (nhãn chỉ số, phụ
+   đề). Phủ một lớp xanh thẫm mờ nâng nền lên ~5.3 mà không đổi màu thương
+   hiệu. Pseudo-element không phải con nên nằm dưới nội dung. */
+.np-passport::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, rgba(4, 47, 42, 0.42) 0%, rgba(4, 47, 42, 0.26) 55%, rgba(4, 47, 42, 0.40) 100%);
+  pointer-events: none;
+}
+
 .np-passport > * { position: relative; z-index: 1; }
 
 .np-pp-avatar { width: clamp(116px, 11vw, 156px); flex-shrink: 0; }
 .np-pp-avatar .avatar-3d-glow-frame {
   width: 100%; aspect-ratio: 1; min-height: 0; padding: 0;
-  border-radius: 22px; background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px; background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
 }
 .np-pp-name { font-size: clamp(1.3rem, 2vw, 1.7rem); font-weight: 800; letter-spacing: -0.02em; }
-.np-pp-sub { font-size: 0.86rem; color: rgba(255, 255, 255, 0.6); margin-top: 2px; }
+.np-pp-sub { font-size: 0.86rem; color: rgba(255, 255, 255, 0.92); margin-top: 2px; }
 .np-pp-expbar { height: 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
 .np-pp-expbar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f6845f, #e5533f); transition: width 0.9s cubic-bezier(0.22,1,0.36,1); }
 
 .np-pp-stats { display: flex; gap: clamp(14px, 1.6vw, 26px); flex-shrink: 0; }
 .np-pp-stat { text-align: left; }
 .np-pp-stat-val { font-size: clamp(1.4rem, 2vw, 1.9rem); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-.np-pp-stat-label { font-size: 0.74rem; font-weight: 700; color: rgba(255, 255, 255, 0.55); margin-top: 5px; display: flex; align-items: center; gap: 4px; }
+.np-pp-stat-label { font-size: 0.74rem; font-weight: 700; color: rgba(255, 255, 255, 0.92); margin-top: 5px; display: flex; align-items: center; gap: 4px; }
 .np-pp-divider { width: 1px; align-self: stretch; background: rgba(255, 255, 255, 0.12); }
 
 @media (max-width: 880px) {
