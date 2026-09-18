@@ -15219,6 +15219,11 @@ p { text-wrap: pretty; }
 .vp-reveal:nth-child(5){animation-delay:.34s} .vp-reveal:nth-child(n+6){animation-delay:.42s}
 @media (prefers-reduced-motion: reduce){ .vp-reveal { animation:none; } }
 
+/* Ảnh bìa portfolio: dải ngang phía trên phần hero. Chiều cao co theo bề
+   rộng màn hình để tỉ lệ không vỡ trên điện thoại. */
+.vp-cover { height:clamp(140px, 22vw, 260px); border-radius:20px; margin-bottom:28px; background-color:#e2e8f0; }
+@media print { .vp-cover { break-inside:avoid; } }
+
 .vp-hero { display:flex; gap:38px; align-items:center; flex-wrap:wrap; margin-bottom:44px; }
 .vp-portrait-stage { width:200px; height:236px; border-radius:20px; overflow:hidden; flex-shrink:0; background:radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--vp-accent) 14%, transparent), transparent 62%), var(--surface-soft); }
 .vp-portrait-stage .portfolio-avatar-canvas { width:200px !important; height:236px !important; }

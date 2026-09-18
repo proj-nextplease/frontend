@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
 import { getPublicProfile, getPublicProfileBySlug } from '../api/portfolioApi.js';
+import { parseBanner } from '../components/postingConstants.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
 
 const SOCIAL_META = {
@@ -74,6 +75,7 @@ export function VerifiedPassport({ profile, isDraft = false }) {
     .map(([k, v]) => ({ key: k, value: v.trim(), ...SOCIAL_META[k] }));
 
   const themeClass = profile.selectedTheme && profile.selectedTheme !== 'DEFAULT' ? `theme-${profile.selectedTheme}` : '';
+  const coverPos = parseBanner(profile.coverBannerPos);
   const hasContent = profile.bio || skills.length || experiences.length || credentials.length;
 
   // Exporting to PDF reuses the browser's native print pipeline (no extra
@@ -101,6 +103,18 @@ export function VerifiedPassport({ profile, isDraft = false }) {
       </div>
 
       <div className="vp-shell">
+        {/* Ảnh bìa: dải ngang trên đầu hồ sơ. Khung hình do người dùng tự căn,
+            lưu dạng "x% y% zoom" giống banner tin tuyển dụng. */}
+        {profile.coverBannerUrl && (
+          <div
+            className="vp-cover vp-reveal"
+            role="img"
+            aria-label={`Ảnh bìa của ${profile.name || 'ứng viên'}`}
+            style={{
+              background: `url(${profile.coverBannerUrl}) ${coverPos.x}% ${coverPos.y}% / ${coverPos.z * 100}% auto no-repeat`,
+            }}
+          />
+        )}
         <header className="vp-hero vp-reveal">
           <div className="vp-portrait"><div className="vp-portrait-stage"><PortfolioAvatar3D avatar={avatar} /></div></div>
           <div className="vp-identity">

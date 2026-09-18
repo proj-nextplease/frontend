@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
+import { CoverBannerEditor } from '../components/CoverBannerEditor.jsx';
 import { EXPERIENCE_CATEGORY_OPTIONS, EXPERIENCE_ROLE_LEVEL_OPTIONS } from '../constants/experience.js';
 import { supabase } from '../services/supabaseClient.js';
 
@@ -401,6 +402,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     skills: '',
     openToWork: false,
     socialLinks: { github: '', linkedin: '', website: '', email: '' },
+    coverBannerUrl: '',
+    coverBannerPos: '50% 50%',
   });
   const [experiences, setExperiences] = useState(defaultExperiences);
   const [credentials, setCredentials] = useState(defaultCredentials);
@@ -483,6 +486,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               skills: data.skills ? data.skills.join(', ') : '',
               openToWork: !!data.openToWork,
               socialLinks: { github: '', linkedin: '', website: '', email: '', ...(data.socialLinks || {}) },
+              coverBannerUrl: data.coverBannerUrl || '',
+              coverBannerPos: data.coverBannerPos || '50% 50%',
             });
             if (data.experiences && data.experiences.length > 0) {
               setExperiences(data.experiences);
@@ -552,6 +557,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         credentials: credentials.filter(cred => cred.name.trim() || cred.issuer.trim()),
         openToWork: !!profile.openToWork,
         socialLinks: profile.socialLinks || {},
+        coverBannerUrl: profile.coverBannerUrl || '',
+        coverBannerPos: profile.coverBannerPos || '50% 50%',
       };
       
       await updateMyPortfolio(payload);
@@ -592,6 +599,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         credentials: credentials.filter(cred => cred.name.trim() || cred.issuer.trim()),
         openToWork: !!profile.openToWork,
         socialLinks: profile.socialLinks || {},
+        coverBannerUrl: profile.coverBannerUrl || '',
+        coverBannerPos: profile.coverBannerPos || '50% 50%',
       };
       
       await updateMyPortfolio(payload, true);
@@ -1354,6 +1363,19 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                 value={profile.skills}
               />
             </label>
+
+            <div className="full-field">
+              Ảnh bìa <span style={{ fontWeight: 500, color: 'var(--muted)' }}>(tuỳ chọn)</span>
+              <span style={{ display: 'block', fontWeight: 500, fontSize: '0.82rem', color: 'var(--muted)', margin: '2px 0 8px' }}>
+                Dải ảnh trên đầu portfolio công khai — cách nhanh nhất để trang của bạn khác với mọi người.
+              </span>
+              <CoverBannerEditor
+                url={profile.coverBannerUrl}
+                pos={profile.coverBannerPos}
+                onChange={({ url, pos }) =>
+                  setProfile((current) => ({ ...current, coverBannerUrl: url, coverBannerPos: pos }))}
+              />
+            </div>
 
             <div className="full-field pf-avail-card">
               <div className="pf-avail-text">
