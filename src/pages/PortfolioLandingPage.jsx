@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  ArrowRight, ShieldCheck, Sparkles, Award, BriefcaseBusiness,
-  ChevronDown, CircleCheck, Layers, Clock,
-} from 'lucide-react';
 import { Mascot } from 'page-mascot';
+import {
+  ArrowRight, ShieldCheck, Sparkles, BriefcaseBusiness, ChevronDown,
+  CircleCheck, CircleX, Link2, Flame, Star, Zap, UserRound, FileText,
+} from 'lucide-react';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
@@ -21,38 +21,35 @@ const HERO_GRAD = 'linear-gradient(158deg, #0f766e 0%, #0d9488 52%, #115e59 100%
 
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 
-/* Ba lợi ích, xen kẽ trái/phải như bố cục tham chiếu. */
-const BENEFITS = [
+/* Ba bước đúng theo cách hồ sơ thật sự lớn lên trên nền tảng. */
+const STEPS = [
   {
-    no: 1,
-    title: 'Minh chứng do tổ chức xác nhận, không phải lời tự khai',
-    body: 'Mỗi công việc hay Quest bạn hoàn thành qua nextplease đều được chính tổ chức đó xác nhận '
-        + 'và cấp Verified Proof of Work. Nhà tuyển dụng bấm vào là thấy ai xác nhận, xác nhận khi nào.',
+    no: '01',
+    icon: UserRound,
+    title: 'Dựng hồ sơ',
+    body: 'Chọn nhân vật 3D, điền kỹ năng và học vấn. Mất vài phút, và bạn đã có một đường dẫn mang tên mình.',
+  },
+  {
+    no: '02',
+    icon: BriefcaseBusiness,
+    title: 'Nhận việc và Quest',
+    body: 'Ứng tuyển một chạm vào công việc của doanh nghiệp hoặc hoạt động của CLB, ngay trên nền tảng.',
+  },
+  {
+    no: '03',
     icon: ShieldCheck,
-    caption: 'Thực tập sinh Marketing · F-Code',
-    chips: ['Đã xác thực', '+120 EXP'],
-    points: ['Dấu xác thực gắn với từng kinh nghiệm', 'Điểm uy tín RS tăng theo việc đã làm', 'Kiểm chứng được trong một chạm'],
+    title: 'Tổ chức xác nhận',
+    body: 'Hoàn thành thì nơi bạn làm xác nhận. Hồ sơ có thêm một minh chứng, điểm uy tín và cấp độ đi lên.',
   },
-  {
-    no: 2,
-    title: 'Một trang mang cá tính của riêng bạn',
-    body: 'Nhân vật 3D bạn tự tạo, ảnh bìa bạn tự chọn, và một đường dẫn mang tên bạn. '
-        + 'Không phải một mẫu hồ sơ ai cũng giống ai.',
-    icon: Sparkles,
-    caption: 'nextplease.vn/p/ten-cua-ban',
-    chips: ['Nhân vật 3D', 'Ảnh bìa riêng'],
-    points: ['Nhân vật 3D tuỳ chỉnh', 'Ảnh bìa tự căn khung', 'Đường dẫn riêng dạng /p/ten-cua-ban'],
-  },
-  {
-    no: 3,
-    title: 'Dựng một lần, dùng ở mọi nơi',
-    body: 'Chia sẻ bằng link để người đọc thấy bản sống luôn cập nhật, hoặc xuất PDF khi cần nộp '
-        + 'qua email. Ứng tuyển trong hệ thống thì chỉ một chạm, không phải đính kèm gì thêm.',
-    icon: Layers,
-    caption: 'Một hồ sơ, mọi nơi đều dùng được',
-    chips: ['Link chia sẻ', 'PDF'],
-    points: ['Ứng tuyển một chạm', 'Xuất PDF khi cần tệp', 'Sửa một nơi, mọi nơi đều đúng'],
-  },
+];
+
+/* So sánh trực diện — phần thuyết phục chính của trang. */
+const COMPARISON = [
+  ['Ai xác nhận những gì bạn viết', 'Không ai', 'Chính tổ chức bạn làm cùng'],
+  ['Khi bạn có kinh nghiệm mới', 'Sửa file, gửi lại từ đầu', 'Link tự cập nhật'],
+  ['Nhà tuyển dụng kiểm chứng', 'Phải gọi hỏi từng nơi', 'Bấm vào là thấy'],
+  ['Thứ bạn tích luỹ được', 'Không có gì', 'Điểm uy tín, EXP, cấp độ'],
+  ['Trông giống ai', 'Giống mọi CV khác', 'Nhân vật 3D và trang của riêng bạn'],
 ];
 
 const FAQS = [
@@ -120,118 +117,74 @@ function FaqItem({ item, open, onToggle }) {
 }
 
 /**
- * Minh hoạ cho mỗi khối lợi ích: linh vật đứng cạnh một tấm thẻ nói đúng nội
- * dung của khối đó.
+ * Bản thu nhỏ của chính thứ người dùng sẽ nhận được.
  *
- * Trang tham chiếu dùng nhân vật thương hiệu tương tác với một tờ CV ở mỗi
- * mục; ta có sẵn linh vật con cóc nên dùng lại, vừa thống nhất với trang chủ
- * vừa khỏi phải thuê vẽ minh hoạ.
+ * Bản cũ vẽ một "tờ giấy có mấy vạch xám" — thứ có thể là sản phẩm của bất kỳ
+ * ai. Ở đây dựng đúng hình hài một portfolio thật: avatar, cấp độ, điểm uy tín,
+ * một kinh nghiệm đã xác thực và đường dẫn riêng. Cho xem còn hơn mô tả.
  */
-function BenefitArt({ icon, caption, chips, mascot = false }) {
-  const Icon = icon;
-  return (
-    <div className="cv-benefit-art" style={{
-      position: 'relative', display: 'grid', placeItems: 'center',
-      minHeight: 280, padding: '28px 24px', borderRadius: 28,
-      background: 'linear-gradient(150deg, #ecfdf5 0%, #f0fdfa 60%, #eff6ff 100%)',
-      border: `1px solid ${LINE}`, overflow: 'hidden',
-    }}>
-      {/* Đốm sáng trang trí phía sau, bo tròn mềm cho đỡ phẳng */}
-      <span aria-hidden="true" style={{
-        position: 'absolute', width: 220, height: 220, borderRadius: '50%',
-        background: 'rgba(16,185,129,0.14)', filter: 'blur(6px)', top: -60, right: -40,
-      }} />
-
-      <div style={{ position: 'relative', display: 'grid', gap: 14, justifyItems: 'center', width: '100%' }}>
-        {/* Tấm thẻ nói nội dung của khối */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12, width: 'min(300px, 100%)',
-          padding: '14px 16px', borderRadius: 16, background: '#fff',
-          boxShadow: '0 16px 36px rgba(4,47,42,0.12)',
-        }}>
-          <span style={{
-            display: 'grid', placeItems: 'center', width: 42, height: 42, flex: 'none',
-            borderRadius: 12, background: MINT, color: TEAL,
-          }}>
-            <Icon size={21} strokeWidth={2} />
-          </span>
-          <span style={{ fontSize: '0.9rem', fontWeight: 800, color: INK, lineHeight: 1.35 }}>{caption}</span>
-        </div>
-
-        {/* Hai nhãn nhỏ nổi quanh, gợi cảm giác trang đang "sống" */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {chips.map((c) => (
-            <span key={c} style={{
-              padding: '5px 12px', borderRadius: 999, background: '#fff',
-              border: `1px solid ${LINE}`, fontSize: '0.74rem', fontWeight: 800, color: TEAL,
-            }}>{c}</span>
-          ))}
-        </div>
-
-        {/* Chỉ một khối có linh vật: ta chỉ có một bộ sprite nên ba con giống
-            hệt nhau trên cùng một trang sẽ thành lặp. Khối còn lại dùng huy
-            hiệu icon để nhịp trang có thay đổi. */}
-        {mascot ? (
-          <Mascot
-            directions="/mascots/frog-directions.webp"
-            reactions="/mascots/frog-reactions.webp"
-            size={116}
-            label="Linh vật nextplease"
-          />
-        ) : (
-          <span style={{
-            display: 'grid', placeItems: 'center', width: 96, height: 96, borderRadius: '50%',
-            background: '#fff', boxShadow: '0 14px 32px rgba(4,47,42,0.12)', color: TEAL,
-          }}>
-            <Icon size={42} strokeWidth={1.6} />
-          </span>
-        )}
-      </div>
+function PortfolioPreview() {
+  const stat = (icon, value, label, color) => (
+    <div style={{ display: 'grid', gap: 2, justifyItems: 'center' }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '1.05rem', fontWeight: 900, color }}>
+        {icon}{value}
+      </span>
+      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: MUTED, letterSpacing: '0.04em' }}>{label}</span>
     </div>
   );
-}
 
-/** Ảnh minh hoạ tấm hồ sơ — dựng bằng CSS nên không phải tải thêm tài nguyên. */
-function PortfolioSheetArt() {
-  const line = (w, dim = false) => (
-    <span style={{ display: 'block', height: 7, width: w, borderRadius: 99, background: dim ? '#e6efec' : '#cfe6de' }} />
-  );
   return (
-    <div style={{ position: 'relative', minHeight: 360 }} aria-hidden="true">
-      {/* Tờ phía sau, hơi nghiêng để tạo chiều sâu */}
+    <div style={{ position: 'relative' }} aria-hidden="true">
       <div style={{
-        position: 'absolute', top: 28, right: 6, width: '72%', height: 300, borderRadius: 16,
-        background: 'rgba(255,255,255,0.35)', transform: 'rotate(6deg)',
-      }} />
-      {/* Tờ chính */}
-      <div style={{
-        position: 'relative', width: 'min(360px, 86%)', padding: '26px 24px', borderRadius: 18,
-        background: '#fff', boxShadow: '0 24px 60px rgba(4,47,42,0.28)', display: 'grid', gap: 14,
+        position: 'relative', width: 'min(390px, 100%)', margin: '0 auto',
+        borderRadius: 24, background: '#fff', overflow: 'hidden',
+        boxShadow: '0 30px 70px rgba(4,47,42,0.3)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ width: 44, height: 44, borderRadius: '50%', background: `linear-gradient(135deg, ${EMERALD}, ${TEAL})` }} />
-          <div style={{ display: 'grid', gap: 6, flex: 1 }}>
-            {line('62%')}
-            {line('40%', true)}
+        {/* Ảnh bìa — đúng tính năng vừa làm xong */}
+        <div style={{ height: 78, background: 'linear-gradient(120deg, #34d399, #0d9488 70%)' }} />
+
+        <div style={{ padding: '0 20px 20px', marginTop: -30 }}>
+          <div style={{
+            width: 62, height: 62, borderRadius: '50%', border: '3px solid #fff',
+            background: 'linear-gradient(135deg, #10b981, #0d9488)', display: 'grid', placeItems: 'center',
+            color: '#fff', fontWeight: 900, fontSize: '1.3rem',
+          }}>P</div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '1.05rem', fontWeight: 900, color: INK }}>Nguyễn Tài Phát</span>
+            <span style={{ padding: '2px 9px', borderRadius: 999, background: MINT, color: TEAL, fontSize: '0.7rem', fontWeight: 900 }}>LV. 4</span>
+          </div>
+          <div style={{ fontSize: '0.82rem', color: MUTED, marginTop: 2 }}>Sinh viên Marketing · ĐH FPT</div>
+
+          <div style={{
+            display: 'flex', justifyContent: 'space-around', gap: 8, margin: '16px 0',
+            padding: '12px 0', borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}`,
+          }}>
+            {stat(<ShieldCheck size={14} />, '86', 'TRUST SCORE', TEAL)}
+            {stat(<Zap size={14} />, '1.2K', 'EXP', '#f59e0b')}
+            {stat(<Flame size={14} />, '7', 'STREAK', '#fb7185')}
+          </div>
+
+          {/* Một dòng kinh nghiệm đã được xác thực */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: '#f7fbf9' }}>
+            <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, flex: 'none', borderRadius: 10, background: MINT, color: TEAL }}>
+              <BriefcaseBusiness size={16} />
+            </span>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: '0.84rem', fontWeight: 800, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Trưởng ban Truyền thông
+              </div>
+              <div style={{ fontSize: '0.74rem', color: MUTED }}>CLB F-Code · 2025</div>
+            </div>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 999, background: MINT, color: TEAL, fontSize: '0.66rem', fontWeight: 900, flex: 'none' }}>
+              <ShieldCheck size={11} /> Đã xác thực
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, fontSize: '0.76rem', fontWeight: 700, color: TEAL }}>
+            <Link2 size={13} /> nextplease.vn/p/tai-phat
           </div>
         </div>
-        <div style={{ height: 1, background: LINE }} />
-        <div style={{ display: 'grid', gap: 9 }}>
-          <span style={{ fontSize: '0.64rem', fontWeight: 800, letterSpacing: '0.12em', color: TEAL }}>KINH NGHIỆM</span>
-          {line('92%')}{line('78%', true)}{line('84%', true)}
-        </div>
-        <div style={{ display: 'grid', gap: 9 }}>
-          <span style={{ fontSize: '0.64rem', fontWeight: 800, letterSpacing: '0.12em', color: TEAL }}>KỸ NĂNG</span>
-          {line('70%', true)}{line('55%', true)}
-        </div>
-      </div>
-      {/* Huy hiệu xác thực nổi lên trên — điểm khác biệt so với CV thường */}
-      <div style={{
-        position: 'absolute', right: '4%', bottom: 18, display: 'inline-flex', alignItems: 'center', gap: 8,
-        padding: '10px 16px', borderRadius: 999, background: '#fff',
-        boxShadow: '0 14px 34px rgba(4,47,42,0.26)', fontSize: '0.82rem', fontWeight: 800, color: TEAL,
-      }}>
-        <ShieldCheck size={16} /> Verified Proof
       </div>
     </div>
   );
@@ -260,41 +213,48 @@ export function PortfolioLandingPage() {
       <SiteHeader />
 
       <style>{`
-        .cv-cta { display:inline-flex; align-items:center; gap:8px; padding:13px 26px; border-radius:9999px;
-                  font-size:0.95rem; font-weight:800; text-decoration:none; border:none; cursor:pointer;
+        .pf-cta { display:inline-flex; align-items:center; gap:8px; padding:14px 28px; border-radius:9999px;
+                  font-size:0.97rem; font-weight:800; text-decoration:none; border:none; cursor:pointer;
                   transition: transform .18s ease, box-shadow .18s ease; }
-        .cv-cta:hover { transform: translateY(-2px); }
-        .cv-cta.primary { background:#ecfccb; color:${INK}; box-shadow:0 10px 26px rgba(0,0,0,0.18); }
-        .cv-cta.ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.55); }
-        .cv-hero { display:grid; grid-template-columns: 1.05fr 0.95fr; gap:48px; align-items:center;
-                   padding: clamp(48px, 7vw, 86px) 0; }
-        .cv-benefit { display:grid; grid-template-columns: 1fr 1fr; gap:clamp(28px, 5vw, 80px); align-items:center;
-                      padding: clamp(52px, 8vw, 104px) 0; }
-        .cv-benefit.flip .cv-benefit-art { order:-1; }
+        .pf-cta:hover { transform: translateY(-2px); }
+        .pf-cta.primary { background:#ecfccb; color:${INK}; box-shadow:0 10px 26px rgba(0,0,0,0.18); }
+        .pf-cta.ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.55); }
+        .pf-cta.solid { background:${TEAL}; color:#fff; box-shadow:0 12px 28px rgba(13,148,136,0.28); }
 
-        /* Nhãn "BẠN SẼ ĐƯỢC #n" dạng chip viền, số dùng màu nhấn — dễ nhận ra
-           đây là một chuỗi có thứ tự hơn là mấy chữ nhỏ trôi nổi. */
-        .cv-kicker { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:999px;
-                     border:1px solid ${LINE}; background:#fff; font-size:0.74rem; font-weight:800;
-                     letter-spacing:0.1em; color:${MUTED}; }
-        .cv-kicker b { color:${EMERALD}; font-weight:900; }
+        .pf-hero { display:grid; grid-template-columns: 1.06fr 0.94fr; gap:clamp(32px, 5vw, 64px);
+                   align-items:center; padding: clamp(46px, 7vw, 84px) 0 clamp(56px, 8vw, 96px); }
 
-        /* Dải nền xen kẽ để mỗi lợi ích là một chặng riêng, thay vì một mảng
-           trắng dài liền mạch. */
-        .cv-band { width:100%; }
-        .cv-band.tint { background:linear-gradient(180deg, #f4fbf8 0%, #ffffff 100%); }
-        .cv-faq-grid { display:grid; grid-template-columns: 0.8fr 1.2fr; gap:clamp(24px, 4vw, 56px); align-items:start; }
-        @media (max-width: 900px) {
-          .cv-hero, .cv-benefit, .cv-faq-grid { grid-template-columns: 1fr; }
-          .cv-benefit.flip .cv-benefit-art { order:0; }
-          .cv-benefit { padding: clamp(36px, 9vw, 56px) 0; }
+        .pf-steps { display:grid; grid-template-columns: repeat(3, 1fr); gap:clamp(18px, 2.4vw, 28px); }
+        .pf-step { position:relative; padding:28px 24px; border-radius:22px; background:#fff;
+                   border:1px solid ${LINE}; box-shadow:0 12px 30px rgba(4,47,42,0.05); }
+
+        /* Bảng so sánh: hai cột nội dung, cột nhãn nằm bên trái. */
+        .pf-cmp { display:grid; grid-template-columns: 1.15fr 1fr 1fr; align-items:stretch;
+                  border:1px solid ${LINE}; border-radius:22px; overflow:hidden; background:#fff; }
+        .pf-cmp > * { padding:16px 18px; border-bottom:1px solid ${LINE}; font-size:0.94rem; }
+        .pf-cmp > *:nth-child(3n) { background:#f5fbf8; }
+        .pf-cmp-head { font-weight:900; font-size:0.9rem !important; letter-spacing:0.02em; }
+
+        .pf-faq { display:grid; grid-template-columns: 0.8fr 1.2fr; gap:clamp(24px, 4vw, 56px); align-items:start; }
+
+        @media (max-width: 960px) {
+          .pf-hero, .pf-faq { grid-template-columns: 1fr; }
+          .pf-steps { grid-template-columns: 1fr; }
+          /* Bảng ba cột không đọc nổi trên màn hẹp. Giữ hai cột so sánh, còn
+             nhãn tiêu chí thành một dòng chạy suốt bề ngang phía trên — đọc
+             một lần cho cả hai bên thay vì lặp lại ở từng ô. */
+          .pf-cmp { grid-template-columns: 1fr 1fr; }
+          .pf-cmp .pf-cmp-label { grid-column: 1 / -1; background:#f7fbf9;
+                                  font-size:0.8rem !important; font-weight:800 !important;
+                                  padding-top:12px; padding-bottom:12px; }
+          .pf-cmp .pf-cmp-head.pf-cmp-label { display:none; }
         }
       `}</style>
 
-      {/* ── Hero ── */}
+      {/* ── 1. HERO — cho xem sản phẩm, không mô tả suông ── */}
       <section style={{ background: HERO_GRAD, color: '#fff' }}>
         <div style={{ ...INNER }}>
-          <div className="cv-hero">
+          <div className="pf-hero">
             <div>
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 14px', borderRadius: 999,
@@ -304,90 +264,128 @@ export function PortfolioLandingPage() {
               </span>
 
               {/* Màu chữ phải khai tường minh trên mọi thẻ tiêu đề: reset của
-                  design-system đặt color cho :where(h1..h6), mà giá trị kế thừa
-                  từ cha thì luôn thua một rule khớp trực tiếp — kể cả rule có
-                  độ ưu tiên bằng 0 như :where(). */}
+                  design-system đặt color cho :where(h1..h6) bằng light-dark(),
+                  nên giá trị kế thừa từ cha luôn thua và bám theo sáng/tối của
+                  hệ điều hành. */}
               <h1 style={{
-                margin: '18px 0 16px', fontSize: 'clamp(2.1rem, 4.4vw, 3.4rem)', fontWeight: 800,
-                lineHeight: 1.12, letterSpacing: '-0.02em', color: '#fff',
+                margin: '18px 0 16px', fontSize: 'clamp(2.15rem, 4.6vw, 3.5rem)', fontWeight: 800,
+                lineHeight: 1.1, letterSpacing: '-0.025em', color: '#fff',
               }}>
-                Hồ sơ năng lực có minh chứng, không chỉ là lời tự khai
+                Đây là hồ sơ của bạn sau ba tháng
               </h1>
 
-              <p style={{ margin: 0, maxWidth: '54ch', fontSize: 'clamp(1rem, 1.4vw, 1.12rem)', lineHeight: 1.7, color: 'rgba(255,255,255,0.88)' }}>
-                Dựng Portfolio với nhân vật 3D của riêng bạn, tích minh chứng được tổ chức xác nhận
-                qua từng công việc, và chia sẻ bằng một đường dẫn mang tên bạn.
+              <p style={{ margin: 0, maxWidth: '52ch', fontSize: 'clamp(1rem, 1.35vw, 1.12rem)', lineHeight: 1.72, color: 'rgba(255,255,255,0.88)' }}>
+                Không phải một bản CV tự khai. Là một trang sống, có minh chứng do tổ chức xác nhận,
+                điểm uy tín tích luỹ thật, và một đường dẫn mang tên bạn.
               </p>
 
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 30 }}>
-                <Link to="/portfolio" onClick={guard} className="cv-cta primary">
-                  Tạo Portfolio ngay <ArrowRight size={17} />
+                <Link to="/portfolio" onClick={guard} className="pf-cta primary">
+                  Dựng hồ sơ của tôi <ArrowRight size={17} />
                 </Link>
-                <Link to="/jobs" className="cv-cta ghost">
+                <Link to="/jobs" className="pf-cta ghost">
                   <BriefcaseBusiness size={16} /> Xem cơ hội đang mở
                 </Link>
               </div>
-
-              <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginTop: 26, fontSize: '0.86rem', color: 'rgba(255,255,255,0.8)' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><CircleCheck size={15} /> Không cần thẻ thanh toán</span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Clock size={15} /> Dựng xong trong vài phút</span>
-              </div>
             </div>
 
-            <PortfolioSheetArt />
+            <PortfolioPreview />
           </div>
         </div>
       </section>
 
-      {/* ── Ba lợi ích: mỗi khối là một dải riêng, nền xen kẽ ── */}
-      {BENEFITS.map((b, i) => (
-        <section key={b.no} className={`cv-band${i % 2 === 1 ? ' tint' : ''}`}>
-          <div style={{ ...INNER }}>
-            <div className={`cv-benefit${i % 2 === 1 ? ' flip' : ''}`}>
-              <div>
-                <span className="cv-kicker">BẠN SẼ ĐƯỢC <b>#{b.no}</b></span>
+      {/* ── 2. BA BƯỚC — cách hồ sơ tự lớn lên ── */}
+      <section style={{ ...INNER, padding: 'clamp(56px, 8vw, 96px) 0' }}>
+        <div style={{ textAlign: 'center', maxWidth: '58ch', margin: '0 auto clamp(32px, 4vw, 48px)' }}>
+          <h2 style={{ margin: 0, fontSize: 'clamp(1.7rem, 3.2vw, 2.5rem)', fontWeight: 800, lineHeight: 1.18, letterSpacing: '-0.02em', color: INK }}>
+            Bạn không phải tự nghĩ ra thành tích
+          </h2>
+          <p style={{ margin: '14px 0 0', color: MUTED, fontSize: '1.04rem', lineHeight: 1.75 }}>
+            Hồ sơ lớn lên theo việc bạn thật sự làm. Bắt đầu từ con số không cũng được.
+          </p>
+        </div>
 
-                <h2 style={{ margin: '16px 0 14px', fontSize: 'clamp(1.6rem, 3.1vw, 2.45rem)', fontWeight: 800, lineHeight: 1.18, letterSpacing: '-0.02em', color: INK }}>
-                  {b.title}
-                </h2>
-                <p style={{ margin: '0 0 22px', color: MUTED, fontSize: 'clamp(1rem, 1.2vw, 1.06rem)', lineHeight: 1.78, maxWidth: '50ch' }}>
-                  {b.body}
-                </p>
-                <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 12 }}>
-                  {b.points.map((p) => (
-                    <li key={p} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.96rem', fontWeight: 600, color: INK }}>
-                      <CircleCheck size={18} style={{ color: EMERALD, flex: 'none' }} /> {p}
-                    </li>
-                  ))}
-                </ul>
+        <div className="pf-steps">
+          {STEPS.map((s) => {
+            const Icon = s.icon;
+            return (
+              <div key={s.no} className="pf-step">
+                <span style={{
+                  position: 'absolute', top: 20, right: 22, fontSize: '2rem', fontWeight: 900,
+                  color: MINT, letterSpacing: '-0.04em', lineHeight: 1,
+                }}>{s.no}</span>
+
+                <span style={{ display: 'grid', placeItems: 'center', width: 48, height: 48, borderRadius: 14, background: MINT, color: TEAL }}>
+                  <Icon size={23} strokeWidth={2} />
+                </span>
+                <h3 style={{ margin: '16px 0 8px', fontSize: '1.18rem', fontWeight: 800, color: INK }}>{s.title}</h3>
+                <p style={{ margin: 0, color: MUTED, fontSize: '0.95rem', lineHeight: 1.7 }}>{s.body}</p>
               </div>
+            );
+          })}
+        </div>
+      </section>
 
-              <BenefitArt icon={b.icon} caption={b.caption} chips={b.chips} mascot={b.no === 2} />
-            </div>
+      {/* ── 3. SO SÁNH — phần thuyết phục chính ── */}
+      <section style={{ background: 'linear-gradient(180deg, #f4fbf8 0%, #ffffff 100%)' }}>
+        <div style={{ ...INNER, padding: 'clamp(56px, 8vw, 96px) 0' }}>
+          <div style={{ textAlign: 'center', maxWidth: '54ch', margin: '0 auto clamp(28px, 4vw, 44px)' }}>
+            <h2 style={{ margin: 0, fontSize: 'clamp(1.7rem, 3.2vw, 2.5rem)', fontWeight: 800, lineHeight: 1.18, letterSpacing: '-0.02em', color: INK }}>
+              Cùng một con người, hai cách kể
+            </h2>
           </div>
-        </section>
-      ))}
 
-      {/* ── Dải nhấn: khác biệt so với CV thường ── */}
-      <section style={{ background: INK, color: '#fff', marginTop: 'clamp(32px, 5vw, 56px)' }}>
-        <div style={{ ...INNER, padding: 'clamp(44px, 6vw, 72px) 20px', display: 'grid', gap: 26, textAlign: 'center' }}>
-          <Award size={40} strokeWidth={1.4} style={{ color: EMERALD, justifySelf: 'center' }} />
-          <h2 style={{ margin: 0, fontSize: 'clamp(1.35rem, 2.6vw, 2rem)', fontWeight: 800, lineHeight: 1.3, color: '#fff' }}>
+          <div className="pf-cmp">
+            <div className="pf-cmp-head pf-cmp-label" style={{ color: MUTED }} />
+            <div className="pf-cmp-head" style={{ color: MUTED }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><FileText size={16} /> CV tự khai</span>
+            </div>
+            <div className="pf-cmp-head" style={{ color: TEAL }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><ShieldCheck size={16} /> Portfolio nextplease</span>
+            </div>
+
+            {COMPARISON.map(([label, cv, pf]) => (
+              <Fragmentish key={label} label={label} cv={cv} pf={pf} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 4. DẢI NHẤN — uy tín tích luỹ ── */}
+      <section style={{ background: INK, color: '#fff' }}>
+        <div style={{ ...INNER, padding: 'clamp(52px, 7vw, 84px) 0', display: 'grid', gap: 22, justifyItems: 'center', textAlign: 'center' }}>
+          <Mascot
+            directions="/mascots/frog-directions.webp"
+            reactions="/mascots/frog-reactions.webp"
+            size={104}
+            label="Linh vật nextplease"
+          />
+          <h2 style={{ margin: 0, fontSize: 'clamp(1.45rem, 2.8vw, 2.15rem)', fontWeight: 800, lineHeight: 1.28, color: '#fff', maxWidth: '20ch' }}>
             Mỗi việc bạn làm đều cộng vào hồ sơ
           </h2>
-          <p style={{ margin: '0 auto', maxWidth: '62ch', color: 'rgba(255,255,255,0.78)', fontSize: '1rem', lineHeight: 1.75 }}>
-            Nhận Quest và công việc nhỏ ngay trên nền tảng. Hoàn thành thì tổ chức xác nhận, hồ sơ có
-            thêm một minh chứng, điểm uy tín và cấp độ của bạn đi lên. Bắt đầu từ con số không cũng được.
-          </p>
-          <Link to="/portfolio" onClick={guard} className="cv-cta primary" style={{ justifySelf: 'center' }}>
+
+          <div style={{ display: 'flex', gap: 'clamp(20px, 4vw, 52px)', flexWrap: 'wrap', justifyContent: 'center', margin: '4px 0 6px' }}>
+            {[
+              [<Star key="i" size={17} />, 'Trust Score', 'Uy tín do tổ chức xác nhận'],
+              [<Zap key="i" size={17} />, 'EXP & Cấp độ', 'Tăng theo từng việc hoàn thành'],
+              [<ShieldCheck key="i" size={17} />, 'Verified Proof', 'Minh chứng ai cũng kiểm được'],
+            ].map(([icon, name, desc]) => (
+              <div key={name} style={{ display: 'grid', gap: 5, justifyItems: 'center', maxWidth: 200 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 900, color: EMERALD }}>{icon}{name}</span>
+                <span style={{ fontSize: '0.86rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55 }}>{desc}</span>
+              </div>
+            ))}
+          </div>
+
+          <Link to="/portfolio" onClick={guard} className="pf-cta primary">
             Bắt đầu miễn phí <ArrowRight size={17} />
           </Link>
         </div>
       </section>
 
-      {/* ── FAQ ── */}
-      <section style={{ ...INNER, padding: 'clamp(48px, 7vw, 86px) 20px' }}>
-        <div className="cv-faq-grid">
+      {/* ── 5. FAQ ── */}
+      <section style={{ ...INNER, padding: 'clamp(52px, 7vw, 88px) 0' }}>
+        <div className="pf-faq">
           <div>
             <h2 style={{ margin: 0, fontSize: 'clamp(1.5rem, 2.8vw, 2.1rem)', fontWeight: 800, lineHeight: 1.22, letterSpacing: '-0.01em', color: INK }}>
               Câu hỏi thường gặp
@@ -411,5 +409,24 @@ export function PortfolioLandingPage() {
 
       <SiteFooter />
     </div>
+  );
+}
+
+/** Một hàng của bảng so sánh — ba ô rời để lưới CSS tự xếp cột. */
+function Fragmentish({ label, cv, pf }) {
+  return (
+    <>
+      <div className="pf-cmp-label" style={{ fontWeight: 700, color: INK }}>{label}</div>
+      <div data-label={label} style={{ color: MUTED }}>
+        <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 8 }}>
+          <CircleX size={16} style={{ color: '#f87171', flex: 'none', marginTop: 2 }} /> {cv}
+        </span>
+      </div>
+      <div data-label={label} style={{ color: INK, fontWeight: 600 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 8 }}>
+          <CircleCheck size={16} style={{ color: EMERALD, flex: 'none', marginTop: 2 }} /> {pf}
+        </span>
+      </div>
+    </>
   );
 }
