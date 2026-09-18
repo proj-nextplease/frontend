@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  ArrowRight, House, BriefcaseBusiness, MessagesSquare, FileText,
+  ArrowRight, House, BriefcaseBusiness, MessagesSquare, FileText, Menu, X, Building2,
   Compass, Bookmark, ClipboardCheck, WalletCards, ChevronDown, LogOut,
 } from 'lucide-react';
 import { Button } from '../astryx/Button.jsx';
@@ -48,6 +48,7 @@ export function SiteHeader() {
   // Chỉ chạy hiệu ứng khi trạng thái đăng nhập THẬT SỰ đổi (đăng nhập bằng
   // modal ngay trên trang). SiteHeader được gắn lại ở mỗi trang landing, nên
   // nếu để class tĩnh thì mục nav sẽ nhấp nháy mỗi lần chuyển trang.
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navSwapRef = useRef(null);
   const skipFirstSwap = useRef(true);
 
@@ -103,6 +104,7 @@ export function SiteHeader() {
   }
 
   const closeMenu = () => setMenuOpen(false);
+  const closeMobile = () => setMobileOpen(false);
 
   const displayName = portfolio?.name?.trim() || 'Ứng viên';
   const portfolioPath = portfolio?.onboardingCompleted ? '/portfolio/edit' : '/portfolio';
@@ -142,11 +144,6 @@ export function SiteHeader() {
            trượt 10px. Chốt bề rộng tối thiểu bằng nhãn dài hơn để không có gì
            xê dịch — chỉ chữ mờ vào. */
         .nph-nav-item-swap { min-width: 140px; justify-content: center; }
-        /* Mục nav thứ tư đổi nhãn theo trạng thái đăng nhập. "Khu vực của tôi"
-           rộng hơn "Tạo portfolio" 20px, mà nav canh giữa nên khi đổi cả cụm sẽ
-           trượt 10px. Chốt bề rộng tối thiểu bằng nhãn dài hơn để không có gì
-           xê dịch — chỉ chữ mờ vào. */
-        .nph-nav-item-swap { min-width: 140px; justify-content: center; }
         /* Mục nav đổi khi đăng nhập/đăng xuất — mờ dần thay vì nhảy đột ngột. */
         .nph-nav-swap { animation: nphNavSwap 0.26s cubic-bezier(0.22,1,0.36,1) both; }
         @keyframes nphNavSwap { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
@@ -177,9 +174,36 @@ export function SiteHeader() {
         .nph-menu-item.danger { color: #b91c1c; }
         .nph-menu-item.danger:hover { background: #fef2f2; color: #b91c1c; }
         @media (max-width: 1139px) {
-          .nph-nav { grid-template-columns: auto 1fr; }
+          .nph-nav { grid-template-columns: 1fr auto; }
           .nph-navlinks, .nph-nav-recruiter { display: none !important; }
         }
+
+        /* ── Menu di động ──
+           Dưới 1140px cả thanh nav lẫn nút đăng nhập đều bị ẩn, nên trước đây
+           header trên điện thoại chỉ còn mỗi logo: không điều hướng được và
+           cũng không đăng nhập được. Nút này mở một ngăn chứa đủ cả hai. */
+        .nph-burger { display: inline-flex; align-items: center; justify-content: center;
+                      width: 42px; height: 42px; flex: none; border-radius: 12px;
+                      border: 1px solid ${LINE}; background: #fff; color: ${INK}; cursor: pointer;
+                      transition: background 0.18s ease, color 0.18s ease; }
+        .nph-burger:hover, .nph-burger[aria-expanded="true"] { background: ${MINT}; color: ${TEAL}; }
+        @media (min-width: 1140px) { .nph-burger { display: none; } }
+
+        .nph-sheet { border-top: 1px solid ${LINE}; background: #fff;
+                     animation: nphSheetIn 0.2s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes nphSheetIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) { .nph-sheet { animation: none; } }
+        .nph-sheet-inner { display: grid; gap: 4px; padding: 10px 0 16px; }
+        .nph-sheet-link { display: flex; align-items: center; gap: 11px; padding: 13px 14px;
+                          border-radius: 12px; font-size: 1rem; font-weight: 700; color: ${INK};
+                          text-decoration: none; }
+        .nph-sheet-link:hover { background: ${MINT}; color: ${TEAL}; }
+        .nph-sheet-link.active { background: ${MINT}; color: ${TEAL}; }
+        .nph-sheet-sep { height: 1px; margin: 8px 6px; background: ${LINE}; }
+        .nph-sheet-cta { display: flex; align-items: center; justify-content: center; gap: 8px;
+                         margin: 4px 6px 0; padding: 14px; border-radius: 999px; border: none;
+                         background: ${TEAL}; color: #fff; font-size: 1rem; font-weight: 800; cursor: pointer; }
+        @media (min-width: 1140px) { .nph-sheet { display: none; } }
       `}</style>
       <div style={{ ...INNER }}>
         <nav className="nph-nav">
@@ -223,6 +247,17 @@ export function SiteHeader() {
           </div>
           <div className="nph-actions">
             <Link to="/businesses" target="_blank" rel="noopener noreferrer" className="nph-navlink nph-nav-recruiter">Dành cho nhà tuyển dụng</Link>
+
+            <button
+              type="button"
+              className="nph-burger"
+              aria-expanded={mobileOpen}
+              aria-controls="nph-mobile-sheet"
+              aria-label={mobileOpen ? 'Đóng menu' : 'Mở menu'}
+              onClick={() => setMobileOpen((open) => !open)}
+            >
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
             {signedIn ? (
               <div className="nph-acct" ref={menuRef}>
                 <button
@@ -280,6 +315,49 @@ export function SiteHeader() {
           </div>
         </nav>
       </div>
+
+      {mobileOpen && (
+        <div className="nph-sheet" id="nph-mobile-sheet">
+          <div style={{ ...INNER }}>
+            <div className="nph-sheet-inner">
+              <Link to="/" onClick={closeMobile} className={`nph-sheet-link${homeActive ? ' active' : ''}`}>
+                <House size={19} /> Trang chủ
+              </Link>
+              <Link to="/jobs" onClick={closeMobile} className={`nph-sheet-link${jobsActive ? ' active' : ''}`}>
+                <BriefcaseBusiness size={19} /> Việc làm
+              </Link>
+              <Link to="/thao-luan" onClick={closeMobile} className={`nph-sheet-link${discussionActive ? ' active' : ''}`}>
+                <MessagesSquare size={19} /> Thảo luận
+              </Link>
+              {signedIn ? (
+                <Link to="/candidates/dashboard/overview" onClick={closeMobile} className={`nph-sheet-link${myAreaActive ? ' active' : ''}`}>
+                  <Compass size={19} /> Khu vực của tôi
+                </Link>
+              ) : (
+                <Link to="/tao-portfolio" onClick={closeMobile} className={`nph-sheet-link${portfolioActive ? ' active' : ''}`}>
+                  <FileText size={19} /> Tạo portfolio
+                </Link>
+              )}
+
+              <div className="nph-sheet-sep" />
+
+              <Link to="/businesses" target="_blank" rel="noopener noreferrer" onClick={closeMobile} className="nph-sheet-link">
+                <Building2 size={19} /> Dành cho nhà tuyển dụng
+              </Link>
+
+              {!signedIn && (
+                <button
+                  type="button"
+                  className="nph-sheet-cta"
+                  onClick={() => { closeMobile(); openLoginModal('candidate'); }}
+                >
+                  Đăng nhập <ArrowRight size={17} />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

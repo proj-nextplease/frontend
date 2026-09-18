@@ -592,6 +592,18 @@ export function DiscussionPage() {
             width: 100% !important;
             max-width: 100% !important;
           }
+          /* Xếp ngang trên màn hẹp: hai mục xếp dọc chiếm hơn 100px chiều cao
+             trước khi thấy bài viết nào — trên điện thoại đó là 1/8 màn hình. */
+          .np-discussion-sidenav {
+            flex-direction: row !important;
+          }
+          .np-discussion-sidenav > * {
+            flex: 1;
+            justify-content: center !important;
+            white-space: nowrap;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+          }
         }
       `}</style>
 
@@ -602,7 +614,7 @@ export function DiscussionPage() {
       <div className="np-discussion-layout">
         {/* ── LEFT SIDEBAR ── */}
         <aside className="np-discussion-sidebar" style={{ position: 'sticky', top: 90, justifySelf: 'start', width: '100%', maxWidth: 240 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="np-discussion-sidenav" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {/* 'Dành cho bạn' Pill Link */}
             <button
               onClick={handleBackToMain}

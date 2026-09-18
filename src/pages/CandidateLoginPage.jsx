@@ -139,7 +139,9 @@ export function CandidateLoginPage() {
       `}</style>
 
       {/* LEFT — form */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px, 5vw, 56px)', animation: 'npFormIn 0.6s ease-out 0.08s both' }}>
+      {/* minWidth 0: ô này là grid item nên mặc định không co dưới min-content
+          của form, khiến trang tràn ngang trên điện thoại. */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0, padding: 'clamp(16px, 5vw, 56px)', animation: 'npFormIn 0.6s ease-out 0.08s both' }}>
         <form onSubmit={handleSubmit} noValidate style={{ width: '100%', maxWidth: '410px' }}>
           <p style={{ fontSize: '0.82rem', fontWeight: '800', letterSpacing: '0.04em', textTransform: 'uppercase', color: RED, margin: '0 0 10px' }}>Đăng nhập ứng viên</p>
           <h2 style={{ fontSize: 'clamp(1.8rem, 3vw, 2.4rem)', fontWeight: '800', letterSpacing: '-0.03em', color: INK, margin: '0 0 8px' }}>Chào mừng trở lại</h2>

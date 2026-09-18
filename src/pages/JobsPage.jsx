@@ -817,8 +817,12 @@ export function JobsPage() {
         @media (max-width: 560px) {
           .jb-filterbar { top: 65px; }
           .jb-search button { padding: 0 15px; }
-          .jb-org-tabs { width: 100%; }
-          .jb-org-tab { flex: 1; justify-content: center; }
+          /* Ba nhãn dài không chia được đều trên màn hẹp: "Doanh nghiệp tuyển
+             dụng" vỡ thành 3 dòng trong khi nhãn khác chỉ 1–2, nhìn rất lởm
+             chởm. Xếp dọc, mỗi tab một dòng, số đếm đẩy sang phải. */
+          .jb-org-tabs { width: 100%; flex-direction: column; flex-wrap: nowrap; }
+          .jb-org-tab { width: 100%; justify-content: flex-start; white-space: nowrap; }
+          .jb-org-tab .jb-org-count { margin-left: auto; }
         }
       `}</style>
 
