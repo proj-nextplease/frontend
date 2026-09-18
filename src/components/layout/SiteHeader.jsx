@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  ArrowRight, House, BriefcaseBusiness, MessagesSquare, FileText, FileSignature,
+  ArrowRight, House, BriefcaseBusiness, MessagesSquare, FileText,
   Compass, Bookmark, ClipboardCheck, WalletCards, ChevronDown, LogOut,
 } from 'lucide-react';
 import { Button } from '../astryx/Button.jsx';
 import { useAuthModal } from '../../context/AuthModalContext.jsx';
-import { getStoredToken } from '../../lib/authStorage.js';
 import { logout } from '../../api/httpClient.js';
 import { UserAvatar } from '../UserAvatar.jsx';
 import { clearMyProfileCache, useMyProfile } from '../../lib/useMyProfile.js';
@@ -45,13 +44,6 @@ export function SiteHeader() {
   // Trước khi Supabase trả lời thì tin vào token đang lưu, để avatar không nháy.
   const signedIn = sessionSignedIn ?? hasToken;
   const menuRef = useRef(null);
-
-  const handlePortfolioClick = (e) => {
-    if (!getStoredToken()) {
-      e.preventDefault();
-      openLoginModal('candidate');
-    }
-  };
 
   // Theo dõi phiên Supabase để menu tắt ngay khi phiên hết hạn ở tab khác.
   useEffect(() => {
@@ -106,7 +98,7 @@ export function SiteHeader() {
   const homeActive = pathname === '/';
   const jobsActive = pathname === '/jobs';
   const discussionActive = pathname === '/thao-luan';
-  const cvActive = pathname === '/tao-cv';
+  const portfolioActive = pathname === '/tao-portfolio';
 
   return (
     <div style={{
@@ -165,8 +157,9 @@ export function SiteHeader() {
             <Link to="/" className={`nph-navlink${homeActive ? ' active' : ''}`}><House size={17} /> Trang chủ</Link>
             <Link to="/jobs" className={`nph-navlink${jobsActive ? ' active' : ''}`}><BriefcaseBusiness size={17} /> Việc làm</Link>
             <Link to="/thao-luan" className={`nph-navlink${discussionActive ? ' active' : ''}`}><MessagesSquare size={17} /> Thảo luận</Link>
-            <Link to="/portfolio" className="nph-navlink" onClick={handlePortfolioClick}><FileText size={17} /> Tạo portfolio</Link>
-            <Link to="/tao-cv" className={`nph-navlink${cvActive ? ' active' : ''}`}><FileSignature size={17} /> Tạo CV</Link>
+            {/* Trỏ về trang giới thiệu chứ không vào thẳng trình dựng: khách
+                vãng lai cần biết Portfolio là gì trước khi bị hỏi đăng nhập. */}
+            <Link to="/tao-portfolio" className={`nph-navlink${portfolioActive ? ' active' : ''}`}><FileText size={17} /> Tạo portfolio</Link>
           </div>
           <div className="nph-actions">
             <Link to="/businesses" target="_blank" rel="noopener noreferrer" className="nph-navlink nph-nav-recruiter">Dành cho nhà tuyển dụng</Link>

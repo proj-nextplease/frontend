@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowRight, ShieldCheck, FileText, Sparkles, Download, QrCode,
+  ArrowRight, ShieldCheck, Sparkles, Award, BriefcaseBusiness,
   ChevronDown, CircleCheck, Layers, Clock,
 } from 'lucide-react';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
@@ -24,62 +24,63 @@ const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 const BENEFITS = [
   {
     kicker: 'BẠN SẼ ĐƯỢC #1',
-    title: 'Điền một lần, dùng cho mọi nơi',
-    body: 'CV lấy thẳng từ Portfolio bạn đã dựng — kinh nghiệm, kỹ năng, minh chứng. '
-        + 'Không phải gõ lại từ đầu mỗi lần ứng tuyển, và sửa ở một chỗ thì mọi bản đều đúng.',
-    icon: Layers,
-    points: ['Không nhập trùng dữ liệu', 'Sửa một nơi, cập nhật tất cả', 'Luôn khớp với hồ sơ công khai'],
+    title: 'Minh chứng do tổ chức xác nhận, không phải lời tự khai',
+    body: 'Mỗi công việc hay Quest bạn hoàn thành qua nextplease đều được chính tổ chức đó xác nhận '
+        + 'và cấp Verified Proof of Work. Nhà tuyển dụng bấm vào là thấy ai xác nhận, xác nhận khi nào.',
+    icon: ShieldCheck,
+    points: ['Dấu xác thực gắn với từng kinh nghiệm', 'Điểm uy tín RS tăng theo việc đã làm', 'Kiểm chứng được trong một chạm'],
   },
   {
     kicker: 'BẠN SẼ ĐƯỢC #2',
-    title: 'Minh chứng đã xác thực đi cùng CV',
-    body: 'Mỗi kinh nghiệm được duyệt đều mang dấu Verified Proof of Work. '
-        + 'CV của bạn không chỉ nói bạn đã làm gì — nó dẫn thẳng tới bằng chứng.',
-    icon: ShieldCheck,
-    points: ['Dấu xác thực do tổ chức cấp', 'Mã QR dẫn về portfolio sống', 'Nhà tuyển dụng kiểm chứng trong một chạm'],
+    title: 'Một trang mang cá tính của riêng bạn',
+    body: 'Nhân vật 3D bạn tự tạo, ảnh bìa bạn tự chọn, và một đường dẫn mang tên bạn. '
+        + 'Không phải một mẫu hồ sơ ai cũng giống ai.',
+    icon: Sparkles,
+    points: ['Nhân vật 3D tuỳ chỉnh', 'Ảnh bìa tự căn khung', 'Đường dẫn riêng dạng /p/ten-cua-ban'],
   },
   {
     kicker: 'BẠN SẼ ĐƯỢC #3',
-    title: 'Bố cục sạch, máy đọc được',
-    body: 'Một cột, phông chữ hệ thống, không bảng biểu lồng nhau — dạng mà phần mềm '
-        + 'lọc hồ sơ của doanh nghiệp đọc được. Xuất PDF để nộp qua email, hoặc gửi link để người ta xem bản sống.',
-    icon: FileText,
-    points: ['Bố cục thân thiện với ATS', 'Xuất PDF một chạm', 'Hoặc chia sẻ bằng link riêng'],
+    title: 'Dựng một lần, dùng ở mọi nơi',
+    body: 'Chia sẻ bằng link để người đọc thấy bản sống luôn cập nhật, hoặc xuất PDF khi cần nộp '
+        + 'qua email. Ứng tuyển trong hệ thống thì chỉ một chạm, không phải đính kèm gì thêm.',
+    icon: Layers,
+    points: ['Ứng tuyển một chạm', 'Xuất PDF khi cần tệp', 'Sửa một nơi, mọi nơi đều đúng'],
   },
 ];
 
 const FAQS = [
   {
-    q: 'CV và Portfolio ở nextplease khác nhau thế nào?',
-    a: 'Portfolio là hồ sơ sống: một đường link luôn cập nhật, có minh chứng đã xác thực, điểm uy tín (RS) '
-     + 'và kinh nghiệm được tổ chức duyệt. CV là bản rút gọn của chính hồ sơ đó, đóng thành PDF để nộp qua '
-     + 'email hoặc các hệ thống tuyển dụng chỉ nhận tệp. Cùng một nguồn dữ liệu, hai cách trình bày.',
+    q: 'Portfolio ở nextplease khác gì CV thường?',
+    a: 'CV là tệp tĩnh do bạn tự khai, người đọc chỉ có thể tin hoặc không. Portfolio ở đây là hồ sơ sống: '
+     + 'mỗi kinh nghiệm đều có thể được tổ chức xác nhận, kèm điểm uy tín (RS) và cấp độ tích luỹ theo '
+     + 'những việc bạn thật sự đã làm. Cần tệp để nộp qua email thì bạn vẫn xuất PDF được.',
   },
   {
-    q: 'Tôi có phải nhập lại thông tin không?',
-    a: 'Không. CV đọc trực tiếp từ Portfolio của bạn. Nếu chưa dựng Portfolio, bạn sẽ được đưa qua bước đó '
-     + 'trước — làm một lần rồi dùng mãi.',
+    q: 'Tôi chưa có kinh nghiệm gì thì dựng portfolio để làm gì?',
+    a: 'Đó chính là lúc nên bắt đầu. Bạn dựng hồ sơ trước, rồi nhận Quest và công việc nhỏ từ CLB hay '
+     + 'doanh nghiệp ngay trên nền tảng — mỗi việc hoàn thành sẽ thành một minh chứng đã xác thực trong '
+     + 'hồ sơ. Sau vài tháng bạn có thứ để đưa ra, thay vì một trang trắng.',
   },
   {
-    q: 'Minh chứng được xác thực nghĩa là gì?',
-    a: 'Khi bạn hoàn thành một công việc hoặc Quest qua nextplease, tổ chức đó xác nhận và hệ thống cấp '
-     + 'Verified Proof of Work. Đây là điểm khác biệt so với CV tự khai: người đọc bấm vào là thấy ai đã xác nhận, '
-     + 'xác nhận khi nào.',
+    q: 'Portfolio có miễn phí không?',
+    a: 'Có. Dựng hồ sơ, tích minh chứng, chia sẻ link và ứng tuyển đều miễn phí. Gói trả phí chỉ mở thêm '
+     + 'giao diện nâng cao cho trang công khai, không khoá dữ liệu hay khả năng ứng tuyển của bạn.',
   },
   {
-    q: 'CV có miễn phí không?',
-    a: 'Có. Dựng Portfolio, xuất CV PDF và chia sẻ link đều miễn phí. Các gói trả phí chỉ mở thêm giao diện '
-     + 'nâng cao cho trang công khai, không khoá dữ liệu hay khả năng ứng tuyển của bạn.',
+    q: 'Verified Proof of Work là gì?',
+    a: 'Là dấu xác nhận do chính tổ chức bạn làm việc cùng cấp, sau khi bạn hoàn thành công việc hoặc Quest. '
+     + 'Nó được lưu vào hồ sơ và ai xem cũng kiểm chứng được — đây là điểm khiến hồ sơ của bạn đáng tin '
+     + 'hơn một bản tự khai.',
   },
   {
-    q: 'CV nên dài bao nhiêu?',
-    a: 'Với sinh viên và người mới đi làm, một trang là đủ và cũng là điều nhà tuyển dụng mong đợi. '
-     + 'Hãy ưu tiên những kinh nghiệm có minh chứng, thay vì liệt kê mọi hoạt động từng tham gia.',
+    q: 'Ai xem được portfolio của tôi?',
+    a: 'Chỉ những người bạn gửi link. Bạn cũng có thể chuyển hồ sơ sang chế độ riêng tư bất cứ lúc nào; '
+     + 'khi đó link chia sẻ sẽ không mở được với người ngoài.',
   },
   {
-    q: 'Nhà tuyển dụng có xem được portfolio từ CV không?',
-    a: 'Có. Bản PDF mang theo đường dẫn riêng của bạn (dạng /p/ten-cua-ban) và mã QR, nên từ tệp tĩnh '
-     + 'người đọc vẫn sang được bản sống có đầy đủ minh chứng.',
+    q: 'Tôi có đổi được đường dẫn của mình không?',
+    a: 'Được. Hệ thống tự sinh một đường dẫn từ tên bạn ngay khi tạo hồ sơ, và bạn đổi lại bất cứ lúc nào '
+     + 'trong Khu vực của tôi — miễn là chưa có người khác dùng.',
   },
 ];
 
@@ -111,8 +112,8 @@ function FaqItem({ item, open, onToggle }) {
   );
 }
 
-/** Ảnh minh hoạ tờ CV — dựng bằng CSS nên không phải tải thêm tài nguyên. */
-function CvSheetArt() {
+/** Ảnh minh hoạ tấm hồ sơ — dựng bằng CSS nên không phải tải thêm tài nguyên. */
+function PortfolioSheetArt() {
   const line = (w, dim = false) => (
     <span style={{ display: 'block', height: 7, width: w, borderRadius: 99, background: dim ? '#e6efec' : '#cfe6de' }} />
   );
@@ -157,7 +158,7 @@ function CvSheetArt() {
   );
 }
 
-export function CvBuilderLandingPage() {
+export function PortfolioLandingPage() {
   const { openLoginModal } = useAuthModal();
   const [openFaq, setOpenFaq] = useState(0);
 
@@ -218,30 +219,30 @@ export function CvBuilderLandingPage() {
                 margin: '18px 0 16px', fontSize: 'clamp(2.1rem, 4.4vw, 3.4rem)', fontWeight: 800,
                 lineHeight: 1.12, letterSpacing: '-0.02em', color: '#fff',
               }}>
-                Tạo CV từ hồ sơ đã được xác thực của bạn
+                Hồ sơ năng lực có minh chứng, không chỉ là lời tự khai
               </h1>
 
               <p style={{ margin: 0, maxWidth: '54ch', fontSize: 'clamp(1rem, 1.4vw, 1.12rem)', lineHeight: 1.7, color: 'rgba(255,255,255,0.88)' }}>
-                Không phải một biểu mẫu trống nữa. CV lấy thẳng từ Portfolio bạn đã dựng, mang theo
-                minh chứng do tổ chức xác nhận — thứ mà CV tự khai không có.
+                Dựng Portfolio với nhân vật 3D của riêng bạn, tích minh chứng được tổ chức xác nhận
+                qua từng công việc, và chia sẻ bằng một đường dẫn mang tên bạn.
               </p>
 
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 30 }}>
                 <Link to="/portfolio" onClick={guard} className="cv-cta primary">
-                  Tạo CV ngay <ArrowRight size={17} />
+                  Tạo Portfolio ngay <ArrowRight size={17} />
                 </Link>
-                <Link to="/candidates/dashboard/overview" onClick={guard} className="cv-cta ghost">
-                  <Download size={16} /> Xuất CV từ Portfolio
+                <Link to="/jobs" className="cv-cta ghost">
+                  <BriefcaseBusiness size={16} /> Xem cơ hội đang mở
                 </Link>
               </div>
 
               <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginTop: 26, fontSize: '0.86rem', color: 'rgba(255,255,255,0.8)' }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><CircleCheck size={15} /> Không cần thẻ thanh toán</span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Clock size={15} /> Xong trong vài phút</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Clock size={15} /> Dựng xong trong vài phút</span>
               </div>
             </div>
 
-            <CvSheetArt />
+            <PortfolioSheetArt />
           </div>
         </div>
       </section>
@@ -285,13 +286,13 @@ export function CvBuilderLandingPage() {
       {/* ── Dải nhấn: khác biệt so với CV thường ── */}
       <section style={{ background: INK, color: '#fff', marginTop: 'clamp(32px, 5vw, 56px)' }}>
         <div style={{ ...INNER, padding: 'clamp(44px, 6vw, 72px) 20px', display: 'grid', gap: 26, textAlign: 'center' }}>
-          <QrCode size={40} strokeWidth={1.4} style={{ color: EMERALD, justifySelf: 'center' }} />
+          <Award size={40} strokeWidth={1.4} style={{ color: EMERALD, justifySelf: 'center' }} />
           <h2 style={{ margin: 0, fontSize: 'clamp(1.35rem, 2.6vw, 2rem)', fontWeight: 800, lineHeight: 1.3, color: '#fff' }}>
-            Một tệp PDF tĩnh vẫn dẫn về hồ sơ sống của bạn
+            Mỗi việc bạn làm đều cộng vào hồ sơ
           </h2>
           <p style={{ margin: '0 auto', maxWidth: '62ch', color: 'rgba(255,255,255,0.78)', fontSize: '1rem', lineHeight: 1.75 }}>
-            CV mang theo đường dẫn riêng và mã QR. Nhà tuyển dụng đọc bản in vẫn sang được portfolio
-            đầy đủ minh chứng — không phải tin vào lời tự khai.
+            Nhận Quest và công việc nhỏ ngay trên nền tảng. Hoàn thành thì tổ chức xác nhận, hồ sơ có
+            thêm một minh chứng, điểm uy tín và cấp độ của bạn đi lên. Bắt đầu từ con số không cũng được.
           </p>
           <Link to="/portfolio" onClick={guard} className="cv-cta primary" style={{ justifySelf: 'center' }}>
             Bắt đầu miễn phí <ArrowRight size={17} />
@@ -307,7 +308,7 @@ export function CvBuilderLandingPage() {
               Câu hỏi thường gặp
             </h2>
             <p style={{ marginTop: 14, color: MUTED, fontSize: '0.97rem', lineHeight: 1.7 }}>
-              Chưa rõ chỗ nào? Đây là những thắc mắc hay gặp nhất về CV và Portfolio.
+              Chưa rõ chỗ nào? Đây là những thắc mắc hay gặp nhất về Portfolio.
             </p>
           </div>
           <div>
