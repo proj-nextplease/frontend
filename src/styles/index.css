@@ -8846,8 +8846,15 @@ img {
 }
 
 /* ============================================================
-   Candidate dashboard — macOS-style bottom Dock navigation
-   (replaces the old vertical sidebar; GenZ-friendly floating bar)
+   Candidate dashboard — thanh tab điều hướng khu vực (bottom bar)
+   ------------------------------------------------------------
+   Trước đây đây là một dock kiểu macOS: chỉ có icon, tên hiện ra
+   dưới dạng tooltip khi hover. Sau khi SiteHeader được thêm vào
+   trang này, dock không còn phải gánh điều hướng cấp site nữa —
+   nó chỉ còn là tab giữa các mục BÊN TRONG Khu vực của tôi. Vì vậy
+   đổi sang pill có chữ: đọc được ngay, không cần hover, và hoạt
+   động trên cảm ứng. Bảng màu lấy từ SiteHeader (teal/mint) để
+   header và thanh tab đọc như một hệ.
    ============================================================ */
 .np-dock {
   position: fixed;
@@ -8860,153 +8867,74 @@ img {
 
 .np-dock-inner {
   display: flex;
-  align-items: flex-end;
-  flex-wrap: wrap;
+  align-items: center;
+  flex-wrap: nowrap;
   justify-content: center;
-  gap: 5px;
-  padding: 9px 12px;
-  border-radius: 26px;
-  background: rgba(255, 255, 255, 0.6);
+  gap: 2px;
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 24px 48px rgba(29, 19, 32, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  /* Deliberately NOT overflow-x:auto + overflow-y:visible — per the CSS spec,
-     when one axis is scroll/auto/hidden, a "visible" other axis computes to
-     "auto" too, which was silently clipping the hover lift (translateY) and
-     the tooltip label (positioned above the icon) — both looked like "no
-     hover effect at all" (2026-07-06 feedback). Wrapping instead of
-     scrolling keeps overflow fully visible on both axes. */
-  overflow: visible;
+  border: 1px solid #e2efe9;
+  box-shadow: 0 18px 40px rgba(15, 46, 43, 0.16), 0 2px 6px rgba(15, 46, 43, 0.06);
+  /* Cuộn ngang khi có nhiều tab tổ chức được mở. Không còn hiệu ứng
+     nhấc lên hay tooltip nào để bị overflow cắt nữa. */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
 }
 
-/* ── Dock trên màn hẹp ──
-   Bản gốc để flex-wrap: wrap với max-width: calc(100vw - 24px). Ở 375px thì
-   9 mục x 50px không đủ chỗ nên nó gập thành một khối 188x201px nổi GIỮA màn
-   hình, đè lên thanh EXP và cả ba nút hành động của hero — người dùng điện
-   thoại không bấm được "Chỉnh sửa Portfolio 3D" / "Sao chép link" / "Xuất PDF".
-
-   Ở đây đổi thành một thanh ngang sát đáy, cuộn ngang. Ghi chú phía trên cảnh
-   báo overflow-x sẽ cắt hiệu ứng nhấc lên và tooltip — đúng, nhưng cả hai đều
-   là hiệu ứng hover, mà màn cảm ứng thì không có hover. */
-@media (max-width: 900px) {
-  .np-dock {
-    left: 0;
-    right: 0;
-    bottom: 0;
-    transform: none;
-    max-width: 100%;
-  }
-
-  .np-dock-inner {
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-    border-radius: 18px 18px 0 0;
-    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-    background: rgba(255, 255, 255, 0.92);
-  }
-
-  .np-dock-inner::-webkit-scrollbar { display: none; }
-
-  /* Hiệu ứng hover vô nghĩa trên cảm ứng, và bị overflow cắt mất. */
-  .np-dock-item:hover { transform: none; box-shadow: none; background: rgba(255, 255, 255, 0.65); }
-  .np-dock-label { display: none; }
-
-  /* Thanh dock giờ thấp hơn khối gập cũ nên đệm đáy giảm theo. */
-  .candidate-portal-main { padding-bottom: 96px; }
-}
+.np-dock-inner::-webkit-scrollbar { display: none; }
 
 .np-dock-item {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
+  gap: 7px;
+  height: 40px;
+  padding: 0 14px;
   flex-shrink: 0;
-  border-radius: 16px;
+  border-radius: 999px;
   border: none;
-  background: rgba(255, 255, 255, 0.65);
-  color: var(--c-ink);
+  background: transparent;
+  color: #4a635e;
+  font-size: 0.84rem;
+  font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
   text-decoration: none;
-  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 160ms ease, box-shadow 160ms ease;
+  transition: background-color 160ms ease, color 160ms ease;
 }
 
+/* Teal đậm (#0f766e) chứ không phải #0d9488: chữ 13px cần tỉ lệ tương
+   phản 4.5. Trắng trên #0d9488 chỉ đạt 3.38–3.74; trên #0f766e đạt 5.5. */
 .np-dock-item:hover {
-  transform: translateY(-14px) scale(1.16);
-  background: #ffffff;
-  box-shadow: 0 16px 28px rgba(29, 19, 32, 0.22), 0 0 0 2px rgba(229, 83, 63, 0.35);
-  z-index: 2;
-}
-
-.np-dock-item:active {
-  transform: translateY(-8px) scale(1.05);
+  background: #e7f7f0;
+  color: #0f766e;
 }
 
 .np-dock-item.active {
-  background: var(--c-red-soft);
-  color: var(--c-red);
-}
-
-.np-dock-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: -7px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--c-red);
+  background: #0f766e;
+  color: #ffffff;
 }
 
 .np-dock-label {
-  position: absolute;
-  bottom: calc(100% + 16px);
-  left: 50%;
-  transform: translateX(-50%) translateY(6px) scale(0.92);
-  background: rgba(20, 16, 20, 0.94);
-  color: #fff;
-  font-size: 0.74rem;
-  font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 9px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 150ms ease, transform 150ms ease;
-  z-index: 5;
-}
-
-/* Little arrow pointing from the tooltip down to its icon. */
-.np-dock-label::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: rgba(20, 16, 20, 0.94);
-}
-
-.np-dock-item:hover .np-dock-label {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0) scale(1);
+  font: inherit;
+  color: inherit;
 }
 
 .np-dock-badge {
   position: absolute;
-  top: -4px;
-  right: -6px;
-  font-size: 0.56rem;
+  top: 1px;
+  right: 4px;
+  font-size: 0.54rem;
   font-weight: 900;
-  padding: 2px 5px;
+  padding: 1px 5px;
   border-radius: 999px;
   text-transform: uppercase;
-  line-height: 1.3;
+  line-height: 1.4;
 }
 .np-dock-badge-new { background: #d97706; color: #fff; }
 .np-dock-badge-hot { background: #f59e0b; color: #fff; }
@@ -9014,20 +8942,21 @@ img {
 
 .np-dock-sep {
   width: 1px;
-  height: 32px;
-  background: rgba(29, 19, 32, 0.14);
-  margin: 0 2px;
+  height: 22px;
+  background: #e2efe9;
+  margin: 0 5px;
   align-self: center;
   flex-shrink: 0;
 }
 
-.np-dock-org-tab { width: auto; min-width: 50px; padding: 0 10px; gap: 4px; }
+.np-dock-org-tab { padding: 0 12px; gap: 7px; }
 .np-dock-org-logo {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 6px;
   color: #fff;
-  font-size: 0.62rem;
+  font-size: 0.6rem;
+
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -9052,115 +8981,38 @@ img {
 }
 .np-dock-org-tab:hover .np-dock-tab-close { display: flex; }
 
-.np-dock-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--c-red);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 0.78rem;
-  flex-shrink: 0;
-}
-.np-dock-avatar-lg { width: 42px; height: 42px; font-size: 0.9rem; }
+/* ── Thanh tab trên màn hẹp ──
+   Ở 375px không có cách nào nhét 9 pill có chữ vừa một hàng, nên thanh
+   bám sát đáy và cuộn ngang; tab đang mở được scroll-into-view bởi
+   trình duyệt khi nó nhận focus. Vẫn giữ chữ — đó là điểm của lần đổi
+   này — chỉ thu nhỏ padding lại. */
+@media (max-width: 900px) {
+  .np-dock {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    max-width: 100%;
+  }
 
-.np-dock-profile-wrap { position: relative; }
+  .np-dock-inner {
+    justify-content: flex-start;
+    border-radius: 16px 16px 0 0;
+    padding: 7px 10px calc(7px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.95);
+  }
 
-.np-dock-profile-menu {
-  position: absolute;
-  bottom: calc(100% + 16px);
-  right: -6px;
-  width: 250px;
-  background: var(--c-surface);
-  border: 1px solid var(--c-line);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 24px 48px rgba(29, 19, 32, 0.22);
-  animation: npDockMenuIn 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
+  .np-dock-item { height: 38px; padding: 0 12px; font-size: 0.8rem; }
 
-@keyframes npDockMenuIn {
-  from { opacity: 0; transform: translateY(8px) scale(0.97); }
-  to { opacity: 1; transform: none; }
-}
+  /* Hover vô nghĩa trên cảm ứng. */
+  .np-dock-item:hover { background: transparent; color: #4a635e; }
+  .np-dock-item.active:hover { background: #0f766e; color: #fff; }
 
-.np-dock-profile-menu-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--c-line);
-}
-
-.np-dock-profile-menu-name {
-  font-size: 0.92rem;
-  font-weight: 800;
-  color: var(--c-ink);
-}
-
-.np-dock-profile-menu-level {
-  font-size: 0.76rem;
-  color: var(--c-muted);
-  margin-top: 2px;
-}
-
-.np-dock-profile-wallet {
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 8px;
-}
-
-.np-dock-profile-logout {
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: none;
-  background: rgba(239, 68, 68, 0.08);
-  color: #ef4444;
-  font-weight: 700;
-  font-size: 0.86rem;
-  padding: 10px 12px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background-color 160ms ease;
-}
-.np-dock-profile-logout:hover { background: rgba(239, 68, 68, 0.16); }
-
-.np-dock-profile-settings {
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: none;
-  background: var(--c-disabled);
-  color: var(--c-ink);
-  font-weight: 700;
-  font-size: 0.86rem;
-  padding: 10px 12px;
-  border-radius: 12px;
-  cursor: pointer;
-  margin-bottom: 8px;
-  transition: background-color 160ms ease;
-}
-.np-dock-profile-settings:hover { background: var(--c-line); }
-
-@media (max-width: 640px) {
-  .np-dock { bottom: 10px; }
-  .np-dock-inner { padding: 7px 9px; gap: 3px; }
-  .np-dock-item { width: 44px; height: 44px; border-radius: 14px; }
-  .np-dock-item:hover { transform: translateY(-10px) scale(1.1); }
+  .candidate-portal-main { padding-bottom: 92px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .np-dock-item, .np-dock-label { transition: none !important; }
-  .np-dock-item:hover { transform: none !important; }
+  .np-dock-item { transition: none !important; }
 }
 
 /* ─── Overview Tab ─── */
@@ -13253,28 +13105,21 @@ img {
 :root[data-theme='dark'] .candidate-sidebar-toggle:hover { background: #23272f; }
 :root[data-theme='dark'] .checklist-item:hover { border-color: rgba(255, 111, 89, 0.35); }
 
-/* Bottom Dock — dark glass instead of light glass. */
+/* Thanh tab khu vực — kính tối thay vì kính sáng. */
 :root[data-theme='dark'] .np-dock-inner {
-  background: rgba(24, 22, 26, 0.7);
+  background: rgba(24, 28, 27, 0.82);
   border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
 }
-:root[data-theme='dark'] .np-dock-item {
-  background: rgba(255, 255, 255, 0.06);
-  color: #e8ecf2;
-}
-:root[data-theme='dark'] .np-dock-item:hover {
-  background: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.4);
-}
-:root[data-theme='dark'] .np-dock-item.active {
-  background: rgba(229, 83, 63, 0.2);
-}
+:root[data-theme='dark'] .np-dock-item { color: #b9c9c5; }
+:root[data-theme='dark'] .np-dock-item:hover { background: rgba(13, 148, 136, 0.2); color: #5eead4; }
+:root[data-theme='dark'] .np-dock-item.active { background: #0d9488; color: #041c1a; }
 :root[data-theme='dark'] .np-dock-sep { background: rgba(255, 255, 255, 0.12); }
-:root[data-theme='dark'] .np-dock-profile-menu { background: #181b21; border-color: rgba(255, 255, 255, 0.1); }
-:root[data-theme='dark'] .np-dock-profile-menu-header { border-color: rgba(255, 255, 255, 0.1); }
-:root[data-theme='dark'] .np-dock-profile-settings { background: rgba(255, 255, 255, 0.06); color: #e8ecf2; }
-:root[data-theme='dark'] .np-dock-profile-settings:hover { background: rgba(255, 255, 255, 0.12); }
+@media (max-width: 900px) {
+  :root[data-theme='dark'] .np-dock-inner { background: rgba(20, 24, 23, 0.96); }
+  :root[data-theme='dark'] .np-dock-item:hover { background: transparent; color: #b9c9c5; }
+  :root[data-theme='dark'] .np-dock-item.active:hover { background: #0d9488; color: #041c1a; }
+}
 
 /* Candidate Premium store — dark surfaces + badge contrast. */
 :root[data-theme='dark'] .candidate-premium-pass-card,
@@ -15664,3 +15509,53 @@ p { text-wrap: pretty; }
 
 
 
+
+/* CTA nhỏ nằm ngay sau câu "bước tiếp theo" ở tiêu đề dashboard. */
+.candidate-nextstep-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 8px;
+  padding: 3px 11px;
+  border: none;
+  border-radius: 999px;
+  background: #e7f7f0;
+  color: #0f766e;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background-color 160ms ease;
+}
+.candidate-nextstep-cta:hover { background: #cdeee1; }
+:root[data-theme='dark'] .candidate-nextstep-cta { background: rgba(13, 148, 136, 0.22); color: #5eead4; }
+:root[data-theme='dark'] .candidate-nextstep-cta:hover { background: rgba(13, 148, 136, 0.34); }
+
+/* Dải nội dung có hoạ tiết sóng trong Khu vực của tôi. Cùng cách dùng với
+   trang chủ: section position:relative, WaveBg là con đầu tiên, nội dung
+   nằm trong .np-band-inner ở z-index 1. */
+.np-band {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid #e2efe9;
+  padding: 20px;
+}
+.np-band-inner { position: relative; z-index: 1; }
+.np-band-mint { background: linear-gradient(160deg, #eafaf3 0%, #d6f3e6 100%); }
+.np-band-mint2 { background: linear-gradient(165deg, #f3faf6 0%, #e6f6ef 100%); }
+
+:root[data-theme='dark'] .np-band { border-color: rgba(255, 255, 255, 0.08); }
+/* Nền sáng của dải sóng sẽ chọi với chữ sáng ở theme tối — đổi sang nền tối
+   cùng tông teal, hoạ tiết SVG vẫn hợp vì nó dùng alpha chứ không dùng màu đặc. */
+:root[data-theme='dark'] .np-band-mint { background: linear-gradient(160deg, #10201e 0%, #0e2a27 100%); }
+:root[data-theme='dark'] .np-band-mint2 { background: linear-gradient(165deg, #121d1c 0%, #0f2422 100%); }
+
+/* Trên màn hẹp thanh tab khu vực bám sát đáy (cao ~54px kể cả safe-area),
+   nút đổi giao diện ở bottom:20px sẽ đè lên nó. Đẩy lên trên thanh tab. */
+@media (max-width: 900px) {
+  body:has(.candidate-portal-layout) .np-floating-theme-toggle {
+    bottom: calc(74px + env(safe-area-inset-bottom));
+  }
+}
