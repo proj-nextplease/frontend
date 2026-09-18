@@ -12,6 +12,7 @@ import { IdealCompanion } from '../components/IdealCompanion.jsx';
 import { PartnerLogos } from '../components/PartnerLogos.jsx';
 import { WaveBg, WAVE_BASE } from '../components/WaveBg.jsx';
 import { prefetchJobs } from '../api/jobsCache.js';
+import { Mascot } from 'page-mascot';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 
@@ -150,6 +151,18 @@ export function HomePage() {
       <section style={{ background: WAVE_BASE.emerald, width: '100%', position: 'relative', overflow: 'hidden' }}>
         <WaveBg variant="emerald" pattern="waves" />
         <div style={{ ...INNER, position: 'relative', zIndex: 1, padding: 'clamp(48px, 6vw, 80px) 20px 0px', textAlign: 'center' }}>
+          {/* Linh vật của trang: nhìn theo con trỏ, nháy mắt khi bị bấm.
+              Tự tắt phần bám con trỏ trên thiết bị không có chuột, và tôn
+              trọng prefers-reduced-motion — hai thứ này do thư viện lo. */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'clamp(4px, 1.5vw, 14px)' }}>
+            <Mascot
+              directions="/mascots/frog-directions.webp"
+              reactions="/mascots/frog-reactions.webp"
+              size={132}
+              label="Linh vật nextplease"
+            />
+          </div>
+
           <h1 style={{ fontSize: 'clamp(1.9rem, 5vw, 3.4rem)', fontWeight: 800, lineHeight: 1.12, letterSpacing: '-0.03em', color: '#fff', margin: 0, minHeight: '2.3em' }}>
             {typed}<span className="np-hero-cursor" />
           </h1>
