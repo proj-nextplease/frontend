@@ -97,8 +97,8 @@ function FaqItem({ item, open, onToggle }) {
         aria-expanded={open}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: 16, padding: '20px 4px', background: 'none', border: 'none', cursor: 'pointer',
-          textAlign: 'left', fontSize: '1.02rem', fontWeight: 700, color: INK,
+          gap: 16, padding: '24px 4px', background: 'none', border: 'none', cursor: 'pointer',
+          textAlign: 'left', fontSize: '1.08rem', fontWeight: 700, color: INK,
         }}
       >
         {item.q}
@@ -136,7 +136,7 @@ function PortfolioPreview() {
   return (
     <div style={{ position: 'relative' }} aria-hidden="true">
       <div style={{
-        position: 'relative', width: 'min(390px, 100%)', margin: '0 auto',
+        position: 'relative', width: 'min(430px, 100%)', margin: '0 auto',
         borderRadius: 24, background: '#fff', overflow: 'hidden',
         boxShadow: '0 30px 70px rgba(4,47,42,0.3)',
       }}>
@@ -221,17 +221,22 @@ export function PortfolioLandingPage() {
         .pf-cta.ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.55); }
         .pf-cta.solid { background:${TEAL}; color:#fff; box-shadow:0 12px 28px rgba(13,148,136,0.28); }
 
-        .pf-hero { display:grid; grid-template-columns: 1.06fr 0.94fr; gap:clamp(32px, 5vw, 64px);
-                   align-items:center; padding: clamp(46px, 7vw, 84px) 0 clamp(56px, 8vw, 96px); }
+        /* Nhịp lấy theo trang tham chiếu: hero của họ cao 788px ở 1400px, mỗi
+           phần nội dung gần một màn hình. Bản trước của ta chỉ thoáng bằng nửa
+           nên đọc bị dồn. */
+        .pf-hero { display:grid; grid-template-columns: 1.06fr 0.94fr; gap:clamp(32px, 5vw, 72px);
+                   align-items:center; min-height:min(788px, 82vh);
+                   padding: clamp(56px, 8vw, 110px) 0 clamp(64px, 9vw, 120px); }
 
         .pf-steps { display:grid; grid-template-columns: repeat(3, 1fr); gap:clamp(18px, 2.4vw, 28px); }
-        .pf-step { position:relative; padding:28px 24px; border-radius:22px; background:#fff;
+        .pf-step { position:relative; padding:clamp(28px, 3vw, 40px) clamp(24px, 2.6vw, 32px);
+                   border-radius:26px; background:#fff;
                    border:1px solid ${LINE}; box-shadow:0 12px 30px rgba(4,47,42,0.05); }
 
         /* Bảng so sánh: hai cột nội dung, cột nhãn nằm bên trái. */
         .pf-cmp { display:grid; grid-template-columns: 1.15fr 1fr 1fr; align-items:stretch;
                   border:1px solid ${LINE}; border-radius:22px; overflow:hidden; background:#fff; }
-        .pf-cmp > * { padding:16px 18px; border-bottom:1px solid ${LINE}; font-size:0.94rem; }
+        .pf-cmp > * { padding:clamp(16px, 1.8vw, 22px) clamp(18px, 2vw, 26px); border-bottom:1px solid ${LINE}; font-size:1rem; }
         .pf-cmp > *:nth-child(3n) { background:#f5fbf8; }
         .pf-cmp-head { font-weight:900; font-size:0.9rem !important; letter-spacing:0.02em; }
 
@@ -268,18 +273,18 @@ export function PortfolioLandingPage() {
                   nên giá trị kế thừa từ cha luôn thua và bám theo sáng/tối của
                   hệ điều hành. */}
               <h1 style={{
-                margin: '18px 0 16px', fontSize: 'clamp(2.15rem, 4.6vw, 3.5rem)', fontWeight: 800,
-                lineHeight: 1.1, letterSpacing: '-0.025em', color: '#fff',
+                margin: '22px 0 20px', fontSize: 'clamp(2.3rem, 5vw, 4rem)', fontWeight: 800,
+                lineHeight: 1.08, letterSpacing: '-0.03em', color: '#fff',
               }}>
                 Đây là hồ sơ của bạn sau ba tháng
               </h1>
 
-              <p style={{ margin: 0, maxWidth: '52ch', fontSize: 'clamp(1rem, 1.35vw, 1.12rem)', lineHeight: 1.72, color: 'rgba(255,255,255,0.88)' }}>
+              <p style={{ margin: 0, maxWidth: '50ch', fontSize: 'clamp(1.04rem, 1.5vw, 1.22rem)', lineHeight: 1.75, color: 'rgba(255,255,255,0.88)' }}>
                 Không phải một bản CV tự khai. Là một trang sống, có minh chứng do tổ chức xác nhận,
                 điểm uy tín tích luỹ thật, và một đường dẫn mang tên bạn.
               </p>
 
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 30 }}>
+              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 38 }}>
                 <Link to="/portfolio" onClick={guard} className="pf-cta primary">
                   Dựng hồ sơ của tôi <ArrowRight size={17} />
                 </Link>
@@ -295,12 +300,12 @@ export function PortfolioLandingPage() {
       </section>
 
       {/* ── 2. BA BƯỚC — cách hồ sơ tự lớn lên ── */}
-      <section style={{ ...INNER, padding: 'clamp(56px, 8vw, 96px) 0' }}>
-        <div style={{ textAlign: 'center', maxWidth: '58ch', margin: '0 auto clamp(32px, 4vw, 48px)' }}>
-          <h2 style={{ margin: 0, fontSize: 'clamp(1.7rem, 3.2vw, 2.5rem)', fontWeight: 800, lineHeight: 1.18, letterSpacing: '-0.02em', color: INK }}>
+      <section style={{ ...INNER, padding: 'clamp(72px, 11vw, 140px) 0' }}>
+        <div style={{ textAlign: 'center', maxWidth: '58ch', margin: '0 auto clamp(40px, 5vw, 64px)' }}>
+          <h2 style={{ margin: 0, fontSize: 'clamp(1.9rem, 3.8vw, 3rem)', fontWeight: 800, lineHeight: 1.14, letterSpacing: '-0.025em', color: INK }}>
             Bạn không phải tự nghĩ ra thành tích
           </h2>
-          <p style={{ margin: '14px 0 0', color: MUTED, fontSize: '1.04rem', lineHeight: 1.75 }}>
+          <p style={{ margin: '18px 0 0', color: MUTED, fontSize: 'clamp(1.04rem, 1.4vw, 1.16rem)', lineHeight: 1.78 }}>
             Hồ sơ lớn lên theo việc bạn thật sự làm. Bắt đầu từ con số không cũng được.
           </p>
         </div>
@@ -318,8 +323,8 @@ export function PortfolioLandingPage() {
                 <span style={{ display: 'grid', placeItems: 'center', width: 48, height: 48, borderRadius: 14, background: MINT, color: TEAL }}>
                   <Icon size={23} strokeWidth={2} />
                 </span>
-                <h3 style={{ margin: '16px 0 8px', fontSize: '1.18rem', fontWeight: 800, color: INK }}>{s.title}</h3>
-                <p style={{ margin: 0, color: MUTED, fontSize: '0.95rem', lineHeight: 1.7 }}>{s.body}</p>
+                <h3 style={{ margin: '20px 0 10px', fontSize: 'clamp(1.2rem, 1.5vw, 1.35rem)', fontWeight: 800, color: INK }}>{s.title}</h3>
+                <p style={{ margin: 0, color: MUTED, fontSize: '1rem', lineHeight: 1.75 }}>{s.body}</p>
               </div>
             );
           })}
@@ -328,9 +333,9 @@ export function PortfolioLandingPage() {
 
       {/* ── 3. SO SÁNH — phần thuyết phục chính ── */}
       <section style={{ background: 'linear-gradient(180deg, #f4fbf8 0%, #ffffff 100%)' }}>
-        <div style={{ ...INNER, padding: 'clamp(56px, 8vw, 96px) 0' }}>
-          <div style={{ textAlign: 'center', maxWidth: '54ch', margin: '0 auto clamp(28px, 4vw, 44px)' }}>
-            <h2 style={{ margin: 0, fontSize: 'clamp(1.7rem, 3.2vw, 2.5rem)', fontWeight: 800, lineHeight: 1.18, letterSpacing: '-0.02em', color: INK }}>
+        <div style={{ ...INNER, padding: 'clamp(72px, 11vw, 140px) 0' }}>
+          <div style={{ textAlign: 'center', maxWidth: '54ch', margin: '0 auto clamp(36px, 5vw, 60px)' }}>
+            <h2 style={{ margin: 0, fontSize: 'clamp(1.9rem, 3.8vw, 3rem)', fontWeight: 800, lineHeight: 1.14, letterSpacing: '-0.025em', color: INK }}>
               Cùng một con người, hai cách kể
             </h2>
           </div>
@@ -353,14 +358,14 @@ export function PortfolioLandingPage() {
 
       {/* ── 4. DẢI NHẤN — uy tín tích luỹ ── */}
       <section style={{ background: INK, color: '#fff' }}>
-        <div style={{ ...INNER, padding: 'clamp(52px, 7vw, 84px) 0', display: 'grid', gap: 22, justifyItems: 'center', textAlign: 'center' }}>
+        <div style={{ ...INNER, padding: 'clamp(68px, 10vw, 124px) 0', display: 'grid', gap: 26, justifyItems: 'center', textAlign: 'center' }}>
           <Mascot
             directions="/mascots/frog-directions.webp"
             reactions="/mascots/frog-reactions.webp"
             size={104}
             label="Linh vật nextplease"
           />
-          <h2 style={{ margin: 0, fontSize: 'clamp(1.45rem, 2.8vw, 2.15rem)', fontWeight: 800, lineHeight: 1.28, color: '#fff', maxWidth: '20ch' }}>
+          <h2 style={{ margin: 0, fontSize: 'clamp(1.7rem, 3.4vw, 2.7rem)', fontWeight: 800, lineHeight: 1.2, letterSpacing: '-0.02em', color: '#fff', maxWidth: '20ch' }}>
             Mỗi việc bạn làm đều cộng vào hồ sơ
           </h2>
 
@@ -383,8 +388,31 @@ export function PortfolioLandingPage() {
         </div>
       </section>
 
-      {/* ── 5. FAQ ── */}
-      <section style={{ ...INNER, padding: 'clamp(52px, 7vw, 88px) 0' }}>
+      {/* ── 5. CTA LẶP LẠI — trang tham chiếu nhắc lại lời mời ngay trước FAQ,
+             vì tới đây người đọc đã hiểu sản phẩm và không nên phải cuộn ngược
+             lên đầu để bấm. ── */}
+      <section style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f4fbf8 100%)' }}>
+        <div style={{ ...INNER, padding: 'clamp(64px, 9vw, 112px) 0', textAlign: 'center' }}>
+          <h2 style={{ margin: 0, fontSize: 'clamp(1.8rem, 3.6vw, 2.8rem)', fontWeight: 800, lineHeight: 1.16, letterSpacing: '-0.025em', color: INK, maxWidth: '22ch', marginInline: 'auto' }}>
+            Ba tháng nữa bạn muốn hồ sơ mình trông thế nào?
+          </h2>
+          <p style={{ margin: '20px auto 0', maxWidth: '54ch', color: MUTED, fontSize: 'clamp(1.02rem, 1.4vw, 1.14rem)', lineHeight: 1.78 }}>
+            Dựng hồ sơ mất vài phút và hoàn toàn miễn phí. Phần còn lại để những việc
+            bạn làm tự nói hộ.
+          </p>
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', marginTop: 34 }}>
+            <Link to="/portfolio" onClick={guard} className="pf-cta solid">
+              Dựng hồ sơ của tôi <ArrowRight size={17} />
+            </Link>
+            <Link to="/jobs" className="pf-cta" style={{ background: '#fff', color: INK, border: `1.5px solid ${LINE}` }}>
+              <BriefcaseBusiness size={16} /> Xem cơ hội đang mở
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 6. FAQ ── */}
+      <section style={{ ...INNER, padding: 'clamp(68px, 10vw, 124px) 0' }}>
         <div className="pf-faq">
           <div>
             <h2 style={{ margin: 0, fontSize: 'clamp(1.5rem, 2.8vw, 2.1rem)', fontWeight: 800, lineHeight: 1.22, letterSpacing: '-0.01em', color: INK }}>
