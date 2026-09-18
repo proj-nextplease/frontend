@@ -138,11 +138,32 @@ export function HomePage() {
         .np-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: center; }
         @media (max-width: 820px) { .np-grid-3 { grid-template-columns: 1fr; } .np-grid-2 { grid-template-columns: 1fr; } }
 
+        /* ── Linh vật neo góc dưới-trái ── */
+        .np-mascot-dock { position: fixed; left: 24px; bottom: 20px; z-index: 1100;
+                          filter: drop-shadow(0 12px 24px rgba(4,47,42,0.22)); }
+        /* Màn hình hẹp: ẩn hẳn. Một khối 180px cố định chiếm gần nửa bề ngang
+           điện thoại, mà ở đó nó cũng không bám con trỏ được. */
+        @media (max-width: 1100px) { .np-mascot-dock { display: none; } }
+
         /* ── Hero typewriter cursor ── */
         .np-hero-cursor { display: inline-block; width: 3px; height: 1em; background: ${YELLOW}; margin-left: 4px; vertical-align: -2px; animation: npBlink 1s steps(1) infinite; }
         @keyframes npBlink { 50% { opacity: 0; } }
         @media (prefers-reduced-motion: reduce) { .np-hero-cursor { animation: none; } }
       `}</style>
+
+      {/* Linh vật của trang — neo cố định ở góc dưới-trái nên cuộn tới đâu nó
+          theo tới đó. Góc dưới-phải đã có nút đổi sáng/tối (z-index 1200), nên
+          mascot nằm bên trái và thấp hơn một bậc để không tranh chỗ.
+          Nhìn theo con trỏ, nháy mắt khi bị bấm; thư viện tự tắt phần bám con
+          trỏ khi không có chuột và tôn trọng prefers-reduced-motion. */}
+      <div className="np-mascot-dock">
+        <Mascot
+          directions="/mascots/frog-directions.webp"
+          reactions="/mascots/frog-reactions.webp"
+          size={180}
+          label="Linh vật nextplease"
+        />
+      </div>
 
       {/* 0. HEADER — shared emerald marketing bar */}
       <SiteHeader />
@@ -151,18 +172,6 @@ export function HomePage() {
       <section style={{ background: WAVE_BASE.emerald, width: '100%', position: 'relative', overflow: 'hidden' }}>
         <WaveBg variant="emerald" pattern="waves" />
         <div style={{ ...INNER, position: 'relative', zIndex: 1, padding: 'clamp(48px, 6vw, 80px) 20px 0px', textAlign: 'center' }}>
-          {/* Linh vật của trang: nhìn theo con trỏ, nháy mắt khi bị bấm.
-              Tự tắt phần bám con trỏ trên thiết bị không có chuột, và tôn
-              trọng prefers-reduced-motion — hai thứ này do thư viện lo. */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'clamp(4px, 1.5vw, 14px)' }}>
-            <Mascot
-              directions="/mascots/frog-directions.webp"
-              reactions="/mascots/frog-reactions.webp"
-              size={132}
-              label="Linh vật nextplease"
-            />
-          </div>
-
           <h1 style={{ fontSize: 'clamp(1.9rem, 5vw, 3.4rem)', fontWeight: 800, lineHeight: 1.12, letterSpacing: '-0.03em', color: '#fff', margin: 0, minHeight: '2.3em' }}>
             {typed}<span className="np-hero-cursor" />
           </h1>
