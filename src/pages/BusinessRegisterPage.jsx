@@ -13,6 +13,7 @@ import {
   GraduationCap,
   LockKeyhole,
   Mail,
+  MapPin,
   Phone,
   ShieldCheck,
   UserRound,
@@ -62,6 +63,7 @@ const initialForm = {
   representativeName: '',
   representativePhone: '',
   companyName: '',
+  address: '',
   companyType: 'SME',
   description: '',
   websiteUrl: '',
@@ -184,9 +186,15 @@ export function BusinessRegisterPage() {
       if (!formData.companyName || !formData.taxCode || !formData.documentUrl) {
         return 'Vui lòng điền Tên doanh nghiệp, Mã số thuế và upload Giấy phép kinh doanh.';
       }
+      if (!formData.address.trim()) {
+        return 'Vui lòng nhập địa chỉ doanh nghiệp.';
+      }
     } else {
       if (!formData.companyName || !formData.documentUrl || !formData.fanpageUrl) {
         return 'Vui lòng điền Tên CLB, Link Fanpage và upload Quyết định thành lập.';
+      }
+      if (!formData.address.trim()) {
+        return 'Vui lòng nhập địa chỉ sinh hoạt của CLB.';
       }
       if (formData.advisorPhone) {
         const advPhoneClean = formData.advisorPhone.replace(/\D/g, '');
@@ -216,6 +224,7 @@ export function BusinessRegisterPage() {
       representativePhone: formData.representativePhone,
       companyName: formData.companyName,
       companyType: activeTab === 'BUSINESS' ? formData.companyType : 'CLUB',
+      address: formData.address.trim(),
       description: formData.description,
       websiteUrl: formData.websiteUrl,
       logoUrl: formData.logoUrl || 'https://images.unsplash.com/photo-1620121692029-d088224ddc74?auto=format&fit=crop&w=300&q=80',
@@ -353,6 +362,24 @@ export function BusinessRegisterPage() {
                   <div style={{ position: 'relative' }}>
                     <span style={ICON}><Building size={18} /></span>
                     <input className="np-bizf" name="companyName" required maxLength={180} type="text" value={formData.companyName} onChange={updateField} placeholder={isBusiness ? 'Tên doanh nghiệp chính thức' : 'Tên Câu lạc bộ / Tổ chức'} style={FIELD} />
+                  </div>
+
+                  {/* Địa chỉ dùng làm mặc định cho địa điểm mỗi tin đăng sau này. */}
+                  <div style={{ position: 'relative' }}>
+                    <span style={ICON}><MapPin size={18} /></span>
+                    <input
+                      className="np-bizf"
+                      name="address"
+                      required
+                      maxLength={300}
+                      type="text"
+                      value={formData.address}
+                      onChange={updateField}
+                      placeholder={isBusiness
+                        ? 'Địa chỉ trụ sở (số nhà, đường, phường/xã, quận/huyện, tỉnh/thành)'
+                        : 'Địa chỉ sinh hoạt (cơ sở, trường, quận/huyện, tỉnh/thành)'}
+                      style={FIELD}
+                    />
                   </div>
 
                   {isBusiness ? (

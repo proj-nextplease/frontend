@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight, House, BriefcaseBusiness, MessagesSquare, FileText } from 'lucide-react';
 import { Button } from '../astryx/Button.jsx';
+import { useAuthModal } from '../../context/AuthModalContext.jsx';
+import { getStoredToken } from '../../lib/authStorage.js';
 
 /**
  * Shared emerald marketing header (nextplease). Sticky white bar with centred
@@ -20,6 +22,14 @@ const INNER = { width: 'min(1400px, calc(100% - 40px))', margin: '0 auto' };
 export function SiteHeader() {
   const { pathname } = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const { openLoginModal } = useAuthModal();
+
+  const handlePortfolioClick = (e) => {
+    if (!getStoredToken()) {
+      e.preventDefault();
+      openLoginModal('candidate');
+    }
+  };
 
   useEffect(() => {
     function onScroll() { setScrolled(window.scrollY > 12); }
@@ -30,6 +40,7 @@ export function SiteHeader() {
 
   const homeActive = pathname === '/';
   const jobsActive = pathname === '/jobs';
+  const discussionActive = pathname === '/thao-luan';
 
   return (
     <div style={{
@@ -48,7 +59,8 @@ export function SiteHeader() {
         .nph-navlink.active { background: ${MINT}; color: ${TEAL}; border-radius: 999px; padding: 7px 14px; font-weight: 800; }
         .nph-navlink.active::after { display: none; }
         .nph-nav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; height: 68px; }
-        .nph-brand { display: inline-flex; align-items: baseline; text-decoration: none; justify-self: start; }
+        .nph-brand { display: inline-flex; align-items: baseline; text-decoration: none; justify-self: start; font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif; transition: opacity 0.15s ease, transform 0.15s ease; }
+        .nph-brand:hover { opacity: 0.88; transform: scale(1.02); }
         .nph-navlinks { display: flex; align-items: center; gap: 26px; justify-self: center; }
         .nph-actions { display: flex; align-items: center; gap: 20px; justify-self: end; }
         .nph-nav-cta { display: none; }
@@ -61,18 +73,26 @@ export function SiteHeader() {
       <div style={{ ...INNER }}>
         <nav className="nph-nav">
           <Link to="/" className="nph-brand">
-            <span style={{ fontSize: '1.45rem', fontWeight: '800', letterSpacing: '-0.03em', color: INK }}>nextplease</span>
-            <span style={{ fontSize: '1.45rem', fontWeight: '800', color: EMERALD }}>:</span>
+            <span style={{ fontSize: '1.65rem', fontWeight: '700', letterSpacing: '-0.01em', color: '#059669', fontFamily: "'Fredoka', 'Baloo 2', cursive, sans-serif" }}>nextplease</span>
+            <span style={{ fontSize: '1.65rem', fontWeight: '800', color: '#f59e0b', fontFamily: "'Fredoka', 'Baloo 2', cursive, sans-serif" }}>:</span>
           </Link>
           <div className="nph-navlinks">
             <Link to="/" className={`nph-navlink${homeActive ? ' active' : ''}`}><House size={17} /> Trang chủ</Link>
             <Link to="/jobs" className={`nph-navlink${jobsActive ? ' active' : ''}`}><BriefcaseBusiness size={17} /> Việc làm</Link>
-            <Link to="/#thao-luan" className="nph-navlink"><MessagesSquare size={17} /> Thảo luận</Link>
-            <Link to="/portfolio" className="nph-navlink"><FileText size={17} /> Tạo portfolio</Link>
+            <Link to="/thao-luan" className={`nph-navlink${discussionActive ? ' active' : ''}`}><MessagesSquare size={17} /> Thảo luận</Link>
+            <Link to="/portfolio" className="nph-navlink" onClick={handlePortfolioClick}><FileText size={17} /> Tạo portfolio</Link>
           </div>
           <div className="nph-actions">
-            <Link to="/businesses" className="nph-navlink nph-nav-recruiter">Dành cho nhà tuyển dụng</Link>
-            <Button className="nph-nav-cta" label="Đăng nhập" href="/candidate/login" variant="primary" size="sm" style={{ background: TEAL, border: 'none', fontWeight: 800 }} endContent={<ArrowRight size={15} />} />
+            <Link to="/businesses" target="_blank" rel="noopener noreferrer" className="nph-navlink nph-nav-recruiter">Dành cho nhà tuyển dụng</Link>
+            <Button
+              className="nph-nav-cta"
+              label="Đăng nhập"
+              clickAction={() => openLoginModal('candidate')}
+              variant="primary"
+              size="sm"
+              style={{ background: TEAL, border: 'none', fontWeight: 800, cursor: 'pointer' }}
+              endContent={<ArrowRight size={15} />}
+            />
           </div>
         </nav>
       </div>

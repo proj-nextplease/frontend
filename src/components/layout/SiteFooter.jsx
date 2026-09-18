@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { useAuthModal } from '../../context/AuthModalContext.jsx';
+import { getStoredToken } from '../../lib/authStorage.js';
 
 /**
  * Shared marketing footer (nextplease) — brand blurb + product / trust columns
@@ -14,12 +16,21 @@ const WHITE = '#ffffff';
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 
 export function SiteFooter() {
+  const { openLoginModal } = useAuthModal();
+
+  const handlePortfolioClick = (e) => {
+    if (!getStoredToken()) {
+      e.preventDefault();
+      openLoginModal('candidate');
+    }
+  };
+
   return (
     <footer style={{ background: WHITE, borderTop: `1px solid ${LINE}` }}>
       <div className="np-footer-grid" style={{ ...INNER, padding: '48px 20px 40px', display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '24px' }}>
         <style>{`@media (max-width: 720px) { .np-footer-grid { grid-template-columns: 1fr 1fr !important; } .np-footer-grid > :first-child { grid-column: 1 / -1; } }`}</style>
         <div>
-          <strong style={{ fontSize: '1.2rem', color: INK }}>next please<span style={{ color: EMERALD }}>:</span></strong>
+          <strong style={{ fontSize: '1.35rem', color: '#059669', fontFamily: "'Fredoka', 'Baloo 2', cursive, sans-serif", fontWeight: 700, letterSpacing: '-0.01em' }}>nextplease<span style={{ color: '#f59e0b', fontWeight: 800 }}>:</span></strong>
           <p style={{ fontSize: '0.9rem', color: MUTED, lineHeight: 1.6, margin: '8px 0 0', maxWidth: '24rem' }}>
             Nền tảng reputation passport giúp sinh viên biến proof thật thành cơ hội nghề nghiệp đáng tin.
           </p>
@@ -27,8 +38,8 @@ export function SiteFooter() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <span style={{ fontSize: '0.78rem', fontWeight: 800, color: INK, marginBottom: '4px' }}>Sản phẩm</span>
           <Link to="/jobs" style={{ fontSize: '0.9rem', color: MUTED, textDecoration: 'none' }}>Việc làm</Link>
-          <Link to="/portfolio" style={{ fontSize: '0.9rem', color: MUTED, textDecoration: 'none' }}>Tạo portfolio</Link>
-          <Link to="/businesses" style={{ fontSize: '0.9rem', color: MUTED, textDecoration: 'none' }}>Nhà tuyển dụng & CLB</Link>
+          <Link to="/portfolio" onClick={handlePortfolioClick} style={{ fontSize: '0.9rem', color: MUTED, textDecoration: 'none' }}>Tạo portfolio</Link>
+          <Link to="/businesses" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.9rem', color: MUTED, textDecoration: 'none' }}>Nhà tuyển dụng & CLB</Link>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <span style={{ fontSize: '0.78rem', fontWeight: 800, color: INK, marginBottom: '4px' }}>Niềm tin hệ thống</span>

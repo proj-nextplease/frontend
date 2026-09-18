@@ -2680,6 +2680,7 @@ function AccountDetailView({ account, company, onRefresh }) {
   const [formData, setFormData] = useState({
     companyName: company?.name || '',
     companyType: company?.companyType || 'ENTERPRISE',
+    address: company?.address || '',
     taxCode: company?.taxCode || '',
     representativeName: company?.representativeName || '',
     representativePhone: company?.representativePhone || '',
@@ -2696,6 +2697,7 @@ function AccountDetailView({ account, company, onRefresh }) {
       setFormData({
         companyName: company.name || '',
         companyType: company.companyType || 'ENTERPRISE',
+        address: company.address || '',
         taxCode: company.taxCode || '',
         representativeName: company.representativeName || '',
         representativePhone: company.representativePhone || '',
@@ -2746,6 +2748,10 @@ function AccountDetailView({ account, company, onRefresh }) {
       setActionStatus({ type: 'error', message: 'Tên tổ chức không được để trống.' });
       return;
     }
+    if (!formData.address.trim()) {
+      setActionStatus({ type: 'error', message: 'Địa chỉ tổ chức không được để trống.' });
+      return;
+    }
     if (!formData.representativeName.trim()) {
       setActionStatus({ type: 'error', message: 'Tên người đại diện không được để trống.' });
       return;
@@ -2793,6 +2799,7 @@ function AccountDetailView({ account, company, onRefresh }) {
     setFormData({
       companyName: company?.name || '',
       companyType: company?.companyType || 'ENTERPRISE',
+      address: company?.address || '',
       taxCode: company?.taxCode || '',
       representativeName: company?.representativeName || '',
       representativePhone: company?.representativePhone || '',
@@ -2862,6 +2869,24 @@ function AccountDetailView({ account, company, onRefresh }) {
                     style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)' }}
                     required
                   />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Địa chỉ tổ chức *</label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="input-field"
+                    maxLength={300}
+                    placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+                    style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)' }}
+                    required
+                  />
+                  <span style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>
+                    Địa chỉ này sẽ được điền sẵn vào ô địa điểm mỗi khi bạn đăng tin mới.
+                  </span>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -3026,6 +3051,10 @@ function AccountDetailView({ account, company, onRefresh }) {
             <div className="partner-account-detail-grid">
               <DetailItem label="Tên tổ chức" value={company?.name} />
               <DetailItem label="Loại đối tác" value={companyTypeLabel} />
+              <DetailItem
+                label="Địa chỉ tổ chức"
+                value={company?.address || <span style={{ color: '#94a3b8', fontStyle: 'italic', fontWeight: '500' }}>Chưa cung cấp</span>}
+              />
               <DetailItem
                 label="Mã số thuế"
                 value={company?.taxCode || <span style={{ color: '#94a3b8', fontStyle: 'italic', fontWeight: '500' }}>Chưa cung cấp</span>}

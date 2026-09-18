@@ -25,6 +25,7 @@ import { getCurrentRoles, isAdmin, isBusiness } from '../lib/authRoles.js';
 import { getStoredToken } from '../lib/authStorage.js';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage.jsx';
 import { ResetPasswordPage } from '../pages/ResetPasswordPage.jsx';
+import { DiscussionPage } from '../pages/DiscussionPage.jsx';
 
 const CandidatePortfolioPage = lazy(() =>
   import('../pages/CandidatePortfolioPage.jsx').then((module) => ({
@@ -346,6 +347,7 @@ export function AppRouter() {
         <Route index element={<HomePage />} />
         <Route path="/candidates" element={<CandidateLandingPage />} />
         <Route path="/jobs" element={<JobsPage />} />
+        <Route path="/thao-luan" element={<DiscussionPage />} />
         <Route path="/candidates/dashboard" element={<ProtectedDashboardRoute />} />
         <Route path="/candidates/dashboard/:tabSlug" element={<ProtectedDashboardRoute />} />
         <Route path="/candidate/dashboard" element={<Navigate to="/candidates/dashboard/overview" replace />} />

@@ -4,6 +4,7 @@ import {
   ArrowRight, Quote, Sparkles, Plus, ChevronRight,
   Wallet, ShieldCheck, TrendingUp, MousePointerClick, Target,
 } from 'lucide-react';
+import { useAuthModal } from '../context/AuthModalContext.jsx';
 
 /* Wellfound palette, theme-aware via CSS variables (see --lp-* in index.css). */
 const INK = 'var(--lp-ink)';
@@ -302,6 +303,8 @@ function MediaPanel({ bg, children }) {
 }
 
 export function CandidateLandingPage() {
+  const { openLoginModal } = useAuthModal();
+
   return (
     <div style={{ background: 'var(--lp-bg)', color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif", paddingBottom: '48px' }}>
 
@@ -322,10 +325,12 @@ export function CandidateLandingPage() {
         .np-in { animation: npFadeUp 0.75s cubic-bezier(0.22,1,0.36,1) both; }
         @media (max-width: 760px) {
           .np-feature { grid-template-columns: 1fr !important; gap: 28px !important; }
+          .np-feature:nth-of-type(even) > div:first-of-type { order: 2; }
           .np-grid-3 { grid-template-columns: 1fr !important; }
           .np-footer-grid { grid-template-columns: 1fr !important; }
+          .np-cta { width: 100%; justify-content: center; }
           .np-faq { flex-direction: column !important; gap: 16px !important; }
-          .np-faq-q { grid-template-columns: 1fr !important; }
+          .np-faq-q { flex-direction: column !important; align-items: flex-start !important; }
           .np-faq-a { flex-basis: auto !important; width: 100%; position: static !important; transform: none !important; }
           .np-faq-a > div { min-width: 0 !important; }
         }
@@ -345,7 +350,14 @@ export function CandidateLandingPage() {
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
             <Link to="/" className="np-navlink" style={{ fontSize: '0.96rem', fontWeight: '600', color: INK }}>Trang chủ</Link>
-            <Link to="/candidate/login" className="np-navlink" style={{ fontSize: '0.96rem', fontWeight: '600', color: INK }}>Đăng nhập</Link>
+            <button
+              type="button"
+              onClick={() => openLoginModal('candidate')}
+              className="np-navlink"
+              style={{ fontSize: '0.96rem', fontWeight: '600', color: INK, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              Đăng nhập
+            </button>
           </div>
         </nav>
       </div>
@@ -364,9 +376,14 @@ export function CandidateLandingPage() {
             <Link to="/candidate/register" className="np-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: 'var(--lp-btn-bg)', color: 'var(--lp-btn-text)', fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
               Tạo hồ sơ <ArrowRight size={18} />
             </Link>
-            <Link to="/candidate/login" className="np-cta np-cta-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: SURFACE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.98rem', textDecoration: 'none' }}>
+            <button
+              type="button"
+              onClick={() => openLoginModal('candidate')}
+              className="np-cta np-cta-ghost"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '999px', background: SURFACE, color: INK, border: `1.5px solid ${INK}`, fontWeight: '700', fontSize: '0.98rem', cursor: 'pointer' }}
+            >
               Tôi đã có tài khoản
-            </Link>
+            </button>
           </div>
         </section>
       </div>
@@ -536,7 +553,13 @@ export function CandidateLandingPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <span style={{ fontSize: '0.78rem', fontWeight: '800', color: INK, marginBottom: '4px' }}>Ứng viên</span>
             <Link to="/candidate/register" style={{ fontSize: '0.9rem', color: MUTED, textDecoration: 'none' }}>Tạo hồ sơ</Link>
-            <Link to="/candidate/login" style={{ fontSize: '0.9rem', color: MUTED, textDecoration: 'none' }}>Đăng nhập</Link>
+            <button
+              type="button"
+              onClick={() => openLoginModal('candidate')}
+              style={{ fontSize: '0.9rem', color: MUTED, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+            >
+              Đăng nhập
+            </button>
             <Link to="/" style={{ fontSize: '0.9rem', color: MUTED, textDecoration: 'none' }}>Về trang chủ</Link>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

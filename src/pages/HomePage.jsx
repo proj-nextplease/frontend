@@ -149,7 +149,7 @@ export function HomePage() {
       {/* 1. HERO — emerald wave band with the envelope animation */}
       <section style={{ background: WAVE_BASE.emerald, width: '100%', position: 'relative', overflow: 'hidden' }}>
         <WaveBg variant="emerald" pattern="waves" />
-        <div style={{ ...INNER, position: 'relative', zIndex: 1, padding: 'clamp(48px, 6vw, 80px) 20px clamp(48px, 6vw, 80px)', textAlign: 'center' }}>
+        <div style={{ ...INNER, position: 'relative', zIndex: 1, padding: 'clamp(48px, 6vw, 80px) 20px 0px', textAlign: 'center' }}>
           <h1 style={{ fontSize: 'clamp(1.9rem, 5vw, 3.4rem)', fontWeight: 800, lineHeight: 1.12, letterSpacing: '-0.03em', color: '#fff', margin: 0, minHeight: '2.3em' }}>
             {typed}<span className="np-hero-cursor" />
           </h1>

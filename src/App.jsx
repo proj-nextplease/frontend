@@ -4,6 +4,7 @@ import { LinkProvider } from '@astryxdesign/core/Link';
 import { neutralTheme } from '@astryxdesign/theme-neutral/built';
 import { AppRouter } from './routes/AppRouter.jsx';
 import { ThemeProvider } from './lib/themeContext.jsx';
+import { AuthModalProvider } from './context/AuthModalContext.jsx';
 import { FloatingThemeToggle } from './components/ThemeToggle.jsx';
 
 export default function App() {
@@ -11,8 +12,10 @@ export default function App() {
     <ThemeProvider>
       <Theme theme={neutralTheme}>
         <LinkProvider component={Link}>
-          <AppRouter />
-          <FloatingThemeToggle />
+          <AuthModalProvider>
+            <AppRouter />
+            <FloatingThemeToggle />
+          </AuthModalProvider>
         </LinkProvider>
       </Theme>
     </ThemeProvider>
