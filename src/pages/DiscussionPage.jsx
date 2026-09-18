@@ -12,6 +12,7 @@ import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
 import { getStoredToken } from '../lib/authStorage.js';
 import { UserAvatar } from '../components/UserAvatar.jsx';
+import { EmptyStateMascot } from '../components/EmptyStateMascot.jsx';
 import { useMyProfile } from '../lib/useMyProfile.js';
 import {
   getTopics, toggleFollowTopic, getPosts, createPost as apiCreatePost,
@@ -961,21 +962,26 @@ export function DiscussionPage() {
                   color: '#64748b',
                 }}
               >
-                <p style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 12px' }}>Chưa có bài viết nào trong chủ đề này</p>
-                <button
-                  onClick={() => requireAuth(() => setIsCreateModalOpen(true))}
-                  style={{
-                    background: TEAL,
-                    color: '#fff',
-                    padding: '8px 20px',
-                    borderRadius: 9999,
-                    border: 'none',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Hãy là người đầu tiên đăng bài!
-                </button>
+                <EmptyStateMascot
+                  title={currentTopic ? `Chưa có bài viết nào trong ${currentTopic.name}` : 'Chưa có bài viết nào'}
+                  description="Cứ mở đầu đi — một câu hỏi cũng được tính là bắt đầu cuộc trò chuyện."
+                  action={(
+                    <button
+                      onClick={() => requireAuth(() => setIsCreateModalOpen(true))}
+                      style={{
+                        background: TEAL,
+                        color: '#fff',
+                        padding: '10px 22px',
+                        borderRadius: 9999,
+                        border: 'none',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Hãy là người đầu tiên đăng bài!
+                    </button>
+                  )}
+                />
               </div>
             ) : (
               displayedPosts.map((post) => {

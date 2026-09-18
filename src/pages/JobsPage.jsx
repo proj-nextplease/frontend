@@ -10,6 +10,7 @@ import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { WaveBg } from '../components/WaveBg.jsx';
 import { loadJobs, getCachedJobs } from '../api/jobsCache.js';
+import { EmptyStateMascot } from '../components/EmptyStateMascot.jsx';
 import { extractProvince } from '../lib/vnProvince.js';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
 import { getStoredToken } from '../lib/authStorage.js';
@@ -986,11 +987,34 @@ export function JobsPage() {
               {!loading && loadError && <div className="jb-empty">{loadError}</div>}
               {!loading && !loadError && !filtered.length && (
                 <div className="jb-empty">
-                  {activeOrgTab === 'CLUB' && !jobs.some((j) => j.isClub)
-                    ? 'Hiện chưa có Quest nào từ CLB.'
-                    : jobs.length
-                      ? 'Chưa tìm thấy cơ hội phù hợp. Thử bỏ bớt bộ lọc hoặc chọn tab khác nhé.'
-                      : 'Hiện chưa có tin tuyển dụng nào.'}
+                  {activeOrgTab === 'CLUB' && !jobs.some((j) => j.isClub) ? (
+                    <EmptyStateMascot
+                      title="Hiện chưa có Quest nào từ CLB"
+                      description="Các CLB chưa đăng hoạt động nào. Ghé lại sau, hoặc xem tin từ doanh nghiệp ở tab bên cạnh."
+                    />
+                  ) : jobs.length ? (
+                    <EmptyStateMascot
+                      title="Chưa tìm thấy cơ hội phù hợp"
+                      description="Thử bỏ bớt bộ lọc hoặc chuyển sang tab khác — có thể cơ hội đang nằm ở nhóm bạn chưa mở."
+                      action={activeCount > 0 ? (
+                        <button
+                          type="button"
+                          onClick={clearFilters}
+                          style={{
+                            background: TEAL, color: '#fff', padding: '10px 22px', borderRadius: 9999,
+                            border: 'none', fontWeight: 700, cursor: 'pointer',
+                          }}
+                        >
+                          Xoá hết bộ lọc
+                        </button>
+                      ) : null}
+                    />
+                  ) : (
+                    <EmptyStateMascot
+                      title="Hiện chưa có tin tuyển dụng nào"
+                      description="Nền tảng đang chờ những cơ hội đầu tiên. Quay lại sau nhé."
+                    />
+                  )}
                 </div>
               )}
             </div>
