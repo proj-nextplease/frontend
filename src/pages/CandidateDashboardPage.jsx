@@ -35,10 +35,9 @@ import {
   Settings,
   Copy,
   Bookmark,
-  BookmarkCheck,
-} from 'lucide-react';
+  BookmarkCheck, Link2,} from 'lucide-react';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
-import { getMyPortfolio } from '../api/portfolioApi.js';
+import { getMyPortfolio, updateMySlug } from '../api/portfolioApi.js';
 import { logout } from '../api/httpClient.js';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
@@ -541,6 +540,80 @@ export function CandidateContentSkeleton({ variant = 'overview' }) {
   );
 }
 
+/**
+ * Đường dẫn công khai của portfolio, kèm chỗ đổi ngay tại chỗ.
+ *
+ * Hiển thị dạng "tên-miền/p/slug" thay vì ô nhập trống, để người dùng thấy
+ * link của mình trông ra sao trước khi sửa — đây là thứ họ sẽ dán vào bio.
+ */
+function PublicLinkEditor({ slug, onSaved }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(slug || '');
+  const [status, setStatus] = useState({ type: 'idle', message: '' });
+
+  if (!slug && !editing) return null;
+
+  const host = window.location.host;
+
+  async function save(e) {
+    e.preventDefault();
+    const next = draft.trim().toLowerCase();
+    if (next === slug) { setEditing(false); return; }
+    setStatus({ type: 'saving', message: '' });
+    try {
+      const saved = await updateMySlug(next);
+      onSaved(saved);
+      setDraft(saved);
+      setEditing(false);
+      setStatus({ type: 'idle', message: '' });
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message || 'Không đổi được đường dẫn.' });
+    }
+  }
+
+  return (
+    <div style={{ marginTop: '14px', fontSize: '0.84rem' }}>
+      {editing ? (
+        <form onSubmit={save} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ color: 'rgba(255,255,255,0.55)' }}>{host}/p/</span>
+          <input
+            value={draft}
+            onChange={(ev) => setDraft(ev.target.value)}
+            maxLength={40}
+            autoFocus
+            placeholder="ten-cua-ban"
+            style={{
+              padding: '6px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.25)',
+              background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: '0.84rem', fontWeight: 700, minWidth: '180px',
+            }}
+          />
+          <button type="submit" disabled={status.type === 'saving'}
+            style={{ padding: '6px 14px', borderRadius: '999px', border: 'none', background: '#10b981', color: '#fff', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
+            {status.type === 'saving' ? 'Đang lưu…' : 'Lưu'}
+          </button>
+          <button type="button" onClick={() => { setDraft(slug || ''); setEditing(false); setStatus({ type: 'idle', message: '' }); }}
+            style={{ padding: '6px 12px', borderRadius: '999px', border: 'none', background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
+            Huỷ
+          </button>
+          {status.type === 'error' && (
+            <span style={{ width: '100%', color: '#fca5a5', fontSize: '0.78rem', fontWeight: 600 }}>{status.message}</span>
+          )}
+        </form>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <Link2 size={14} style={{ color: 'rgba(255,255,255,0.5)' }} />
+          <span style={{ color: 'rgba(255,255,255,0.55)' }}>{host}/p/</span>
+          <span style={{ fontWeight: 800, color: '#fff' }}>{slug}</span>
+          <button type="button" onClick={() => setEditing(true)}
+            style={{ padding: '3px 10px', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.22)', background: 'transparent', color: 'rgba(255,255,255,0.8)', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}>
+            Đổi
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function CandidateDashboardPage({ initialPortfolio }) {
   const navigate = useNavigate();
   const { tabSlug } = useParams();
@@ -657,8 +730,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   async function handleCopyPortfolioLink() {
     setCopyLinkStatus('copying');
     try {
-      const userId = await getMyUserId();
-      const shareUrl = `${window.location.origin}/portfolio/view/${userId}`;
+      // Ưu tiên link chữ (/p/phat-nguyen); chỉ rơi về link UUID nếu hồ sơ
+      // chưa kịp có slug — backend sinh slug ngay lần đọc hồ sơ đầu tiên.
+      const shareUrl = portfolio?.publicSlug
+        ? `${window.location.origin}/p/${portfolio.publicSlug}`
+        : `${window.location.origin}/portfolio/view/${await getMyUserId()}`;
       await navigator.clipboard.writeText(shareUrl);
       setCopyLinkStatus('done');
     } catch {
@@ -2065,6 +2141,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     </button>
                   )}
                 </div>
+
+                <PublicLinkEditor
+                  slug={portfolio?.publicSlug}
+                  onSaved={(next) => setPortfolio((prev) => (prev ? { ...prev, publicSlug: next } : prev))}
+                />
               </div>
 
               <div className="np-pp-stats">

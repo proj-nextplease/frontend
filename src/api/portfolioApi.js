@@ -6,6 +6,20 @@ export async function getPublicProfile(userId) {
   return response.data.data;
 }
 
+/** Hồ sơ công khai tra theo đường dẫn chữ (/p/phat-nguyen). */
+export async function getPublicProfileBySlug(slug) {
+  const response = await httpClient.get(`/profiles/by-slug/${encodeURIComponent(slug)}/public`);
+  if (!response.data?.success) throw new Error(response.data?.message || 'Không thể tải hồ sơ.');
+  return response.data.data;
+}
+
+/** Đổi đường dẫn công khai của chính mình. Trả về slug đã lưu. */
+export async function updateMySlug(slug) {
+  const response = await httpClient.patch('/profiles/me/slug', { slug });
+  if (!response.data?.success) throw new Error(response.data?.message || 'Không thể đổi đường dẫn.');
+  return response.data.data.publicSlug;
+}
+
 export async function getMyPortfolio() {
   const response = await httpClient.get('/profiles/me');
   if (!response.data?.success) {

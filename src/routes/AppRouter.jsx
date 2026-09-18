@@ -378,6 +378,9 @@ export function AppRouter() {
         <Route path="/jobs/:id" element={<JobDetailPage />} />
         <Route path="/quests/:id" element={<JobDetailPage />} />
         <Route path="/portfolio/view/:userId" element={<CandidatePortfolioViewPage />} />
+        {/* Link chia sẻ dạng chữ: /p/phat-nguyen. Đặt ngắn vì người dùng dán nó
+            vào bio, tin nhắn, CV — UUID thì không ai muốn dán. */}
+        <Route path="/p/:slug" element={<CandidatePortfolioViewPage />} />
         <Route path="/portfolio" element={<ProtectedPortfolioRoute isEditing={false} />} />
         <Route path="/portfolio/edit" element={<ProtectedPortfolioRoute isEditing={true} />} />
         <Route

@@ -5,7 +5,7 @@ import {
   MapPin, BadgeCheck, ExternalLink, Code2, Link2, Globe, Mail, Eye, FileUp, Download,
 } from 'lucide-react';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
-import { getPublicProfile } from '../api/portfolioApi.js';
+import { getPublicProfile, getPublicProfileBySlug } from '../api/portfolioApi.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
 
 const SOCIAL_META = {
@@ -16,17 +16,20 @@ const SOCIAL_META = {
 };
 
 export function CandidatePortfolioViewPage() {
-  const { userId } = useParams();
+  // Trang này phục vụ hai đường dẫn: /p/:slug (link đẹp để chia sẻ) và
+  // /portfolio/view/:userId (link cũ, giữ lại để không gãy link đã gửi đi).
+  const { userId, slug } = useParams();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    getPublicProfile(userId)
+    const request = slug ? getPublicProfileBySlug(slug) : getPublicProfile(userId);
+    request
       .then(setProfile)
       .catch(err => setError(err.message || 'Không thể tải hồ sơ.'))
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [userId, slug]);
 
   if (loading) {
     return (
