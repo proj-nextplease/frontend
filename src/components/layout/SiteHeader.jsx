@@ -45,6 +45,25 @@ export function SiteHeader() {
   const signedIn = sessionSignedIn ?? hasToken;
   const menuRef = useRef(null);
 
+  // Chỉ chạy hiệu ứng khi trạng thái đăng nhập THẬT SỰ đổi (đăng nhập bằng
+  // modal ngay trên trang). SiteHeader được gắn lại ở mỗi trang landing, nên
+  // nếu để class tĩnh thì mục nav sẽ nhấp nháy mỗi lần chuyển trang.
+  const navSwapRef = useRef(null);
+  const skipFirstSwap = useRef(true);
+
+  useEffect(() => {
+    if (skipFirstSwap.current) { skipFirstSwap.current = false; return undefined; }
+    const el = navSwapRef.current;
+    if (!el) return undefined;
+    // Gỡ rồi gắn lại class, chen một lần đọc layout ở giữa để trình duyệt
+    // khởi động lại animation thay vì bỏ qua vì class không đổi.
+    el.classList.remove('nph-nav-swap');
+    void el.offsetWidth;
+    el.classList.add('nph-nav-swap');
+    const timer = setTimeout(() => el.classList.remove('nph-nav-swap'), 320);
+    return () => clearTimeout(timer);
+  }, [signedIn]);
+
   // Theo dõi phiên Supabase để menu tắt ngay khi phiên hết hạn ở tab khác.
   useEffect(() => {
     if (!supabase) return undefined;
@@ -99,6 +118,7 @@ export function SiteHeader() {
   const jobsActive = pathname === '/jobs';
   const discussionActive = pathname === '/thao-luan';
   const portfolioActive = pathname === '/tao-portfolio';
+  const myAreaActive = pathname.startsWith('/candidates/dashboard');
 
   return (
     <div style={{
@@ -117,6 +137,20 @@ export function SiteHeader() {
         .nph-navlink.active { background: ${MINT}; color: ${TEAL}; border-radius: 999px; padding: 7px 14px; font-weight: 800; }
         .nph-navlink.active::after { display: none; }
         .nph-nav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; height: 68px; }
+        /* Mục nav thứ tư đổi nhãn theo trạng thái đăng nhập. "Khu vực của tôi"
+           rộng hơn "Tạo portfolio" 20px, mà nav canh giữa nên khi đổi cả cụm sẽ
+           trượt 10px. Chốt bề rộng tối thiểu bằng nhãn dài hơn để không có gì
+           xê dịch — chỉ chữ mờ vào. */
+        .nph-nav-item-swap { min-width: 140px; justify-content: center; }
+        /* Mục nav thứ tư đổi nhãn theo trạng thái đăng nhập. "Khu vực của tôi"
+           rộng hơn "Tạo portfolio" 20px, mà nav canh giữa nên khi đổi cả cụm sẽ
+           trượt 10px. Chốt bề rộng tối thiểu bằng nhãn dài hơn để không có gì
+           xê dịch — chỉ chữ mờ vào. */
+        .nph-nav-item-swap { min-width: 140px; justify-content: center; }
+        /* Mục nav đổi khi đăng nhập/đăng xuất — mờ dần thay vì nhảy đột ngột. */
+        .nph-nav-swap { animation: nphNavSwap 0.26s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes nphNavSwap { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) { .nph-nav-swap { animation: none; } }
         .nph-brand { display: inline-flex; align-items: baseline; text-decoration: none; justify-self: start; font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif; transition: opacity 0.15s ease, transform 0.15s ease; }
         .nph-brand:hover { opacity: 0.88; transform: scale(1.02); }
         .nph-navlinks { display: flex; align-items: center; gap: 26px; justify-self: center; }
@@ -159,7 +193,33 @@ export function SiteHeader() {
             <Link to="/thao-luan" className={`nph-navlink${discussionActive ? ' active' : ''}`}><MessagesSquare size={17} /> Thảo luận</Link>
             {/* Trỏ về trang giới thiệu chứ không vào thẳng trình dựng: khách
                 vãng lai cần biết Portfolio là gì trước khi bị hỏi đăng nhập. */}
-            <Link to="/tao-portfolio" className={`nph-navlink${portfolioActive ? ' active' : ''}`}><FileText size={17} /> Tạo portfolio</Link>
+            {/* Mục thứ tư đổi theo trạng thái, KHÔNG thêm mục thứ năm: dưới
+                1140px cả thanh nav đã bị ẩn, thêm một mục nữa sẽ đẩy ngưỡng đó
+                lên cao hơn và nhiều laptop mất sạch nav.
+                "Tạo portfolio" là lời mời cho người chưa có; người đã đăng nhập
+                thì đã có rồi, thứ họ cần là vào khu vực của mình.
+                `key` đổi theo trạng thái để React gắn lại node và chạy hiệu ứng
+                mờ dần — đăng nhập bằng modal không tải lại trang, nên nếu không
+                có nó thì chữ sẽ nhảy cái độp. */}
+            {signedIn ? (
+              <Link
+                key="my-area"
+                to="/candidates/dashboard/overview"
+                ref={navSwapRef}
+                className={`nph-navlink nph-nav-item-swap${myAreaActive ? ' active' : ''}`}
+              >
+                <Compass size={17} /> Khu vực của tôi
+              </Link>
+            ) : (
+              <Link
+                key="create-portfolio"
+                to="/tao-portfolio"
+                ref={navSwapRef}
+                className={`nph-navlink nph-nav-item-swap${portfolioActive ? ' active' : ''}`}
+              >
+                <FileText size={17} /> Tạo portfolio
+              </Link>
+            )}
           </div>
           <div className="nph-actions">
             <Link to="/businesses" target="_blank" rel="noopener noreferrer" className="nph-navlink nph-nav-recruiter">Dành cho nhà tuyển dụng</Link>
@@ -189,9 +249,6 @@ export function SiteHeader() {
                     </div>
                     <div className="nph-menu-sep" />
 
-                    <Link className="nph-menu-item" role="menuitem" onClick={closeMenu} to="/candidates/dashboard/overview">
-                      <Compass size={16} /> Khu vực của tôi
-                    </Link>
                     <Link className="nph-menu-item" role="menuitem" onClick={closeMenu} to={portfolioPath}>
                       <FileText size={16} /> Portfolio của tôi
                     </Link>
