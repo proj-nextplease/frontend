@@ -39,6 +39,7 @@ import {
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { getMyPortfolio, updateMySlug } from '../api/portfolioApi.js';
 import { WaveBg } from '../components/WaveBg.jsx';
+import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { logout } from '../api/httpClient.js';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
@@ -1833,7 +1834,15 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   return (
     <div className="candidate-portal-layout">
-      <NotificationBell accent="#e5533f" />
+      {/* Trang này trước đây KHÔNG có header site nào — đó là lý do cái dock
+          phải gánh cả điều hướng toàn trang lẫn điều hướng nội bộ. Đưa
+          SiteHeader vào để cấp site dùng chung một thanh với mọi trang khác;
+          dock chỉ còn lo các mục bên trong Khu vực của tôi. */}
+      <SiteHeader />
+
+      {/* Đẩy xuống dưới SiteHeader: header cao 68px và dính trên cùng, để mặc
+          định top 18px thì chuông đè lên menu tài khoản ở góc phải. */}
+      <NotificationBell accent="#e5533f" style={{ top: '84px' }} />
 
       {/* ─── Bottom Dock Navigation (macOS-style) ─── */}
       <nav className="np-dock" aria-label="Điều hướng chính">
