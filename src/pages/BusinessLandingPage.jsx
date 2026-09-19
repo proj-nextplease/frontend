@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Sparkles, ArrowRight, CheckCircle2, ShieldCheck,
@@ -9,7 +9,6 @@ import {
   Clock, CheckSquare, MessageSquare, TrendingUp,
   Calendar, Paperclip, AtSign, ArrowUp, Briefcase
 } from 'lucide-react';
-import { useAuthModal } from '../context/AuthModalContext.jsx';
 
 /* ── Exact Navigos Talent One Design Tokens ── */
 const NAV_INDIGO = '#304ffe'; // Primary Brand Blue/Indigo
@@ -51,7 +50,6 @@ const GRADIENT_BRAND = {
 };
 
 export function BusinessLandingPage() {
-  const { openLoginModal } = useAuthModal();
   const [activeTab, setActiveTab] = useState('gia-tri');
 
   // Interactive state for Contact modal / quick consult

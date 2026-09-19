@@ -13,7 +13,7 @@ import { getJobDetail } from '../api/jobApi.js';
 import { applyToJob } from '../api/applicationApi.js';
 import { applyToQuest } from '../api/questApi.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
-import { loadJobs, getCachedJobs } from '../api/jobsCache.js';
+import { loadJobs } from '../api/jobsCache.js';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
 import { getStoredToken } from '../lib/authStorage.js';
 

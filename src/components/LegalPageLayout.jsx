@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   ShieldCheck, FileText, Mail, ArrowLeft,
@@ -89,6 +89,20 @@ export function LegalPageLayout({ eyebrow, title, updated, intro, sections }) {
           }}>
             {title} <span style={{ color: YELLOW }}>nextplease</span>
           </h1>
+
+          {/* Ngày cập nhật — TermsPage và PrivacyPage vẫn luôn truyền prop
+              `updated` vào, nhưng trước đây layout không dựng nó ra, nên hai
+              trang pháp lý không hề cho biết bản đang đọc có từ bao giờ. */}
+          {updated && (
+            <p style={{
+              margin: intro ? '-16px auto 26px' : '14px auto 0',
+              fontSize: '0.88rem',
+              fontWeight: 600,
+              color: 'rgba(255,255,255,0.82)',
+            }}>
+              Cập nhật lần cuối: {updated}
+            </p>
+          )}
 
           {/* Intro Card */}
           {intro && (
