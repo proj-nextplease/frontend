@@ -23,8 +23,8 @@ import {
 } from 'lucide-react';
 import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
+import { CoverBannerEditor } from '../components/CoverBannerEditor.jsx';
 import { EXPERIENCE_CATEGORY_OPTIONS, EXPERIENCE_ROLE_LEVEL_OPTIONS } from '../constants/experience.js';
-import { supabase } from '../services/supabaseClient.js';
 
 export const PORTFOLIO_PREVIEW_STORAGE_PREFIX = 'nextplease:portfolio-preview:';
 
@@ -401,6 +401,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     skills: '',
     openToWork: false,
     socialLinks: { github: '', linkedin: '', website: '', email: '' },
+    coverBannerUrl: '',
+    coverBannerPos: '50% 50%',
   });
   const [experiences, setExperiences] = useState(defaultExperiences);
   const [credentials, setCredentials] = useState(defaultCredentials);
@@ -483,6 +485,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               skills: data.skills ? data.skills.join(', ') : '',
               openToWork: !!data.openToWork,
               socialLinks: { github: '', linkedin: '', website: '', email: '', ...(data.socialLinks || {}) },
+              coverBannerUrl: data.coverBannerUrl || '',
+              coverBannerPos: data.coverBannerPos || '50% 50%',
             });
             if (data.experiences && data.experiences.length > 0) {
               setExperiences(data.experiences);
@@ -552,6 +556,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         credentials: credentials.filter(cred => cred.name.trim() || cred.issuer.trim()),
         openToWork: !!profile.openToWork,
         socialLinks: profile.socialLinks || {},
+        coverBannerUrl: profile.coverBannerUrl || '',
+        coverBannerPos: profile.coverBannerPos || '50% 50%',
       };
       
       await updateMyPortfolio(payload);
@@ -592,15 +598,14 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         credentials: credentials.filter(cred => cred.name.trim() || cred.issuer.trim()),
         openToWork: !!profile.openToWork,
         socialLinks: profile.socialLinks || {},
+        coverBannerUrl: profile.coverBannerUrl || '',
+        coverBannerPos: profile.coverBannerPos || '50% 50%',
       };
       
       await updateMyPortfolio(payload, true);
       localStorage.removeItem('nextplease:portfolio-draft');
       setIsDraftDirty(false);
       setShowExitWarningModal(false);
-      if (supabase) {
-        await supabase.auth.signOut();
-      }
       navigate('/');
     } catch (err) {
       console.error(err);
@@ -1071,18 +1076,16 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     );
   }
 
-  const handleExitClick = async (e) => {
+  // Rời trang dựng portfolio CHỈ là điều hướng, không phải đăng xuất.
+  // Ba chỗ thoát ở đây từng gọi supabase.auth.signOut() — di sản từ thời
+  // portfolio là bước bắt buộc ngay sau khi đăng ký, nên "thoát" bị hiểu là
+  // bỏ dở việc tạo tài khoản. Giờ nó là một trang bình thường, đăng xuất
+  // người dùng khi họ bấm "Về trang chủ" là sai.
+  const handleExitClick = (e) => {
     if (e) e.preventDefault();
     if (isDraftDirty) {
       setShowExitWarningModal(true);
     } else {
-      if (supabase) {
-        try {
-          await supabase.auth.signOut();
-        } catch (err) {
-          console.error('Lỗi khi đăng xuất:', err);
-        }
-      }
       navigate('/');
     }
   };
@@ -1354,6 +1357,19 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                 value={profile.skills}
               />
             </label>
+
+            <div className="full-field">
+              Ảnh bìa <span style={{ fontWeight: 500, color: 'var(--muted)' }}>(tuỳ chọn)</span>
+              <span style={{ display: 'block', fontWeight: 500, fontSize: '0.82rem', color: 'var(--muted)', margin: '2px 0 8px' }}>
+                Dải ảnh trên đầu portfolio công khai — cách nhanh nhất để trang của bạn khác với mọi người.
+              </span>
+              <CoverBannerEditor
+                url={profile.coverBannerUrl}
+                pos={profile.coverBannerPos}
+                onChange={({ url, pos }) =>
+                  setProfile((current) => ({ ...current, coverBannerUrl: url, coverBannerPos: pos }))}
+              />
+            </div>
 
             <div className="full-field pf-avail-card">
               <div className="pf-avail-text">
@@ -1889,17 +1905,10 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               </button>
               <button
                 className="button secondary-button"
-                onClick={async () => {
+                onClick={() => {
                   localStorage.removeItem('nextplease:portfolio-draft');
                   setIsDraftDirty(false);
                   setShowExitWarningModal(false);
-                  if (supabase) {
-                    try {
-                      await supabase.auth.signOut();
-                    } catch (err) {
-                      console.error('Lỗi khi đăng xuất:', err);
-                    }
-                  }
                   navigate('/');
                 }}
                 type="button"

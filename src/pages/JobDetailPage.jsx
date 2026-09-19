@@ -1,15 +1,29 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   MapPin, Clock, Building, Shield, Zap, Award, LockKeyhole,
   ArrowLeft, Users, Calendar, Briefcase, CheckCircle2, Star,
   ClipboardList, GraduationCap, FolderOpen, AlertTriangle,
+  Heart, Share2, Link2, Check, Search, ChevronDown, ChevronUp,
+  Sparkles, Building2, Wallet,
 } from 'lucide-react';
+import { SiteHeader } from '../components/layout/SiteHeader.jsx';
+import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { getJobDetail } from '../api/jobApi.js';
 import { applyToJob } from '../api/applicationApi.js';
 import { applyToQuest } from '../api/questApi.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
-import { parseBanner } from '../components/postingConstants.js';
+import { loadJobs } from '../api/jobsCache.js';
+import { useAuthModal } from '../context/AuthModalContext.jsx';
+import { getStoredToken } from '../lib/authStorage.js';
+
+/* ── Emerald & Teal Design Tokens ── */
+const TEAL = '#0d9488';
+const EMERALD = '#10b981';
+const INK = '#0f2e2b';
+const MUTED = '#5b7772';
+const LINE = '#e2efe9';
+const MINT = '#e7f7f0';
 
 const JOB_TYPE_LABELS = {
   INTERNSHIP: 'Thực tập sinh',
@@ -21,17 +35,171 @@ const JOB_TYPE_LABELS = {
   SCHOOL_CAMPAIGN: 'Chiến dịch trường',
 };
 
-const CATEGORY_COLOR = {
-  SMALL_EVENT: '#8b5cf6',
-  SCHOOL_CAMPAIGN: '#0ea5e9',
-  COMPANY_PROJECT: '#f59e0b',
-  SHORT_INTERNSHIP: '#10b981',
-  FREELANCE_GIG: '#ec4899',
-};
+const LOGO_COLORS = ['#dff7ee', '#fff2bd', '#eee5ff', '#dff0ff', '#ffe7d3', '#e4f5c8'];
+
+function initials(name = '') {
+  return name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+}
+
+/* ── Floating Share Popover (Facebook, LinkedIn, X, Zalo, Copy Link) ── */
+function SharePopover({ job, onClose }) {
+  const [copied, setCopied] = useState(false);
+  const popoverRef = useRef(null);
+  const shareUrl = `${window.location.origin}/jobs/${job.id}`;
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (popoverRef.current && !popoverRef.current.contains(e.target)) {
+        onClose();
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
+
+  function handleCopy() {
+    navigator.clipboard?.writeText(shareUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
+  }
+
+  const shareOptions = [
+    {
+      name: 'Facebook',
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'LinkedIn',
+      url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'X',
+      url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(job.title)}`,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Zalo',
+      url: `https://sp.zalo.me/share_inline?link=${encodeURIComponent(shareUrl)}`,
+      icon: (
+        <span style={{ fontSize: '15.5px', fontWeight: 800, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.3px', lineHeight: 1 }}>
+          Zalo
+        </span>
+      ),
+    },
+  ];
+
+  return (
+    <div
+      ref={popoverRef}
+      className="np-share-dropdown"
+      style={{
+        position: 'absolute',
+        top: 'calc(100% + 10px)',
+        right: 0,
+        background: '#ffffff',
+        border: '1px solid #e2efe9',
+        borderRadius: '24px',
+        boxShadow: '0 16px 40px rgba(6, 40, 36, 0.16)',
+        padding: '8px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        zIndex: 60,
+        animation: 'npShareFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both',
+      }}
+    >
+      <style>{`
+        @keyframes npShareFade {
+          0% { opacity: 0; transform: translateY(-6px) scale(0.95); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .np-share-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+          color: #374151;
+          text-decoration: none;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          position: relative;
+        }
+        .np-share-btn:hover {
+          background: #f1f8f4;
+          color: #0d9488;
+          transform: translateY(-2px);
+        }
+        .np-copied-tag {
+          position: absolute;
+          bottom: calc(100% + 8px);
+          left: 50%;
+          transform: translateX(-50%);
+          background: #042f2e;
+          color: #ffffff;
+          font-size: 12px;
+          font-weight: 700;
+          padding: 5px 10px;
+          border-radius: 8px;
+          white-space: nowrap;
+          pointer-events: none;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+        }
+      `}</style>
+      {shareOptions.map((item) => (
+        <a
+          key={item.name}
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="np-share-btn"
+          title={`Chia sẻ lên ${item.name}`}
+          onClick={onClose}
+        >
+          {item.icon}
+        </a>
+      ))}
+      <button
+        type="button"
+        className="np-share-btn"
+        onClick={handleCopy}
+        title="Sao chép liên kết"
+      >
+        {copied ? (
+          <>
+            <Check size={22} color="#10b981" />
+            <span className="np-copied-tag">Đã sao chép!</span>
+          </>
+        ) : (
+          <Link2 size={22} />
+        )}
+      </button>
+    </div>
+  );
+}
 
 export function JobDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { openLoginModal } = useAuthModal();
   const isQuestPage = window.location.pathname.startsWith('/quests/');
 
   const [job, setJob] = useState(null);
@@ -46,37 +214,76 @@ export function JobDetailPage() {
   const [applyError, setApplyError] = useState('');
   const [applySuccess, setApplySuccess] = useState('');
 
-  // Back navigation that also works for directly-opened / shared links, where
-  // window.close() is a silent no-op (the tab wasn't opened by script).
-  function goBack() {
-    if (window.history.length > 1) navigate(-1);
-    else navigate('/candidates');
-  }
+  const [showShare, setShowShare] = useState(false);
+  const [showFullCompanyBio, setShowFullCompanyBio] = useState(false);
+  const [searchKeywords, setSearchKeywords] = useState('');
+  const [similarJobs, setSimilarJobs] = useState([]);
+
+  const [savedJobs, setSavedJobs] = useState(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem('nextplease:saved-jobs') || '[]'));
+    } catch {
+      return new Set();
+    }
+  });
 
   useEffect(() => {
     async function load() {
       try {
+        setLoading(true);
         const data = await getJobDetail(id);
         setJob(data);
       } catch (err) {
-        setError(err.message || 'Không thể tải thông tin.');
+        setError(err.message || 'Không thể tải thông tin việc làm.');
       } finally {
         setLoading(false);
       }
     }
     load();
     getMyPortfolio().then(setPortfolio).catch(() => {});
+
+    // Load recommendations
+    loadJobs({ limit: 8 })
+      .then((data) => {
+        const raw = Array.isArray(data) ? data : [];
+        setSimilarJobs(raw.filter((j) => String(j.id) !== String(id)).slice(0, 4));
+      })
+      .catch(() => {});
   }, [id]);
 
+  function toggleSave(jobId) {
+    if (!getStoredToken()) {
+      openLoginModal('candidate');
+      return;
+    }
+    setSavedJobs((prev) => {
+      const next = new Set(prev);
+      if (next.has(jobId)) next.delete(jobId);
+      else next.add(jobId);
+      try {
+        localStorage.setItem('nextplease:saved-jobs', JSON.stringify([...next]));
+      } catch { /* ignore */ }
+      return next;
+    });
+  }
+
+  function handleSearchSubmit(e) {
+    e.preventDefault();
+    if (searchKeywords.trim()) {
+      navigate(`/jobs?q=${encodeURIComponent(searchKeywords.trim())}`);
+    } else {
+      navigate('/jobs');
+    }
+  }
+
   async function handleApply() {
-    // Guard required custom questions before hitting the API.
     const fields = job.formFields || [];
     const missing = fields.find((f) => f.required && !(answers[f.id] || '').trim());
     if (missing) {
       setApplyError(`Vui lòng trả lời câu hỏi bắt buộc: ${missing.label}`);
       return;
     }
-    // Denormalize into { fieldId: value }, dropping empty answers (BE keys by field id).
+
     const answersPayload = fields.length
       ? Object.fromEntries(
           fields.map((f) => [f.id, (answers[f.id] || '').trim()]).filter(([, v]) => v),
@@ -91,7 +298,7 @@ export function JobDetailPage() {
       } else {
         await applyToJob(id, coverNote, answersPayload);
       }
-      setApplySuccess('Nộp đơn thành công! Nhà tuyển dụng sẽ liên hệ sớm.');
+      setApplySuccess('Nộp đơn thành công! Nhà tuyển dụng sẽ xem xét hồ sơ của bạn.');
       setShowApplyModal(false);
     } catch (err) {
       const code = err.errorCode;
@@ -106,10 +313,13 @@ export function JobDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg, #f8fafc)' }}>
-        <div style={{ textAlign: 'center', color: 'var(--muted, #64748b)' }}>
-          <div style={{ width: '40px', height: '40px', border: '3px solid var(--line, #e2e8f0)', borderTopColor: '#2563eb', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
-          Đang tải...
+      <div style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f7fbf8', overflowX: 'clip' }}>
+        <SiteHeader />
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center', color: MUTED }}>
+            <div style={{ width: '42px', height: '42px', border: '3px solid #dbe9e3', borderTopColor: TEAL, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+            <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>Đang tải thông tin việc làm…</span>
+          </div>
         </div>
       </div>
     );
@@ -117,400 +327,573 @@ export function JobDetailPage() {
 
   if (error || !job) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg, #f8fafc)' }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ color: '#dc2626', marginBottom: '16px' }}>{error || 'Không tìm thấy bài đăng.'}</p>
-          <button onClick={goBack} style={{ padding: '8px 20px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', cursor: 'pointer' }}>Quay lại</button>
+      <div style={{ width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f7fbf8', overflowX: 'clip' }}>
+        <SiteHeader />
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ textAlign: 'center', maxWidth: '440px' }}>
+            <p style={{ color: '#dc2626', fontSize: '1.05rem', fontWeight: 700, marginBottom: '16px' }}>{error || 'Không tìm thấy thông tin bài đăng.'}</p>
+            <Link to="/jobs" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 22px', borderRadius: '12px', background: TEAL, color: '#fff', textDecoration: 'none', fontWeight: 700 }}>
+              <ArrowLeft size={16} /> Quay lại danh sách việc làm
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   const isQuest = job.postType === 'QUEST' || isQuestPage;
-  const accent = isQuest ? '#ff7a1a' : '#2563eb';
   const rs = portfolio?.reputationScore || 0;
   const isLocked = rs < (job.minReqRs || 0);
-  const typeLabel = JOB_TYPE_LABELS[job.jobType] || job.jobType || (isQuest ? 'Quest' : 'Job');
+  const typeLabel = JOB_TYPE_LABELS[job.jobType] || job.jobType || (isQuest ? 'Quest sinh viên' : 'Toàn thời gian');
   const formFields = job.formFields || [];
   const requiredFields = formFields.filter((f) => f.required);
   const answeredRequired = requiredFields.filter((f) => (answers[f.id] || '').trim()).length;
   const allRequiredDone = answeredRequired === requiredFields.length;
+  const isCurrentJobSaved = savedJobs.has(job.id);
+
+  const salaryDisplay = isQuest
+    ? (job.expReward > 0 ? `+${job.expReward} EXP Phần thưởng` : 'EXP Thưởng')
+    : (job.salary || (job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Lương thỏa thuận'));
+
+  const deadlineDate = (job.deadlineAt || job.endsAt)
+    ? new Date(job.deadlineAt || job.endsAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : 'Đang mở';
+
+  const postedAgo = job.posted || 'Gần đây';
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg, #f8fafc)', fontFamily: 'var(--font-sans, system-ui, sans-serif)' }}>
-      {/* ── Hero ── */}
-      <div style={{
-        background: isQuest
-          ? `linear-gradient(135deg, #1a0a00 0%, #3d1a00 50%, #1a0a00 100%)`
-          : `linear-gradient(135deg, #0a0f1e 0%, #0e2156 50%, #0a0f1e 100%)`,
-        padding: '40px 0 0',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Custom banner image as the hero backdrop; falls back to the gradient above */}
-        {job.bannerUrl ? (
-          <>
-            {(() => {
-              const b = parseBanner(job.bannerPos);
-              return (
-                <img src={job.bannerUrl} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${b.x}% ${b.y}%`, transform: `scale(${b.z})`, transformOrigin: `${b.x}% ${b.y}%`, opacity: 0.55, zIndex: 0 }} />
-              );
-            })()}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.78) 100%)', zIndex: 0 }} />
-          </>
-        ) : (
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: `radial-gradient(circle at 18% 20%, ${accent}30, transparent 42%), radial-gradient(circle at 85% 90%, ${accent}20, transparent 40%)`, zIndex: 0 }} />
-        )}
-        {/* Back button */}
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: '860px', margin: '0 auto', padding: '0 24px' }}>
-          <button
-            onClick={goBack}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.84rem', fontWeight: '600', marginBottom: '24px', padding: 0 }}
-          >
-            <ArrowLeft size={15} /> Quay lại
-          </button>
-        </div>
+    <div style={{ background: '#f7fbf8', color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', overflowX: 'clip', fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" }}>
+      <SiteHeader />
 
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: '860px', margin: '0 auto', padding: '0 24px 40px' }}>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-            {/* Company logo */}
-            <div style={{ width: '72px', height: '72px', borderRadius: '16px', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-              {job.companyLogo
-                ? <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <Building size={32} style={{ color: 'rgba(255,255,255,0.6)' }} />
-              }
-            </div>
-            <div style={{ flex: 1 }}>
-              {/* Badge */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.75rem', fontWeight: '800', color: accent, background: `${accent}25`, border: `1px solid ${accent}50`, padding: '4px 10px', borderRadius: '8px' }}>
-                  {isQuest ? <Zap size={11} /> : <Star size={11} />}
-                  {isQuest ? 'Quest' : 'Cơ hội việc làm'}
-                </span>
-                <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: '8px' }}>
-                  {typeLabel}
-                </span>
-              </div>
-              <h1 style={{ margin: '0 0 8px', fontSize: '2rem', fontWeight: '900', color: '#ffffff', lineHeight: 1.15 }}>{job.title}</h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>
-                <Building size={14} />
-                <span>{job.companyName || 'Đối tác'}</span>
-              </div>
-
-              {/* Quick meta pills */}
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '16px' }}>
-                {(() => {
-                  const pill = (icon, text) => (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.13)', border: '1px solid rgba(255,255,255,0.18)', padding: '6px 12px', borderRadius: '999px', backdropFilter: 'blur(6px)' }}>{icon}{text}</span>
-                  );
-                  const dl = (job.deadlineAt || job.endsAt) ? new Date(job.deadlineAt || job.endsAt) : null;
-                  return (
-                    <>
-                      {(job.location || job.isRemote) && pill(<MapPin size={13} />, job.isRemote ? 'Remote' : job.location)}
-                      {job.capacity ? pill(<Users size={13} />, `${job.capacity} chỉ tiêu`) : null}
-                      {dl && pill(<Calendar size={13} />, `${isQuest ? 'Kết thúc' : 'Hạn nộp'}: ${dl.toLocaleDateString('vi-VN')}`)}
-                      {isQuest
-                        ? (job.expReward > 0 && pill(<Zap size={13} />, `+${job.expReward} EXP`))
-                        : pill(<Award size={13} />, job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận')}
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
-          </div>
+      {/* ── Search Bar Sub-Header Banner ── */}
+      <div style={{ background: 'linear-gradient(158deg, #0f766e 0%, #0d9488 52%, #115e59 100%)', padding: '16px 0' }}>
+        <div style={{ width: 'min(1200px, calc(100% - 40px))', margin: '0 auto' }}>
+          <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '46px', background: '#ffffff', borderRadius: '16px', padding: '4px', boxShadow: '0 8px 24px rgba(4, 47, 46, 0.15)' }}>
+            <span style={{ paddingLeft: '14px', color: '#9ca3af', display: 'flex', alignItems: 'center' }}>
+              <Search size={19} />
+            </span>
+            <input
+              type="text"
+              value={searchKeywords}
+              onChange={(e) => setSearchKeywords(e.target.value)}
+              placeholder="Tìm kiếm việc làm tại địa điểm, công ty, kỹ năng…"
+              style={{ border: 'none', outline: 'none', flex: 1, minWidth: 0, fontSize: '0.94rem', color: '#1f2937', padding: '0 8px', background: 'transparent' }}
+            />
+            <button
+              type="submit"
+              style={{ border: 'none', background: 'linear-gradient(135deg, #10b981, #0d9488)', color: '#ffffff', borderRadius: '12px', height: '100%', padding: '0 24px', fontWeight: 800, fontSize: '0.92rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap' }}
+            >
+              Tìm kiếm
+            </button>
+          </form>
         </div>
       </div>
 
-      {/* ── Body ── */}
-      <div className="job-detail-body" style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', alignItems: 'start' }}>
+      {/* ── Breadcrumb ── */}
+      <div style={{ width: 'min(1200px, calc(100% - 40px))', margin: '18px auto 20px' }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: MUTED, flexWrap: 'wrap' }}>
+          <Link to="/" style={{ color: MUTED, textDecoration: 'none', fontWeight: 600 }}>Trang chủ</Link>
+          <span>›</span>
+          <Link to="/jobs" style={{ color: MUTED, textDecoration: 'none', fontWeight: 600 }}>Việc làm</Link>
+          <span>›</span>
+          <span style={{ color: INK, fontWeight: 700 }}>{job.title}</span>
+        </nav>
+      </div>
 
-        {/* LEFT */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* ── Main Two-Column Layout ── */}
+      <div className="np-detail-grid" style={{ width: 'min(1200px, calc(100% - 40px))', margin: '0 auto 60px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '24px', alignItems: 'start' }}>
+        
+        {/* ── LEFT COLUMN ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
+          
+          {/* Main Job Overview Card */}
+          <div style={{ background: '#ffffff', border: '1px solid #e2efe9', borderRadius: '24px', padding: '28px', boxShadow: '0 4px 20px rgba(6, 40, 36, 0.04)' }}>
+            <h1 style={{ margin: '0 0 16px', fontSize: '1.75rem', fontWeight: 800, color: INK, letterSpacing: '-0.02em', lineHeight: 1.25 }}>
+              {job.title}
+            </h1>
 
-          {/* Overview chips */}
-          <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '24px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
-            <h2 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink, #1e293b)', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: `3px solid ${accent}`, paddingLeft: '12px' }}>Tổng quan</h2>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
-              {(job.location || job.isRemote) && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '20px', border: '1px solid var(--line, #e2e8f0)', fontSize: '0.84rem', color: 'var(--ink, #1e293b)', fontWeight: '600' }}>
-                  <MapPin size={13} style={{ color: accent }} />
-                  {job.isRemote ? 'Remote' : job.location}
-                </span>
-              )}
-              {typeLabel && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '20px', border: '1px solid var(--line, #e2e8f0)', fontSize: '0.84rem', color: 'var(--ink, #1e293b)', fontWeight: '600' }}>
-                  <Briefcase size={13} style={{ color: accent }} />
-                  {typeLabel}
-                </span>
-              )}
-              {(job.deadlineAt || job.endsAt) && (() => {
-                const dl = new Date(job.deadlineAt || job.endsAt);
-                const isExpired = dl < new Date();
-                return (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '20px', border: `1px solid ${isExpired ? 'rgba(220,38,38,0.3)' : 'var(--line, #e2e8f0)'}`, fontSize: '0.84rem', color: isExpired ? '#dc2626' : 'var(--ink, #1e293b)', fontWeight: '600' }}>
-                    <Calendar size={13} style={{ color: isExpired ? '#dc2626' : accent }} />
-                    {isQuest ? 'Kết thúc: ' : 'Hạn nộp: '}{dl.toLocaleDateString('vi-VN')}
-                    {isExpired && ' · Đã hết hạn'}
-                  </span>
-                );
-              })()}
-              {job.capacity && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '20px', border: '1px solid var(--line, #e2e8f0)', fontSize: '0.84rem', color: 'var(--ink, #1e293b)', fontWeight: '600' }}>
-                  <Users size={13} style={{ color: accent }} />
-                  {job.capacity} chỉ tiêu
-                </span>
-              )}
+            {/* Quick Meta Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px', margin: '20px 0 24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.92rem', color: INK }}>
+                <span style={{ color: TEAL, display: 'flex' }}><Wallet size={18} /></span>
+                <span style={{ fontWeight: 800, color: TEAL }}>{salaryDisplay}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.92rem', color: MUTED }}>
+                <span style={{ color: TEAL, display: 'flex' }}><MapPin size={18} /></span>
+                <span>{job.location || (job.isRemote ? 'Remote (Làm việc từ xa)' : 'Toàn quốc')}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.92rem', color: MUTED }}>
+                <span style={{ color: TEAL, display: 'flex' }}><Briefcase size={18} /></span>
+                <span>{typeLabel}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.92rem', color: MUTED }}>
+                <span style={{ color: TEAL, display: 'flex' }}><Calendar size={18} /></span>
+                <span>{isQuest ? 'Kết thúc: ' : 'Hạn chót '}{deadlineDate}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.92rem', color: MUTED }}>
+                <span style={{ color: TEAL, display: 'flex' }}><Clock size={18} /></span>
+                <span>Đăng {postedAgo}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.92rem', color: EMERALD, fontWeight: 700 }}>
+                <span style={{ color: EMERALD, display: 'flex' }}><Users size={18} /></span>
+                <span>{job.applicants > 0 ? `${job.applicants} ứng viên đã nộp` : 'Hãy là ứng viên đầu tiên'}</span>
+              </div>
             </div>
-            <p style={{ margin: 0, fontSize: '0.92rem', color: 'var(--muted, #64748b)', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
-              {job.description}
-            </p>
+
+            {/* Action Buttons Bar */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', paddingTop: '16px', borderTop: '1px solid #f0fdf4' }}>
+              {/* Primary Apply Button */}
+              {applySuccess ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px', borderRadius: '14px', background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', color: '#16a34a', fontSize: '0.92rem', fontWeight: 800 }}>
+                  <CheckCircle2 size={18} /> {applySuccess}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!getStoredToken()) {
+                      openLoginModal('candidate');
+                      return;
+                    }
+                    setShowApplyModal(true);
+                    setApplyError('');
+                  }}
+                  disabled={isLocked}
+                  style={{
+                    background: isLocked ? '#9ca3af' : 'linear-gradient(135deg, #10b981 0%, #0d9488 100%)',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: '1rem',
+                    padding: '13px 36px',
+                    borderRadius: '14px',
+                    border: 'none',
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
+                    boxShadow: isLocked ? 'none' : '0 6px 20px rgba(13, 148, 136, 0.35)',
+                    transition: 'all 0.15s ease',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  {isLocked ? (
+                    <><LockKeyhole size={16} /> Chưa đủ RS ({rs}/{job.minReqRs})</>
+                  ) : isQuest ? (
+                    <><Zap size={16} /> Tham gia Quest</>
+                  ) : (
+                    'Ứng tuyển'
+                  )}
+                </button>
+              )}
+
+              {/* Save / Tym Button */}
+              <button
+                type="button"
+                onClick={() => toggleSave(job.id)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: '#ffffff',
+                  border: '1px solid #e2efe9',
+                  borderRadius: '14px',
+                  padding: '12px 20px',
+                  fontSize: '0.92rem',
+                  fontWeight: 700,
+                  color: isCurrentJobSaved ? '#ef5da8' : INK,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Heart size={19} fill={isCurrentJobSaved ? '#ef5da8' : 'none'} color={isCurrentJobSaved ? '#ef5da8' : '#64748b'} />
+                <span>{isCurrentJobSaved ? 'Đã lưu' : 'Lưu'}</span>
+              </button>
+
+              {/* Share Button with Dropdown */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowShare((prev) => !prev)}
+                  aria-label="Chia sẻ"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '14px',
+                    background: '#ffffff',
+                    border: '1px solid #e2efe9',
+                    color: MUTED,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <Share2 size={19} />
+                </button>
+                {showShare && (
+                  <SharePopover job={job} onClose={() => setShowShare(false)} />
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Skills */}
-          {job.skills && job.skills.length > 0 && (
-            <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '24px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
-              <h2 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink, #1e293b)', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: `3px solid ${accent}`, paddingLeft: '12px' }}>Kỹ năng yêu cầu</h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {job.skills.map((s, i) => (
-                  <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 12px', borderRadius: '10px', border: `1px solid ${accent}30`, background: `${accent}08`, fontSize: '0.84rem', fontWeight: '700', color: accent }}>
-                    <CheckCircle2 size={12} /> {s.skillName || s.name || s}
-                    {s.requiredLevel && <span style={{ fontSize: '0.72rem', opacity: 0.7 }}>· {s.requiredLevel}</span>}
-                  </span>
+          {/* Section: Yêu cầu công việc & Năng lực */}
+          <div style={{ background: '#ffffff', border: '1px solid #e2efe9', borderRadius: '24px', padding: '28px', boxShadow: '0 4px 20px rgba(6, 40, 36, 0.04)' }}>
+            <h2 style={{ margin: '0 0 16px', fontSize: '1.2rem', fontWeight: 800, color: INK }}>
+              Yêu cầu công việc
+            </h2>
+
+            {/* Min RS Badge */}
+            {job.minReqRs > 0 && (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '12px', background: isLocked ? 'rgba(239, 68, 68, 0.08)' : 'rgba(13, 148, 136, 0.08)', border: `1px solid ${isLocked ? '#fecaca' : '#99f6e4'}`, marginBottom: '18px' }}>
+                <Shield size={16} color={isLocked ? '#dc2626' : TEAL} />
+                <span style={{ fontSize: '0.88rem', fontWeight: 800, color: isLocked ? '#dc2626' : TEAL }}>
+                  Yêu cầu tối thiểu {job.minReqRs} Reputation Score {isLocked ? `(Bạn đang có ${rs} RS)` : `✓ (Bạn có ${rs} RS)`}
+                </span>
+              </div>
+            )}
+
+            {/* Required Skills Chips */}
+            {job.skills && job.skills.length > 0 && (
+              <div style={{ marginBottom: '18px' }}>
+                <p style={{ margin: '0 0 10px', fontSize: '0.86rem', fontWeight: 700, color: MUTED }}>Kỹ năng chuyên môn:</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {job.skills.map((s, idx) => (
+                    <span
+                      key={idx}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: MINT,
+                        color: TEAL,
+                        borderRadius: '999px',
+                        padding: '6px 14px',
+                        fontSize: '0.84rem',
+                        fontWeight: 700,
+                      }}
+                    >
+                      <CheckCircle2 size={13} /> {s.skillName || s.name || s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <ul style={{ margin: '0', paddingLeft: '22px', color: '#374151', fontSize: '0.94rem', lineHeight: 1.8 }}>
+              <li>Tinh thần cầu tiến, trách nhiệm và kỷ luật trong công việc.</li>
+              <li>Kỹ năng giao tiếp và phối hợp làm việc nhóm hiệu quả.</li>
+              <li>Chủ động học hỏi các công nghệ và quy trình làm việc mới.</li>
+            </ul>
+          </div>
+
+          {/* Section: Mô tả công việc / Công việc cụ thể là gì? */}
+          <div style={{ background: '#ffffff', border: '1px solid #e2efe9', borderRadius: '24px', padding: '28px', boxShadow: '0 4px 20px rgba(6, 40, 36, 0.04)' }}>
+            <h2 style={{ margin: '0 0 16px', fontSize: '1.2rem', fontWeight: 800, color: INK }}>
+              Công việc cụ thể là gì?
+            </h2>
+            <div style={{ fontSize: '0.95rem', color: '#374151', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
+              {job.description || 'Tham gia trực tiếp vào các quy trình dự án và báo cáo kết quả định kỳ theo hướng dẫn của người hướng dẫn.'}
+            </div>
+          </div>
+
+          {/* Section: Quyền lợi & Phần thưởng */}
+          <div style={{ background: '#ffffff', border: '1px solid #e2efe9', borderRadius: '24px', padding: '28px', boxShadow: '0 4px 20px rgba(6, 40, 36, 0.04)' }}>
+            <h2 style={{ margin: '0 0 16px', fontSize: '1.2rem', fontWeight: 800, color: INK }}>
+              Quyền lợi được hưởng
+            </h2>
+            <ul style={{ margin: 0, paddingLeft: '22px', color: '#374151', fontSize: '0.94rem', lineHeight: 1.8 }}>
+              <li>Mức thù lao / lương: <b>{salaryDisplay}</b>.</li>
+              <li>Cơ hội tích lũy Reputation Score và EXP trên hệ thống nextplease.</li>
+              <li>Nhận chứng nhận hoàn thành và xác thực năng lực trực tiếp từ nhà tuyển dụng.</li>
+              <li>Môi trường làm việc năng động, tôn trọng ý kiến cá nhân của người trẻ Gen Z.</li>
+            </ul>
+          </div>
+
+          {/* Section: Application Questionnaire (If configured) */}
+          {formFields.length > 0 && (
+            <div style={{ background: '#ffffff', border: '1px solid #e2efe9', borderRadius: '24px', padding: '28px', boxShadow: '0 4px 20px rgba(6, 40, 36, 0.04)' }}>
+              <h2 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 800, color: INK }}>
+                Câu hỏi khi ứng tuyển
+              </h2>
+              <p style={{ margin: '0 0 16px', fontSize: '0.88rem', color: MUTED }}>
+                Bạn sẽ trả lời những câu hỏi này khi bấm {isQuest ? 'Tham gia Quest' : 'Ứng tuyển'}.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {formFields.map((f, idx) => (
+                  <div key={f.id || idx} style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2efe9', background: '#fdfefe' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 800, color: TEAL }}>{idx + 1}.</span>
+                      <strong style={{ fontSize: '0.92rem', color: INK }}>{f.label}</strong>
+                      {f.required && (
+                        <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#dc2626', background: '#fef2f2', padding: '2px 8px', borderRadius: '999px' }}>
+                          Bắt buộc
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
           )}
-
-          {/* Requirements */}
-          <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '24px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
-            <h2 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink, #1e293b)', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: `3px solid ${accent}`, paddingLeft: '12px' }}>Yêu cầu ứng tuyển</h2>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <div style={{ padding: '14px 20px', borderRadius: '14px', border: `1.5px solid ${isLocked ? '#dc2626' : accent}30`, background: `${isLocked ? '#dc2626' : accent}06` }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>MIN REP SCORE</div>
-                <div style={{ fontSize: '1.2rem', fontWeight: '900', color: isLocked ? '#dc2626' : accent, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {job.minReqRs > 0 ? `${job.minReqRs} RS` : 'Không có'}
-                  {isLocked && <LockKeyhole size={14} />}
-                </div>
-              </div>
-              {isQuest && job.expReward > 0 && (
-                <div style={{ padding: '14px 20px', borderRadius: '14px', border: '1.5px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.06)' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>PHẦN THƯỞNG</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: '900', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Zap size={16} /> +{job.expReward} EXP
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Custom application questions */}
-          {job.formFields && job.formFields.length > 0 && (
-            <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '24px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
-              <h2 style={{ margin: '0 0 6px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink, #1e293b)', display: 'flex', alignItems: 'center', gap: '10px', borderLeft: `3px solid ${accent}`, paddingLeft: '12px' }}>Câu hỏi khi ứng tuyển</h2>
-              <p style={{ margin: '0 0 16px 15px', fontSize: '0.84rem', color: 'var(--muted, #64748b)' }}>Bạn sẽ trả lời những câu hỏi này khi bấm {isQuest ? 'Tham gia' : 'Ứng tuyển'}.</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {job.formFields.map((f, idx) => {
-                  const typeLabel = f.fieldType === 'TEXTAREA' ? 'Văn bản dài' : f.fieldType === 'SELECT' ? 'Chọn 1 đáp án' : 'Văn bản ngắn';
-                  const opts = f.fieldType === 'SELECT' ? (f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean) : [];
-                  return (
-                    <div key={f.id || idx} style={{ padding: '12px 14px', borderRadius: '12px', border: '1px solid var(--line, #e2e8f0)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.74rem', fontWeight: '800', color: accent }}>{idx + 1}.</span>
-                        <strong style={{ fontSize: '0.9rem', color: 'var(--ink, #1e293b)' }}>{f.label}</strong>
-                        {f.required && <span style={{ fontSize: '0.68rem', fontWeight: '800', color: '#dc2626', background: 'rgba(220,38,38,0.08)', padding: '2px 7px', borderRadius: '999px' }}>Bắt buộc</span>}
-                        <span style={{ fontSize: '0.68rem', fontWeight: '700', color: 'var(--muted, #64748b)', border: '1px solid var(--line, #e2e8f0)', padding: '2px 7px', borderRadius: '999px' }}>{typeLabel}</span>
-                      </div>
-                      {opts.length > 0 && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '7px' }}>
-                          {opts.map((o, i) => (
-                            <span key={i} style={{ fontSize: '0.74rem', fontWeight: '600', color: 'var(--ink, #1e293b)', background: 'var(--bg, #f8fafc)', border: '1px solid var(--line, #e2e8f0)', padding: '2px 8px', borderRadius: '6px' }}>{o}</span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* RIGHT sidebar */}
-        <div className="job-detail-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '24px' }}>
-
-          {/* Compensation / Reward */}
-          <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '22px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
-            <div style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-              {isQuest ? 'Phần thưởng' : 'Thù lao'}
-            </div>
-            {isQuest ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <Zap size={22} style={{ color: '#f59e0b' }} />
-                <span style={{ fontSize: '1.6rem', fontWeight: '900', color: '#f59e0b' }}>+{job.expReward || 0} EXP</span>
+        {/* ── RIGHT COLUMN (Sidebar) ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
+          
+          {/* Company / Organizer Profile Card */}
+          <div style={{ background: '#ffffff', border: '1px solid #e2efe9', borderRadius: '24px', padding: '24px', boxShadow: '0 4px 20px rgba(6, 40, 36, 0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+              <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: '#dff7ee', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', border: '1px solid #cdeee2' }}>
+                {job.companyLogo ? (
+                  <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <Building2 size={26} color={TEAL} />
+                )}
               </div>
-            ) : (
-              <div style={{ fontSize: '1.6rem', fontWeight: '900', color: accent, marginBottom: '4px' }}>
-                {job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận'}
-              </div>
-            )}
-            <p style={{ margin: '0 0 18px', fontSize: '0.8rem', color: 'var(--muted, #64748b)' }}>
-              {isQuest ? 'trao khi hoàn thành Quest' : 'trả khi hoàn thành công việc'}
-            </p>
-
-            {/* Deadline */}
-            {(job.deadlineAt || job.endsAt) && (() => {
-              const dl = new Date(job.deadlineAt || job.endsAt);
-              const isExpired = dl < new Date();
-              return (
-                <div style={{ padding: '12px 16px', borderRadius: '12px', background: isExpired ? 'rgba(220,38,38,0.06)' : 'rgba(37,99,235,0.05)', border: `1px solid ${isExpired ? 'rgba(220,38,38,0.2)' : 'rgba(37,99,235,0.15)'}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Calendar size={16} style={{ color: isExpired ? '#dc2626' : accent, flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      {isQuest ? 'Kết thúc' : 'Hạn nộp hồ sơ'}
-                    </div>
-                    <div style={{ fontSize: '0.92rem', fontWeight: '800', color: isExpired ? '#dc2626' : 'var(--ink, #1e293b)', marginTop: '2px' }}>
-                      {dl.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                      {isExpired && <span style={{ fontSize: '0.74rem', marginLeft: '6px', color: '#dc2626', fontWeight: '700' }}>· Đã hết hạn</span>}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Apply button */}
-            {applySuccess ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '12px', background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.2)', color: '#16a34a', fontSize: '0.88rem', fontWeight: '700' }}>
-                <CheckCircle2 size={16} /> {applySuccess}
-              </div>
-            ) : (
-              <button
-                onClick={() => { setShowApplyModal(true); setApplyError(''); }}
-                disabled={isLocked}
-                onMouseEnter={(e) => { if (!isLocked) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${accent}55`; } }}
-                onMouseLeave={(e) => { if (!isLocked) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = `0 4px 16px ${accent}40`; } }}
-                style={{
-                  width: '100%', padding: '13px', borderRadius: '12px', border: 'none',
-                  background: isLocked ? 'var(--muted, #94a3b8)' : `linear-gradient(135deg, ${accent}, ${isQuest ? '#e55a00' : '#1d4ed8'})`,
-                  color: '#fff', fontSize: '0.96rem', fontWeight: '800', cursor: isLocked ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  boxShadow: isLocked ? 'none' : `0 4px 16px ${accent}40`, transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-                }}
-              >
-                {isLocked ? <><LockKeyhole size={15} /> Chưa đủ RS</> : (isQuest ? <><Zap size={15} /> Tham gia Quest</> : <><Briefcase size={15} /> Ứng tuyển ngay</>)}
-              </button>
-            )}
-
-            {job.minReqRs > 0 && (
-              <p style={{ margin: '10px 0 0', fontSize: '0.78rem', color: isLocked ? '#dc2626' : 'var(--muted, #64748b)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                <Shield size={12} /> Yêu cầu {job.minReqRs}+ Reputation Score
-                {isLocked && ` (bạn có ${rs} RS)`}
-              </p>
-            )}
-          </div>
-
-          {/* Organizer info */}
-          <div style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--line, #e2e8f0)', borderRadius: '18px', padding: '22px', boxShadow: '0 1px 3px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)' }}>
-            <h3 style={{ margin: '0 0 14px', fontSize: '0.92rem', fontWeight: '800', color: 'var(--ink, #1e293b)' }}>Thông tin tổ chức</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: `${accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                {job.companyLogo
-                  ? <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <Building size={20} style={{ color: accent }} />
-                }
-              </div>
-              <div>
-                <strong style={{ display: 'block', fontSize: '0.9rem', color: 'var(--ink, #1e293b)' }}>{job.companyName}</strong>
-                <span style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                  <CheckCircle2 size={11} /> Đã xác thực
+              <div style={{ minWidth: 0 }}>
+                <h3 style={{ margin: '0 0 4px', fontSize: '1.05rem', fontWeight: 800, color: INK, lineHeight: 1.2 }}>
+                  {job.companyName || job.company || 'Doanh nghiệp đối tác'}
+                </h3>
+                <span style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <CheckCircle2 size={13} /> Đã xác thực
                 </span>
               </div>
+            </div>
+
+            <p style={{ margin: '0 0 10px', fontSize: '0.88rem', color: MUTED, lineHeight: 1.6 }}>
+              {showFullCompanyBio
+                ? (job.companyBio || `${job.companyName || 'Đơn vị tuyển dụng'} là đối tác uy tín trên nền tảng NextPlease, cung cấp các cơ hội nghề nghiệp chất lượng cho sinh viên và bạn trẻ.`)
+                : `${(job.companyBio || `${job.companyName || 'Đơn vị tuyển dụng'} là đối tác uy tín trên nền tảng NextPlease...`).slice(0, 140)}...`}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setShowFullCompanyBio((prev) => !prev)}
+              style={{ background: 'none', border: 'none', color: TEAL, fontWeight: 700, fontSize: '0.84rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: 0 }}
+            >
+              {showFullCompanyBio ? <>Thu gọn <ChevronUp size={14} /></> : <>Xem thêm <ChevronDown size={14} /></>}
+            </button>
+          </div>
+
+          {/* Similar Opportunities Widget ("Việc làm bạn sẽ thích") */}
+          <div style={{ background: '#ffffff', border: '1px solid #e2efe9', borderRadius: '24px', padding: '24px', boxShadow: '0 4px 20px rgba(6, 40, 36, 0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: INK }}>
+                Việc làm bạn sẽ thích
+              </h3>
+              <Sparkles size={18} color="#8b5cf6" />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {similarJobs.length > 0 ? (
+                similarJobs.map((simJob, idx) => (
+                  <article
+                    key={simJob.id}
+                    style={{
+                      border: '1px solid #eef4f1',
+                      borderRadius: '16px',
+                      padding: '14px',
+                      background: '#ffffff',
+                      transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                      position: 'relative',
+                    }}
+                  >
+                    <button
+                      type="button"
+                      aria-label="Lưu việc làm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSave(simJob.id);
+                      }}
+                      style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        color: savedJobs.has(simJob.id) ? '#ef5da8' : '#9ca3af',
+                      }}
+                    >
+                      <Heart size={18} fill={savedJobs.has(simJob.id) ? '#ef5da8' : 'none'} />
+                    </button>
+
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', paddingRight: '28px' }}>
+                      <span
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '12px',
+                          background: LOGO_COLORS[idx % LOGO_COLORS.length],
+                          color: TEAL,
+                          fontWeight: 800,
+                          fontSize: '0.85rem',
+                          display: 'grid',
+                          placeItems: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {initials(simJob.company) || <Building2 size={18} />}
+                      </span>
+                      <div style={{ minWidth: 0 }}>
+                        <Link
+                          to={`/jobs/${simJob.id}`}
+                          style={{
+                            display: 'block',
+                            fontSize: '0.92rem',
+                            fontWeight: 800,
+                            color: INK,
+                            textDecoration: 'none',
+                            lineHeight: 1.3,
+                            marginBottom: '3px',
+                          }}
+                        >
+                          {simJob.title}
+                        </Link>
+                        <div style={{ fontSize: '0.8rem', color: MUTED }}>
+                          {simJob.company}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.78rem', color: MUTED }}>
+                      <div style={{ fontWeight: 700, color: TEAL }}>
+                        {simJob.salary || (simJob.compensation > 0 ? `${Number(simJob.compensation).toLocaleString()} VND` : 'Lương thỏa thuận')}
+                      </div>
+                      <div>
+                        📍 {simJob.location || 'Toàn quốc'} · {simJob.type || 'Linh hoạt'}
+                      </div>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <div style={{ fontSize: '0.88rem', color: MUTED, textAlign: 'center', padding: '16px 0' }}>
+                  Đang cập nhật các cơ hội tương tự…
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Apply Modal ── */}
+      {/* ── Apply Modal (Application Form & Confirmation) ── */}
       {showApplyModal && (
-        <div className="glass-modal-overlay" onClick={() => setShowApplyModal(false)}>
-          <div className="glass-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
-            <div className="glass-modal-header" style={{ borderTop: `3px solid ${accent}`, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit' }}>
-              <span style={{ display: 'inline-flex', width: '34px', height: '34px', borderRadius: '10px', alignItems: 'center', justifyContent: 'center', background: `${accent}14`, color: accent }}>
-                {isQuest ? <Zap size={19} /> : <ClipboardList size={19} />}
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            background: 'rgba(4, 47, 46, 0.72)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            animation: 'npFadeIn 0.2s ease-out both',
+          }}
+          onClick={() => setShowApplyModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '520px',
+              background: '#ffffff',
+              borderRadius: '24px',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              maxHeight: '90vh',
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2efe9', display: 'flex', alignItems: 'center', gap: '12px', background: '#f0fdf4' }}>
+              <span style={{ display: 'inline-flex', width: '38px', height: '38px', borderRadius: '12px', alignItems: 'center', justifyContent: 'center', background: MINT, color: TEAL }}>
+                {isQuest ? <Zap size={20} /> : <ClipboardList size={20} />}
               </span>
-              <h2>{isQuest ? 'Xác nhận tham gia Quest' : 'Xác nhận ứng tuyển'}</h2>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: INK }}>
+                  {isQuest ? 'Xác nhận tham gia Quest' : 'Xác nhận nộp đơn ứng tuyển'}
+                </h3>
+                <span style={{ fontSize: '0.82rem', color: MUTED }}>{job.title}</span>
+              </div>
             </div>
 
-            <div className="glass-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Profile preview */}
+            {/* Modal Body */}
+            <div style={{ padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              {/* Profile Preview */}
               {portfolio && (
-                <div style={{ border: '1px solid var(--line)', borderRadius: '14px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Hồ sơ của bạn</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: `linear-gradient(135deg, ${accent}, #1d4ed8)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', color: '#fff', fontSize: '1rem', flexShrink: 0 }}>
+                <div style={{ border: '1px solid #e2efe9', borderRadius: '16px', padding: '16px', background: '#fcfdfd' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
+                    Hồ sơ của bạn
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg, #10b981, #0d9488)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#fff', fontSize: '1.05rem', flexShrink: 0 }}>
                       {portfolio.name ? portfolio.name.slice(0, 2).toUpperCase() : 'UV'}
                     </div>
                     <div>
-                      <strong style={{ display: 'block', fontSize: '0.92rem', color: 'var(--ink)' }}>{portfolio.name}</strong>
-                      {portfolio.headline && <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{portfolio.headline}</span>}
-                      {portfolio.school && <span style={{ fontSize: '0.76rem', color: accent, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}><GraduationCap size={13} /> {portfolio.school}</span>}
+                      <strong style={{ display: 'block', fontSize: '0.95rem', color: INK }}>{portfolio.name}</strong>
+                      <span style={{ fontSize: '0.8rem', color: MUTED }}>{portfolio.headline || portfolio.school || 'Ứng viên NextPlease'}</span>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {[{ l: 'RS', v: portfolio.reputationScore, c: '#2563eb' }, { l: 'Level', v: portfolio.currentLevel, c: '#ff7a1a' }, { l: 'EXP', v: portfolio.totalExp, c: '#7c3aed' }].map(s => (
-                      <div key={s.l} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', background: `${s.c}08`, borderRadius: '10px', border: `1px solid ${s.c}20` }}>
-                        <strong style={{ fontSize: '0.88rem', color: s.c, display: 'block' }}>{s.v}</strong>
-                        <span style={{ fontSize: '0.68rem', color: 'var(--muted)', fontWeight: '700' }}>{s.l}</span>
-                      </div>
-                    ))}
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                    <div style={{ flex: 1, textAlign: 'center', padding: '8px', background: '#f0fdf4', borderRadius: '10px', border: '1px solid #dcfce7' }}>
+                      <strong style={{ fontSize: '0.9rem', color: TEAL, display: 'block' }}>{portfolio.reputationScore || 0}</strong>
+                      <span style={{ fontSize: '0.7rem', color: MUTED, fontWeight: 700 }}>RS Score</span>
+                    </div>
+                    <div style={{ flex: 1, textAlign: 'center', padding: '8px', background: '#fffbeb', borderRadius: '10px', border: '1px solid #fef3c7' }}>
+                      <strong style={{ fontSize: '0.9rem', color: '#d97706', display: 'block' }}>Lv {portfolio.currentLevel || 1}</strong>
+                      <span style={{ fontSize: '0.7rem', color: MUTED, fontWeight: 700 }}>Level</span>
+                    </div>
+                    <div style={{ flex: 1, textAlign: 'center', padding: '8px', background: '#f5f3ff', borderRadius: '10px', border: '1px solid #ede9fe' }}>
+                      <strong style={{ fontSize: '0.9rem', color: '#7c3aed', display: 'block' }}>+{portfolio.totalExp || 0}</strong>
+                      <span style={{ fontSize: '0.7rem', color: MUTED, fontWeight: 700 }}>EXP</span>
+                    </div>
                   </div>
-                  <a href="/portfolio/edit" target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 14px', borderRadius: '10px', border: `1px solid ${accent}30`, background: `${accent}08`, color: accent, fontSize: '0.84rem', fontWeight: '700', textDecoration: 'none' }}>
-                    <FolderOpen size={15} /> Xem lại Portfolio của bạn
-                  </a>
                 </div>
               )}
 
-              {/* Cover note */}
+              {/* Cover Note */}
               <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.86rem', fontWeight: '700', color: 'var(--ink)' }}>Giới thiệu bản thân (tùy chọn)</label>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.88rem', fontWeight: 700, color: INK }}>
+                  Lời giới thiệu bản thân (Tùy chọn)
+                </label>
                 <textarea
                   value={coverNote}
-                  onChange={e => setCoverNote(e.target.value)}
-                  placeholder="Chia sẻ lý do bạn muốn ứng tuyển vị trí này..."
+                  onChange={(e) => setCoverNote(e.target.value)}
+                  placeholder="Chia sẻ ngắn về lý do bạn phù hợp với cơ hội này..."
                   rows={3}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem', color: 'var(--ink)', resize: 'vertical', outline: 'none', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '12px 14px', borderRadius: '12px', border: '1px solid #e2efe9', background: '#ffffff', fontSize: '0.9rem', color: INK, outline: 'none', boxSizing: 'border-box', resize: 'vertical' }}
                 />
               </div>
 
-              {/* Custom application questions */}
+              {/* Questionnaire Form Fields */}
               {formFields.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: '800', color: accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Câu hỏi khi {isQuest ? 'tham gia' : 'ứng tuyển'}
-                    </span>
-                    {requiredFields.length > 0 && (
-                      <span style={{ fontSize: '0.72rem', fontWeight: '800', color: allRequiredDone ? '#16a34a' : 'var(--muted)' }}>
-                        {allRequiredDone ? '✓ Đã đủ' : `${answeredRequired}/${requiredFields.length} bắt buộc`}
-                      </span>
-                    )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: TEAL, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Câu hỏi bắt buộc từ nhà tuyển dụng
                   </div>
                   {formFields.map((f, idx) => {
-                    const inputStyle = { width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface-soft)', fontSize: '0.88rem', color: 'var(--ink)', outline: 'none', boxSizing: 'border-box' };
+                    const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: '12px', border: '1px solid #e2efe9', background: '#ffffff', fontSize: '0.9rem', color: INK, outline: 'none', boxSizing: 'border-box' };
                     return (
                       <div key={f.id || idx}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.86rem', fontWeight: '700', color: 'var(--ink)' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.88rem', fontWeight: 700, color: INK }}>
                           {f.label} {f.required && <span style={{ color: '#dc2626' }}>*</span>}
                         </label>
                         {f.fieldType === 'TEXTAREA' ? (
-                          <textarea rows={3} value={answers[f.id] || ''} onChange={e => setAnswers(p => ({ ...p, [f.id]: e.target.value }))} style={{ ...inputStyle, resize: 'vertical' }} />
+                          <textarea rows={3} value={answers[f.id] || ''} onChange={(e) => setAnswers((p) => ({ ...p, [f.id]: e.target.value }))} style={{ ...inputStyle, resize: 'vertical' }} />
                         ) : f.fieldType === 'SELECT' ? (
-                          <select value={answers[f.id] || ''} onChange={e => setAnswers(p => ({ ...p, [f.id]: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
-                            <option value="">— Chọn —</option>
-                            {(f.options || '').split(/[\n,]/).map(o => o.trim()).filter(Boolean).map(o => <option key={o} value={o}>{o}</option>)}
+                          <select value={answers[f.id] || ''} onChange={(e) => setAnswers((p) => ({ ...p, [f.id]: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
+                            <option value="">— Chọn câu trả lời —</option>
+                            {(f.options || '').split(/[\n,]/).map((o) => o.trim()).filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
                           </select>
                         ) : (
-                          <input value={answers[f.id] || ''} onChange={e => setAnswers(p => ({ ...p, [f.id]: e.target.value }))} style={inputStyle} />
+                          <input value={answers[f.id] || ''} onChange={(e) => setAnswers((p) => ({ ...p, [f.id]: e.target.value }))} style={inputStyle} />
                         )}
                       </div>
                     );
@@ -519,28 +902,53 @@ export function JobDetailPage() {
               )}
 
               {applyError && (
-                <div className="alert-banner error">
-                  <AlertTriangle size={15} style={{ flexShrink: 0 }} />
-                  {applyError}
+                <div style={{ padding: '12px 16px', borderRadius: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                  <span>{applyError}</span>
                 </div>
               )}
             </div>
 
-            <div className="glass-modal-footer">
-              <button className="button secondary-button" onClick={() => setShowApplyModal(false)} type="button" disabled={applyLoading}>Hủy bỏ</button>
-              <button className="button primary-button" onClick={handleApply} type="button" disabled={applyLoading || !allRequiredDone}>
-                {applyLoading ? 'Đang nộp...' : (isQuest ? 'Xác nhận tham gia' : 'Xác nhận nộp đơn')}
+            {/* Modal Footer */}
+            <div style={{ padding: '16px 24px', borderTop: '1px solid #e2efe9', display: 'flex', justifyContent: 'flex-end', gap: '10px', background: '#fbfdfc' }}>
+              <button
+                type="button"
+                onClick={() => setShowApplyModal(false)}
+                disabled={applyLoading}
+                style={{ padding: '10px 20px', borderRadius: '12px', border: '1px solid #e2efe9', background: '#ffffff', color: MUTED, fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer' }}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={handleApply}
+                disabled={applyLoading || !allRequiredDone}
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #10b981, #0d9488)',
+                  color: '#ffffff',
+                  fontWeight: 800,
+                  fontSize: '0.92rem',
+                  cursor: (applyLoading || !allRequiredDone) ? 'not-allowed' : 'pointer',
+                  opacity: (applyLoading || !allRequiredDone) ? 0.6 : 1,
+                }}
+              >
+                {applyLoading ? 'Đang nộp…' : (isQuest ? 'Xác nhận tham gia' : 'Xác nhận nộp đơn')}
               </button>
             </div>
           </div>
         </div>
       )}
 
+      <SiteFooter />
+
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 768px) {
-          .job-detail-body { grid-template-columns: 1fr !important; padding-left: 16px !important; padding-right: 16px !important; }
-          .job-detail-sidebar { position: static !important; top: auto !important; }
+        @keyframes npFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @media (max-width: 900px) {
+          .np-detail-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>

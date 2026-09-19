@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageSquarePlus, Plus, Minus, Trash2, GripVertical, ImagePlus, Sparkles, AlertTriangle, Move } from 'lucide-react';
 import { createQuest, updateQuest, getQuestExpConfig } from '../api/questApi.js';
+import { getMyCompany } from '../api/b2bApi.js';
 import { PremiumDateTimePicker } from './PremiumDateTimePicker.jsx';
 import { QUEST_CATEGORIES, toLocalISOString, parseBanner, serializeBanner } from './postingConstants.js';
 
@@ -47,11 +48,25 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
     description: initialData?.description ?? '',
     questCategory: initialData?.category ?? 'SMALL_EVENT',
     minReqRs: initialData?.minReqRs ?? 0,
+    location: initialData?.location ?? '',
     capacity: initialData?.capacity ? String(initialData.capacity) : '',
     deadlineAt: initialData?.endsAt ?? '',
     bannerUrl: initialData?.bannerUrl ?? '',
     bannerPos: initialData?.bannerPos ?? '50% 50%',
   });
+
+  // Địa điểm mặc định lấy từ địa chỉ CLB / tổ chức đã đăng ký; vẫn sửa được.
+  useEffect(() => {
+    if (isEdit) return;
+    let alive = true;
+    getMyCompany()
+      .then((company) => {
+        if (!alive || !company?.address) return;
+        setForm((c) => (c.location.trim() ? c : { ...c, location: company.address }));
+      })
+      .catch(() => { /* không prefill được thì người đăng tự nhập */ });
+    return () => { alive = false; };
+  }, [isEdit]);
 
   function handleBannerUpload(e) {
     const file = e.target.files?.[0];
@@ -140,6 +155,7 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
     if (!form.title.trim()) e.title = 'Tiêu đề không được để trống.';
     else if (form.title.trim().length < 10) e.title = 'Tiêu đề quá ngắn (tối thiểu 10 ký tự).';
     else if (form.title.trim().length > 200) e.title = 'Tiêu đề quá dài (tối đa 200 ký tự).';
+    if (!form.location.trim()) e.location = 'Địa điểm không được để trống.';
     if (!form.description.trim()) e.description = 'Mô tả không được để trống.';
     else if (form.description.trim().length < 30) e.description = 'Mô tả quá ngắn (tối thiểu 30 ký tự).';
     if (form.capacity) {
@@ -175,6 +191,7 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
       description: form.description.trim(),
       category: form.questCategory,
       minReqRs: parseInt(form.minReqRs) || 0,
+      location: form.location.trim(),
       capacity: form.capacity ? parseInt(form.capacity) : null,
       endsAt: deadline,
       bannerUrl: form.bannerUrl || null,
@@ -289,6 +306,16 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <SectionLabel num={2} label="Yêu cầu & Thời hạn" color="#2563eb" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: '1 / -1' }}>
+              <label style={{ fontSize: '0.86rem', fontWeight: '700', color: 'var(--muted)' }}>Địa điểm diễn ra *</label>
+              <input name="location" value={form.location} onChange={handleChange}
+                maxLength={200} placeholder="VD: Hội trường A, ĐH FPT, TP. Thủ Đức, TP. Hồ Chí Minh"
+                style={errStyle(errors.location)} />
+              {errors.location
+                ? <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: '600' }}>{errors.location}</span>
+                : <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Lấy sẵn từ địa chỉ tổ chức — bạn có thể sửa cho từng Quest.</span>}
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '0.86rem', fontWeight: '700', color: 'var(--muted)' }}>Số lượng tham gia</label>
               <input type="text" inputMode="numeric" name="capacity" value={form.capacity} onChange={handleChange}

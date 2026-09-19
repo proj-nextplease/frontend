@@ -437,7 +437,7 @@ function SystemConfigPanel() {
 }
 
 function ProvisionPanel() {
-  const [form, setForm] = useState({ name: '', companyType: 'SME', representativeEmail: '' });
+  const [form, setForm] = useState({ name: '', companyType: 'SME', address: '', representativeEmail: '' });
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const [lastLink, setLastLink] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
@@ -505,6 +505,7 @@ function ProvisionPanel() {
       const result = await provisionCompany({
         name: entry.name,
         companyType: entry.companyType,
+        address: entry.address,
         representativeEmail: entry.email
       });
       const inviteLink = result?.inviteUrl || '';
@@ -542,6 +543,9 @@ function ProvisionPanel() {
     if (!form.name.trim()) {
       validationErrors.name = 'Vui lòng điền vào tên tổ chức / đối tác.';
     }
+    if (!form.address.trim()) {
+      validationErrors.address = 'Vui lòng điền địa chỉ của tổ chức.';
+    }
     if (!form.representativeEmail.trim()) {
       validationErrors.representativeEmail = 'Vui lòng điền vào email người đại diện.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.representativeEmail)) {
@@ -574,6 +578,7 @@ function ProvisionPanel() {
         id: Date.now(),
         name: form.name,
         companyType: form.companyType,
+        address: form.address,
         email: form.representativeEmail,
         date: new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         link: inviteLink
@@ -583,7 +588,7 @@ function ProvisionPanel() {
       localStorage.setItem('np_recent_provisions', JSON.stringify(updated));
 
       // Reset form
-      setForm({ name: '', companyType: 'SME', representativeEmail: '' });
+      setForm({ name: '', companyType: 'SME', address: '', representativeEmail: '' });
     } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Cấp quyền tổ chức thất bại.' });
     }
@@ -743,6 +748,40 @@ function ProvisionPanel() {
                 <AlertCircle size={14} />
                 <span>{provisionErrors.name}</span>
               </div>
+            )}
+          </div>
+
+          {/* Địa chỉ: bắt buộc, dùng làm mặc định cho địa điểm tin đăng của tổ chức */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Địa chỉ tổ chức</label>
+            <input
+              name="address"
+              value={form.address}
+              onChange={update}
+              maxLength={300}
+              placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+              required
+              style={{
+                padding: '12px 14px',
+                borderRadius: '10px',
+                border: provisionErrors.address ? '1.5px solid #dc2626' : '1.5px solid var(--line)',
+                boxShadow: provisionErrors.address ? '0 0 0 4px rgba(220, 38, 38, 0.15)' : 'none',
+                fontSize: '14px',
+                outline: 'none',
+                background: 'var(--surface)',
+                color: 'var(--ink)',
+                transition: 'all 200ms ease'
+              }}
+            />
+            {provisionErrors.address ? (
+              <div style={{ color: '#dc2626', fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                <AlertCircle size={14} />
+                <span>{provisionErrors.address}</span>
+              </div>
+            ) : (
+              <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                Sẽ được điền sẵn vào ô địa điểm mỗi khi tổ chức này đăng tin.
+              </span>
             )}
           </div>
 

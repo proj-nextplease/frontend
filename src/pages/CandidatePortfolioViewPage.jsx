@@ -5,7 +5,8 @@ import {
   MapPin, BadgeCheck, ExternalLink, Code2, Link2, Globe, Mail, Eye, FileUp, Download,
 } from 'lucide-react';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
-import { getPublicProfile } from '../api/portfolioApi.js';
+import { getPublicProfile, getPublicProfileBySlug } from '../api/portfolioApi.js';
+import { parseBanner } from '../components/postingConstants.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
 
 const SOCIAL_META = {
@@ -16,17 +17,20 @@ const SOCIAL_META = {
 };
 
 export function CandidatePortfolioViewPage() {
-  const { userId } = useParams();
+  // Trang này phục vụ hai đường dẫn: /p/:slug (link đẹp để chia sẻ) và
+  // /portfolio/view/:userId (link cũ, giữ lại để không gãy link đã gửi đi).
+  const { userId, slug } = useParams();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    getPublicProfile(userId)
+    const request = slug ? getPublicProfileBySlug(slug) : getPublicProfile(userId);
+    request
       .then(setProfile)
       .catch(err => setError(err.message || 'Không thể tải hồ sơ.'))
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [userId, slug]);
 
   if (loading) {
     return (
@@ -71,6 +75,7 @@ export function VerifiedPassport({ profile, isDraft = false }) {
     .map(([k, v]) => ({ key: k, value: v.trim(), ...SOCIAL_META[k] }));
 
   const themeClass = profile.selectedTheme && profile.selectedTheme !== 'DEFAULT' ? `theme-${profile.selectedTheme}` : '';
+  const coverPos = parseBanner(profile.coverBannerPos);
   const hasContent = profile.bio || skills.length || experiences.length || credentials.length;
 
   // Exporting to PDF reuses the browser's native print pipeline (no extra
@@ -98,6 +103,18 @@ export function VerifiedPassport({ profile, isDraft = false }) {
       </div>
 
       <div className="vp-shell">
+        {/* Ảnh bìa: dải ngang trên đầu hồ sơ. Khung hình do người dùng tự căn,
+            lưu dạng "x% y% zoom" giống banner tin tuyển dụng. */}
+        {profile.coverBannerUrl && (
+          <div
+            className="vp-cover vp-reveal"
+            role="img"
+            aria-label={`Ảnh bìa của ${profile.name || 'ứng viên'}`}
+            style={{
+              background: `url(${profile.coverBannerUrl}) ${coverPos.x}% ${coverPos.y}% / ${coverPos.z * 100}% auto no-repeat`,
+            }}
+          />
+        )}
         <header className="vp-hero vp-reveal">
           <div className="vp-portrait"><div className="vp-portrait-stage"><PortfolioAvatar3D avatar={avatar} /></div></div>
           <div className="vp-identity">

@@ -38,6 +38,7 @@ import {
   Trophy,
   Users,
 } from 'lucide-react';
+import { UserAvatar } from '../components/UserAvatar.jsx';
 import {
   getCurrentUser,
   getMyCompany,
@@ -408,7 +409,7 @@ function CandidatesView() {
                     onMouseLeave={e => { if (!isSelected) e.currentTarget.style.borderColor = boosted ? '#f59e0b' : 'var(--p-line)'; }}
                   >
                     <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.05rem', color: accent, flexShrink: 0, overflow: 'hidden' }}>
-                      {app.avatar_url ? <img src={app.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (getName(app)[0]?.toUpperCase() || 'U')}
+                      <UserAvatar src={app.avatar_url} name={getName(app)} size={42} background="transparent" style={{ color: accent, fontWeight: 800 }} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '3px', flexWrap: 'wrap' }}>
@@ -452,7 +453,7 @@ function CandidatesView() {
               {/* Avatar + name block */}
               <div className="np-di" style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px' }}>
                 <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '1.5rem', color: accent, flexShrink: 0, overflow: 'hidden', border: `2px solid ${accent}30` }}>
-                  {selectedApplicant.avatar_url ? <img src={selectedApplicant.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (getName(selectedApplicant)[0]?.toUpperCase() || 'U')}
+                  <UserAvatar src={selectedApplicant.avatar_url} name={getName(selectedApplicant)} size={60} background="transparent" style={{ color: accent, fontWeight: 900 }} />
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <strong style={{ fontSize: '1.08rem', display: 'block', color: 'var(--ink)', marginBottom: '2px' }}>{getName(selectedApplicant)}</strong>
@@ -2680,6 +2681,7 @@ function AccountDetailView({ account, company, onRefresh }) {
   const [formData, setFormData] = useState({
     companyName: company?.name || '',
     companyType: company?.companyType || 'ENTERPRISE',
+    address: company?.address || '',
     taxCode: company?.taxCode || '',
     representativeName: company?.representativeName || '',
     representativePhone: company?.representativePhone || '',
@@ -2696,6 +2698,7 @@ function AccountDetailView({ account, company, onRefresh }) {
       setFormData({
         companyName: company.name || '',
         companyType: company.companyType || 'ENTERPRISE',
+        address: company.address || '',
         taxCode: company.taxCode || '',
         representativeName: company.representativeName || '',
         representativePhone: company.representativePhone || '',
@@ -2746,6 +2749,10 @@ function AccountDetailView({ account, company, onRefresh }) {
       setActionStatus({ type: 'error', message: 'Tên tổ chức không được để trống.' });
       return;
     }
+    if (!formData.address.trim()) {
+      setActionStatus({ type: 'error', message: 'Địa chỉ tổ chức không được để trống.' });
+      return;
+    }
     if (!formData.representativeName.trim()) {
       setActionStatus({ type: 'error', message: 'Tên người đại diện không được để trống.' });
       return;
@@ -2793,6 +2800,7 @@ function AccountDetailView({ account, company, onRefresh }) {
     setFormData({
       companyName: company?.name || '',
       companyType: company?.companyType || 'ENTERPRISE',
+      address: company?.address || '',
       taxCode: company?.taxCode || '',
       representativeName: company?.representativeName || '',
       representativePhone: company?.representativePhone || '',
@@ -2862,6 +2870,24 @@ function AccountDetailView({ account, company, onRefresh }) {
                     style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)' }}
                     required
                   />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Địa chỉ tổ chức *</label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="input-field"
+                    maxLength={300}
+                    placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+                    style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)' }}
+                    required
+                  />
+                  <span style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>
+                    Địa chỉ này sẽ được điền sẵn vào ô địa điểm mỗi khi bạn đăng tin mới.
+                  </span>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -3026,6 +3052,10 @@ function AccountDetailView({ account, company, onRefresh }) {
             <div className="partner-account-detail-grid">
               <DetailItem label="Tên tổ chức" value={company?.name} />
               <DetailItem label="Loại đối tác" value={companyTypeLabel} />
+              <DetailItem
+                label="Địa chỉ tổ chức"
+                value={company?.address || <span style={{ color: '#94a3b8', fontStyle: 'italic', fontWeight: '500' }}>Chưa cung cấp</span>}
+              />
               <DetailItem
                 label="Mã số thuế"
                 value={company?.taxCode || <span style={{ color: '#94a3b8', fontStyle: 'italic', fontWeight: '500' }}>Chưa cung cấp</span>}

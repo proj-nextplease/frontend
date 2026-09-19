@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { BriefcaseBusiness, MessageSquarePlus, Plus, Minus, Trash2, GripVertical, ImagePlus, AlertTriangle, Move } from 'lucide-react';
 import { createJob, updateJob, getSkills } from '../api/jobApi.js';
+import { getMyCompany } from '../api/b2bApi.js';
 import { PremiumDateTimePicker } from './PremiumDateTimePicker.jsx';
 import {
   CATEGORY_MAP, JOB_TYPES, SKILL_LEVELS,
@@ -65,6 +66,20 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
     bannerUrl: initialData?.bannerUrl ?? '',
     bannerPos: initialData?.bannerPos ?? '50% 50%',
   });
+
+  // Địa điểm mặc định lấy từ địa chỉ tổ chức đã đăng ký; người đăng vẫn sửa được.
+  // Chỉ prefill khi tạo tin mới và ô đang trống, để không ghi đè tin đang sửa.
+  useEffect(() => {
+    if (isEdit) return;
+    let alive = true;
+    getMyCompany()
+      .then((company) => {
+        if (!alive || !company?.address) return;
+        setForm((c) => (c.location.trim() ? c : { ...c, location: company.address }));
+      })
+      .catch(() => { /* không prefill được thì người đăng tự nhập */ });
+    return () => { alive = false; };
+  }, [isEdit]);
 
   function handleBannerUpload(e) {
     const file = e.target.files?.[0];
@@ -212,6 +227,7 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
     if (!form.title.trim()) e.title = 'Tiêu đề không được để trống.';
     else if (form.title.trim().length < 10) e.title = 'Tiêu đề quá ngắn (tối thiểu 10 ký tự).';
     else if (form.title.trim().length > 200) e.title = 'Tiêu đề quá dài (tối đa 200 ký tự).';
+    if (!form.location.trim()) e.location = 'Địa điểm không được để trống.';
     if (!form.description.trim()) e.description = 'Mô tả không được để trống.';
     else if (form.description.trim().length < 30) e.description = 'Mô tả quá ngắn (tối thiểu 30 ký tự).';
     if (form.compensation) {
@@ -255,7 +271,7 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
       specialty: form.specialties.join(','),
       compensation: form.compensation ? parseFloat(form.compensation) : null,
       minReqRs: parseInt(form.minReqRs) || 0,
-      location: form.isRemote ? null : (form.location || null),
+      location: form.location.trim(),
       isRemote: form.isRemote,
       capacity: form.capacity ? parseInt(form.capacity) : null,
       deadlineAt: deadline,
@@ -455,11 +471,14 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '0.86rem', fontWeight: '700', color: 'var(--muted)' }}>Địa điểm làm việc</label>
+              <label style={{ fontSize: '0.86rem', fontWeight: '700', color: 'var(--muted)' }}>Địa điểm làm việc *</label>
               <input name="location" value={form.location} onChange={handleChange}
-                disabled={form.isRemote}
-                placeholder={form.isRemote ? 'Làm việc từ xa (Remote)' : 'VD: Quận 9, TP. HCM'}
-                style={{ ...errStyle(false), background: form.isRemote ? 'var(--surface-soft)' : 'var(--bg)' }} />
+                maxLength={200}
+                placeholder="VD: Quận 9, TP. HCM"
+                style={errStyle(errors.location)} />
+              {errors.location
+                ? <span style={{ fontSize: '0.76rem', color: '#dc2626' }}>{errors.location}</span>
+                : <span style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>Lấy sẵn từ địa chỉ tổ chức — bạn có thể sửa cho từng tin.</span>}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '24px' }}>

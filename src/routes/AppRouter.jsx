@@ -4,6 +4,7 @@ import { AppLayout } from '../components/layout/AppLayout.jsx';
 import { BusinessPage } from '../pages/BusinessPage.jsx';
 import { CandidateDashboardPage, CandidateContentSkeleton, skeletonVariantForTabSlug } from '../pages/CandidateDashboardPage.jsx';
 import { CandidateLandingPage } from '../pages/CandidateLandingPage.jsx';
+import { JobsPage } from '../pages/JobsPage.jsx';
 import { CandidateLoginPage } from '../pages/CandidateLoginPage.jsx';
 import { CandidateRegisterPage } from '../pages/CandidateRegisterPage.jsx';
 import { HomePage } from '../pages/HomePage.jsx';
@@ -24,6 +25,8 @@ import { getCurrentRoles, isAdmin, isBusiness } from '../lib/authRoles.js';
 import { getStoredToken } from '../lib/authStorage.js';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage.jsx';
 import { ResetPasswordPage } from '../pages/ResetPasswordPage.jsx';
+import { DiscussionPage } from '../pages/DiscussionPage.jsx';
+import { PortfolioLandingPage } from '../pages/PortfolioLandingPage.jsx';
 
 const CandidatePortfolioPage = lazy(() =>
   import('../pages/CandidatePortfolioPage.jsx').then((module) => ({
@@ -344,6 +347,9 @@ export function AppRouter() {
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="/candidates" element={<CandidateLandingPage />} />
+        <Route path="/jobs" element={<JobsPage />} />
+        <Route path="/thao-luan" element={<DiscussionPage />} />
+        <Route path="/tao-portfolio" element={<PortfolioLandingPage />} />
         <Route path="/candidates/dashboard" element={<ProtectedDashboardRoute />} />
         <Route path="/candidates/dashboard/:tabSlug" element={<ProtectedDashboardRoute />} />
         <Route path="/candidate/dashboard" element={<Navigate to="/candidates/dashboard/overview" replace />} />
@@ -374,6 +380,9 @@ export function AppRouter() {
         <Route path="/jobs/:id" element={<JobDetailPage />} />
         <Route path="/quests/:id" element={<JobDetailPage />} />
         <Route path="/portfolio/view/:userId" element={<CandidatePortfolioViewPage />} />
+        {/* Link chia sẻ dạng chữ: /p/phat-nguyen. Đặt ngắn vì người dùng dán nó
+            vào bio, tin nhắn, CV — UUID thì không ai muốn dán. */}
+        <Route path="/p/:slug" element={<CandidatePortfolioViewPage />} />
         <Route path="/portfolio" element={<ProtectedPortfolioRoute isEditing={false} />} />
         <Route path="/portfolio/edit" element={<ProtectedPortfolioRoute isEditing={true} />} />
         <Route

@@ -170,9 +170,12 @@ export function Header() {
 
                   <div className="dropdown-divider" />
                   
+                  {/* Hành động là đăng xuất (icon LogOut, ô danger) nên nhãn phải
+                      nói đúng như vậy — nhãn cũ "Trở về trang chủ" khiến người
+                      dùng bị đăng xuất mà tưởng chỉ đang điều hướng. */}
                   <button className="dropdown-item danger-action" onClick={handleLogout} type="button">
                     <LogOut size={16} />
-                    Trở về trang chủ
+                    Đăng xuất
                   </button>
                 </div>
               )}

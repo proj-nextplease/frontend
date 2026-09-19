@@ -320,14 +320,23 @@ export function CandidateRegisterPage() {
         .np-otp { transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; }
         .np-otp:focus { border-color: #1d1320 !important; box-shadow: 0 0 0 3px rgba(29,19,32,0.12); }
         @media (max-width: 900px){ .np-auth{ grid-template-columns: 1fr !important; } .np-auth-brand{ display:none !important; } }
+        /* Ba nhãn bước đều nowrap nên cộng lại rộng hơn màn hình điện thoại,
+           làm cả trang tràn ngang. Dưới 430px chỉ giữ nhãn của bước đang đứng;
+           các vòng tròn số và đường nối vẫn cho thấy tiến độ. */
+        @media (max-width: 430px){ .np-step-label:not(.current){ display: none; } }
       `}</style>
 
       {/* LEFT — brand panel */}
       <AuthBrandPanel animation="npBrandInL" headline="Bắt đầu hồ sơ của bạn" subcopy="Tạo tài khoản ứng viên miễn phí và biến trải nghiệm thành cơ hội." />
 
       {/* RIGHT — form */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px, 5vw, 56px)', animation: 'npFormIn 0.6s ease-out 0.08s both' }}>
-        <form onSubmit={handlePanelSubmit} noValidate style={{ width: '100%', maxWidth: '440px' }}>
+      {/* minWidth 0: ô này là grid item nên mặc định không co dưới min-content
+          của form, khiến trang tràn ngang ở 375px. Đệm cũng hạ xuống 16px để
+          form còn đủ chỗ thở trên điện thoại. */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0, padding: 'clamp(16px, 5vw, 56px)', animation: 'npFormIn 0.6s ease-out 0.08s both' }}>
+        {/* minWidth 0: form là flex item nên mặc định không co xuống dưới
+            min-content của con nó, làm trang tràn ngang 1px ở 375px. */}
+        <form onSubmit={handlePanelSubmit} noValidate style={{ width: '100%', maxWidth: '440px', minWidth: 0 }}>
 
           {/* Step indicator */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '28px' }}>
@@ -339,7 +348,7 @@ export function CandidateRegisterPage() {
                   <span style={{ width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.78rem', flexShrink: 0, background: state === 'pending' ? 'var(--lp-line)' : state === 'done' ? '#16a34a' : RED, color: state === 'pending' ? MUTED : WHITE }}>
                     {state === 'done' ? <CheckCircle2 size={16} /> : n}
                   </span>
-                  <span style={{ fontSize: '0.84rem', fontWeight: state === 'current' ? '800' : '600', color: state === 'pending' ? MUTED : INK, whiteSpace: 'nowrap' }}>{label}</span>
+                  <span className={`np-step-label${state === 'current' ? ' current' : ''}`} style={{ fontSize: '0.84rem', fontWeight: state === 'current' ? '800' : '600', color: state === 'pending' ? MUTED : INK, whiteSpace: 'nowrap' }}>{label}</span>
                   {i < 2 && <span style={{ flex: 1, height: '1.5px', background: n < currentStep ? '#16a34a' : LINE, marginLeft: '4px' }} />}
                 </div>
               );

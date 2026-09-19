@@ -17,7 +17,6 @@ import {
   UserRound,
   WalletCards,
   Zap,
-  LogOut,
   RefreshCw,
   Building,
   AlertTriangle,
@@ -33,12 +32,17 @@ import {
   ImagePlus,
   Palette,
   Settings,
+  House,
+  MessagesSquare,
+  LogOut,
   Copy,
   Bookmark,
-  BookmarkCheck,
-} from 'lucide-react';
+  BookmarkCheck, Link2,} from 'lucide-react';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
-import { getMyPortfolio } from '../api/portfolioApi.js';
+import { getMyPortfolio, updateMySlug } from '../api/portfolioApi.js';
+import { WaveBg } from '../components/WaveBg.jsx';
+import { UserAvatar } from '../components/UserAvatar.jsx';
+import { clearMyProfileCache } from '../lib/useMyProfile.js';
 import { logout } from '../api/httpClient.js';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
@@ -541,6 +545,80 @@ export function CandidateContentSkeleton({ variant = 'overview' }) {
   );
 }
 
+/**
+ * Đường dẫn công khai của portfolio, kèm chỗ đổi ngay tại chỗ.
+ *
+ * Hiển thị dạng "tên-miền/p/slug" thay vì ô nhập trống, để người dùng thấy
+ * link của mình trông ra sao trước khi sửa — đây là thứ họ sẽ dán vào bio.
+ */
+function PublicLinkEditor({ slug, onSaved }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(slug || '');
+  const [status, setStatus] = useState({ type: 'idle', message: '' });
+
+  if (!slug && !editing) return null;
+
+  const host = window.location.host;
+
+  async function save(e) {
+    e.preventDefault();
+    const next = draft.trim().toLowerCase();
+    if (next === slug) { setEditing(false); return; }
+    setStatus({ type: 'saving', message: '' });
+    try {
+      const saved = await updateMySlug(next);
+      onSaved(saved);
+      setDraft(saved);
+      setEditing(false);
+      setStatus({ type: 'idle', message: '' });
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message || 'Không đổi được đường dẫn.' });
+    }
+  }
+
+  return (
+    <div style={{ marginTop: '14px', fontSize: '0.84rem' }}>
+      {editing ? (
+        <form onSubmit={save} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ color: 'rgba(255,255,255,0.55)' }}>{host}/p/</span>
+          <input
+            value={draft}
+            onChange={(ev) => setDraft(ev.target.value)}
+            maxLength={40}
+            autoFocus
+            placeholder="ten-cua-ban"
+            style={{
+              padding: '6px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.25)',
+              background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: '0.84rem', fontWeight: 700, minWidth: '180px',
+            }}
+          />
+          <button type="submit" disabled={status.type === 'saving'}
+            style={{ padding: '6px 14px', borderRadius: '999px', border: 'none', background: '#10b981', color: '#fff', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
+            {status.type === 'saving' ? 'Đang lưu…' : 'Lưu'}
+          </button>
+          <button type="button" onClick={() => { setDraft(slug || ''); setEditing(false); setStatus({ type: 'idle', message: '' }); }}
+            style={{ padding: '6px 12px', borderRadius: '999px', border: 'none', background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
+            Huỷ
+          </button>
+          {status.type === 'error' && (
+            <span style={{ width: '100%', color: '#fca5a5', fontSize: '0.78rem', fontWeight: 600 }}>{status.message}</span>
+          )}
+        </form>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <Link2 size={14} style={{ color: 'rgba(255,255,255,0.5)' }} />
+          <span style={{ color: 'rgba(255,255,255,0.55)' }}>{host}/p/</span>
+          <span style={{ fontWeight: 800, color: '#fff' }}>{slug}</span>
+          <button type="button" onClick={() => setEditing(true)}
+            style={{ padding: '3px 10px', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.22)', background: 'transparent', color: 'rgba(255,255,255,0.8)', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}>
+            Đổi
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function CandidateDashboardPage({ initialPortfolio }) {
   const navigate = useNavigate();
   const { tabSlug } = useParams();
@@ -634,7 +712,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .catch(() => { /* keep the cached view on failure */ });
   };
 
-  // Dock profile popover (wallet balance + logout), replaces the old sidebar footer.
+  // Menu tài khoản ở cuối thanh dock — thay cho menu avatar của SiteHeader.
   const [showDockProfileMenu, setShowDockProfileMenu] = useState(false);
   const dockProfileRef = useRef(null);
   useEffect(() => {
@@ -648,6 +726,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDockProfileMenu]);
 
+  /* Trên màn hẹp thanh tab cuộn ngang (9 pill ~1030px so với 373px), nên tab
+     đang mở có thể nằm ngoài tầm nhìn. Kéo nó vào giữa mỗi khi đổi tab. */
+  const dockRef = useRef(null);
+  useEffect(() => {
+    const active = dockRef.current?.querySelector('.np-dock-item.active');
+    active?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }, [activeView]);
+
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Copy Portfolio share link (Overview hero) — fetch the app_users id lazily
@@ -657,8 +743,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   async function handleCopyPortfolioLink() {
     setCopyLinkStatus('copying');
     try {
-      const userId = await getMyUserId();
-      const shareUrl = `${window.location.origin}/portfolio/view/${userId}`;
+      // Ưu tiên link chữ (/p/phat-nguyen); chỉ rơi về link UUID nếu hồ sơ
+      // chưa kịp có slug — backend sinh slug ngay lần đọc hồ sơ đầu tiên.
+      const shareUrl = portfolio?.publicSlug
+        ? `${window.location.origin}/p/${portfolio.publicSlug}`
+        : `${window.location.origin}/portfolio/view/${await getMyUserId()}`;
       await navigator.clipboard.writeText(shareUrl);
       setCopyLinkStatus('done');
     } catch {
@@ -1070,6 +1159,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       setFilterJobType(searchParams.get('t') || '');
       setFilterIsRemote(searchParams.get('r') === 'true');
       setFilterCanApply(searchParams.get('fit') === 'true');
+      // ?saved=1 mở thẳng danh sách "Đã lưu" — menu tài khoản trên header dẫn vào đây.
+      setShowSavedJobsOnly(searchParams.get('saved') === '1');
     }
   }, [location.search, activeView]);
 
@@ -1462,6 +1553,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   };
 
   async function handleLogout() {
+    clearMyProfileCache();
     await logout();
     navigate('/');
   }
@@ -1684,6 +1776,19 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const hasApplications = appliedJobs.length > 0;
 
 
+  /* Việc cần làm tiếp theo — cùng thứ tự với checklist "Next Steps" bên
+     dưới. Tiêu đề trang nói thẳng bước kế tiếp thay vì một câu chung chung,
+     để mở dashboard lên là biết ngay phải làm gì. */
+  const nextStep = !has3D
+    ? { text: 'Bước tiếp theo: khởi tạo Portfolio 3D để nhà tuyển dụng thấy được bạn.', cta: 'Khởi tạo ngay', to: '/portfolio' }
+    : !hasSchool
+      ? { text: 'Bước tiếp theo: bổ sung trường học vào hồ sơ để tăng độ tin cậy.', cta: 'Cập nhật hồ sơ', to: '/portfolio/edit' }
+      : !hasCredentials
+        ? { text: 'Bước tiếp theo: tải lên minh chứng đầu tiên để nâng Trust Score.', cta: 'Thêm minh chứng', view: 'CREDENTIALS' }
+        : !hasApplications
+          ? { text: 'Bước tiếp theo: ứng tuyển cơ hội đầu tiên của bạn.', cta: 'Xem cơ hội', view: 'OPPORTUNITIES' }
+          : { text: 'Hồ sơ đã đủ. Giữ streak và hoàn thành nhiệm vụ để lên hạng.', cta: null };
+
   // Filters candidates jobs by RS threshold if checked
   const candidateRs = portfolio?.reputationScore || 0;
   const filteredJobs = jobsList.filter(job => {
@@ -1756,16 +1861,26 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     <div className="candidate-portal-layout">
       <NotificationBell accent="#e5533f" />
 
-      {/* ─── Bottom Dock Navigation (macOS-style) ─── */}
+      {/* ─── Thanh điều hướng duy nhất của trang ───
+          Ở đây CỐ TÌNH không dùng SiteHeader: hai thanh điều hướng cùng lúc
+          là thừa. Nhưng như vậy thanh này phải gánh cả ba thứ chỉ header mới
+          có — đường về trang chủ, avatar thật, và nút đăng xuất — nếu không
+          thì vào dashboard là không còn lối ra. Vì vậy: logo ở đầu thanh,
+          menu tài khoản ở cuối thanh, các tab khu vực nằm giữa. */}
       <nav className="np-dock" aria-label="Điều hướng chính">
-        <div className="np-dock-inner">
+        <Link to="/" className="np-dock-brand" aria-label="Về trang chủ nextplease">
+          <span className="np-dock-brand-word">nextplease</span>
+          <span className="np-dock-brand-colon">:</span>
+        </Link>
+
+        <div className="np-dock-inner" ref={dockRef}>
           <button
             className={`np-dock-item ${activeView === 'OVERVIEW' ? 'active' : ''}`}
             onClick={() => handleTabChange('OVERVIEW')}
             type="button"
           >
-            <UserRound size={22} />
-            <span className="np-dock-label">Tổng quan tài năng</span>
+            <UserRound size={18} />
+            <span className="np-dock-label">Tổng quan</span>
           </button>
 
           <button
@@ -1773,8 +1888,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             onClick={() => handleTabChange('OPPORTUNITIES')}
             type="button"
           >
-            <BriefcaseBusiness size={22} />
-            <span className="np-dock-label">Bảng cơ hội</span>
+            <BriefcaseBusiness size={18} />
+            <span className="np-dock-label">Cơ hội</span>
           </button>
 
           <button
@@ -1782,7 +1897,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             onClick={() => handleTabChange('QUESTS')}
             type="button"
           >
-            <Zap size={22} />
+            <Zap size={18} />
             <span className="np-dock-label">Quest</span>
           </button>
 
@@ -1791,9 +1906,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             onClick={() => handleTabChange('RECOMMENDATIONS')}
             type="button"
           >
-            <Sparkles size={22} color={wallet?.hasJobMatchAlert ? '#facc15' : 'currentColor'} />
+            <Sparkles size={18} color={wallet?.hasJobMatchAlert ? '#facc15' : 'currentColor'} />
             <span className="np-dock-badge np-dock-badge-new">NEW</span>
-            <span className="np-dock-label">Gợi ý việc làm AI</span>
+            <span className="np-dock-label">Gợi ý AI</span>
           </button>
 
           <button
@@ -1802,9 +1917,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             type="button"
             style={{ color: '#f59e0b' }}
           >
-            <Crown size={22} color="#f59e0b" />
+            <Crown size={18} color="#f59e0b" />
             <span className="np-dock-badge np-dock-badge-hot">HOT</span>
-            <span className="np-dock-label">Cửa hàng Premium</span>
+            <span className="np-dock-label">Premium</span>
           </button>
 
           <button
@@ -1812,8 +1927,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             onClick={() => handleTabChange('ORGANIZATIONS')}
             type="button"
           >
-            <Building size={22} />
-            <span className="np-dock-label">Doanh nghiệp & CLB</span>
+            <Building size={18} />
+            <span className="np-dock-label">Doanh nghiệp</span>
           </button>
 
           {/* Dynamic tabs spawned when viewing companies */}
@@ -1854,11 +1969,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             onClick={() => handleTabChange('MY_APPLICATIONS')}
             type="button"
           >
-            <Clock3 size={22} />
+            <Clock3 size={18} />
             {(appliedJobs.length + questApplications.length) > 0 && (
               <span className="np-dock-badge np-dock-badge-count">{appliedJobs.length + questApplications.length}</span>
             )}
-            <span className="np-dock-label">Theo dõi ứng tuyển</span>
+            <span className="np-dock-label">Ứng tuyển</span>
           </button>
 
           <button
@@ -1866,86 +1981,75 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             onClick={() => handleTabChange('CREDENTIALS')}
             type="button"
           >
-            <Award size={22} />
-            <span className="np-dock-label">Minh chứng & Trạng thái</span>
+            <Award size={18} />
+            <span className="np-dock-label">Minh chứng</span>
           </button>
 
           {has3D ? (
             <Link className="np-dock-item" to="/portfolio/edit">
-              <FileText size={22} />
-              <span className="np-dock-label">Chỉnh sửa Portfolio 3D</span>
+              <FileText size={18} />
+              <span className="np-dock-label">Portfolio 3D</span>
             </Link>
           ) : (
             <Link className="np-dock-item" to="/portfolio">
-              <FileText size={22} />
-              <span className="np-dock-label">Khởi tạo Portfolio 3D</span>
+              <FileText size={18} />
+              <span className="np-dock-label">Portfolio 3D</span>
             </Link>
           )}
 
-          <span className="np-dock-sep" />
+        </div>
 
-          {/* Profile — replaces the old sidebar's profile card + wallet chip + logout */}
-          <div className="np-dock-profile-wrap" ref={dockProfileRef}>
-            <button
-              className="np-dock-item np-dock-profile-trigger"
-              onClick={() => setShowDockProfileMenu((v) => !v)}
-              type="button"
-            >
-              <span className="np-dock-avatar">
-                {portfolio?.name ? portfolio.name.slice(0, 2).toUpperCase() : 'C'}
-              </span>
-              <span className="np-dock-label">Tài khoản</span>
-            </button>
+          {/* Menu tài khoản — thay cho menu avatar của SiteHeader. */}
+        <div className="np-dock-acct" ref={dockProfileRef}>
+          <button
+            type="button"
+            className="np-dock-item np-dock-acct-btn"
+            aria-haspopup="menu"
+            aria-expanded={showDockProfileMenu}
+            aria-label="Menu tài khoản"
+            onClick={() => setShowDockProfileMenu((v) => !v)}
+          >
+            <UserAvatar src={portfolio?.avatarUrl} name={portfolio?.name || 'Ứng viên'} size={26} />
+            <ChevronDown size={14} />
+          </button>
 
-            {showDockProfileMenu && (
-              <div className="np-dock-profile-menu">
-                <div className="np-dock-profile-menu-header">
-                  <span className="np-dock-avatar np-dock-avatar-lg">
-                    {portfolio?.name ? portfolio.name.slice(0, 2).toUpperCase() : 'C'}
-                  </span>
-                  <div>
-                    <div className="np-dock-profile-menu-name">{portfolio?.name || 'Ứng viên'}</div>
-                    <div className="np-dock-profile-menu-level">Candidate Talent · Cấp độ {currentLevel}</div>
-                  </div>
+          {showDockProfileMenu && (
+            <div className="np-dock-acct-menu" role="menu">
+              <div className="np-dock-acct-head">
+                <UserAvatar src={portfolio?.avatarUrl} name={portfolio?.name || 'Ứng viên'} size={38} />
+                <div style={{ minWidth: 0 }}>
+                  <div className="np-dock-acct-name">{portfolio?.name || 'Ứng viên'}</div>
+                  <div className="np-dock-acct-sub">Candidate Talent · Cấp độ {currentLevel}</div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => { setShowTopUpModal(true); setShowDockProfileMenu(false); }}
-                  className={`candidate-wallet-chip np-dock-profile-wallet ${wallet?.isPremium ? 'premium' : ''}`}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                    <WalletCards size={15} color={wallet?.isPremium ? '#d97706' : 'var(--muted)'} />
-                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--ink)' }}>
-                      {walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString()} NP
-                    </span>
-                  </div>
-                  {wallet?.isPremium
-                    ? <Crown size={13} color="#d97706" />
-                    : <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: '700' }}>Nạp</span>
-                  }
-                </button>
-
-                <button
-                  className="np-dock-profile-settings"
-                  onClick={() => { setShowSettingsModal(true); setShowDockProfileMenu(false); }}
-                  type="button"
-                >
-                  <Settings size={16} />
-                  <span>Cài đặt tài khoản</span>
-                </button>
-
-                <button
-                  className="np-dock-profile-logout"
-                  onClick={handleLogout}
-                  type="button"
-                >
-                  <LogOut size={16} />
-                  <span>Đăng xuất</span>
-                </button>
               </div>
-            )}
-          </div>
+
+              <div className="np-dock-acct-sep" />
+
+              <Link className="np-dock-acct-item" role="menuitem" to="/" onClick={() => setShowDockProfileMenu(false)}>
+                <House size={16} /> Trang chủ
+              </Link>
+              <Link className="np-dock-acct-item" role="menuitem" to="/jobs" onClick={() => setShowDockProfileMenu(false)}>
+                <BriefcaseBusiness size={16} /> Việc làm
+              </Link>
+              <Link className="np-dock-acct-item" role="menuitem" to="/thao-luan" onClick={() => setShowDockProfileMenu(false)}>
+                <MessagesSquare size={16} /> Thảo luận
+              </Link>
+
+              <div className="np-dock-acct-sep" />
+
+              <button
+                type="button"
+                role="menuitem"
+                className="np-dock-acct-item"
+                onClick={() => { setShowSettingsModal(true); setShowDockProfileMenu(false); }}
+              >
+                <Settings size={16} /> Cài đặt tài khoản
+              </button>
+              <button type="button" role="menuitem" className="np-dock-acct-item danger" onClick={handleLogout}>
+                <LogOut size={16} /> Đăng xuất
+              </button>
+            </div>
+          )}
         </div>
       </nav>
 
@@ -2006,12 +2110,27 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             <header className="candidate-overview-header" style={{ marginBottom: '20px' }}>
               <div className="candidate-overview-title">
                 <h1>Chào {portfolio?.name || 'bạn'}</h1>
-                <p>Không gian danh tiếng của bạn. Giữ streak và hoàn thành nhiệm vụ để lên hạng.</p>
+                <p>
+                  {nextStep.text}
+                  {nextStep.cta && (nextStep.to ? (
+                    <Link to={nextStep.to} className="candidate-nextstep-cta">{nextStep.cta} <ArrowRight size={14} /></Link>
+                  ) : (
+                    <button type="button" className="candidate-nextstep-cta" onClick={() => handleTabChange(nextStep.view)}>
+                      {nextStep.cta} <ArrowRight size={14} />
+                    </button>
+                  ))}
+                </p>
               </div>
             </header>
 
             {/* Reputation Passport - hero focal point */}
             <section className="np-passport">
+              {/* Cùng hoạ tiết sóng với hero trang chủ. Quy tắc
+                  `.np-passport > * { z-index: 1 }` áp cho cả svg này, nên nó
+                  nằm cùng tầng với nội dung và thứ tự DOM quyết định — đặt đầu
+                  tiên là nó ở dưới. */}
+              <WaveBg variant="emerald" pattern="waves" />
+
               <div className="np-pp-avatar">
                 <div className="avatar-3d-glow-frame">
                   <PortfolioAvatar3D avatar={portfolio?.avatar} />
@@ -2063,16 +2182,21 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     </button>
                   )}
                 </div>
+
+                <PublicLinkEditor
+                  slug={portfolio?.publicSlug}
+                  onSaved={(next) => setPortfolio((prev) => (prev ? { ...prev, publicSlug: next } : prev))}
+                />
               </div>
 
               <div className="np-pp-stats">
                 <button type="button" onClick={() => setShowTopUpModal(true)} title="Nhấn để nạp NP" className="np-pp-stat" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', padding: 0, textAlign: 'left' }}>
-                  <div className="np-pp-stat-val" style={{ color: '#4ade80' }}>{walletLoading ? '...' : <CountUp value={wallet?.npBalance ?? 0} />}</div>
+                  <div className="np-pp-stat-val" style={{ color: '#fff' }}>{walletLoading ? '...' : <CountUp value={wallet?.npBalance ?? 0} />}</div>
                   <div className="np-pp-stat-label"><WalletCards size={13} /> Ví NP {wallet?.isPremium && <Crown size={11} color="#fbbf24" style={{ marginLeft: '2px' }} />}</div>
                 </button>
                 <div className="np-pp-divider" />
                 <div className="np-pp-stat">
-                  <div className="np-pp-stat-val" style={{ color: '#c4b5fd' }}><CountUp value={portfolio?.reputationScore ?? 0} format={(n) => Math.round(n).toString()} /></div>
+                  <div className="np-pp-stat-val" style={{ color: '#fff' }}><CountUp value={portfolio?.reputationScore ?? 0} format={(n) => Math.round(n).toString()} /></div>
                   <div className="np-pp-stat-label"><ShieldCheck size={13} /> Trust Score (RS)</div>
                 </div>
               </div>
@@ -2081,7 +2205,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
             {/* Daily & weekly quests */}
             {gamification && (
-              <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', marginTop: '20px' }}>
+              /* Mỗi nhóm nội dung một dải sóng riêng, cùng hệ hoạ tiết với
+                 trang chủ: hero emerald/waves → nhiệm vụ mint/layers →
+                 Next Steps mint2/ripple. */
+              <section className="np-band np-band-mint" style={{ marginTop: '20px' }}>
+                <WaveBg variant="mint" pattern="layers" />
+                <div className="np-band-inner" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
                 <QuestPanel
                   title="Nhiệm vụ hằng ngày"
                   subtitle="đặt lại mỗi ngày"
@@ -2104,10 +2233,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   onClaim={handleClaimQuest}
                   claiming={claimingQuest}
                 />
+                </div>
               </section>
             )}
 
-            <section className="candidate-checklist-card" style={{ marginTop: '20px' }}>
+            <section className="np-band np-band-mint2" style={{ marginTop: '20px' }}>
+              <WaveBg variant="mint2" pattern="ripple" />
+              <div className="np-band-inner candidate-checklist-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
               <h2 className="candidate-checklist-title">
                 <CheckCircle2 size={20} color="var(--primary)" />
                 Hành trình phát triển hồ sơ (Next Steps)
@@ -2159,6 +2291,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   </span>
                   <span className="checklist-item-desc">Khám phá Bảng cơ hội và gửi đơn ứng tuyển vào dự án phù hợp với năng lực.</span>
                 </div>
+              </div>
               </div>
             </section>
           </div>
