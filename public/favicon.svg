@@ -1,10 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#2563eb" />
-      <stop offset="1" stop-color="#60a5fa" />
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="16" fill="url(#g)" />
-  <path fill="#ffffff" d="M32 10 L37.66 26.34 L54 32 L37.66 37.66 L32 54 L26.34 37.66 L10 32 L26.34 26.34 Z" />
+<!--
+  Biểu tượng tab trình duyệt.
+
+  Không tự nghĩ ra hình mới: đây chính là ô logo thu nhỏ mà SiteHeader đã dùng
+  khi thanh điều hướng co lại (.nph-brand-mark) — nền emerald, bo góc, chữ "n",
+  chấm hổ phách thay cho dấu hai chấm trong "nextplease:". Nhờ vậy biểu tượng
+  trên tab và logo trên trang là cùng một vật.
+
+  Vì sao vẽ chữ "n" bằng hình khối thay vì dùng <text>:
+  favicon được trình duyệt dựng NGOÀI ngữ cảnh trang, không có webfont nào được
+  tải, nên <text font-family="Fredoka"> sẽ rơi về font mặc định của từng hệ
+  điều hành và mỗi máy ra một kiểu chữ khác nhau. Hình khối thì ở đâu cũng vậy.
+
+  Vì sao một chấm chứ không phải dấu hai chấm: ở 16px — kích thước thật của
+  favicon — hai chấm chồng lên nhau thành một vệt nhoè. Một chấm thì còn đọc ra.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="nextplease">
+  <rect width="64" height="64" rx="19" fill="#10b981" />
+
+  <!-- Chữ "n": thân trái + vòm + thân phải, cùng bề dày 9 nên nối liền mạch. -->
+  <g fill="#0b0f0e">
+    <rect x="13" y="19" width="9" height="28" rx="4.5" />
+    <rect x="34" y="31" width="9" height="16" rx="4.5" />
+  </g>
+  <path
+    d="M17.5 31 a10.5 10.5 0 0 1 21 0"
+    fill="none"
+    stroke="#0b0f0e"
+    stroke-width="9"
+    stroke-linecap="round"
+  />
+
+  <!-- Chấm hổ phách: dấu hai chấm của wordmark, rút còn một chấm. -->
+  <circle cx="51.5" cy="42.5" r="4.5" fill="#f59e0b" />
 </svg>

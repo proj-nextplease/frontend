@@ -24,6 +24,7 @@ import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 const INK = '#0b0f0e';          // nền tối chủ đạo
 const INK_SOFT = '#121817';     // band tối nhạt hơn một bậc
 const EMERALD = '#10b981';      // màu nhấn duy nhất
+const EMERALD_BRIGHT = '#34d399'; // bản sáng hơn, dùng cho chữ rê chuột
 const ON_DARK = '#ffffff';
 const MUTED_DARK = 'rgba(233,247,242,0.62)';
 const LINE_DARK = 'rgba(255,255,255,0.12)';
@@ -152,8 +153,14 @@ function SectionTitle({ children, align = 'left', style }) {
 /* Headline display: Archivo ở độ rộng nén + in hoa + letter-spacing âm.
    CHỈ dùng cho H1 của hero — xem ghi chú ở SectionTitle. */
 function Display({ children, size = 'clamp(2.4rem, 6.2vw, 4.6rem)', color = ON_DARK, align = 'left', style }) {
+  /* Màu đi qua BIẾN CSS chứ không đặt thẳng vào `color` của inline style.
+     Inline style thắng mọi rule trong stylesheet, nên đặt thẳng thì quy tắc
+     :hover không bao giờ có cơ hội chạy. */
   return (
-    <h2 className="np-display" style={{ fontSize: size, color, textAlign: align, ...style }}>
+    <h2
+      className="np-display"
+      style={{ fontSize: size, '--np-display-color': color, textAlign: align, ...style }}
+    >
       {children}
     </h2>
   );
@@ -326,11 +333,16 @@ export function HomePage() {
            vẫn đủ dấu tiếng Việt. Ẫ/Ộ vẫn hiện trọn dấu nhờ line-height 0.92 —
            Handshake để 0.8 nhưng bảng chữ của họ không có dấu. */
         .np-display {
+          color: var(--np-display-color, ${ON_DARK});
           font-family: 'Archivo', 'Be Vietnam Pro', sans-serif;
           font-variation-settings: 'wdth' 84;
           font-weight: 800;
           text-transform: uppercase;
-          line-height: 0.92;
+          /* 0.92 là mức SÀN để dấu Ẫ/Ộ/Ế không bị cắt ngọn, không phải mức
+             đẹp. Tiêu đề hai dòng tiếng Việt thì dòng trên có dấu nặng thò
+             xuống (Ệ) còn dòng dưới có dấu mũ đội lên (Ủ), hai dấu gần chạm
+             nhau. 1.02 tách chúng ra mà vẫn giữ được khối chữ chắc. */
+          line-height: 1.02;
           letter-spacing: -0.022em;
           margin: 0;
         }
@@ -343,6 +355,38 @@ export function HomePage() {
           font-size: clamp(1.6rem, 3vw, 2rem); font-weight: 400; line-height: 1.1;
           letter-spacing: -0.025em; color: ${ON_DARK}; margin: 0;
         }
+        /* ── Rê chuột lên tiêu đề thì chữ đổi sang màu nhấn ──
+           Chỉ áp cho TIÊU ĐỀ, không áp cho đoạn văn. Đổi màu khi rê chuột là
+           quy ước của thứ bấm được; gắn cho cả đoạn văn thì người đọc sẽ thử
+           bấm vào chữ và không có gì xảy ra. Tiêu đề thì hiếm ai thử bấm, nên
+           đây là chỗ an toàn nhất để chơi.
+           Dùng transition riêng cho color để không đụng vào các transition
+           khác đã có trên cùng phần tử. */
+        .np-display,
+        .np-section-title,
+        .np-feature-copy h4,
+        .np-quote .np-quote-name {
+          transition: color 220ms ease;
+        }
+        .np-display:hover,
+        .np-section-title:hover,
+        .np-feature-copy h4:hover,
+        .np-quote .np-quote-name:hover {
+          /* Bản SÁNG của emerald, không phải #10b981. Chữ cỡ lớn trên nền mesh
+             mà dùng emerald gốc thì tối hơn nền trắng đang thay thế, đọc ra
+             như chữ bị mờ đi chứ không phải được làm nổi lên. */
+          color: ${EMERALD_BRIGHT};
+        }
+        /* Tiêu đề thẻ việc làm đi theo cả THẺ chứ không theo riêng dòng chữ:
+           cả thẻ là một liên kết, nên rê vào bất kỳ đâu trong thẻ cũng phải
+           cho cùng một phản hồi. */
+        .np-jobcard-title { transition: color 220ms ease; }
+        .np-jobcard:hover .np-jobcard-title { color: ${EMERALD_BRIGHT}; }
+        @media (prefers-reduced-motion: reduce) {
+          .np-display, .np-section-title, .np-feature-copy h4,
+          .np-quote .np-quote-name, .np-jobcard-title { transition: none; }
+        }
+
         .np-lead { font-size: 1.125rem; line-height: 1.4; letter-spacing: -0.015em; color: ${MUTED_DARK}; margin: 24px 0 0; max-width: 40rem; }
 
         /* ── Hero ── Nền mesh nằm trong <HeroMesh />, dùng chung với /jobs. */
@@ -419,14 +463,27 @@ export function HomePage() {
         /* ── Lưới thẻ việc làm ──
            Trang mẫu KHÔNG cuộn ngang: 3 cột × 2 hàng, cách nhau 16px, mỗi thẻ
            cao 182px, viền trắng 10%, đệm 40px, không nền, hover sáng lên. */
-        .np-jobgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 80px; }
+        .np-jobgrid {
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 80px;
+          /* Mọi hàng cao bằng hàng cao nhất. Nhờ vậy cả sáu thẻ vẫn khít nhau
+             tuyệt đối mà KHÔNG cần khoá chiều cao cứng trên từng thẻ. */
+          grid-auto-rows: 1fr;
+        }
         .np-jobcard {
           position: relative; overflow: hidden; box-sizing: border-box;
           display: flex; flex-direction: column; align-items: flex-start;
-          /* Cao cố định để mọi thẻ khít nhau tuyệt đối. Chỉ dùng được vì khối
-             tiêu đề bên dưới cũng đã khoá đúng 2 dòng — nếu để tiêu đề tự co
-             thì thẻ 1 dòng và thẻ 2 dòng sẽ lệch nhau như bản trước. */
-          height: 216px; padding: 28px 30px; border-radius: 20px;
+          /* min-height, KHÔNG phải height.
+             Với height cứng, nội dung cao hơn 216px sẽ bị flex bóp lại: tiêu
+             đề hai dòng cần 54px bị ép xuống 44px rồi overflow:hidden xén
+             ngang thân chữ. Đó chính là lỗi vỡ tiêu đề ở hàng dưới.
+             Việc cho các thẻ bằng nhau đã chuyển lên grid (grid-auto-rows:1fr),
+             nên ở đây chỉ cần đặt sàn chiều cao. */
+          /* height: 100% để thẻ lấp đầy div bọc của hiệu ứng Reveal.
+             Con trực tiếp của grid KHÔNG phải thẻ mà là div bọc đó; nó giãn
+             đúng chiều cao hàng, còn thẻ bên trong thì co theo nội dung, nên
+             thẻ 1 dòng thấp hơn thẻ 2 dòng 10px. (Cùng cái bẫy đã gặp ở
+             .np-feature — Reveal chen một tầng vào giữa.) */
+          min-height: 216px; height: 100%; padding: 28px 30px; border-radius: 20px;
           border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.016);
           color: ${ON_DARK}; text-align: left; text-decoration: none;
           transition: border-color 260ms ease, background-color 260ms ease, transform 320ms cubic-bezier(0.22,1,0.36,1);
@@ -471,10 +528,21 @@ export function HomePage() {
         .np-jobcard:hover .np-jobcard-type { border-color: rgba(16,185,129,0.5); color: ${EMERALD}; }
 
         .np-jobcard-title {
-          margin: 0; font-size: 1.25rem; line-height: 1.3; letter-spacing: -0.3px; font-weight: 400;
-          /* Luôn chiếm đúng 2 dòng: tên ngắn thì chừa chỗ trống, tên dài thì cắt.
-             Nhờ vậy chân thẻ của cả sáu cái nằm trên cùng một đường. */
-          height: 2.6em;
+          margin: 0; font-size: 1.25rem; line-height: 1.35; letter-spacing: -0.3px; font-weight: 400;
+          /* KHÔNG khoá chiều cao ở đây.
+             Bản trước đặt height: 2.6em để chân thẻ của cả sáu cái nằm trên
+             một đường. Nhưng thẻ đã là flex column cao cố định và
+             .np-jobcard-foot có margin-top: auto, nên chân thẻ vốn đã bị ghim
+             xuống đáy rồi — chiều cao tiêu đề không ảnh hưởng gì tới việc đó.
+             Cái height đó chỉ còn đúng một tác dụng: CẮT chữ. Nó tính ra
+             43.8px trong khi hai dòng cần 52px, nên tiêu đề hai dòng bị xén
+             ngang thân chữ — lộ nhất ở tiếng Việt, nơi dấu ộ/ề/ậ ăn cả phần
+             trên lẫn phần dưới dòng. line-clamp 2 đã lo việc cắt ở đúng hai
+             dòng, và nó cắt bằng dấu ba chấm chứ không xén giữa nét chữ.
+             line-height 1.35 (thay vì 1.3) để dấu thanh có chỗ thở. */
+          /* flex-shrink: 0 — tiêu đề là nội dung, không phải chỗ để bù trừ
+             khi thiếu không gian. Thiếu thì thẻ cao lên, không phải chữ bẹp đi. */
+          flex-shrink: 0;
           display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
         /* Đẩy chân thẻ xuống đáy — đây là chỗ bố cục cũ bị vỡ. */
@@ -499,7 +567,7 @@ export function HomePage() {
         div.np-jobcard .np-jobcard-arrow { display: none; }
 
         @media (max-width: 1023px) { .np-jobgrid { grid-template-columns: 1fr 1fr; } }
-        @media (max-width: 639px) { .np-jobgrid { grid-template-columns: 1fr; } .np-jobcard { height: 200px; padding: 24px 26px; } .np-jobcard-index { font-size: 2.1rem; } }
+        @media (max-width: 639px) { .np-jobgrid { grid-template-columns: 1fr; } .np-jobcard { min-height: 200px; padding: 24px 26px; } .np-jobcard-index { font-size: 2.1rem; } }
 
         /* ── Nút ── */
         .np-btn {
