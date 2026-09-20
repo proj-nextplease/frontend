@@ -111,9 +111,7 @@ function ProtectedDashboardRoute() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-        <CandidateContentSkeleton variant={skeletonVariantForTabSlug(tabSlug)} />
-      </div>
+      <CandidateContentSkeleton variant={skeletonVariantForTabSlug(tabSlug)} />
     );
   }
 
@@ -190,7 +188,7 @@ function ProtectedPortfolioRoute({ isEditing = false }) {
   }
 
   return (
-    <Suspense fallback={<div className="route-loading">Đang dựng Portfolio 3D...</div>}>
+    <Suspense fallback={<div className="route-loading">Đang dựng Portfolio...</div>}>
       <CandidatePortfolioPage isEditing={isEditing} />
     </Suspense>
   );

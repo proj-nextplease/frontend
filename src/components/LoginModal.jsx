@@ -5,6 +5,8 @@ import { supabase } from '../services/supabaseClient.js';
 import { loginCandidate } from '../api/authApi.js';
 import { setRemember, setStoredToken, rememberLastEmail, getLastEmail } from '../lib/authStorage.js';
 import { consumeReturnTo, peekReturnTo } from '../lib/returnTo.js';
+import { openOnboardingTabEarly, sendTabToBuilder, discardOnboardingTab } from '../lib/onboardingTab.js';
+import { getMyPortfolio } from '../api/portfolioApi.js';
 
 export function LoginModal({ isOpen, role = 'candidate', onClose }) {
   const navigate = useNavigate();
@@ -80,10 +82,19 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
       return;
     }
 
+    /* Mở tab trống NGAY tại đây, trước mọi `await` — trình duyệt chỉ cho
+       window.open chạy trong đúng nhịp người dùng bấm. Đây mới là form đăng
+       nhập hay dùng nhất: nó bật lên ngay trên trang người dùng đang xem, và
+       chính nó ghi nhớ returnTo. Chưa biết tài khoản có hồ sơ hay chưa nên tab
+       có thể thừa; thừa thì đóng ở dưới. Xem lib/onboardingTab.js.
+       Chỉ áp cho ứng viên — bên doanh nghiệp không có bước dựng hồ sơ này. */
+    const onboardingTab = currentRole === 'business' ? null : openOnboardingTabEarly();
+
     setLoading(true);
     setErrorMsg('');
 
     if (!isSupabaseConfigured) {
+      discardOnboardingTab(onboardingTab);
       setTimeout(() => {
         setLoading(false);
         onClose();
@@ -109,8 +120,43 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
       }
 
       onClose();
-      navigate(destinationAfterLogin());
+
+      if (currentRole === 'business') {
+        navigate(destinationAfterLogin());
+        return;
+      }
+
+      const destination = destinationAfterLogin();
+
+      let needsOnboarding = false;
+      try {
+        const portfolio = await getMyPortfolio();
+        needsOnboarding = !portfolio || !portfolio.onboardingCompleted;
+      } catch (loadErr) {
+        /* Gọi hỏng KHÁC với "chưa có hồ sơ". Coi lỗi mạng hay database chết là
+           chưa có hồ sơ thì người đã có hồ sơ đầy đủ bị đẩy vào trình dựng với
+           biểu mẫu TRỐNG — điền rồi lưu là ghi đè hồ sơ thật thành rỗng. */
+        console.error('Không thể kiểm tra trạng thái onboarding:', loadErr);
+        discardOnboardingTab(onboardingTab);
+        navigate(destination);
+        return;
+      }
+
+      if (!needsOnboarding) {
+        discardOnboardingTab(onboardingTab);
+        navigate(destination);
+        return;
+      }
+
+      /* Chưa có hồ sơ: việc dựng hồ sơ sang tab riêng, tab này trả họ về đúng
+         trang đang xem dở trước khi bấm đăng nhập. */
+      if (sendTabToBuilder(onboardingTab)) {
+        navigate(destination);
+      } else {
+        navigate('/portfolio');
+      }
     } catch (err) {
+      discardOnboardingTab(onboardingTab);
       setErrorMsg(err.message || 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại.');
     } finally {
       setLoading(false);

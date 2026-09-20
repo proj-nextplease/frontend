@@ -1,14 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Moon, Sparkles, Sun, Compass, WalletCards, FileText, LogOut } from 'lucide-react';
+import { Sparkles, Compass, WalletCards, FileText, LogOut } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient.js';
 import { getMyPortfolio } from '../../api/portfolioApi.js';
 import { logout } from '../../api/httpClient.js';
-import { useTheme } from '../../lib/themeContext.jsx';
 
 export function Header() {
   const navigate = useNavigate();
-  const { isDark: isDarkTheme, toggleTheme } = useTheme();
 
   const [session, setSession] = useState(null);
   const [portfolio, setPortfolio] = useState(null);
@@ -104,13 +102,14 @@ export function Header() {
   };
 
   const handleLogout = async () => {
-    try {
-      await logout();
-      setShowDropdown(false);
-      navigate('/');
-    } catch (err) {
-      console.error('Lỗi khi đăng xuất:', err);
-    }
+    // Cùng lý do với SiteHeader: rời trang trước, thu hồi phiên sau. Bản cũ
+    // còn một lỗi nữa — navigate nằm TRONG try, nên logout() ném lỗi là người
+    // dùng đứng nguyên tại chỗ với phiên đã hỏng dở.
+    setShowDropdown(false);
+    navigate('/');
+    // Giữ token tới khi logout() xong, nếu không POST /auth/logout đi tay
+    // không và phiên phía server không được thu hồi.
+    logout().catch((err) => console.error('Lỗi khi đăng xuất:', err));
   };
 
   return (
@@ -154,7 +153,7 @@ export function Header() {
                   {portfolio.onboardingCompleted ? (
                     <Link className="dropdown-item" to="/portfolio/edit" onClick={() => setShowDropdown(false)}>
                       <Sparkles size={16} />
-                      Chỉnh sửa Portfolio 3D
+                      Chỉnh sửa Portfolio
                     </Link>
                   ) : (
                     <Link className="dropdown-item" to="/portfolio" onClick={() => setShowDropdown(false)}>
@@ -183,18 +182,6 @@ export function Header() {
           ) : (
             <Link to="/#about">Về chúng tôi</Link>
           )}
-
-          <button
-            aria-label={isDarkTheme ? 'Chuyển sang nền sáng' : 'Chuyển sang nền tối'}
-            className="theme-toggle"
-            onClick={toggleTheme}
-            type="button"
-          >
-            <span className="theme-toggle-icon">
-              {isDarkTheme ? <Sun size={16} /> : <Moon size={16} />}
-            </span>
-            <span>{isDarkTheme ? 'Sáng' : 'Tối'}</span>
-          </button>
         </nav>
       </div>
     </header>

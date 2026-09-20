@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import * as THREE from 'three';
+import { HeroMesh } from '../components/HeroMesh.jsx';
+import { ONBOARDING_TAB_FLAG, announcePortfolioSaved } from '../lib/onboardingTab.js';
+import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
+import { MASCOTS, mascotSheets, resolveMascot } from '../lib/mascots.js';
 import {
   ArrowLeft,
   Award,
@@ -97,55 +100,6 @@ function mergeCredentials(serverCredentials, draftCredentials) {
   });
 }
 
-const avatarStyles = {
-  female: {
-    label: 'Nữ',
-    hair: '#2d1b16',
-    outfit: '#2563eb',
-    accent: '#f97316',
-    bodyScale: [0.9, 1.08, 0.72],
-    shoulder: 1.25,
-  },
-  male: {
-    label: 'Nam',
-    hair: '#1f2937',
-    outfit: '#0f172a',
-    accent: '#2563eb',
-    bodyScale: [1, 1.05, 0.78],
-    shoulder: 1.45,
-  },
-};
-
-const skinToneOptions = [
-  { label: 'Sáng', value: '#f4c9a9' },
-  { label: 'Tự nhiên', value: '#dca77f' },
-  { label: 'Ấm', value: '#b97855' },
-  { label: 'Nâu', value: '#8d5a43' },
-];
-
-const hairStyleOptions = {
-  female: [
-    { label: 'Bob', value: 'bob' },
-    { label: 'Dài layer', value: 'layered' },
-    { label: 'Buộc cao', value: 'ponytail' },
-  ],
-  male: [
-    { label: 'Side part', value: 'sidePart' },
-    { label: 'Textured', value: 'textured' },
-    { label: 'Undercut', value: 'undercut' },
-  ],
-};
-
-const accessoryOptions = [
-  { label: 'Không kính', value: 'none' },
-  { label: 'Mắt kính', value: 'glasses' },
-];
-
-const poseOptions = [
-  { label: 'Tự tin', value: 'confident' },
-  { label: 'Chào cơ hội', value: 'wave' },
-];
-
 const defaultExperiences = [
   {
     id: 1,
@@ -161,14 +115,13 @@ const defaultExperiences = [
   },
 ];
 
+/* Hồ sơ chỉ còn lưu id linh vật, cộng giới tính để suy ra linh vật cho những
+   hồ sơ CŨ đã lưu trước khi đổi (xem lib/mascots.js). Các trường skinTone /
+   hairStyle / accessory / pose đã bỏ cùng với nhân vật 3D. */
 const defaultAvatar = {
   gender: 'female',
-  skinTone: skinToneOptions[0].value,
-  hairStyle: hairStyleOptions.female[0].value,
-  accessory: 'none',
-  pose: 'confident',
+  mascot: 'ballerina',
 };
-
 const defaultCredentials = [
   {
     id: 1,
@@ -181,213 +134,10 @@ const defaultCredentials = [
   },
 ];
 
-function addMesh(parent, geometry, material, position, scale = [1, 1, 1], rotation = [0, 0, 0]) {
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set(...position);
-  mesh.scale.set(...scale);
-  mesh.rotation.set(...rotation);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  parent.add(mesh);
-  return mesh;
-}
-
-function addHairStyle(avatarGroup, hairMaterial, gender, hairStyle) {
-  addMesh(avatarGroup, new THREE.SphereGeometry(0.6, 48, 24), hairMaterial, [0, 2.58, -0.05], [1.04, 0.58, 0.98]);
-
-  if (gender === 'female' && hairStyle === 'layered') {
-    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.18, 1.15, 14, 28), hairMaterial, [-0.48, 2.04, -0.05], [1, 1, 0.72], [0.02, 0, 0.06]);
-    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.18, 1.15, 14, 28), hairMaterial, [0.48, 2.04, -0.05], [1, 1, 0.72], [0.02, 0, -0.06]);
-    addMesh(avatarGroup, new THREE.SphereGeometry(0.18, 24, 16), hairMaterial, [0.34, 2.48, 0.34], [1.35, 0.52, 0.55], [0, 0, -0.25]);
-    return;
-  }
-
-  if (gender === 'female' && hairStyle === 'ponytail') {
-    addMesh(avatarGroup, new THREE.SphereGeometry(0.28, 32, 20), hairMaterial, [0, 2.37, -0.56], [0.82, 1.15, 0.72]);
-    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.13, 0.86, 12, 24), hairMaterial, [0, 1.92, -0.62], [1, 1, 0.72], [0.08, 0, 0]);
-    addMesh(avatarGroup, new THREE.SphereGeometry(0.16, 24, 16), hairMaterial, [-0.32, 2.56, 0.34], [1.3, 0.48, 0.55], [0, 0, 0.25]);
-    return;
-  }
-
-  if (gender === 'male' && hairStyle === 'textured') {
-    [-0.34, -0.12, 0.1, 0.32].forEach((x, index) => {
-      addMesh(avatarGroup, new THREE.ConeGeometry(0.13, 0.28, 18), hairMaterial, [x, 2.9, 0.12], [1, 1, 0.8], [0.24, 0, (index - 1.5) * 0.16]);
-    });
-    return;
-  }
-
-  if (gender === 'male' && hairStyle === 'undercut') {
-    addMesh(avatarGroup, new THREE.BoxGeometry(0.78, 0.18, 0.58), hairMaterial, [0.04, 2.74, 0.03], [1, 1, 1], [0, 0, -0.08]);
-    addMesh(avatarGroup, new THREE.SphereGeometry(0.5, 32, 18), hairMaterial, [0, 2.58, -0.12], [1, 0.34, 0.92]);
-    return;
-  }
-
-  addMesh(avatarGroup, new THREE.SphereGeometry(0.2, 28, 18), hairMaterial, [-0.28, 2.63, 0.35], [1.45, 0.44, 0.58], [0, 0, 0.22]);
-  addMesh(avatarGroup, new THREE.SphereGeometry(0.2, 28, 18), hairMaterial, [0.22, 2.66, 0.34], [1.6, 0.42, 0.58], [0, 0, -0.18]);
-}
-
-function addGlasses(avatarGroup, frameMaterial) {
-  addMesh(avatarGroup, new THREE.TorusGeometry(0.16, 0.012, 8, 36), frameMaterial, [-0.2, 2.39, 0.51], [1.04, 0.72, 1], [0, 0, 0]);
-  addMesh(avatarGroup, new THREE.TorusGeometry(0.16, 0.012, 8, 36), frameMaterial, [0.2, 2.39, 0.51], [1.04, 0.72, 1], [0, 0, 0]);
-  addMesh(avatarGroup, new THREE.BoxGeometry(0.12, 0.025, 0.018), frameMaterial, [0, 2.39, 0.51]);
-  addMesh(avatarGroup, new THREE.BoxGeometry(0.19, 0.018, 0.018), frameMaterial, [-0.42, 2.4, 0.49], [1, 1, 1], [0, 0.25, 0.02]);
-  addMesh(avatarGroup, new THREE.BoxGeometry(0.19, 0.018, 0.018), frameMaterial, [0.42, 2.4, 0.49], [1, 1, 1], [0, -0.25, -0.02]);
-}
-
-export function PortfolioAvatar3D({ avatar = defaultAvatar, gender }) {
-  const mountRef = useRef(null);
-
-  useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return undefined;
-
-    const avatarConfig = {
-      ...defaultAvatar,
-      ...(gender ? { gender } : {}),
-      ...avatar,
-    };
-    const style = avatarStyles[avatarConfig.gender] || avatarStyles.female;
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(38, mount.clientWidth / mount.clientHeight, 0.1, 100);
-    camera.position.set(0, 1.65, 6.4);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(mount.clientWidth, mount.clientHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    mount.appendChild(renderer.domElement);
-
-    const avatarGroup = new THREE.Group();
-    avatarGroup.position.y = -0.55;
-    scene.add(avatarGroup);
-
-    const skin = new THREE.MeshStandardMaterial({ color: avatarConfig.skinTone, roughness: 0.5 });
-    const hair = new THREE.MeshStandardMaterial({ color: style.hair, roughness: 0.75 });
-    const outfit = new THREE.MeshStandardMaterial({ color: style.outfit, roughness: 0.48, metalness: 0.04 });
-    const accent = new THREE.MeshStandardMaterial({
-      color: style.accent,
-      roughness: 0.42,
-      metalness: 0.12,
-    });
-    const white = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.5 });
-    const dark = new THREE.MeshStandardMaterial({ color: '#0f172a', roughness: 0.66 });
-    const lip = new THREE.MeshStandardMaterial({ color: '#9f4d4f', roughness: 0.6 });
-    const cheek = new THREE.MeshStandardMaterial({ color: '#e98a7a', roughness: 0.7, transparent: true, opacity: 0.55 });
-    const lens = new THREE.MeshStandardMaterial({ color: '#dbeafe', roughness: 0.18, metalness: 0.04, transparent: true, opacity: 0.28 });
-
-    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.18, 0.3, 12, 24), skin, [0, 1.9, 0]);
-    addMesh(avatarGroup, new THREE.SphereGeometry(0.54, 64, 48), skin, [0, 2.36, 0], [0.92, 1.05, 0.9]);
-    addMesh(avatarGroup, new THREE.SphereGeometry(0.06, 20, 16), skin, [-0.52, 2.34, 0.03], [0.75, 1.15, 0.5]);
-    addMesh(avatarGroup, new THREE.SphereGeometry(0.06, 20, 16), skin, [0.52, 2.34, 0.03], [0.75, 1.15, 0.5]);
-    addHairStyle(avatarGroup, hair, avatarConfig.gender, avatarConfig.hairStyle);
-    addMesh(avatarGroup, new THREE.SphereGeometry(0.065, 18, 18), dark, [-0.19, 2.38, 0.48]);
-    addMesh(avatarGroup, new THREE.SphereGeometry(0.065, 18, 18), dark, [0.19, 2.38, 0.48]);
-    addMesh(avatarGroup, new THREE.BoxGeometry(0.18, 0.025, 0.028), dark, [-0.19, 2.52, 0.5], [1, 1, 1], [0, 0, -0.08]);
-    addMesh(avatarGroup, new THREE.BoxGeometry(0.18, 0.025, 0.028), dark, [0.19, 2.52, 0.5], [1, 1, 1], [0, 0, 0.08]);
-    addMesh(avatarGroup, new THREE.ConeGeometry(0.065, 0.18, 24), skin, [0, 2.31, 0.55], [0.65, 1, 0.7], [Math.PI / 2, 0, 0]);
-    addMesh(avatarGroup, new THREE.SphereGeometry(0.055, 18, 12), cheek, [-0.32, 2.28, 0.49], [1.2, 0.55, 0.35]);
-    addMesh(avatarGroup, new THREE.SphereGeometry(0.055, 18, 12), cheek, [0.32, 2.28, 0.49], [1.2, 0.55, 0.35]);
-    addMesh(avatarGroup, new THREE.BoxGeometry(0.26, 0.04, 0.035), lip, [0, 2.14, 0.5]);
-    if (avatarConfig.accessory === 'glasses') {
-      addMesh(avatarGroup, new THREE.SphereGeometry(0.13, 24, 16), lens, [-0.2, 2.39, 0.51], [1, 0.72, 0.08]);
-      addMesh(avatarGroup, new THREE.SphereGeometry(0.13, 24, 16), lens, [0.2, 2.39, 0.51], [1, 0.72, 0.08]);
-      addGlasses(avatarGroup, dark);
-    }
-    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.54, 1.1, 16, 32), outfit, [0, 1.32, 0], style.bodyScale);
-    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.38, 0.22, 12, 24), white, [0, 1.78, 0.36], [1, 0.46, 0.25]);
-    const leftArmRotation = avatarConfig.pose === 'wave' ? [0.15, 0, -1.02] : [0, 0, -0.38];
-    const rightArmRotation = avatarConfig.pose === 'wave' ? [-0.2, 0, 0.18] : [0, 0, 0.38];
-    const leftArmPosition = avatarConfig.pose === 'wave' ? [-0.86, 1.7, 0.03] : [-0.76, 1.42, 0];
-    const rightArmPosition = avatarConfig.pose === 'wave' ? [0.88, 1.54, 0.02] : [0.76, 1.42, 0];
-    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.13, style.shoulder, 12, 24), outfit, leftArmPosition, [1, 1, 1], leftArmRotation);
-    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.13, style.shoulder, 12, 24), outfit, rightArmPosition, [1, 1, 1], rightArmRotation);
-    if (avatarConfig.pose === 'wave') {
-      addMesh(avatarGroup, new THREE.CapsuleGeometry(0.12, 0.58, 12, 24), skin, [-1.25, 2.08, 0.04], [1, 1, 1], [0.18, 0, -0.55]);
-      addMesh(avatarGroup, new THREE.SphereGeometry(0.14, 24, 18), skin, [-1.42, 2.36, 0.05], [0.9, 1.1, 0.76]);
-    } else {
-      addMesh(avatarGroup, new THREE.SphereGeometry(0.13, 24, 18), skin, [-1.02, 1.0, 0.02], [0.9, 1.1, 0.76]);
-      addMesh(avatarGroup, new THREE.SphereGeometry(0.13, 24, 18), skin, [1.02, 1.0, 0.02], [0.9, 1.1, 0.76]);
-    }
-    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.16, 0.92, 12, 24), dark, [-0.28, 0.2, 0], [1, 1, 1], [0.08, 0, 0.08]);
-    addMesh(avatarGroup, new THREE.CapsuleGeometry(0.16, 0.92, 12, 24), dark, [0.28, 0.2, 0], [1, 1, 1], [0.08, 0, -0.08]);
-    addMesh(avatarGroup, new THREE.TorusGeometry(0.72, 0.018, 12, 96), accent, [0, 1.9, 0.04], [1, 1, 1], [Math.PI / 2, 0, 0]);
-    addMesh(avatarGroup, new THREE.BoxGeometry(0.95, 0.12, 0.18), white, [0, 0.9, 0.5]);
-
-    const base = addMesh(
-      scene,
-      new THREE.CylinderGeometry(1.7, 1.92, 0.18, 96),
-      new THREE.MeshStandardMaterial({ color: '#eaf1ff', roughness: 0.55 }),
-      [0, -0.68, 0],
-    );
-    base.receiveShadow = true;
-
-    const ring = addMesh(
-      scene,
-      new THREE.TorusGeometry(1.72, 0.018, 12, 120),
-      accent,
-      [0, -0.55, 0],
-      [1, 1, 1],
-      [Math.PI / 2, 0, 0],
-    );
-    ring.castShadow = false;
-
-    scene.add(new THREE.HemisphereLight('#f8fbff', '#9fb1ca', 1.65));
-    const keyLight = new THREE.DirectionalLight('#ffffff', 2.4);
-    keyLight.position.set(3.5, 5, 4);
-    keyLight.castShadow = true;
-    scene.add(keyLight);
-
-    const fillLight = new THREE.PointLight(style.accent, 2.1, 8);
-    fillLight.position.set(-3, 2.2, 3);
-    scene.add(fillLight);
-
-    const clock = new THREE.Clock();
-    let frameId = 0;
-
-    function resize() {
-      const width = mount.clientWidth;
-      const height = mount.clientHeight;
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
-    }
-
-    function animate() {
-      const elapsed = clock.getElapsedTime();
-      avatarGroup.rotation.y = Math.sin(elapsed * 0.55) * 0.22;
-      avatarGroup.position.y = -0.55 + Math.sin(elapsed * 1.2) * 0.04;
-      ring.rotation.z = elapsed * 0.42;
-      renderer.render(scene, camera);
-      frameId = requestAnimationFrame(animate);
-    }
-
-    const observer = new ResizeObserver(resize);
-    observer.observe(mount);
-    animate();
-
-    return () => {
-      cancelAnimationFrame(frameId);
-      observer.disconnect();
-      renderer.dispose();
-      scene.traverse((object) => {
-        if (object.geometry) object.geometry.dispose();
-        if (object.material) {
-          if (Array.isArray(object.material)) {
-            object.material.forEach((material) => material.dispose());
-          } else {
-            object.material.dispose();
-          }
-        }
-      });
-      if (renderer.domElement.parentNode === mount) {
-        mount.removeChild(renderer.domElement);
-      }
-    };
-  }, [avatar, gender]);
-
-  return <div className="portfolio-avatar-canvas" ref={mountRef} aria-label="3D portfolio avatar preview" />;
-}
+/* Mốc tan của mesh, bằng px. Trang này cao gấp ba lần một trang thường, nên
+   quầng sáng chỉ phủ phần đầu (tiêu đề + đỉnh hai cột) rồi trả về nền ink
+   phẳng, để khu vực nhập liệu không phải đọc chữ trên nền loang màu. */
+const PF_MESH_MASK = 'linear-gradient(to bottom, #000 0px, #000 260px, transparent 720px)';
 
 export function CandidatePortfolioPage({ isEditing = false }) {
   const navigate = useNavigate();
@@ -413,7 +163,51 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   const [filePreview, setFilePreview] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  /* Đọc MỘT LẦN lúc mount: luồng đăng nhập gắn cờ này vào URL khi nó mở trang
+     dựng ở tab riêng. Đọc một lần vì trang có thể thay đổi URL trong lúc dùng,
+     và cờ phải giữ nguyên ý nghĩa "tab này sinh ra để làm việc đó". */
+  const [openedAsOnboardingTab] = useState(
+    () => new URLSearchParams(window.location.search).get(ONBOARDING_TAB_FLAG) === '1',
+  );
   const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
+
+  /* Sau khi lưu xong thì tự đưa người dùng về khu vực ứng viên.
+     Trước đó màn "Thành công" là ngõ cụt: nó báo xong việc rồi bắt bấm thêm
+     một nút nữa mới đi tiếp — mà chẳng có lựa chọn nào khác để cân nhắc, nên
+     cú bấm đó không mang quyết định gì.
+
+     2 giây, không phải ngay lập tức: đủ để đọc hết "Cập nhật Portfolio thành
+     công!" và ghi nhận là việc đã xong. Nhảy ngay thì người dùng không kịp
+     thấy gì, và sẽ không chắc hồ sơ đã lưu hay chưa.
+
+     Nút vẫn giữ nguyên cho ai muốn đi ngay, và làm phương án dự phòng nếu
+     timer không chạy. `replace` để nút Back của trình duyệt không ném họ
+     ngược về màn thành công của một lần lưu đã cũ. */
+  useEffect(() => {
+    if (!isSubmittedSuccessfully) return undefined;
+
+    // Báo cho các tab khác biết hồ sơ vừa được lưu, để chúng bỏ bộ đệm hồ sơ
+    // cũ. Gửi ngay, không đợi hết 2 giây — tab kia có thể dùng được liền.
+    announcePortfolioSaved();
+
+    const timer = setTimeout(() => {
+      /* Nếu tab này do luồng đăng nhập mở ra (lib/onboardingTab.js) thì việc
+         của nó đã xong: tự đóng, trả người dùng về tab họ đang làm dở.
+         window.close() chỉ chạy được với tab do script mở — nên nếu người dùng
+         tự mở /portfolio ở tab mới thì lệnh này im lặng thất bại. Vì vậy phải
+         kiểm tra sau một nhịp và điều hướng bù, không thì họ mắc kẹt ở màn
+         "Thành công". */
+      if (openedAsOnboardingTab) {
+        window.close();
+        setTimeout(() => {
+          if (!window.closed) navigate('/candidates/dashboard/overview', { replace: true });
+        }, 250);
+        return;
+      }
+      navigate('/candidates/dashboard/overview', { replace: true });
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [isSubmittedSuccessfully, navigate, openedAsOnboardingTab]);
   const [isDraftDirty, setIsDraftDirty] = useState(false);
   const [showExitWarningModal, setShowExitWarningModal] = useState(false);
   const [errors, setErrors] = useState({});
@@ -620,12 +414,15 @@ export function CandidatePortfolioPage({ isEditing = false }) {
 
   function updateAvatar(field, value) {
     markDirty();
+    // Chọn linh vật thì ghi luôn giới tính tương ứng, để trường gender còn lại
+    // trong dữ liệu không mâu thuẫn với linh vật đang chọn.
     setAvatar((current) => {
-      const nextAvatar = { ...current, [field]: value };
-      if (field === 'gender') {
-        nextAvatar.hairStyle = hairStyleOptions[value][0].value;
+      const next = { ...current, [field]: value };
+      if (field === 'mascot') {
+        const picked = MASCOTS.find((m) => m.id === value);
+        if (picked) next.gender = picked.gender;
       }
-      return nextAvatar;
+      return next;
     });
   }
 
@@ -1042,8 +839,16 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             textAlign: 'center'
           }}>
             {isEditing
-              ? 'Hồ sơ 3D và Proof of Work của bạn đã được cập nhật thành công trên hệ thống nextplease.'
-              : 'Hồ sơ 3D và Proof of Work của bạn đã được ghi nhận chính thức trên hệ thống nextplease. Bạn đã sẵn sàng để khám phá các cơ hội nghề nghiệp.'}
+              ? 'Hồ sơ và Proof of Work của bạn đã được cập nhật thành công trên hệ thống nextplease.'
+              : 'Hồ sơ và Proof of Work của bạn đã được ghi nhận chính thức trên hệ thống nextplease. Bạn đã sẵn sàng để khám phá các cơ hội nghề nghiệp.'}
+          </p>
+
+          {/* Nói trước là trang sắp tự chuyển. Không nói thì cú nhảy sau 2 giây
+              đọc ra như trang tự ý bỏ đi. */}
+          <p className="pf-success-redirect" aria-live="polite">
+            {openedAsOnboardingTab
+              ? 'Đang đóng tab này, bạn quay lại trang đang xem nhé…'
+              : 'Đang đưa bạn về khu vực của tôi…'}
           </p>
 
           <div style={{
@@ -1051,13 +856,13 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             flexDirection: 'column',
             gap: '12px'
           }}>
-            <Link to="/candidates/dashboard" className="button primary-button" style={{
+            <Link to="/candidates/dashboard/overview" replace className="button primary-button" style={{
               justifyContent: 'center',
               padding: '14px',
               fontSize: '1rem',
               fontWeight: '600'
             }}>
-              {isEditing ? 'Quay lại Dashboard' : 'Đến trang ứng viên'}
+              {isEditing ? 'Quay lại ngay' : 'Đến khu vực của tôi'}
             </Link>
             
             {!isEditing && (
@@ -1092,6 +897,13 @@ export function CandidatePortfolioPage({ isEditing = false }) {
 
   return (
     <section className="portfolio-page">
+      {/* Cùng tấm mesh với trang chủ và khu vực ứng viên, cùng mốc tan tính
+          bằng px — trình dựng là một biểu mẫu rất dài (~3200px), để mesh loang
+          theo % chiều cao khung thì nửa dưới trang toàn màu. Xem HeroMesh. */}
+      <div className="pf-bg" aria-hidden="true">
+        <div className="pf-bg-inner"><HeroMesh fadeMask={PF_MESH_MASK} /></div>
+      </div>
+
       <div className="portfolio-hero">
         <div>
           {!isEditing && (
@@ -1117,7 +929,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
           )}
           <h1>Dựng hồ sơ năng lực của bạn.</h1>
           <p>
-            Chọn nhân vật, nhập thông tin và kinh nghiệm đã được xác thực.
+            Chọn linh vật, nhập thông tin và kinh nghiệm đã được xác thực.
             Mọi thay đổi hiện ngay ở khung xem trước.
           </p>
         </div>
@@ -1126,86 +938,41 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       <div className="portfolio-builder">
         <aside className="portfolio-studio">
           <div className="avatar-stage">
-            <PortfolioAvatar3D avatar={avatar} />
+            <PortfolioMascot avatar={avatar} size={200} />
           </div>
-          <div className="gender-picker" aria-label="Chọn giới tính nhân vật">
-            {Object.entries(avatarStyles).map(([key, value]) => (
-              <button
-                className={avatar.gender === key ? 'gender-option active' : 'gender-option'}
-                key={key}
-                onClick={() => updateAvatar('gender', key)}
-                type="button"
-              >
-                {value.label}
-              </button>
-            ))}
-          </div>
-          <div className="avatar-customizer">
-            <div className="avatar-control-group">
-              <span>Màu da</span>
-              <div className="skin-tone-row">
-                {skinToneOptions.map((skinTone) => (
+          {/* Bộ chọn linh vật.
+              Trước đây chỗ này là chọn giới tính + màu da + kiểu tóc + phụ kiện
+              + dáng đứng, vì nhân vật 3D dựng từng bộ phận nên tuỳ biến được.
+              Linh vật là tranh cố định, không có bộ phận nào để đổi, nên chỉ
+              còn một việc: chọn một trong bốn. Bày hết cả bốn ra thay vì bắt
+              chọn giới tính trước rồi mới thấy hai — bốn cái vừa một hàng, và
+              người dùng thấy ngay toàn bộ lựa chọn của mình. */}
+          <div className="pf-mascot-picker">
+            <span className="pf-mascot-picker-label">Chọn linh vật</span>
+            <div className="pf-mascot-row" role="radiogroup" aria-label="Chọn linh vật đại diện">
+              {MASCOTS.map((m) => {
+                const active = resolveMascot(avatar) === m.id;
+                return (
                   <button
-                    aria-label={`Chọn màu da ${skinTone.label}`}
-                    className={avatar.skinTone === skinTone.value ? 'skin-tone active' : 'skin-tone'}
-                    key={skinTone.value}
-                    onClick={() => updateAvatar('skinTone', skinTone.value)}
-                    style={{ '--skin-tone': skinTone.value }}
+                    key={m.id}
                     type="button"
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="avatar-control-group">
-              <span>Kiểu tóc</span>
-              <div className="avatar-option-row">
-                {hairStyleOptions[avatar.gender].map((hairStyle) => (
-                  <button
-                    className={avatar.hairStyle === hairStyle.value ? 'avatar-chip active' : 'avatar-chip'}
-                    key={hairStyle.value}
-                    onClick={() => updateAvatar('hairStyle', hairStyle.value)}
-                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    className={active ? 'pf-mascot-option active' : 'pf-mascot-option'}
+                    onClick={() => updateAvatar('mascot', m.id)}
                   >
-                    {hairStyle.label}
+                    <span
+                      className="pf-mascot-thumb"
+                      aria-hidden="true"
+                      style={{ backgroundImage: `url(${mascotSheets(m.id).directions})` }}
+                    />
+                    <span>{m.label}</span>
                   </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="avatar-control-grid">
-              <div className="avatar-control-group">
-                <span>Phụ kiện</span>
-                <div className="avatar-option-row compact">
-                  {accessoryOptions.map((accessory) => (
-                    <button
-                      className={avatar.accessory === accessory.value ? 'avatar-chip active' : 'avatar-chip'}
-                      key={accessory.value}
-                      onClick={() => updateAvatar('accessory', accessory.value)}
-                      type="button"
-                    >
-                      {accessory.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="avatar-control-group">
-                <span>Pose</span>
-                <div className="avatar-option-row compact">
-                  {poseOptions.map((pose) => (
-                    <button
-                      className={avatar.pose === pose.value ? 'avatar-chip active' : 'avatar-chip'}
-                      key={pose.value}
-                      onClick={() => updateAvatar('pose', pose.value)}
-                      type="button"
-                    >
-                      {pose.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                );
+              })}
             </div>
           </div>
+
           <div className="portfolio-preview-card">
             <h2>{profile.name || 'Tên ứng viên'}</h2>
             <p>{profile.headline || 'Headline nghề nghiệp'}</p>
@@ -1700,7 +1467,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               <div>
                 <h2>Xem trước Portfolio</h2>
                 <p>
-                  Mở một tab riêng để kiểm tra cách hồ sơ, nhân vật 3D, kinh nghiệm và chứng chỉ đang hiển thị.
+                  Mở một tab riêng để kiểm tra cách hồ sơ, linh vật, kinh nghiệm và chứng chỉ đang hiển thị.
                 </p>
               </div>
             </div>
@@ -1746,10 +1513,10 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             <div className="confirm-modal-body">
               <div className="confirm-avatar-container">
                 <div className="confirm-avatar-box">
-                  <PortfolioAvatar3D avatar={avatar} />
+                  <PortfolioMascot avatar={avatar} size={200} />
                 </div>
                 <p style={{ fontSize: '0.9rem', color: 'var(--ink-muted)', textAlign: 'center' }}>
-                  Nhân vật 3D đại diện cho hồ sơ ứng tuyển của bạn.
+                  Linh vật đại diện cho hồ sơ ứng tuyển của bạn.
                 </p>
               </div>
               <div className="confirm-details-container">

@@ -6,6 +6,7 @@ import { loginCandidate } from '../api/authApi.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { setRemember, setStoredToken, rememberLastEmail, getLastEmail } from '../lib/authStorage.js';
 import { consumeReturnTo, peekReturnTo } from '../lib/returnTo.js';
+import { openOnboardingTabEarly, sendTabToBuilder, discardOnboardingTab } from '../lib/onboardingTab.js';
 import { AuthBrandPanel } from '../components/AuthBrandPanel.jsx';
 import { AuthStatusCard } from '../components/AuthStatusCard.jsx';
 
@@ -79,13 +80,21 @@ export function CandidateLoginPage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setStatus({ type: 'loading', message: 'Đang kiểm tra tài khoản ứng viên...' });
 
     if (!loginData.email.trim() || !loginData.password.trim()) {
       setStatus({ type: 'error', message: 'Nhập email và mật khẩu ứng viên trước nhé.' });
       return;
     }
+
+    /* Mở tab trống NGAY tại đây, trước mọi `await`: trình duyệt chỉ cho
+       window.open chạy trong đúng nhịp người dùng bấm, và sau request đăng
+       nhập thì nhịp đó đã đứt. Lúc này còn chưa biết tài khoản có hồ sơ chưa,
+       nên tab có thể thừa — nếu thừa thì đóng ngay ở dưới. Xem lib/onboardingTab.js. */
+    const onboardingTab = openOnboardingTabEarly();
+
+    setStatus({ type: 'loading', message: 'Đang kiểm tra tài khoản ứng viên...' });
     if (!isSupabaseConfigured) {
+      discardOnboardingTab(onboardingTab);
       setStatus({ type: 'success', message: 'Đăng nhập mô phỏng thành công. Đang mở Candidate Hub...' });
       navigate(consumeReturnTo('/candidates/dashboard/overview'));
       return;
@@ -106,25 +115,50 @@ export function CandidateLoginPage() {
         refresh_token: response.refreshToken,
       });
       if (error) {
+        discardOnboardingTab(onboardingTab);
         setStatus({ type: 'error', message: error.message || 'Không thể thiết lập phiên đăng nhập.' });
         return;
       }
-      // Nếu họ đang xem một trang rồi mới bấm đăng nhập thì trả về đúng trang
-      // đó. Chỉ khi vào thẳng trang đăng nhập mới áp luật onboarding.
       const returnTo = consumeReturnTo();
-      if (returnTo) {
-        navigate(returnTo);
-        return;
-      }
+
+      let needsOnboarding = false;
       try {
         const portfolio = await getMyPortfolio();
-        if (portfolio && portfolio.onboardingCompleted) navigate('/candidates/dashboard/overview');
-        else navigate('/portfolio');
+        needsOnboarding = !portfolio || !portfolio.onboardingCompleted;
       } catch (err) {
+        /* GỌI HỎNG KHÁC VỚI "CHƯA CÓ HỒ SƠ".
+           Nếu API lỗi (mất mạng, database đang chết) mà coi như chưa có hồ sơ
+           thì người đã có hồ sơ đầy đủ sẽ bị đẩy vào trình dựng với biểu mẫu
+           TRỐNG — và nếu họ điền rồi lưu, hồ sơ thật bị ghi đè thành rỗng.
+           Đó là đường mất dữ liệu, không phải một bất tiện.
+           Khi không chắc thì đi tiếp như bình thường; dashboard sẽ tự xử lý
+           khi API sống lại. */
         console.error('Không thể kiểm tra trạng thái onboarding:', err);
+        discardOnboardingTab(onboardingTab);
+        navigate(returnTo || '/candidates/dashboard/overview');
+        return;
+      }
+
+      if (!needsOnboarding) {
+        discardOnboardingTab(onboardingTab);
+        navigate(returnTo || '/candidates/dashboard/overview');
+        return;
+      }
+
+      /* Chưa có hồ sơ. Việc tạo hồ sơ đi sang tab riêng, còn tab này trả họ về
+         đúng chỗ đang dở trước khi bấm đăng nhập — không cắt ngang việc họ làm.
+         Trước đây khi có returnTo thì bước onboarding bị bỏ qua HOÀN TOÀN;
+         người dùng về lại trang cũ và không bao giờ được nhắc tạo hồ sơ. */
+      if (sendTabToBuilder(onboardingTab)) {
+        navigate(returnTo || '/');
+      } else {
+        // Tab bị chặn hoặc đóng mất: quay về hành vi cũ, dựng hồ sơ ngay tại
+        // tab này. Thà lạc nhịp còn hơn để người dùng không có đường nào đi.
         navigate('/portfolio');
       }
     } catch (error) {
+      // Đăng nhập hỏng thì tab trống thành rác — đóng nó đi.
+      discardOnboardingTab(onboardingTab);
       setStatus({ type: 'error', message: error.response?.data?.message || error.message || 'Đăng nhập thất bại.' });
     }
   }

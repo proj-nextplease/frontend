@@ -7,6 +7,7 @@ import {
   Sparkles, CheckCircle2, User, Link2, MoreHorizontal,
   Bookmark, Award, ThumbsUp, HelpCircle
 } from 'lucide-react';
+import { HeroMesh } from '../components/HeroMesh.jsx';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
@@ -19,14 +20,19 @@ import {
   toggleLikePost, votePoll as apiVotePoll, getComments, addComment as apiAddComment,
 } from '../api/discussionApi.js';
 
-/* ── Brand Color Tokens ── */
-const TEAL = '#0d9488';
+/* ── Hệ màu nền tối, dùng chung với trang chủ và /jobs (xem DESIGN.md) ── */
 const EMERALD = '#10b981';
-const INK = '#0f2e2b';
-const MUTED = '#64748b';
-const LINE = '#e2e8f0';
-const BG_PAGE = '#f8fafc'; // Upzi soft light gray background
-const CARD_BG = '#ffffff';
+const TEAL = '#0d9488';
+const INK = '#0b0f0e';            // nền trang
+const SURFACE = '#121817';        // bề mặt nổi: thẻ bài, modal, menu
+const ON_DARK = '#ffffff';
+const MUTED = 'rgba(233,247,242,0.62)';
+const LINE = 'rgba(255,255,255,0.1)';
+const LINE_STRONG = 'rgba(255,255,255,0.2)';
+const BG_PAGE = INK;
+/* Đặc hơn thẻ ở trang chủ/jobs: feed nằm đè lên tấm mesh, để nền 0.016 như
+   bên kia thì thẻ chìm hẳn vào màu loang và mất cảm giác là một thẻ. */
+const CARD_BG = 'rgba(18,24,23,0.72)';
 
 /* ── 3D Sticker SVGs for Topics ── */
 function Topic3DIcon({ type, size = 36 }) {
@@ -175,7 +181,15 @@ function Topic3DIcon({ type, size = 36 }) {
 /* ── 6 Topics matching Upzi ── */
 /* ── Chuẩn hoá dữ liệu từ API về đúng shape mà phần render đang dùng ── */
 
-const AVATAR_BGS = ['#dff7ee', '#fff2bd', '#eee5ff', '#dff0ff', '#ffe7d3', '#e4f5c8'];
+/* Nền avatar dự phòng khi người dùng chưa có ảnh. Dải pastel cũ đặt trên nền
+   tối biến thành một cột đốm sáng chạy dọc feed, kéo mắt khỏi nội dung — đổi
+   sang các sắc độ mờ cùng tông với hệ. */
+const POST_MAX_CHARS = 2000;
+
+const AVATAR_BGS = [
+  'rgba(16,185,129,0.22)', 'rgba(103,232,249,0.2)', 'rgba(167,139,250,0.2)',
+  'rgba(56,189,248,0.2)', 'rgba(251,146,60,0.2)', 'rgba(163,230,53,0.2)',
+];
 
 /** Màu nền avatar ổn định theo tên, để cùng một người luôn ra cùng một màu. */
 function avatarBgFor(name) {
@@ -545,16 +559,19 @@ export function DiscussionPage() {
       marginLeft: 'calc(50% - 50vw)',
       background: BG_PAGE,
       minHeight: '100vh',
-      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
-      color: INK,
+      fontFamily: "'Be Vietnam Pro', 'Inter', sans-serif",
+      color: ON_DARK,
       marginTop: '-34px',
       overflowX: 'clip',
+      // SiteHeader ở chế độ pinned={false} dùng position: absolute nên thẻ bọc
+      // ngoài cùng phải có position để nó neo đúng chỗ.
+      position: 'relative',
     }}>
       {/* Toast Notification */}
       {copyToast && (
         <div style={{
           position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 9999, background: INK, color: '#fff', padding: '12px 24px',
+          zIndex: 9999, background: SURFACE, border: `1px solid ${LINE_STRONG}`, color: '#fff', padding: '12px 24px',
           borderRadius: 999, fontSize: '0.9rem', fontWeight: 600,
           boxShadow: '0 8px 30px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8,
           animation: 'fadeIn 0.2s ease',
@@ -565,15 +582,24 @@ export function DiscussionPage() {
       )}
 
       <style>{`
+        .np-disc-bg { position: absolute; inset: 0 0 auto; height: 620px; overflow: hidden; pointer-events: none; z-index: 0; }
         .np-discussion-layout {
+          position: relative; z-index: 1;
           width: min(1400px, calc(100% - 40px));
           margin: 0 auto;
-          padding: 24px 0 80px;
+          /* Chế độ đè không render spacer nên phải tự chừa 24px lề + 56px thanh. */
+          padding: clamp(104px, 10vw, 124px) 0 80px;
           display: grid;
           grid-template-columns: 1fr minmax(auto, 720px) 1fr;
           gap: 32px;
           align-items: start;
         }
+        /* Ô lưới mặc định có min-width: auto, nên nội dung không xuống dòng
+           được (nhãn ở cột trái đặt white-space: nowrap) sẽ đẩy cả cột rộng
+           hơn khung. Trên 375px cột phình lên 428px và bị overflow:clip của
+           thẻ bọc cắt cụt — nhìn như thiết kế hỏng chứ không ai thấy thanh
+           cuộn để biết là tràn. */
+        .np-discussion-layout > * { min-width: 0; }
         @media (max-width: 1200px) {
           .np-discussion-layout {
             grid-template-columns: 240px 1fr !important;
@@ -585,7 +611,7 @@ export function DiscussionPage() {
         @media (max-width: 860px) {
           .np-discussion-layout {
             grid-template-columns: 1fr !important;
-            padding: 16px 12px 60px !important;
+            padding: 92px 12px 60px !important;
           }
           .np-discussion-sidebar {
             position: static !important;
@@ -607,13 +633,20 @@ export function DiscussionPage() {
         }
       `}</style>
 
-      {/* Main Global Header */}
-      <SiteHeader />
+      {/* Nền mesh chung với trang chủ / trang việc làm. Đặt ở tầng nền của cả
+          trang (không nhét vào một khối cao ~300px) thì màu mới kịp loang. */}
+      <div className="np-disc-bg" aria-hidden="true">
+        <HeroMesh veil="radial-gradient(100% 92% at 50% 18%, rgba(11,15,14,0) 0%, #0b0f0e 100%)" />
+      </div>
+
+      {/* Thanh điều hướng trôi theo trang: cột trái và ô soạn bài đã bám rồi,
+          thêm một thanh dính nữa là ba lớp chồng nhau ở mép trên. */}
+      <SiteHeader overlay pinned={false} />
 
       {/* Page Content Container (Dead-centered feed, Left Sidebar flush to the left) */}
       <div className="np-discussion-layout">
         {/* ── LEFT SIDEBAR ── */}
-        <aside className="np-discussion-sidebar" style={{ position: 'sticky', top: 90, justifySelf: 'start', width: '100%', maxWidth: 240 }}>
+        <aside className="np-discussion-sidebar" style={{ position: 'sticky', top: 24, justifySelf: 'start', width: '100%', maxWidth: 240 }}>
           <div className="np-discussion-sidenav" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {/* 'Dành cho bạn' Pill Link */}
             <button
@@ -625,8 +658,8 @@ export function DiscussionPage() {
                 width: '100%',
                 padding: '12px 18px',
                 borderRadius: 9999,
-                background: activeTab === 'danh-cho-ban' ? '#e2e8f0' : 'transparent',
-                color: activeTab === 'danh-cho-ban' ? '#0f172a' : '#475569',
+                background: activeTab === 'danh-cho-ban' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                color: activeTab === 'danh-cho-ban' ? '#ffffff' : 'rgba(233,247,242,0.55)',
                 fontWeight: activeTab === 'danh-cho-ban' ? 700 : 600,
                 fontSize: '0.95rem',
                 border: 'none',
@@ -635,13 +668,13 @@ export function DiscussionPage() {
                 transition: 'all 0.15s ease',
               }}
               onMouseEnter={(e) => {
-                if (activeTab !== 'danh-cho-ban') e.currentTarget.style.background = '#f1f5f9';
+                if (activeTab !== 'danh-cho-ban') e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
               }}
               onMouseLeave={(e) => {
                 if (activeTab !== 'danh-cho-ban') e.currentTarget.style.background = 'transparent';
               }}
             >
-              <House size={20} color={activeTab === 'danh-cho-ban' ? '#0f172a' : '#64748b'} strokeWidth={2.4} />
+              <House size={20} color={activeTab === 'danh-cho-ban' ? '#ffffff' : 'rgba(233,247,242,0.62)'} strokeWidth={2.4} />
               <span>Dành cho bạn</span>
             </button>
 
@@ -656,7 +689,7 @@ export function DiscussionPage() {
                 padding: '12px 18px',
                 borderRadius: 9999,
                 background: 'transparent',
-                color: '#334155',
+                color: 'rgba(233,247,242,0.72)',
                 fontWeight: 600,
                 fontSize: '0.95rem',
                 border: 'none',
@@ -664,10 +697,10 @@ export function DiscussionPage() {
                 textAlign: 'left',
                 transition: 'all 0.15s ease',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
-              <PlusSquare size={20} color="#475569" strokeWidth={2.2} />
+              <PlusSquare size={20} color="rgba(233,247,242,0.55)" strokeWidth={2.2} />
               <span>Đăng bài mới</span>
             </button>
           </div>
@@ -684,7 +717,7 @@ export function DiscussionPage() {
                   background: CARD_BG,
                   borderRadius: 20,
                   padding: '14px 18px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid rgba(255,255,255,0.1)',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                   display: 'flex',
                   alignItems: 'center',
@@ -700,23 +733,23 @@ export function DiscussionPage() {
                   onClick={() => requireAuth(() => setIsCreateModalOpen(true))}
                   style={{
                     flex: 1,
-                    background: '#f1f5f9',
+                    background: 'rgba(255,255,255,0.06)',
                     borderRadius: 9999,
                     padding: '10px 18px',
                     fontSize: '0.92rem',
-                    color: '#64748b',
+                    color: 'rgba(233,247,242,0.62)',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background 0.15s ease',
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#e2e8f0'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
                 >
                   Bạn có điều gì muốn hỏi không?
                 </div>
 
                 {/* Action Icons */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#475569' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'rgba(233,247,242,0.55)' }}>
                   {/* Đính kèm ảnh/tệp chưa triển khai — xem README phần Thảo Luận. */}
                   <button
                     onClick={() => requireAuth(() => {
@@ -724,7 +757,7 @@ export function DiscussionPage() {
                       setIsCreateModalOpen(true);
                     })}
                     title="Tạo cuộc bình chọn"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: 4 }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(233,247,242,0.55)', padding: 4 }}
                   >
                     <BarChart2 size={21} />
                   </button>
@@ -747,7 +780,7 @@ export function DiscussionPage() {
                     style={{
                       background: CARD_BG,
                       borderRadius: 9999,
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid rgba(255,255,255,0.1)',
                       boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
                       padding: '6px 8px 6px 16px',
                       display: 'flex',
@@ -760,15 +793,15 @@ export function DiscussionPage() {
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-1px)';
                       e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)';
-                      e.currentTarget.style.borderColor = '#cbd5e1';
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'none';
                       e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.02)';
-                      e.currentTarget.style.borderColor = '#e2e8f0';
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
                     }}
                   >
-                    <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {topic.name}
                     </span>
                     <div style={{ flexShrink: 0 }}>
@@ -794,7 +827,7 @@ export function DiscussionPage() {
                   border: 'none',
                   fontSize: '1.05rem',
                   fontWeight: 700,
-                  color: '#0f172a',
+                  color: '#ffffff',
                   cursor: 'pointer',
                   padding: '4px 0 16px',
                 }}
@@ -809,7 +842,7 @@ export function DiscussionPage() {
                   background: CARD_BG,
                   borderRadius: 20,
                   padding: '24px 28px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid rgba(255,255,255,0.1)',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                   marginBottom: 16,
                 }}
@@ -820,15 +853,15 @@ export function DiscussionPage() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                      <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
                         {currentTopic.name}
                       </h1>
                       <ShieldCheck size={20} color="#8b5cf6" />
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: 6 }}>
+                    <div style={{ fontSize: '0.85rem', color: 'rgba(233,247,242,0.62)', marginBottom: 6 }}>
                       Chủ đề chính thức · được NextPlease quản trị
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: '#334155', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.85rem', color: 'rgba(233,247,242,0.72)', fontWeight: 600 }}>
                       {currentTopic.followersCount} người theo dõi · {currentTopic.postsCount} bài viết
                     </div>
                   </div>
@@ -841,8 +874,8 @@ export function DiscussionPage() {
                     width: '100%',
                     padding: '12px 20px',
                     borderRadius: 9999,
-                    background: followedTopics[currentTopic.id] ? '#f1f5f9' : '#8b5cf6',
-                    color: followedTopics[currentTopic.id] ? '#475569' : '#ffffff',
+                    background: followedTopics[currentTopic.id] ? 'rgba(255,255,255,0.06)' : '#8b5cf6',
+                    color: followedTopics[currentTopic.id] ? 'rgba(233,247,242,0.55)' : '#ffffff',
                     fontWeight: 700,
                     fontSize: '0.95rem',
                     border: 'none',
@@ -860,7 +893,7 @@ export function DiscussionPage() {
                   background: CARD_BG,
                   borderRadius: 20,
                   padding: '14px 18px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid rgba(255,255,255,0.1)',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                   display: 'flex',
                   alignItems: 'center',
@@ -876,17 +909,17 @@ export function DiscussionPage() {
                   }}
                   style={{
                     flex: 1,
-                    background: '#f1f5f9',
+                    background: 'rgba(255,255,255,0.06)',
                     borderRadius: 9999,
                     padding: '10px 18px',
                     fontSize: '0.92rem',
-                    color: '#64748b',
+                    color: 'rgba(233,247,242,0.62)',
                     cursor: 'pointer',
                   }}
                 >
                   Chia sẻ quan điểm {currentTopic.name} của bạn...
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#475569' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'rgba(233,247,242,0.55)' }}>
                   <BarChart2
                     size={21}
                     style={{ cursor: 'pointer' }}
@@ -901,8 +934,8 @@ export function DiscussionPage() {
                   <button
                     onClick={() => setFilterMode('newest')}
                     style={{
-                      background: filterMode === 'newest' ? '#e2e8f0' : 'transparent',
-                      color: filterMode === 'newest' ? '#0f172a' : '#64748b',
+                      background: filterMode === 'newest' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                      color: filterMode === 'newest' ? '#ffffff' : 'rgba(233,247,242,0.62)',
                       padding: '6px 14px',
                       borderRadius: 9999,
                       fontSize: '0.88rem',
@@ -916,8 +949,8 @@ export function DiscussionPage() {
                   <button
                     onClick={() => setFilterMode('highlight')}
                     style={{
-                      background: filterMode === 'highlight' ? '#e2e8f0' : 'transparent',
-                      color: filterMode === 'highlight' ? '#0f172a' : '#64748b',
+                      background: filterMode === 'highlight' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                      color: filterMode === 'highlight' ? '#ffffff' : 'rgba(233,247,242,0.62)',
                       padding: '6px 14px',
                       borderRadius: 9999,
                       fontSize: '0.88rem',
@@ -929,7 +962,7 @@ export function DiscussionPage() {
                     Nổi bật
                   </button>
                 </div>
-                <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                <span style={{ fontSize: '0.82rem', color: 'rgba(233,247,242,0.62)' }}>
                   {displayedPosts.length} bài viết tuần này
                 </span>
               </div>
@@ -940,7 +973,7 @@ export function DiscussionPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {actionError && (
               <div style={{
-                background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c',
+                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5',
                 borderRadius: 14, padding: '12px 16px', fontSize: '0.88rem', fontWeight: 600,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
               }}>
@@ -952,14 +985,14 @@ export function DiscussionPage() {
             {loading ? (
               <div style={{
                 background: CARD_BG, borderRadius: 20, padding: '48px 24px',
-                textAlign: 'center', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 600,
+                textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(233,247,242,0.62)', fontWeight: 600,
               }}>
                 Đang tải bài viết…
               </div>
             ) : feedError ? (
               <div style={{
                 background: CARD_BG, borderRadius: 20, padding: '48px 24px',
-                textAlign: 'center', border: '1px solid #fecaca', color: '#b91c1c', fontWeight: 600,
+                textAlign: 'center', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5', fontWeight: 600,
               }}>
                 {feedError}
               </div>
@@ -970,8 +1003,8 @@ export function DiscussionPage() {
                   borderRadius: 20,
                   padding: '48px 24px',
                   textAlign: 'center',
-                  border: '1px solid #e2e8f0',
-                  color: '#64748b',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'rgba(233,247,242,0.62)',
                 }}
               >
                 <EmptyStateMascot
@@ -1008,7 +1041,7 @@ export function DiscussionPage() {
                       background: CARD_BG,
                       borderRadius: 20,
                       padding: '22px 24px',
-                      border: '1px solid #e2e8f0',
+                      border: '1px solid rgba(255,255,255,0.1)',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                     }}
                   >
@@ -1020,16 +1053,16 @@ export function DiscussionPage() {
                         name={post.author.name}
                         size={44}
                         background={post.author.avatarBg}
-                        style={{ color: '#0f172a' }}
+                        style={{ color: '#ffffff' }}
                       />
 
                       {/* Author Info */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', lineHeight: 1.3 }}>
-                          <span style={{ fontWeight: 700, fontSize: '0.98rem', color: '#0f172a' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.98rem', color: '#ffffff' }}>
                             {post.author.name}
                           </span>
-                          <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>›</span>
+                          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.9rem' }}>›</span>
                           <button
                             onClick={() => handleSelectTopic(post.topicId)}
                             style={{
@@ -1038,15 +1071,15 @@ export function DiscussionPage() {
                               padding: 0,
                               fontWeight: 700,
                               fontSize: '0.92rem',
-                              color: '#0f172a',
+                              color: '#ffffff',
                               cursor: 'pointer',
                             }}
                           >
                             {post.topicName}
                           </button>
-                          <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>· {post.timeAgo}</span>
+                          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.85rem' }}>· {post.timeAgo}</span>
                         </div>
-                        <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: 3 }}>
+                        <div style={{ fontSize: '0.82rem', color: 'rgba(233,247,242,0.62)', marginTop: 3 }}>
                           {post.author.role}
                         </div>
                       </div>
@@ -1056,7 +1089,7 @@ export function DiscussionPage() {
                     <div style={{
                       fontSize: '0.93rem',
                       lineHeight: 1.65,
-                      color: '#1e293b',
+                      color: '#ffffff',
                       whiteSpace: 'pre-line',
                       marginBottom: 14,
                     }}>
@@ -1086,17 +1119,17 @@ export function DiscussionPage() {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 10,
-                          background: '#f8fafc',
-                          border: '1px solid #e2e8f0',
+                          background: '#0b0f0e',
+                          border: '1px solid rgba(255,255,255,0.1)',
                           borderRadius: 14,
                           padding: '10px 16px',
                           marginBottom: 16,
                           fontSize: '0.85rem',
                           fontWeight: 600,
-                          color: '#334155',
+                          color: 'rgba(233,247,242,0.72)',
                         }}
                       >
-                        <FileText size={18} color="#64748b" />
+                        <FileText size={18} color="rgba(233,247,242,0.62)" />
                         <span style={{ textDecoration: 'underline' }}>{post.attachment.name}</span>
                       </div>
                     )}
@@ -1105,10 +1138,10 @@ export function DiscussionPage() {
                     {post.poll && (
                       <div
                         style={{
-                          background: '#f8fafc',
+                          background: '#0b0f0e',
                           borderRadius: 16,
                           padding: '16px',
-                          border: '1px solid #e2e8f0',
+                          border: '1px solid rgba(255,255,255,0.1)',
                           marginBottom: 16,
                         }}
                       >
@@ -1128,8 +1161,8 @@ export function DiscussionPage() {
                                   width: '100%',
                                   padding: '12px 16px',
                                   borderRadius: 12,
-                                  background: isSelected ? '#ecfdf5' : '#ffffff',
-                                  border: isSelected ? `1.5px solid ${TEAL}` : '1px solid #cbd5e1',
+                                  background: isSelected ? 'rgba(16,185,129,0.16)' : 'rgba(255,255,255,0.04)',
+                                  border: isSelected ? `1.5px solid ${TEAL}` : '1px solid rgba(255,255,255,0.22)',
                                   textAlign: 'left',
                                   cursor: post.poll.votedOption ? 'default' : 'pointer',
                                   overflow: 'hidden',
@@ -1147,18 +1180,18 @@ export function DiscussionPage() {
                                       left: 0,
                                       bottom: 0,
                                       width: `${percent}%`,
-                                      background: isSelected ? '#a7f3d0' : '#e2e8f0',
+                                      background: isSelected ? '#a7f3d0' : 'rgba(255,255,255,0.1)',
                                       opacity: 0.45,
                                       zIndex: 0,
                                       transition: 'width 0.4s ease',
                                     }}
                                   />
                                 )}
-                                <span style={{ position: 'relative', zIndex: 1, fontWeight: isSelected ? 700 : 500, fontSize: '0.9rem', color: '#1e293b' }}>
+                                <span style={{ position: 'relative', zIndex: 1, fontWeight: isSelected ? 700 : 500, fontSize: '0.9rem', color: '#ffffff' }}>
                                   {option.text}
                                 </span>
                                 {post.poll.votedOption && (
-                                  <span style={{ position: 'relative', zIndex: 1, fontWeight: 700, fontSize: '0.88rem', color: isSelected ? TEAL : '#64748b' }}>
+                                  <span style={{ position: 'relative', zIndex: 1, fontWeight: 700, fontSize: '0.88rem', color: isSelected ? TEAL : 'rgba(233,247,242,0.62)' }}>
                                     {percent}%
                                   </span>
                                 )}
@@ -1166,7 +1199,7 @@ export function DiscussionPage() {
                             );
                           })}
                         </div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 10, textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(233,247,242,0.62)', marginTop: 10, textAlign: 'right' }}>
                           Tổng {post.poll.totalVotes} lượt bình chọn
                         </div>
                       </div>
@@ -1179,7 +1212,7 @@ export function DiscussionPage() {
                         alignItems: 'center',
                         gap: 24,
                         paddingTop: 12,
-                        borderTop: '1px solid #f1f5f9',
+                        borderTop: '1px solid rgba(255,255,255,0.06)',
                         position: 'relative',
                       }}
                     >
@@ -1192,7 +1225,7 @@ export function DiscussionPage() {
                           gap: 6,
                           background: 'none',
                           border: 'none',
-                          color: post.hasLiked ? '#ef4444' : '#64748b',
+                          color: post.hasLiked ? '#ef4444' : 'rgba(233,247,242,0.62)',
                           cursor: 'pointer',
                           padding: 0,
                           fontSize: '0.9rem',
@@ -1216,7 +1249,7 @@ export function DiscussionPage() {
                           gap: 6,
                           background: 'none',
                           border: 'none',
-                          color: '#64748b',
+                          color: 'rgba(233,247,242,0.62)',
                           cursor: 'pointer',
                           padding: 0,
                           fontSize: '0.9rem',
@@ -1237,7 +1270,7 @@ export function DiscussionPage() {
                             gap: 6,
                             background: 'none',
                             border: 'none',
-                            color: '#64748b',
+                            color: 'rgba(233,247,242,0.62)',
                             cursor: 'pointer',
                             padding: 0,
                           }}
@@ -1253,10 +1286,10 @@ export function DiscussionPage() {
                               bottom: '100%',
                               left: 0,
                               marginBottom: 8,
-                              background: '#ffffff',
+                              background: SURFACE,
                               borderRadius: 14,
                               boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-                              border: '1px solid #e2e8f0',
+                              border: '1px solid rgba(255,255,255,0.1)',
                               padding: 8,
                               zIndex: 100,
                               display: 'flex',
@@ -1278,11 +1311,11 @@ export function DiscussionPage() {
                                 borderRadius: 8,
                                 fontSize: '0.85rem',
                                 fontWeight: 600,
-                                color: '#1e293b',
+                                color: '#ffffff',
                                 cursor: 'pointer',
                                 textAlign: 'left',
                               }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
                               onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
                             >
                               <Link2 size={16} color={TEAL} />
@@ -1305,11 +1338,11 @@ export function DiscussionPage() {
                                 borderRadius: 8,
                                 fontSize: '0.85rem',
                                 fontWeight: 600,
-                                color: '#1e293b',
+                                color: '#ffffff',
                                 cursor: 'pointer',
                                 textAlign: 'left',
                               }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
                               onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
                             >
                               <Share2 size={16} color="#2563eb" />
@@ -1322,7 +1355,7 @@ export function DiscussionPage() {
 
                     {/* Expandable Comments Section */}
                     {isCommentsOpen && (
-                      <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
+                      <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                         {/* List of comments */}
                         {post.comments && post.comments.length > 0 ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
@@ -1333,20 +1366,20 @@ export function DiscussionPage() {
                                   name={comment.author}
                                   size={32}
                                   background={comment.avatarBg}
-                                  style={{ color: '#0f172a' }}
+                                  style={{ color: '#ffffff' }}
                                 />
-                                <div style={{ background: '#f8fafc', borderRadius: 12, padding: '10px 14px', flex: 1, border: '1px solid #f1f5f9' }}>
+                                <div style={{ background: '#0b0f0e', borderRadius: 12, padding: '10px 14px', flex: 1, border: '1px solid rgba(255,255,255,0.06)' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                                    <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0f172a' }}>{comment.author}</span>
-                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>· {comment.timeAgo}</span>
+                                    <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#ffffff' }}>{comment.author}</span>
+                                    <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)' }}>· {comment.timeAgo}</span>
                                   </div>
-                                  <div style={{ fontSize: '0.88rem', color: '#334155', lineHeight: 1.5 }}>{comment.content}</div>
+                                  <div style={{ fontSize: '0.88rem', color: 'rgba(233,247,242,0.72)', lineHeight: 1.5 }}>{comment.content}</div>
                                 </div>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 12px' }}>Chưa có bình luận nào. Hãy là người đầu tiên thảo luận!</p>
+                          <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', margin: '0 0 12px' }}>Chưa có bình luận nào. Hãy là người đầu tiên thảo luận!</p>
                         )}
 
                         {/* Comment Input Box */}
@@ -1361,8 +1394,8 @@ export function DiscussionPage() {
                             }}
                             style={{
                               flex: 1,
-                              background: '#f8fafc',
-                              border: '1px solid #cbd5e1',
+                              background: '#0b0f0e',
+                              border: '1px solid rgba(255,255,255,0.22)',
                               borderRadius: 9999,
                               padding: '10px 16px',
                               fontSize: '0.88rem',
@@ -1401,211 +1434,204 @@ export function DiscussionPage() {
       {/* ── CREATE POST MODAL ── */}
       {isCreateModalOpen && (
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 1000,
-            background: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(6px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 20,
-          }}
+          className="np-modal-overlay"
+          role="presentation"
           onClick={() => setIsCreateModalOpen(false)}
         >
+          {/* Các trạng thái focus / placeholder / hover không viết được bằng
+              inline style, nên phần còn lại của trang dùng inline thì riêng
+              modal vẫn cần một khối <style> nhỏ. */}
+          <style>{`
+            .np-modal-overlay {
+              position: fixed; inset: 0; z-index: 1000; padding: 20px;
+              display: flex; align-items: center; justify-content: center;
+              background: rgba(11,15,14,0.72);
+              backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+              animation: npModalFade 180ms ease-out both;
+            }
+            .np-modal {
+              width: 100%; max-width: 560px; box-sizing: border-box;
+              background: ${SURFACE}; border: 1px solid ${LINE_STRONG}; border-radius: 20px;
+              box-shadow: 0 30px 70px rgba(0,0,0,0.6);
+              animation: npModalIn 240ms cubic-bezier(0.22,1,0.36,1) both;
+              max-height: calc(100vh - 40px); display: flex; flex-direction: column;
+            }
+            @keyframes npModalFade { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes npModalIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+            @media (prefers-reduced-motion: reduce) {
+              .np-modal-overlay, .np-modal { animation: none !important; }
+            }
+
+            .np-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 22px 24px 18px; border-bottom: 1px solid ${LINE}; }
+            .np-modal-title { font-family: inherit; margin: 0; font-size: 1.25rem; font-weight: 500; letter-spacing: -0.02em; color: ${ON_DARK}; }
+            .np-modal-sub { margin: 6px 0 0; font-size: 0.875rem; line-height: 1.4; color: ${MUTED}; }
+            .np-modal-x { flex: none; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid ${LINE_STRONG}; background: transparent; color: ${MUTED}; cursor: pointer; transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease; }
+            .np-modal-x:hover { color: ${ON_DARK}; background: rgba(255,255,255,0.06); }
+
+            .np-modal-body { padding: 20px 24px; overflow-y: auto; }
+            .np-field-label { display: block; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; color: ${MUTED}; margin-bottom: 10px; }
+
+            /* Chủ đề là chip chứ không phải <select>: danh sách chỉ vài mục, mà
+               <select> gốc thì mỗi hệ điều hành vẽ một kiểu — trên Windows nó
+               bung ra một danh sách nền trắng giữa giao diện tối. */
+            .np-topicchips { display: flex; flex-wrap: wrap; gap: 8px; }
+            .np-topicchip { border: 1px solid ${LINE_STRONG}; background: transparent; color: ${ON_DARK}; border-radius: 8px; padding: 9px 14px; font: inherit; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease; }
+            .np-topicchip:hover { background: rgba(255,255,255,0.08); }
+            .np-topicchip[aria-pressed="true"] { background: rgba(16,185,129,0.16); border-color: rgba(16,185,129,0.6); color: ${EMERALD}; }
+
+            /* Khung ôm lấy textarea mới là thứ mang viền + vòng focus; textarea
+               bên trong bỏ viền hẳn. Nhờ vậy bộ đếm ký tự nằm chung trong khung
+               thay vì lơ lửng bên ngoài. */
+            .np-composer { margin-top: 22px; border: 1px solid ${LINE_STRONG}; border-radius: 14px; background: rgba(255,255,255,0.03); transition: border-color 150ms ease, box-shadow 150ms ease; }
+            .np-composer:focus-within { border-color: rgba(16,185,129,0.6); box-shadow: 0 0 0 3px rgba(16,185,129,0.12); }
+            .np-composer textarea { display: block; width: 100%; box-sizing: border-box; min-height: 150px; resize: vertical; border: 0; outline: 0; background: transparent; padding: 16px 16px 8px; font: inherit; font-size: 1.0625rem; line-height: 1.6; color: ${ON_DARK}; }
+            .np-composer textarea::placeholder { color: rgba(255,255,255,0.38); }
+            .np-composer-foot { display: flex; justify-content: flex-end; padding: 0 16px 12px; font-size: 0.78rem; color: rgba(255,255,255,0.38); }
+            .np-composer-foot.over { color: #fca5a5; }
+
+            .np-poll { margin-top: 18px; border: 1px solid ${LINE}; border-radius: 14px; padding: 16px; background: rgba(255,255,255,0.03); }
+            .np-poll-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+            .np-poll-head span { font-size: 0.875rem; font-weight: 500; color: ${ON_DARK}; }
+            .np-poll-drop { background: none; border: 0; color: #fca5a5; font: inherit; font-size: 0.8rem; font-weight: 500; cursor: pointer; padding: 4px; }
+            .np-poll-drop:hover { text-decoration: underline; text-underline-offset: 3px; }
+            .np-poll-row { display: flex; align-items: center; gap: 8px; }
+            .np-poll-row input { flex: 1; min-width: 0; box-sizing: border-box; padding: 10px 13px; border-radius: 10px; border: 1px solid ${LINE_STRONG}; background: transparent; font: inherit; font-size: 0.9rem; color: ${ON_DARK}; outline: 0; transition: border-color 150ms ease; }
+            .np-poll-row input::placeholder { color: rgba(255,255,255,0.35); }
+            .np-poll-row input:focus { border-color: rgba(16,185,129,0.6); }
+            .np-poll-x { flex: none; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: transparent; color: ${MUTED}; cursor: pointer; transition: color 150ms ease, background-color 150ms ease; }
+            .np-poll-x:hover { color: #fca5a5; background: rgba(239,68,68,0.12); }
+            .np-poll-add { width: 100%; border: 1px dashed ${LINE_STRONG}; border-radius: 10px; padding: 10px; background: none; font: inherit; font-size: 0.85rem; font-weight: 500; color: ${EMERALD}; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease; }
+            .np-poll-add:hover { border-color: rgba(16,185,129,0.6); background: rgba(16,185,129,0.08); }
+
+            .np-modal-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 24px 20px; border-top: 1px solid ${LINE}; }
+            .np-modal-foot-right { display: flex; align-items: center; gap: 10px; }
+            .np-btn-poll { display: inline-flex; align-items: center; gap: 7px; border: 1px solid ${LINE_STRONG}; background: transparent; color: ${MUTED}; border-radius: 8px; padding: 9px 14px; font: inherit; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease; }
+            .np-btn-poll:hover:not(:disabled) { color: ${EMERALD}; border-color: rgba(16,185,129,0.5); background: rgba(16,185,129,0.08); }
+            .np-btn-poll:disabled { opacity: 0.4; cursor: not-allowed; }
+            .np-btn-ghost { border: 1px solid ${LINE_STRONG}; background: transparent; color: ${ON_DARK}; border-radius: 8px; padding: 11px 18px; font: inherit; font-size: 0.9375rem; font-weight: 500; cursor: pointer; transition: background-color 150ms ease; }
+            .np-btn-ghost:hover { background: rgba(255,255,255,0.08); }
+            .np-btn-send { border: 0; background: ${EMERALD}; color: ${INK}; border-radius: 8px; padding: 11px 22px; font: inherit; font-size: 0.9375rem; font-weight: 600; cursor: pointer; transition: background-color 150ms ease; }
+            .np-btn-send:hover:not(:disabled) { background: #34d399; }
+            .np-btn-send:disabled { opacity: 0.45; cursor: not-allowed; }
+
+            @media (max-width: 560px) {
+              .np-modal-foot { flex-direction: column; align-items: stretch; }
+              .np-modal-foot-right { justify-content: flex-end; }
+            }
+          `}</style>
+
           <div
-            style={{
-              background: '#ffffff',
-              borderRadius: 24,
-              maxWidth: 580,
-              width: '100%',
-              padding: '24px 28px',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
-              border: '1px solid #e2e8f0',
-            }}
+            className="np-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Tạo bài viết mới"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                Tạo bài viết mới
-              </h2>
-              <button
-                onClick={() => setIsCreateModalOpen(false)}
-                style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-              >
-                <X size={18} color="#475569" />
+            <div className="np-modal-head">
+              <div style={{ minWidth: 0 }}>
+                <h2 className="np-modal-title">Tạo bài viết mới</h2>
+                <p className="np-modal-sub">
+                  Đăng với tên <b style={{ color: ON_DARK, fontWeight: 500 }}>{myName}</b>
+                </p>
+              </div>
+              <button type="button" className="np-modal-x" aria-label="Đóng" onClick={() => setIsCreateModalOpen(false)}>
+                <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleCreatePost}>
-              {/* Topic Selector */}
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#475569', marginBottom: 6 }}>
-                  Chọn chủ đề:
-                </label>
-                <select
-                  value={newPostTopic}
-                  onChange={(e) => setNewPostTopic(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 14px',
-                    borderRadius: 12,
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.9rem',
-                    fontWeight: 600,
-                    outline: 'none',
-                    background: '#f8fafc',
-                  }}
-                >
+            <form onSubmit={handleCreatePost} style={{ display: 'contents' }}>
+              <div className="np-modal-body">
+                <span className="np-field-label">Chủ đề</span>
+                <div className="np-topicchips" role="group" aria-label="Chọn chủ đề">
                   {topics.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Text Area */}
-              <div style={{ marginBottom: 16 }}>
-                <textarea
-                  rows={5}
-                  placeholder="Bạn muốn chia sẻ điều gì với cộng đồng hôm nay?..."
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '14px',
-                    borderRadius: 14,
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.95rem',
-                    lineHeight: 1.6,
-                    outline: 'none',
-                    fontFamily: 'inherit',
-                    resize: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                />
-              </div>
-
-              {/* Poll Toggle / Options */}
-              {newPostPollEnabled ? (
-                <div style={{ background: '#f8fafc', borderRadius: 14, padding: 14, border: '1px solid #e2e8f0', marginBottom: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>Tùy chọn bình chọn:</span>
                     <button
+                      key={t.id}
                       type="button"
-                      onClick={() => setNewPostPollEnabled(false)}
-                      style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                      className="np-topicchip"
+                      aria-pressed={String(newPostTopic) === String(t.id)}
+                      onClick={() => setNewPostTopic(t.id)}
                     >
-                      Hủy bình chọn
+                      {t.name}
                     </button>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {pollOptions.map((opt, idx) => (
-                      <input
-                        key={idx}
-                        type="text"
-                        placeholder={`Lựa chọn ${idx + 1}...`}
-                        value={opt}
-                        onChange={(e) => {
-                          const next = [...pollOptions];
-                          next[idx] = e.target.value;
-                          setPollOptions(next);
-                        }}
-                        style={{
-                          width: '100%',
-                          padding: '8px 12px',
-                          borderRadius: 10,
-                          border: '1px solid #cbd5e1',
-                          fontSize: '0.85rem',
-                          outline: 'none',
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                    ))}
-                    {pollOptions.length < 4 && (
-                      <button
-                        type="button"
-                        onClick={() => setPollOptions([...pollOptions, ''])}
-                        style={{
-                          background: 'none',
-                          border: '1px dashed #cbd5e1',
-                          borderRadius: 10,
-                          padding: '8px',
-                          fontSize: '0.82rem',
-                          fontWeight: 600,
-                          color: TEAL,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        + Thêm lựa chọn
-                      </button>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              ) : (
-                <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-                  <button
-                    type="button"
-                    onClick={() => setNewPostPollEnabled(true)}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      background: '#f1f5f9',
-                      border: 'none',
-                      padding: '8px 14px',
-                      borderRadius: 10,
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      color: '#475569',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <BarChart2 size={16} /> Thêm bình chọn
-                  </button>
-                </div>
-              )}
 
-              {/* Submit Buttons */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <div className="np-composer">
+                  <textarea
+                    placeholder="Bạn muốn chia sẻ điều gì với cộng đồng hôm nay?"
+                    value={newPostContent}
+                    onChange={(e) => setNewPostContent(e.target.value)}
+                    maxLength={POST_MAX_CHARS}
+                    required
+                    aria-label="Nội dung bài viết"
+                  />
+                  <div className={`np-composer-foot${newPostContent.length > POST_MAX_CHARS - 100 ? ' over' : ''}`}>
+                    {newPostContent.length}/{POST_MAX_CHARS}
+                  </div>
+                </div>
+
+                {newPostPollEnabled && (
+                  <div className="np-poll">
+                    <div className="np-poll-head">
+                      <span>Lựa chọn bình chọn</span>
+                      <button type="button" className="np-poll-drop" onClick={() => setNewPostPollEnabled(false)}>
+                        Bỏ bình chọn
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {pollOptions.map((opt, idx) => (
+                        // Dùng index làm key vì lựa chọn chưa có id và nội dung
+                        // có thể trùng nhau; danh sách chỉ thêm/bớt ở cuối.
+                        <div className="np-poll-row" key={idx}>
+                          <input
+                            type="text"
+                            placeholder={`Lựa chọn ${idx + 1}`}
+                            value={opt}
+                            onChange={(e) => {
+                              const next = [...pollOptions];
+                              next[idx] = e.target.value;
+                              setPollOptions(next);
+                            }}
+                          />
+                          {pollOptions.length > 2 && (
+                            <button
+                              type="button"
+                              className="np-poll-x"
+                              aria-label={`Xoá lựa chọn ${idx + 1}`}
+                              onClick={() => setPollOptions(pollOptions.filter((_, i) => i !== idx))}
+                            >
+                              <X size={16} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {pollOptions.length < 4 && (
+                        <button type="button" className="np-poll-add" onClick={() => setPollOptions([...pollOptions, ''])}>
+                          + Thêm lựa chọn
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="np-modal-foot">
                 <button
                   type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  style={{
-                    padding: '10px 18px',
-                    borderRadius: 9999,
-                    background: '#f1f5f9',
-                    border: 'none',
-                    fontWeight: 600,
-                    fontSize: '0.9rem',
-                    color: '#475569',
-                    cursor: 'pointer',
-                  }}
+                  className="np-btn-poll"
+                  disabled={newPostPollEnabled}
+                  onClick={() => setNewPostPollEnabled(true)}
                 >
-                  Hủy
+                  <BarChart2 size={16} /> Thêm bình chọn
                 </button>
-                <button
-                  type="submit"
-                  disabled={creatingPost || !newPostContent.trim()}
-                  style={{
-                    padding: '10px 24px',
-                    borderRadius: 9999,
-                    background: TEAL,
-                    border: 'none',
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
-                    color: '#ffffff',
-                    cursor: creatingPost || !newPostContent.trim() ? 'not-allowed' : 'pointer',
-                    opacity: creatingPost || !newPostContent.trim() ? 0.6 : 1,
-                    boxShadow: '0 4px 14px rgba(13, 148, 136, 0.3)',
-                  }}
-                >
-                  {creatingPost ? 'Đang đăng…' : 'Đăng bài'}
-                </button>
+                <div className="np-modal-foot-right">
+                  <button type="button" className="np-btn-ghost" onClick={() => setIsCreateModalOpen(false)}>
+                    Hủy
+                  </button>
+                  <button type="submit" className="np-btn-send" disabled={creatingPost || !newPostContent.trim()}>
+                    {creatingPost ? 'Đang đăng…' : 'Đăng bài'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

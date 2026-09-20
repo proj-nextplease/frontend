@@ -6,25 +6,33 @@ import {
   X, Share2, ArrowRight, Link2, GraduationCap, Zap, ShieldCheck,
   Star, Award, Sparkles, FolderOpen,
 } from 'lucide-react';
+import { HeroMesh } from '../components/HeroMesh.jsx';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
-import { WaveBg } from '../components/WaveBg.jsx';
 import { loadJobs, getCachedJobs } from '../api/jobsCache.js';
 import { EmptyStateMascot } from '../components/EmptyStateMascot.jsx';
 import { extractProvince } from '../lib/vnProvince.js';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
 import { getStoredToken } from '../lib/authStorage.js';
+import { useSavedJobs } from '../lib/savedJobs.js';
 
-/* ── Emerald palette (matches the landing) ── */
-const TEAL = '#0d9488';
+/* ── Hệ màu nền tối, dùng chung với trang chủ (xem DESIGN.md) ──
+   Cả trang là một nền tối liền mạch; emerald là màu tương tác duy nhất. */
+const INK = '#0b0f0e';          // nền trang
+const SURFACE = '#121817';      // bề mặt nổi: panel chi tiết, menu, ô trống
 const EMERALD = '#10b981';
-const INK = '#0f2e2b';
-const MUTED = '#5b7772';
-const LINE = '#e2efe9';
-const MINT = '#e7f7f0';
-const HERO_GRAD = 'linear-gradient(158deg, #0f766e 0%, #0d9488 52%, #115e59 100%)';
+const TEAL = '#0d9488';
+const ON_DARK = '#ffffff';
+const MUTED = 'rgba(233,247,242,0.62)';
+const LINE = 'rgba(255,255,255,0.1)';
+const LINE_STRONG = 'rgba(255,255,255,0.2)';
 
-const LOGO_COLORS = ['#dff7ee', '#fff2bd', '#eee5ff', '#dff0ff', '#ffe7d3', '#e4f5c8'];
+/* Nền ô logo khi doanh nghiệp chưa tải ảnh lên — sắc độ mờ trên nền tối thay
+   cho dải pastel cũ (pastel sáng trên nền tối thành sáu đốm chói). */
+const LOGO_COLORS = [
+  'rgba(16,185,129,0.16)', 'rgba(103,232,249,0.14)', 'rgba(167,139,250,0.14)',
+  'rgba(56,189,248,0.14)', 'rgba(251,146,60,0.14)', 'rgba(163,230,53,0.14)',
+];
 
 const JOB_TYPE_LABELS = {
   INTERNSHIP: 'Thực tập sinh',
@@ -233,7 +241,7 @@ function JobLogo({ job, index }) {
   }
   if (job.isClub) {
     return (
-      <span className="jb-logo jb-logo-club" style={{ background: '#ecfdf5', color: TEAL, border: '1px solid #cdeee2' }}>
+      <span className="jb-logo jb-logo-club" style={{ background: 'rgba(16,185,129,0.16)', color: EMERALD, border: '1px solid rgba(16,185,129,0.35)' }}>
         <GraduationCap size={26} strokeWidth={2.2} />
       </span>
     );
@@ -540,7 +548,8 @@ function JobDetail({ job, onClose, saved, onToggleSave, closing, onApply }) {
 export function JobsPage() {
   const navigate = useNavigate();
   const { openLoginModal } = useAuthModal();
-  const [query, setQuery] = useState('');
+  // Trang chủ gửi từ khoá sang bằng /jobs?q=… nên ô tìm kiếm mở lên đã có sẵn chữ.
+  const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get('q') || '');
   const [filters, setFilters] = useState({});
   const [activeOrgTab, setActiveOrgTab] = useState('ALL'); // 'ALL' | 'BUSINESS' | 'CLUB'
   const [openChip, setOpenChip] = useState(null);
@@ -555,10 +564,10 @@ export function JobsPage() {
   const [loadError, setLoadError] = useState(null);
   const [selectedId, setSelectedId] = useState(() => searchParams.get('preview'));
   const [closing, setClosing] = useState(false);
-  const [saved, setSaved] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('nextplease:saved-jobs') || '[]')); }
-    catch { return new Set(); }
-  });
+  // Trạng thái lưu nằm ở kho dùng chung (lib/savedJobs.js) chứ không phải state
+  // cục bộ: trước đây trang này chỉ ghi localStorage nên khu vực ứng viên —
+  // vốn đọc từ API — không bao giờ thấy tin đã lưu.
+  const { savedIds: saved, toggleSave: toggleSavedJob } = useSavedJobs();
   const barRef = useRef(null);
 
   // Load real job postings
@@ -649,12 +658,13 @@ export function JobsPage() {
   const selectedJob = jobs.find((j) => String(j.id) === String(selectedId)) || null;
 
   function toggleSave(id) {
-    setSaved((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      try { localStorage.setItem('nextplease:saved-jobs', JSON.stringify([...next])); } catch { /* ignore */ }
-      return next;
-    });
+    // Chưa đăng nhập thì lưu ở máy cũng vô nghĩa: danh sách nằm ở tài khoản.
+    // Hỏi đăng nhập ngay, và mergeGuestSaves sẽ đẩy nốt những gì đã lưu trước đó.
+    if (!getStoredToken()) {
+      openLoginModal('candidate');
+      return;
+    }
+    toggleSavedJob(id).catch(() => {});
   }
 
   function handleApply(jobId) {
@@ -674,86 +684,155 @@ export function JobsPage() {
   }
 
   return (
-    <div style={{ background: '#f7fbf8', color: INK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', overflowX: 'clip', fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" }}>
+    <div style={{ background: INK, color: ON_DARK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', position: 'relative', overflowX: 'clip', fontFamily: "'Be Vietnam Pro', 'Inter', sans-serif" }}>
       <style>{`
-        .jb-inner { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
-        .jb-hero { position: relative; overflow: hidden; background: ${HERO_GRAD}; padding: 18px 0 16px; }
-        .jb-hero-inner { position: relative; z-index: 1; width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
-        .jb-search { display: flex; align-items: center; gap: 8px; height: 44px; box-sizing: border-box; background: #fff; border: 1px solid #e1e2e2; border-radius: 14px; padding: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        .jb-search input { border: 0; outline: 0; flex: 1; min-width: 0; font: inherit; font-size: 15px; color: #1c1c1c; background: transparent; padding: 0 14px; }
-        .jb-search input::placeholder { color: #6b7280; }
-        .jb-search button { border: 2px solid #fff; background: ${TEAL}; color: #fff; border-radius: 12px; height: 100%; padding: 0 24px; font-weight: 700; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; white-space: nowrap; transition: background 0.2s ease; }
-        .jb-search button:hover { background: #0b5f58; }
+        .jb-inner { position: relative; z-index: 1; width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
 
-        /* Segment tabs for Business vs CLB */
-        .jb-org-tabs { display: inline-flex; gap: 8px; margin: 18px 0 6px; background: #ebf5f0; padding: 5px; border-radius: 16px; border: 1px solid ${LINE}; flex-wrap: wrap; }
-        .jb-org-tab { display: inline-flex; align-items: center; gap: 8px; border: none; background: transparent; color: ${MUTED}; padding: 8px 18px; border-radius: 12px; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; }
-        .jb-org-tab:hover { color: ${TEAL}; }
-        .jb-org-tab.active { background: #fff; color: ${INK}; box-shadow: 0 4px 14px rgba(13,148,136,0.12); }
-        .jb-org-tab.club.active { color: #059669; }
-        .jb-org-count { display: inline-flex; align-items: center; justify-content: center; background: rgba(13,148,136,0.1); color: ${TEAL}; font-size: 0.78rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
-        .jb-org-tab.active .jb-org-count { background: ${MINT}; color: ${TEAL}; }
+        /* ── Hero ──
+           Cùng tấm mesh với trang chủ (<HeroMesh />). Thanh điều hướng ở chế độ
+           đè nên hero phải tự chừa chỗ cho nó: 24px lề trên + 56px thanh. */
+        .jb-bg { position: absolute; inset: 0 0 auto; height: 720px; overflow: hidden; pointer-events: none; z-index: 0; }
+        .jb-hero { position: relative; z-index: 1; padding: clamp(112px, 10vw, 136px) 0 clamp(28px, 3vw, 40px); }
+        .jb-hero-inner { position: relative; z-index: 3; width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+        /* Ô lọc: cùng ngôn ngữ với ô tìm việc ở trang chủ, chỉ thấp hơn. */
+        /* Trải hết bề ngang khung nội dung và hạ chiều cao xuống 56px: đây là
+           ô lọc của một trang danh sách, không phải nhân vật chính như ô tìm
+           việc ở hero trang chủ — để nó vừa cao vừa ngắn thì nhìn thô. */
+        .jb-search {
+          position: relative; display: flex; align-items: center;
+          height: 56px; width: 100%;
+          background: #fff; border-radius: 14px;
+        }
+        .jb-search-icon { position: absolute; left: 18px; color: #252630; pointer-events: none; }
+        .jb-search input {
+          box-sizing: border-box; width: 100%; height: 100%;
+          border: 0; outline: 0; border-radius: 14px; background: transparent;
+          padding: 0 52px 0 52px;
+          font: inherit; font-size: 1rem; letter-spacing: -0.015em; color: #252630;
+        }
+        .jb-search input::placeholder { color: #8d9a97; }
+        .jb-search-clear {
+          position: absolute; right: 14px; display: inline-flex; align-items: center; justify-content: center;
+          width: 34px; height: 34px; border: 0; border-radius: 9999px; cursor: pointer;
+          background: rgba(37,38,48,0.08); color: #252630; transition: background-color 150ms ease;
+        }
+        .jb-search-clear:hover { background: rgba(37,38,48,0.18); }
 
-        /* Organization Pill Tags */
-        .jb-org-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 0.76rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; letter-spacing: 0.02em; }
-        .jb-org-pill.club { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-        .jb-org-pill.biz { background: #f0fdfa; color: #0d9488; border: 1px solid #ccfbf1; }
-        
-        /* Reward badges */
-        .jb-reward-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e2efe9; }
-        .jb-reward-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 700; padding: 3px 9px; border-radius: 8px; }
-        .jb-reward-badge.proof { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-        .jb-reward-badge.exp { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-        .jb-reward-badge.rs { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
-
-        .jb-detail-rewards { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; padding: 14px 16px; margin: 16px 0 8px; }
-        .jb-reward-title { font-size: 0.88rem; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
-        .jb-reward-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        @media (max-width: 600px) { .jb-reward-grid { grid-template-columns: 1fr; } }
-        .jb-reward-card { background: #ffffff; border: 1px solid #dcfce7; border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
-        .jb-reward-card strong { display: block; font-size: 0.85rem; color: ${INK}; }
-        .jb-reward-card span { font-size: 0.76rem; color: ${MUTED}; }
-
-        .jb-filterbar { position: sticky; top: 69px; z-index: 40; background: rgba(247,251,248,0.94); backdrop-filter: saturate(180%) blur(10px); -webkit-backdrop-filter: saturate(180%) blur(10px); border-bottom: 1px solid ${LINE}; padding: 14px 0; }
+        /* Đây mới là thứ cần bám khi cuộn: lọc xong mà phải cuộn ngược lên đầu
+           trang để đổi bộ lọc thì vô dụng. Thanh điều hướng thì trôi đi
+           (SiteHeader pinned={false}) nên top = 0, không phải né gì cả. */
+        .jb-filterbar {
+          position: sticky; top: 0; z-index: 40;
+          /* Nằm đè lên mesh và lên danh sách nên nền phải đục hơn lúc trước. */
+          background: rgba(11,15,14,0.86);
+          backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px);
+          border-top: 1px solid ${LINE}; border-bottom: 1px solid ${LINE}; padding: 14px 0;
+        }
         .jb-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
         .jb-chip-wrap { position: relative; }
-        .jb-chip { display: inline-flex; align-items: center; gap: 7px; background: #fff; border: 1px solid #dbe9e3; color: ${INK}; border-radius: 999px; padding: 8px 15px; font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; white-space: nowrap; }
-        .jb-chip:hover { border-color: ${EMERALD}; }
-        .jb-chip.active { background: ${MINT}; border-color: ${EMERALD}; color: ${TEAL}; font-weight: 800; }
-        .jb-menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 50; min-width: 210px; background: #fff; border: 1px solid ${LINE}; border-radius: 14px; box-shadow: 0 20px 44px rgba(6,40,36,0.16); padding: 6px; max-height: 300px; overflow: auto; }
-        .jb-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; background: transparent; padding: 9px 12px; border-radius: 9px; font: inherit; font-size: 0.9rem; color: ${INK}; cursor: pointer; }
-        .jb-menu-item:hover { background: #f1f8f4; }
-        .jb-menu-item.active { color: ${TEAL}; font-weight: 700; }
-        .jb-check { flex-shrink: 0; width: 17px; height: 17px; border-radius: 5px; border: 1.5px solid #cdd9d4; display: inline-flex; align-items: center; justify-content: center; color: #fff; transition: background 0.15s ease, border-color 0.15s ease; }
+        .jb-chip {
+          display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+          background: transparent; border: 1px solid ${LINE_STRONG}; color: ${ON_DARK};
+          border-radius: 8px; padding: 10px 14px; font: inherit; font-size: 0.875rem; font-weight: 500;
+          cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+        }
+        .jb-chip:hover { background-color: rgba(255,255,255,0.1); }
+        .jb-chip.active { background: rgba(16,185,129,0.14); border-color: rgba(16,185,129,0.55); color: ${EMERALD}; }
+
+        .jb-menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 50; min-width: 220px; background: ${SURFACE}; border: 1px solid ${LINE_STRONG}; border-radius: 14px; box-shadow: 0 22px 50px rgba(0,0,0,0.55); padding: 6px; max-height: 320px; overflow: auto; }
+        .jb-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; background: transparent; padding: 10px 12px; border-radius: 9px; font: inherit; font-size: 0.9rem; color: ${ON_DARK}; cursor: pointer; transition: background-color 150ms ease; }
+        .jb-menu-item:hover { background: rgba(255,255,255,0.08); }
+        .jb-menu-item.active { color: ${EMERALD}; font-weight: 600; }
+        .jb-check { flex-shrink: 0; width: 17px; height: 17px; border-radius: 5px; border: 1.5px solid ${LINE_STRONG}; display: inline-flex; align-items: center; justify-content: center; color: ${INK}; transition: background 0.15s ease, border-color 0.15s ease; }
         .jb-menu-item.active .jb-check { background: ${EMERALD}; border-color: ${EMERALD}; }
-        .jb-menu-searchwrap { display: flex; align-items: center; gap: 7px; padding: 8px 10px; margin-bottom: 4px; border: 1px solid ${LINE}; border-radius: 9px; color: ${MUTED}; }
-        .jb-menu-search { border: 0; outline: 0; flex: 1; min-width: 0; font: inherit; font-size: 0.88rem; color: ${INK}; background: transparent; }
-        .jb-menu-search::placeholder { color: #9bb0aa; }
+        .jb-menu-searchwrap { display: flex; align-items: center; gap: 7px; padding: 9px 11px; margin-bottom: 4px; border: 1px solid ${LINE}; border-radius: 9px; color: ${MUTED}; }
+        .jb-menu-search { border: 0; outline: 0; flex: 1; min-width: 0; font: inherit; font-size: 0.88rem; color: ${ON_DARK}; background: transparent; }
+        .jb-menu-search::placeholder { color: rgba(255,255,255,0.4); }
         .jb-menu-empty { padding: 10px 12px; color: ${MUTED}; font-size: 0.86rem; }
-        .jb-clear { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 0; color: ${EMERALD}; font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; padding: 8px; }
-        .jb-clear:hover { color: ${TEAL}; }
+        .jb-clear { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 0; color: ${EMERALD}; font: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; padding: 8px; }
+        .jb-clear:hover { text-decoration: underline; text-underline-offset: 4px; }
 
-        .jb-listhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 20px 0 16px; flex-wrap: wrap; }
-        .jb-listhead h1 { margin: 0; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; color: ${INK}; }
-        .jb-listhead h1 b { color: ${TEAL}; }
-        .jb-viewtoggle { display: inline-flex; background: #fff; border: 1px solid ${LINE}; border-radius: 11px; padding: 3px; }
-        .jb-viewbtn { border: 0; background: transparent; color: #9bb0aa; padding: 7px 9px; border-radius: 8px; cursor: pointer; display: inline-flex; }
-        .jb-viewbtn.active { background: ${MINT}; color: ${TEAL}; }
+        /* ── Tab nguồn đăng ── */
+        .jb-org-tabs { display: inline-flex; gap: 4px; margin: 28px 0 4px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 12px; border: 1px solid ${LINE}; flex-wrap: wrap; }
+        .jb-org-tab { display: inline-flex; align-items: center; gap: 8px; border: none; background: transparent; color: ${MUTED}; padding: 9px 16px; border-radius: 8px; font: inherit; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
+        .jb-org-tab:hover { color: ${ON_DARK}; background: rgba(255,255,255,0.06); }
+        .jb-org-tab.active { background: ${EMERALD}; color: ${INK}; font-weight: 600; }
+        .jb-org-count { display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); color: inherit; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+        .jb-org-tab.active .jb-org-count { background: rgba(11,15,14,0.18); }
 
-        .jb-results { padding-bottom: 70px; }
+        /* ── Nhãn nguồn trên thẻ ── */
+        .jb-org-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 500; padding: 4px 10px; border-radius: 9999px; border: 1px solid ${LINE_STRONG}; color: rgba(255,255,255,0.82); }
+        .jb-org-pill.club { border-color: rgba(16,185,129,0.4); color: ${EMERALD}; }
+
+        /* ── Huy hiệu phần thưởng ── */
+        .jb-reward-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid ${LINE}; }
+        .jb-reward-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 500; padding: 4px 10px; border-radius: 8px; border: 1px solid ${LINE_STRONG}; color: rgba(255,255,255,0.82); }
+        .jb-reward-badge.proof { border-color: rgba(16,185,129,0.4); color: ${EMERALD}; }
+        .jb-reward-badge.exp { border-color: rgba(251,191,36,0.4); color: #fbbf24; }
+        .jb-reward-badge.rs { border-color: rgba(103,232,249,0.4); color: #67e8f9; }
+
+        .jb-detail-rewards { background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.28); border-radius: 16px; padding: 16px; margin: 18px 0 8px; }
+        .jb-reward-title { font-size: 0.875rem; font-weight: 600; color: ${EMERALD}; display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+        .jb-reward-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 600px) { .jb-reward-grid { grid-template-columns: 1fr; } }
+        .jb-reward-card { background: rgba(255,255,255,0.04); border: 1px solid ${LINE}; border-radius: 12px; padding: 11px 13px; display: flex; align-items: center; gap: 10px; }
+        .jb-reward-card strong { display: block; font-size: 0.875rem; font-weight: 500; color: ${ON_DARK}; }
+        .jb-reward-card span { font-size: 0.78rem; color: ${MUTED}; }
+
+        /* ── Đầu danh sách ── */
+        .jb-listhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 18px; flex-wrap: wrap; }
+        .jb-listhead h1 { font-family: inherit; margin: 0; font-size: 1.125rem; font-weight: 400; letter-spacing: -0.015em; color: ${MUTED}; }
+        .jb-listhead h1 b { color: ${ON_DARK}; font-weight: 600; }
+        .jb-viewtoggle { display: inline-flex; background: rgba(255,255,255,0.05); border: 1px solid ${LINE}; border-radius: 10px; padding: 3px; }
+        .jb-viewbtn { border: 0; background: transparent; color: ${MUTED}; padding: 7px 9px; border-radius: 7px; cursor: pointer; display: inline-flex; transition: background-color 150ms ease, color 150ms ease; }
+        .jb-viewbtn:hover { color: ${ON_DARK}; }
+        .jb-viewbtn.active { background: rgba(255,255,255,0.1); color: ${ON_DARK}; }
+
+        .jb-results { padding-bottom: 80px; }
         .jb-results.split { display: grid; grid-template-columns: minmax(320px, 420px) 1fr; gap: 18px; align-items: start; }
         .jb-list { display: grid; gap: 14px; }
         .jb-list.grid { grid-template-columns: repeat(2, 1fr); }
         @media (max-width: 780px) { .jb-list.grid { grid-template-columns: 1fr; } }
 
-        .jb-card { position: relative; background: #fff; border: 1px solid ${LINE}; border-radius: 20px; padding: 20px 22px; transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s ease, border-color 0.25s ease; text-decoration: none; color: inherit; display: block; cursor: pointer; }
-        .jb-card:hover { transform: translateY(-4px); box-shadow: 0 22px 44px rgba(13,148,136,0.12); border-color: #cdeee2; }
-        .jb-card:active { transform: scale(0.985); }
-        .jb-card.selected { border-color: ${EMERALD}; box-shadow: 0 0 0 2px rgba(16,185,129,0.25); transform: none; }
-        .jb-card.is-club { border-left: 4px solid #10b981; }
+        /* ── Thẻ tin ──
+           Cùng công thức với thẻ việc làm ở trang chủ: nền trong suốt, viền
+           hairline, hover thì viền lên emerald + nhấc nhẹ + một quầng sáng ở
+           góc dưới-phải. Không dùng box-shadow màu. */
+        .jb-card {
+          position: relative; overflow: hidden; display: block; cursor: pointer;
+          background: rgba(255,255,255,0.016); border: 1px solid ${LINE}; border-radius: 20px;
+          padding: 22px 24px; color: inherit; text-decoration: none;
+          transition: transform 0.28s cubic-bezier(0.22,1,0.36,1), background-color 0.25s ease, border-color 0.25s ease;
+        }
+        .jb-card::before { content: ''; position: absolute; inset: 0 0 auto; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); opacity: 0.5; transition: opacity 0.25s ease; }
+        .jb-card::after { content: ''; position: absolute; right: -40%; bottom: -60%; width: 90%; height: 150%; pointer-events: none; background: radial-gradient(closest-side, rgba(16,185,129,0.2), rgba(16,185,129,0) 70%); opacity: 0; transition: opacity 0.3s ease; }
+        .jb-card > * { position: relative; z-index: 1; }
+        .jb-card:hover { transform: translateY(-4px); background-color: rgba(255,255,255,0.05); border-color: rgba(16,185,129,0.55); }
+        .jb-card:hover::before { opacity: 1; }
+        .jb-card:hover::after { opacity: 1; }
+        .jb-card:active { transform: scale(0.99); }
+        .jb-card.selected { border-color: ${EMERALD}; background-color: rgba(16,185,129,0.08); transform: none; }
+        .jb-card.is-club::before { background: linear-gradient(90deg, transparent, rgba(16,185,129,0.6), transparent); opacity: 0.8; }
 
-        /* detail preview panel */
-        .jb-detail { position: sticky; top: 150px; align-self: start; display: flex; flex-direction: column; background: #fff; border: 1px solid ${LINE}; border-radius: 20px; height: calc(100vh - 168px); overflow: hidden; box-shadow: 0 22px 50px rgba(6,40,36,0.08); animation: jbDetailIn 0.32s cubic-bezier(0.22,1,0.36,1) both; }
+        .jb-card-top { display: flex; align-items: flex-start; gap: 14px; }
+        .jb-logo { flex-shrink: 0; width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font-weight: 600; font-size: 0.95rem; color: ${ON_DARK}; }
+        .jb-logo-img { background: #fff; border: 1px solid ${LINE}; overflow: hidden; }
+        .jb-logo-img img { width: 100%; height: 100%; object-fit: cover; }
+        .jb-title { font-family: inherit; margin: 0; font-size: 1.0625rem; font-weight: 500; line-height: 1.35; letter-spacing: -0.015em; color: ${ON_DARK}; padding-right: 34px; }
+        .jb-company { color: ${MUTED}; font-size: 0.875rem; margin-top: 4px; }
+        .jb-save { position: absolute; top: 20px; right: 20px; z-index: 2; border: 0; background: transparent; color: rgba(255,255,255,0.35); cursor: pointer; padding: 4px; border-radius: 8px; transition: color 0.2s, transform 0.2s; }
+        .jb-save:hover { color: ${EMERALD}; transform: scale(1.1); }
+        .jb-save.on { color: #ef5da8; }
+        .jb-divider { height: 1px; background: ${LINE}; margin: 16px 0; }
+        .jb-meta { display: flex; flex-direction: column; gap: 9px; }
+        .jb-metarow { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; font-size: 0.875rem; color: ${MUTED}; }
+        .jb-metarow span { display: inline-flex; align-items: center; gap: 6px; }
+        .jb-metarow.accent span { color: rgba(255,255,255,0.5); }
+        .jb-pay { color: ${EMERALD}; font-weight: 500; }
+        .jb-empty { background: transparent; border: 1px solid ${LINE}; border-radius: 20px; padding: 56px 24px; text-align: center; color: ${MUTED}; }
+
+        /* ── Panel chi tiết ── */
+        .jb-detail { position: sticky; top: 90px; align-self: start; display: flex; flex-direction: column; background: ${SURFACE}; border: 1px solid ${LINE_STRONG}; border-radius: 20px; height: calc(100vh - 112px); overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.5); animation: jbDetailIn 0.32s cubic-bezier(0.22,1,0.36,1) both; }
         .jb-detail.out { animation: jbDetailOut 0.22s ease-in both; }
         @keyframes jbDetailIn { from { opacity: 0; transform: translateX(28px) scale(0.98); } to { opacity: 1; transform: none; } }
         @keyframes jbDetailOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(28px) scale(0.98); } }
@@ -768,25 +847,26 @@ export function JobsPage() {
         @media (prefers-reduced-motion: reduce) {
           .jb-detail, .jb-detail.out, .jb-detail-body > * { animation: none !important; }
         }
-        .jb-detail-head { flex-shrink: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 20px; background: #fff; border-bottom: 1px solid #eef4f1; border-radius: 20px 20px 0 0; }
+        .jb-detail-head { flex-shrink: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 20px; background: rgba(255,255,255,0.03); border-bottom: 1px solid ${LINE}; border-radius: 20px 20px 0 0; }
         .jb-detail-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
-        .jb-detail h2 { margin: 0; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em; color: ${INK}; }
+        .jb-detail h2 { font-family: inherit; margin: 0; font-size: 1.125rem; font-weight: 500; letter-spacing: -0.015em; color: ${ON_DARK}; }
         .jb-detail-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-        .jb-apply { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, ${EMERALD}, ${TEAL}); color: #fff; border: none; border-radius: 12px; padding: 10px 18px; font-weight: 800; font-size: 0.9rem; text-decoration: none; cursor: pointer; white-space: nowrap; }
-        .jb-apply:hover { filter: brightness(1.05); }
-        .jb-iconbtn { width: 40px; height: 40px; border-radius: 12px; border: 1px solid ${LINE}; background: #fff; color: ${MUTED}; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
-        .jb-iconbtn:hover { border-color: #cdeee2; color: ${TEAL}; }
-        .jb-iconbtn.on { color: #ef5da8; border-color: #f6c9de; }
-        .jb-detail-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 18px 22px 26px; }
-        .jb-detail-meta { display: flex; flex-direction: column; gap: 9px; font-size: 0.9rem; color: ${MUTED}; }
+        .jb-apply { display: inline-flex; align-items: center; gap: 6px; background: ${EMERALD}; color: ${INK}; border: none; border-radius: 8px; padding: 11px 18px; font: inherit; font-weight: 500; font-size: 0.9375rem; text-decoration: none; cursor: pointer; white-space: nowrap; transition: background-color 150ms ease; }
+        .jb-apply:hover { background: #34d399; }
+        .jb-iconbtn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid ${LINE_STRONG}; background: transparent; color: ${MUTED}; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: color 0.2s, border-color 0.2s, background-color 0.2s; }
+        .jb-iconbtn:hover { border-color: rgba(16,185,129,0.5); color: ${EMERALD}; background: rgba(255,255,255,0.05); }
+        .jb-iconbtn.on { color: #ef5da8; border-color: rgba(239,93,168,0.5); }
+        .jb-detail-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 20px 22px 26px; }
+        .jb-detail-meta { display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: ${MUTED}; }
         .jb-detail-meta span { display: inline-flex; align-items: center; gap: 8px; }
-        .jb-detail-meta .accent { color: ${EMERALD}; font-weight: 600; }
-        .jb-skillrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; }
-        .jb-skill { background: ${MINT}; color: ${TEAL}; border-radius: 999px; padding: 6px 12px; font-size: 0.8rem; font-weight: 700; }
-        .jb-detail section { margin-top: 22px; }
-        .jb-detail h3 { margin: 0 0 10px; font-size: 1rem; font-weight: 800; color: ${INK}; }
+        .jb-detail-meta .accent { color: ${EMERALD}; }
+        .jb-detail-p { margin: 0 0 10px; color: ${MUTED}; font-size: 0.9rem; line-height: 1.7; white-space: pre-line; }
+        .jb-skillrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 4px; }
+        .jb-skill { background: rgba(255,255,255,0.05); border: 1px solid ${LINE}; color: rgba(255,255,255,0.82); border-radius: 9999px; padding: 6px 13px; font-size: 0.8rem; font-weight: 500; }
+        .jb-detail section { margin-top: 24px; }
+        .jb-detail h3 { font-family: inherit; margin: 0 0 10px; font-size: 1rem; font-weight: 500; color: ${ON_DARK}; }
         .jb-detail ul { margin: 0; padding-left: 20px; color: ${MUTED}; font-size: 0.9rem; line-height: 1.75; }
-        .jb-apply-lg { margin-top: auto; width: 100%; justify-content: center; padding: 13px 0; font-size: 0.96rem; }
+        .jb-apply-lg { margin-top: auto; width: 100%; justify-content: center; padding: 15px 0; font-size: 1rem; }
         .jb-detail section:last-of-type { margin-bottom: 24px; }
 
         @media (max-width: 900px) {
@@ -796,27 +876,10 @@ export function JobsPage() {
           .jb-detail-body { overflow: visible; }
           .jb-apply-lg { margin-top: 24px; }
         }
-        .jb-card-top { display: flex; align-items: flex-start; gap: 14px; }
-        .jb-logo { flex-shrink: 0; width: 52px; height: 52px; border-radius: 15px; display: grid; place-items: center; font-weight: 800; font-size: 0.95rem; color: ${TEAL}; }
-        .jb-logo-img { background: #fff; border: 1px solid ${LINE}; overflow: hidden; }
-        .jb-logo-img img { width: 100%; height: 100%; object-fit: cover; }
-        .jb-detail-p { margin: 0 0 10px; color: ${MUTED}; font-size: 0.9rem; line-height: 1.75; white-space: pre-line; }
-        .jb-title { margin: 0; font-size: 1.04rem; font-weight: 800; letter-spacing: -0.01em; color: ${INK}; padding-right: 34px; }
-        .jb-company { color: ${MUTED}; font-size: 0.88rem; margin-top: 3px; }
-        .jb-save { position: absolute; top: 18px; right: 18px; border: 0; background: transparent; color: #b7cbc4; cursor: pointer; padding: 4px; border-radius: 8px; transition: color 0.2s, transform 0.2s; }
-        .jb-save:hover { color: ${EMERALD}; transform: scale(1.1); }
-        .jb-save.on { color: #ef5da8; }
-        .jb-divider { height: 1px; background: #eef4f1; margin: 14px 0; }
-        .jb-meta { display: flex; flex-direction: column; gap: 9px; }
-        .jb-metarow { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; font-size: 0.88rem; color: ${MUTED}; }
-        .jb-metarow span { display: inline-flex; align-items: center; gap: 6px; }
-        .jb-metarow.accent span { color: ${EMERALD}; font-weight: 600; }
-        .jb-pay { color: ${INK}; font-weight: 700; }
-        .jb-empty { background: #fff; border: 1px solid ${LINE}; border-radius: 18px; padding: 52px 24px; text-align: center; color: ${MUTED}; }
 
         @media (max-width: 560px) {
-          .jb-filterbar { top: 65px; }
-          .jb-search button { padding: 0 15px; }
+          .jb-search { height: 56px; }
+          .jb-search input { font-size: 1rem; padding: 0 52px; }
           /* Ba nhãn dài không chia được đều trên màn hẹp: "Doanh nghiệp tuyển
              dụng" vỡ thành 3 dòng trong khi nhãn khác chỉ 1–2, nhìn rất lởm
              chởm. Xếp dọc, mỗi tab một dòng, số đếm đẩy sang phải. */
@@ -826,20 +889,36 @@ export function JobsPage() {
         }
       `}</style>
 
-      <SiteHeader />
+      <SiteHeader overlay pinned={false} />
 
-      {/* hero search band */}
+      {/* hero — tiêu đề trang + ô tìm kiếm */}
+      {/* Tấm mesh nằm ở tầng nền của CẢ TRANG chứ không nằm trong hero: hero ở
+          đây chỉ cao ~350px, nhét mesh vào trong thì các quầng (định vị bằng %)
+          bị bóp dẹt và vignette tắt ngay, nên màu không kịp loang. Cho nó cao
+          900px và đè xuống qua thanh lọc thì mới ra được vệt loang như trang
+          chủ. */}
+      <div className="jb-bg" aria-hidden="true">
+        <HeroMesh veil="radial-gradient(100% 92% at 50% 22%, rgba(11,15,14,0) 0%, #0b0f0e 100%)" />
+      </div>
+
       <section className="jb-hero">
-        <WaveBg variant="emerald" pattern="contour" />
         <div className="jb-hero-inner">
-          <form className="jb-search" onSubmit={(e) => e.preventDefault()}>
+          {/* Danh sách lọc ngay khi gõ, nên không có nút "Tìm kiếm" — một nút
+              không làm gì thêm chỉ khiến người dùng tưởng phải bấm mới ra kết
+              quả. Kính lúp nằm trong ô là quy ước cho ô lọc tức thời. */}
+          <form className="jb-search" role="search" onSubmit={(e) => e.preventDefault()}>
+            <Search className="jb-search-icon" size={22} strokeWidth={1.8} />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Tìm kiếm cơ hội, CLB, doanh nghiệp, kỹ năng (ví dụ: F-Code, Canva, React)..."
+              placeholder="Tìm cơ hội, CLB, doanh nghiệp hoặc kỹ năng…"
               aria-label="Tìm kiếm cơ hội"
             />
-            <button type="submit">Tìm kiếm</button>
+            {query && (
+              <button type="button" className="jb-search-clear" aria-label="Xoá từ khoá" onClick={() => setQuery('')}>
+                <X size={18} />
+              </button>
+            )}
           </form>
         </div>
       </section>
@@ -924,11 +1003,11 @@ export function JobsPage() {
                 >
                   <button
                     type="button"
-                    className={`jb-save${saved.has(job.id) ? ' on' : ''}`}
-                    aria-label={saved.has(job.id) ? 'Bỏ lưu' : 'Lưu cơ hội'}
+                    className={`jb-save${saved.has(String(job.id)) ? ' on' : ''}`}
+                    aria-label={saved.has(String(job.id)) ? 'Bỏ lưu' : 'Lưu cơ hội'}
                     onClick={(e) => { e.stopPropagation(); handleToggleSave(job.id); }}
                   >
-                    <Heart size={20} fill={saved.has(job.id) ? '#ef5da8' : 'none'} />
+                    <Heart size={20} fill={saved.has(String(job.id)) ? '#ef5da8' : 'none'} />
                   </button>
                   <div className="jb-card-top">
                     <JobLogo job={job} index={i} />
@@ -1005,8 +1084,8 @@ export function JobsPage() {
                           type="button"
                           onClick={clearFilters}
                           style={{
-                            background: TEAL, color: '#fff', padding: '10px 22px', borderRadius: 9999,
-                            border: 'none', fontWeight: 700, cursor: 'pointer',
+                            background: EMERALD, color: INK, padding: '16px 20px', borderRadius: 8,
+                            border: 'none', fontWeight: 500, fontSize: '1.125rem', cursor: 'pointer',
                           }}
                         >
                           Xoá hết bộ lọc
@@ -1030,7 +1109,7 @@ export function JobsPage() {
               job={selectedJob}
               closing={closing}
               onClose={closeDetail}
-              saved={saved.has(selectedJob.id)}
+              saved={saved.has(String(selectedJob.id))}
               onToggleSave={() => handleToggleSave(selectedJob.id)}
               onApply={handleApply}
             />

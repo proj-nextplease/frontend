@@ -4,7 +4,7 @@ import {
   Award, BriefcaseBusiness, ShieldCheck, ArrowLeft, GraduationCap,
   MapPin, BadgeCheck, ExternalLink, Code2, Link2, Globe, Mail, Eye, FileUp, Download,
 } from 'lucide-react';
-import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
+import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
 import { getPublicProfile, getPublicProfileBySlug } from '../api/portfolioApi.js';
 import { parseBanner } from '../components/postingConstants.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
@@ -116,7 +116,7 @@ export function VerifiedPassport({ profile, isDraft = false }) {
           />
         )}
         <header className="vp-hero vp-reveal">
-          <div className="vp-portrait"><div className="vp-portrait-stage"><PortfolioAvatar3D avatar={avatar} /></div></div>
+          <div className="vp-portrait"><div className="vp-portrait-stage"><PortfolioMascot avatar={avatar} size={190} /></div></div>
           <div className="vp-identity">
             <div className="vp-badges">
               {isDraft ? (
@@ -146,6 +146,24 @@ export function VerifiedPassport({ profile, isDraft = false }) {
             )}
           </div>
         </header>
+
+        {/* Dải kỹ năng. Cần ÍT NHẤT 4 kỹ năng mới cho chạy: dưới ngưỡng đó
+            danh sách ngắn hơn bề ngang khung, dải sẽ hở một khoảng trống chạy
+            qua chạy lại trông như lỗi. Ít hơn thì rơi xuống khối tĩnh cuối
+            trang như cũ. */}
+        {skills.length >= 4 && (
+          <div className="vp-marquee vp-reveal" aria-label="Kỹ năng">
+            <div className="vp-marquee-track">
+              {/* Nhân đôi danh sách để vòng lặp khép kín: khi track trượt hết
+                  50% thì bản sao đã lấp đúng chỗ bản gốc, không thấy mối nối. */}
+              {[0, 1].map((copy) => (
+                <span className="vp-marquee-item" key={copy} aria-hidden={copy === 1}>
+                  {skills.map((sk, i) => <span key={i}>{sk}</span>)}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {hasStats && (
           <div className="vp-stats vp-reveal">
@@ -233,7 +251,7 @@ export function VerifiedPassport({ profile, isDraft = false }) {
           </section>
         )}
 
-        {skills.length > 0 && (
+        {skills.length > 0 && skills.length < 4 && (
           <section className="vp-section vp-reveal">
             <h2 className="vp-section-title">Kỹ năng</h2>
             <div className="vp-skills">{skills.map((s, i) => <span key={i} className="vp-skill">{s}</span>)}</div>
@@ -252,21 +270,33 @@ export function VerifiedPassport({ profile, isDraft = false }) {
   );
 }
 
-/** Preset theme accents (kept subtle to preserve the editorial language). */
+/**
+ * Theme người dùng mua ở Premium. Bản trước chỉ đổi một biến --vp-accent; giờ
+ * trang dựng trên bộ ba giấy / lime / violet nên mỗi theme đổi cả bộ, không thì
+ * mua theme xong mà nhìn không ra khác gì.
+ */
 function PassportThemeStyles() {
   return (
     <style>{`
-      .vp-page.theme-DARK_GOLD { --vp-accent:#c2831a; }
-      .vp-page.theme-CYBERPUNK { --vp-accent:#c026d3; }
-      .vp-page.theme-EMERALD_CLASSIC { --vp-accent:#047857; }
+      .vp-page.theme-DARK_GOLD { --vp-paper:#f7f1e4; --vp-lime:#f5c84b; --vp-violet:#1f1a12; --vp-coral:#c2831a; }
+      .vp-page.theme-CYBERPUNK { --vp-paper:#f2eefb; --vp-lime:#7df9ff; --vp-violet:#c026d3; --vp-coral:#ff2d95; }
+      .vp-page.theme-EMERALD_CLASSIC { --vp-paper:#eef7f2; --vp-lime:#7ae5b4; --vp-violet:#047857; --vp-coral:#0f9d6e; }
+
+      /* Bản in: bỏ hết bóng cứng và mảng màu đặc. Chúng ngốn mực, và máy in
+         đen trắng biến nền violet thành một khối xám nuốt chữ trắng trên đó. */
       @media print {
-        .vp-topbar { display: none !important; }
-        .vp-cred-file { display: none !important; }
+        .vp-topbar, .vp-cred-file, .vp-marquee { display: none !important; }
         .vp-page {
           background: #ffffff !important; color: #111111 !important;
-          width: auto !important; min-height: 0 !important; margin: 0 !important; padding: 0 24px !important;
+          width: auto !important; min-height: 0 !important;
+          margin: 0 !important; padding: 0 24px !important;
         }
-        .vp-shell { max-width: 100% !important; }
+        .vp-page::before { display: none !important; }
+        .vp-hero, .vp-section, .vp-stat, .vp-tl-item, .vp-cred, .vp-cover {
+          box-shadow: none !important;
+          background: #ffffff !important;
+        }
+        .vp-portrait-stage, .vp-section-title, .vp-badges .vp-badge { transform: none !important; }
         .vp-hero, .vp-stats, .vp-section, .vp-tl-item { break-inside: avoid; }
       }
     `}</style>
