@@ -17462,3 +17462,22 @@ body:has(.portfolio-success-page),
 }
 /* Trang portfolio công khai cũng vậy. */
 html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #fbf7ef; }
+
+/* Dòng nhắc "đang chuyển trang" ở màn lưu thành công. Chấm nhấp nháy cho biết
+   có thứ gì đó đang chạy, thay vì để người dùng ngồi đoán. */
+.portfolio-success-page .pf-success-redirect {
+  margin: -18px 0 26px !important;
+  font-size: 0.86rem;
+  opacity: 0.6;
+}
+.portfolio-success-page .pf-success-redirect::after {
+  content: '';
+  display: inline-block;
+  width: 5px; height: 5px; margin-left: 7px; vertical-align: middle;
+  border-radius: 50%; background: currentColor;
+  animation: pf-success-pulse 1s ease-in-out infinite;
+}
+@keyframes pf-success-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-success-page .pf-success-redirect::after { animation: none; }
+}

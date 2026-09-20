@@ -121,16 +121,34 @@ export function SiteHeader({ overlay = false, pinned = true }) {
 
   async function handleLogout() {
     setMenuOpen(false);
-    try {
-      await logout();
-    } finally {
-      clearMyProfileCache();
-      // Kho "việc đã lưu" là bộ nhớ trong module, sống qua cả lần đăng xuất.
-      // Không dọn thì tài khoản đăng nhập sau sẽ thấy tim của tài khoản trước.
-      resetSavedJobs();
-      setSessionSignedIn(false);
-      navigate('/');
-    }
+
+    /* THỨ TỰ Ở ĐÂY QUAN TRỌNG: dọn sạch và RỜI TRANG TRƯỚC, gọi logout() sau.
+       Bản trước `await logout()` rồi mới navigate('/'), và người dùng luôn bị
+       ném về /candidate/login chứ không về trang chủ. Lý do: signOut() của
+       Supabase phát sự kiện SIGNED_OUT ngay trong lúc await, mà
+       ProtectedDashboardRoute có listener onAuthStateChange — nó setSession(null),
+       render lại, gặp `if (!session)` và trả về <Navigate to="/candidate/login"
+       replace />. Chuyển hướng đó xảy ra TRƯỚC khi khối finally kịp chạy, và
+       nó gỡ luôn cả header này khỏi cây, nên navigate('/') không còn tác dụng.
+
+       Guard đó đúng với việc nó sinh ra để làm: chặn người CHƯA đăng nhập đi
+       vào dashboard. Nhưng người vừa bấm Đăng xuất không phải hạng đó — họ có
+       chủ đích và có đích đến riêng. Rời trang trước thì dashboard gỡ bỏ,
+       listener huỷ đăng ký, và guard không bao giờ chạy. */
+    clearMyProfileCache();
+    // Kho "việc đã lưu" là bộ nhớ trong module, sống qua cả lần đăng xuất.
+    // Không dọn thì tài khoản đăng nhập sau sẽ thấy tim của tài khoản trước.
+    resetSavedJobs();
+    setSessionSignedIn(false);
+    navigate('/');
+
+    /* GIỮ TOKEN cho tới khi logout() chạy xong. logout() gọi POST /auth/logout
+       để thu hồi phiên phía server và ghi audit log — xoá token trước thì
+       request đó đi tay không, server trả 401, và bản ghi thu hồi không bao
+       giờ được tạo. Token được dọn ngay sau đó: logout() tự clearStoredAuth()
+       trong finally, và listener onAuthStateChange ở httpClient cũng dọn khi
+       nhận SIGNED_OUT. */
+    logout().catch(() => { /* logout() đã tự nuốt lỗi và dọn local state */ });
   }
 
   const closeMobile = () => setMobileOpen(false);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { getStoredToken } from './authStorage.js';
+import { onPortfolioSaved } from './onboardingTab.js';
 
 /**
  * Hồ sơ của chính người đang đăng nhập, dùng chung cho mọi chỗ cần hiển thị
@@ -44,6 +45,23 @@ export function useMyProfile() {
       .then((data) => { if (alive) setLoaded(data); })
       .catch(() => { /* không tải được thì hiển thị mặc định */ });
     return () => { alive = false; };
+  }, [signedIn]);
+
+  /* Hồ sơ có thể được tạo/sửa ở MỘT TAB KHÁC — cụ thể là tab dựng hồ sơ mà
+     luồng đăng nhập mở ra (lib/onboardingTab.js). Cache ở phạm vi module nên
+     tab này sẽ ôm mãi bản cũ ("chưa có hồ sơ") cho tới khi tải lại trang.
+     Nghe tin rồi nạp lại — im lặng, không đụng gì tới việc người dùng đang làm
+     trên tab này. */
+  useEffect(() => {
+    if (!signedIn) return undefined;
+    let alive = true;
+    const unsubscribe = onPortfolioSaved(() => {
+      clearMyProfileCache();
+      load()
+        .then((data) => { if (alive) setLoaded(data); })
+        .catch(() => { /* bỏ qua, lần đọc sau sẽ thử lại */ });
+    });
+    return () => { alive = false; unsubscribe(); };
   }, [signedIn]);
 
   // Đọc thẳng từ cache khi render: component gắn sau khi cache đã đầy vẫn có

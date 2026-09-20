@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { HeroMesh } from '../components/HeroMesh.jsx';
+import { ONBOARDING_TAB_FLAG, announcePortfolioSaved } from '../lib/onboardingTab.js';
 import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
 import { MASCOTS, mascotSheets, resolveMascot } from '../lib/mascots.js';
 import {
@@ -162,7 +163,51 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   const [filePreview, setFilePreview] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  /* Đọc MỘT LẦN lúc mount: luồng đăng nhập gắn cờ này vào URL khi nó mở trang
+     dựng ở tab riêng. Đọc một lần vì trang có thể thay đổi URL trong lúc dùng,
+     và cờ phải giữ nguyên ý nghĩa "tab này sinh ra để làm việc đó". */
+  const [openedAsOnboardingTab] = useState(
+    () => new URLSearchParams(window.location.search).get(ONBOARDING_TAB_FLAG) === '1',
+  );
   const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
+
+  /* Sau khi lưu xong thì tự đưa người dùng về khu vực ứng viên.
+     Trước đó màn "Thành công" là ngõ cụt: nó báo xong việc rồi bắt bấm thêm
+     một nút nữa mới đi tiếp — mà chẳng có lựa chọn nào khác để cân nhắc, nên
+     cú bấm đó không mang quyết định gì.
+
+     2 giây, không phải ngay lập tức: đủ để đọc hết "Cập nhật Portfolio thành
+     công!" và ghi nhận là việc đã xong. Nhảy ngay thì người dùng không kịp
+     thấy gì, và sẽ không chắc hồ sơ đã lưu hay chưa.
+
+     Nút vẫn giữ nguyên cho ai muốn đi ngay, và làm phương án dự phòng nếu
+     timer không chạy. `replace` để nút Back của trình duyệt không ném họ
+     ngược về màn thành công của một lần lưu đã cũ. */
+  useEffect(() => {
+    if (!isSubmittedSuccessfully) return undefined;
+
+    // Báo cho các tab khác biết hồ sơ vừa được lưu, để chúng bỏ bộ đệm hồ sơ
+    // cũ. Gửi ngay, không đợi hết 2 giây — tab kia có thể dùng được liền.
+    announcePortfolioSaved();
+
+    const timer = setTimeout(() => {
+      /* Nếu tab này do luồng đăng nhập mở ra (lib/onboardingTab.js) thì việc
+         của nó đã xong: tự đóng, trả người dùng về tab họ đang làm dở.
+         window.close() chỉ chạy được với tab do script mở — nên nếu người dùng
+         tự mở /portfolio ở tab mới thì lệnh này im lặng thất bại. Vì vậy phải
+         kiểm tra sau một nhịp và điều hướng bù, không thì họ mắc kẹt ở màn
+         "Thành công". */
+      if (openedAsOnboardingTab) {
+        window.close();
+        setTimeout(() => {
+          if (!window.closed) navigate('/candidates/dashboard/overview', { replace: true });
+        }, 250);
+        return;
+      }
+      navigate('/candidates/dashboard/overview', { replace: true });
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [isSubmittedSuccessfully, navigate, openedAsOnboardingTab]);
   const [isDraftDirty, setIsDraftDirty] = useState(false);
   const [showExitWarningModal, setShowExitWarningModal] = useState(false);
   const [errors, setErrors] = useState({});
@@ -798,18 +843,26 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               : 'Hồ sơ và Proof of Work của bạn đã được ghi nhận chính thức trên hệ thống nextplease. Bạn đã sẵn sàng để khám phá các cơ hội nghề nghiệp.'}
           </p>
 
+          {/* Nói trước là trang sắp tự chuyển. Không nói thì cú nhảy sau 2 giây
+              đọc ra như trang tự ý bỏ đi. */}
+          <p className="pf-success-redirect" aria-live="polite">
+            {openedAsOnboardingTab
+              ? 'Đang đóng tab này, bạn quay lại trang đang xem nhé…'
+              : 'Đang đưa bạn về khu vực của tôi…'}
+          </p>
+
           <div style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '12px'
           }}>
-            <Link to="/candidates/dashboard" className="button primary-button" style={{
+            <Link to="/candidates/dashboard/overview" replace className="button primary-button" style={{
               justifyContent: 'center',
               padding: '14px',
               fontSize: '1rem',
               fontWeight: '600'
             }}>
-              {isEditing ? 'Quay lại Dashboard' : 'Đến trang ứng viên'}
+              {isEditing ? 'Quay lại ngay' : 'Đến khu vực của tôi'}
             </Link>
             
             {!isEditing && (

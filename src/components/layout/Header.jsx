@@ -102,13 +102,14 @@ export function Header() {
   };
 
   const handleLogout = async () => {
-    try {
-      await logout();
-      setShowDropdown(false);
-      navigate('/');
-    } catch (err) {
-      console.error('Lỗi khi đăng xuất:', err);
-    }
+    // Cùng lý do với SiteHeader: rời trang trước, thu hồi phiên sau. Bản cũ
+    // còn một lỗi nữa — navigate nằm TRONG try, nên logout() ném lỗi là người
+    // dùng đứng nguyên tại chỗ với phiên đã hỏng dở.
+    setShowDropdown(false);
+    navigate('/');
+    // Giữ token tới khi logout() xong, nếu không POST /auth/logout đi tay
+    // không và phiên phía server không được thu hồi.
+    logout().catch((err) => console.error('Lỗi khi đăng xuất:', err));
   };
 
   return (
