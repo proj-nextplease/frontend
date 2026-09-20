@@ -1,23 +1,26 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mascot } from 'page-mascot';
 import {
   ArrowRight, ShieldCheck, Sparkles, BriefcaseBusiness, ChevronDown,
   CircleCheck, CircleX, Link2, Flame, Star, Zap, UserRound, FileText,
 } from 'lucide-react';
+import { HeroMesh } from '../components/HeroMesh.jsx';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
 import { getStoredToken } from '../lib/authStorage.js';
 
 /* ── Emerald palette (khớp với các trang landing còn lại) ── */
-const TEAL = '#0d9488';
+/* ── Hệ màu nền tối, dùng chung toàn site (xem DESIGN.md) ── */
 const EMERALD = '#10b981';
-const INK = '#0f2e2b';
-const MUTED = '#5b7772';
-const LINE = '#e2efe9';
-const MINT = '#e7f7f0';
-const HERO_GRAD = 'linear-gradient(158deg, #0f766e 0%, #0d9488 52%, #115e59 100%)';
+const TEAL = '#0d9488';
+const INK = '#0b0f0e';
+const SURFACE = '#121817';
+const ON_DARK = '#ffffff';
+const MUTED = 'rgba(233,247,242,0.62)';
+const LINE = 'rgba(255,255,255,0.1)';
+const LINE_STRONG = 'rgba(255,255,255,0.2)';
+const MINT = 'rgba(16,185,129,0.16)';
 
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 
@@ -98,17 +101,17 @@ function FaqItem({ item, open, onToggle }) {
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           gap: 16, padding: '24px 4px', background: 'none', border: 'none', cursor: 'pointer',
-          textAlign: 'left', fontSize: '1.08rem', fontWeight: 700, color: INK,
+          textAlign: 'left', fontFamily: 'inherit', fontSize: '1.0625rem', fontWeight: 500, letterSpacing: '-0.015em', color: ON_DARK,
         }}
       >
         {item.q}
         <ChevronDown
           size={20}
-          style={{ flex: 'none', color: TEAL, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .22s ease' }}
+          style={{ flex: 'none', color: EMERALD, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .22s ease' }}
         />
       </button>
       {open && (
-        <p style={{ margin: '0 4px 22px', color: MUTED, fontSize: '0.97rem', lineHeight: 1.75, maxWidth: '76ch' }}>
+        <p style={{ margin: '0 4px 22px', color: MUTED, fontSize: '1rem', lineHeight: 1.6, letterSpacing: '-0.015em', maxWidth: '76ch' }}>
           {item.a}
         </p>
       )}
@@ -137,22 +140,22 @@ function PortfolioPreview() {
     <div style={{ position: 'relative' }} aria-hidden="true">
       <div style={{
         position: 'relative', width: 'min(430px, 100%)', margin: '0 auto',
-        borderRadius: 24, background: '#fff', overflow: 'hidden',
-        boxShadow: '0 30px 70px rgba(4,47,42,0.3)',
+        borderRadius: 20, background: SURFACE, border: `1px solid ${LINE_STRONG}`, overflow: 'hidden',
+        boxShadow: '0 30px 70px rgba(0,0,0,0.55)',
       }}>
         {/* Ảnh bìa — đúng tính năng vừa làm xong */}
         <div style={{ height: 78, background: 'linear-gradient(120deg, #34d399, #0d9488 70%)' }} />
 
         <div style={{ padding: '0 20px 20px', marginTop: -30 }}>
           <div style={{
-            width: 62, height: 62, borderRadius: '50%', border: '3px solid #fff',
+            width: 62, height: 62, borderRadius: '50%', border: `3px solid ${SURFACE}`,
             background: 'linear-gradient(135deg, #10b981, #0d9488)', display: 'grid', placeItems: 'center',
             color: '#fff', fontWeight: 900, fontSize: '1.3rem',
           }}>P</div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '1.05rem', fontWeight: 900, color: INK }}>Nguyễn Tài Phát</span>
-            <span style={{ padding: '2px 9px', borderRadius: 999, background: MINT, color: TEAL, fontSize: '0.7rem', fontWeight: 900 }}>LV. 4</span>
+            <span style={{ fontSize: '1.05rem', fontWeight: 600, color: ON_DARK }}>Nguyễn Tài Phát</span>
+            <span style={{ padding: '3px 10px', borderRadius: 999, background: MINT, color: EMERALD, fontSize: '0.7rem', fontWeight: 600 }}>LV. 4</span>
           </div>
           <div style={{ fontSize: '0.82rem', color: MUTED, marginTop: 2 }}>Sinh viên Marketing · ĐH FPT</div>
 
@@ -160,28 +163,28 @@ function PortfolioPreview() {
             display: 'flex', justifyContent: 'space-around', gap: 8, margin: '16px 0',
             padding: '12px 0', borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}`,
           }}>
-            {stat(<ShieldCheck size={14} />, '86', 'TRUST SCORE', TEAL)}
+            {stat(<ShieldCheck size={14} />, '86', 'TRUST SCORE', EMERALD)}
             {stat(<Zap size={14} />, '1.2K', 'EXP', '#f59e0b')}
             {stat(<Flame size={14} />, '7', 'STREAK', '#fb7185')}
           </div>
 
           {/* Một dòng kinh nghiệm đã được xác thực */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: '#f7fbf9' }}>
-            <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, flex: 'none', borderRadius: 10, background: MINT, color: TEAL }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: `1px solid ${LINE}` }}>
+            <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, flex: 'none', borderRadius: 10, background: MINT, color: EMERALD }}>
               <BriefcaseBusiness size={16} />
             </span>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: '0.84rem', fontWeight: 800, color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: '0.84rem', fontWeight: 500, color: ON_DARK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Trưởng ban Truyền thông
               </div>
               <div style={{ fontSize: '0.74rem', color: MUTED }}>CLB F-Code · 2025</div>
             </div>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 999, background: MINT, color: TEAL, fontSize: '0.66rem', fontWeight: 900, flex: 'none' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 999, background: MINT, color: EMERALD, fontSize: '0.66rem', fontWeight: 600, flex: 'none' }}>
               <ShieldCheck size={11} /> Đã xác thực
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, fontSize: '0.76rem', fontWeight: 700, color: TEAL }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, fontSize: '0.76rem', fontWeight: 500, color: EMERALD }}>
             <Link2 size={13} /> nextplease.vn/p/tai-phat
           </div>
         </div>
@@ -206,80 +209,119 @@ export function PortfolioLandingPage() {
     // .app-main bị giới hạn 1180px; các trang landing khác thoát ra bằng cách
     // kéo rộng 100vw rồi bù lề âm, để dải màu chạy hết bề ngang màn hình.
     <div style={{
-      background: '#fff', color: INK,
+      background: INK, color: ON_DARK, position: 'relative',
       width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip',
-      fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif",
+      fontFamily: "'Be Vietnam Pro', 'Inter', sans-serif",
     }}>
-      <SiteHeader />
+      {/* Trang giới thiệu nên thanh điều hướng vẫn ghim như trang chủ — ở đây
+          không có thanh công cụ nào khác tranh chỗ bám. */}
+      <SiteHeader overlay />
 
       <style>{`
-        .pf-cta { display:inline-flex; align-items:center; gap:8px; padding:14px 28px; border-radius:9999px;
-                  font-size:0.97rem; font-weight:800; text-decoration:none; border:none; cursor:pointer;
-                  transition: transform .18s ease, box-shadow .18s ease; }
-        .pf-cta:hover { transform: translateY(-2px); }
-        .pf-cta.primary { background:#ecfccb; color:${INK}; box-shadow:0 10px 26px rgba(0,0,0,0.18); }
-        .pf-cta.ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.55); }
-        .pf-cta.solid { background:${TEAL}; color:#fff; box-shadow:0 12px 28px rgba(13,148,136,0.28); }
+        /* Nút theo hệ: bo 8px, đệm 16/20, chữ 18px/500, đổi màu trong 150ms —
+           không viên thuốc, không shadow màu, không nhấc lên khi hover. */
+        .pf-cta { display:inline-flex; align-items:center; gap:6px; padding:15px 20px; border-radius:8px;
+                  font-family:inherit; font-size:1rem; font-weight:500; line-height:1; text-decoration:none;
+                  border:1px solid transparent; cursor:pointer;
+                  transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
+        .pf-cta.primary, .pf-cta.solid { background:${EMERALD}; color:${INK}; }
+        .pf-cta.primary:hover, .pf-cta.solid:hover { background:#34d399; }
+        .pf-cta.ghost { background:transparent; color:${ON_DARK}; border-color:${LINE_STRONG}; }
+        .pf-cta.ghost:hover { background:rgba(255,255,255,0.08); }
 
-        /* Nhịp lấy theo trang tham chiếu: hero của họ cao 788px ở 1400px, mỗi
-           phần nội dung gần một màn hình. Bản trước của ta chỉ thoáng bằng nửa
-           nên đọc bị dồn. */
-        .pf-hero { display:grid; grid-template-columns: 1.06fr 0.94fr; gap:clamp(32px, 5vw, 72px);
-                   align-items:center; min-height:min(788px, 82vh);
-                   padding: clamp(56px, 8vw, 110px) 0 clamp(64px, 9vw, 120px); }
+        /* index.css gán 'Baloo 2' cho h1–h4 nên mọi tiêu đề ở đây phải khai lại. */
+        .pf-h1 { font-family:'Archivo','Be Vietnam Pro',sans-serif; font-variation-settings:'wdth' 84;
+                 font-weight:800; text-transform:uppercase; line-height:0.92; letter-spacing:-0.022em;
+                 font-size:clamp(2.3rem, 5vw, 4rem); color:${ON_DARK}; margin:22px 0 20px; }
+        .pf-h2 { font-family:inherit; margin:0; font-size:clamp(1.6rem, 3vw, 2rem); font-weight:400;
+                 line-height:1.1; letter-spacing:-0.025em; color:${ON_DARK}; }
+        .pf-lead { margin:18px 0 0; color:${MUTED}; font-size:1.125rem; line-height:1.4; letter-spacing:-0.015em; }
 
-        .pf-steps { display:grid; grid-template-columns: repeat(3, 1fr); gap:clamp(18px, 2.4vw, 28px); }
-        .pf-step { position:relative; padding:clamp(28px, 3vw, 40px) clamp(24px, 2.6vw, 32px);
-                   border-radius:26px; background:#fff;
-                   border:1px solid ${LINE}; box-shadow:0 12px 30px rgba(4,47,42,0.05); }
+        .pf-bg { position:absolute; inset:0 0 auto; height:1000px; overflow:hidden; pointer-events:none; z-index:0; }
+        .pf-hero { position:relative; z-index:1; display:grid; grid-template-columns: 1.06fr 0.94fr;
+                   gap:clamp(32px, 5vw, 72px); align-items:center;
+                   padding: clamp(128px, 12vw, 176px) 0 clamp(64px, 9vw, 120px); }
 
-        /* Bảng so sánh: hai cột nội dung, cột nhãn nằm bên trái. */
+        .pf-eyebrow { display:inline-flex; align-items:center; gap:8px; font-size:1rem; font-weight:500;
+                      letter-spacing:-0.015em; color:${ON_DARK}; }
+        .pf-eyebrow i { width:8px; height:8px; border-radius:9999px; background:${EMERALD}; flex:none; }
+
+        /* ── Ba bước ──
+           KHÔNG dùng lưới ba thẻ bo tròn, mỗi thẻ một icon trong ô vuông bo —
+           đó là bố cục mặc định thấy ở mọi landing page, và đặt cạnh những thẻ
+           bo tròn khác trên cùng trang thì cả trang thành một rổ hình chữ nhật
+           giống hệt nhau. Ở đây là một danh sách kiểu bản in: số thứ tự cỡ lớn
+           bằng font display làm cột mốc, các dòng ngăn nhau bằng kẻ mảnh, không
+           khung bao. Chữ tự gánh, không cần icon. */
+        .pf-steps { border-top: 1px solid ${LINE}; }
+        .pf-step {
+          display: grid; grid-template-columns: 112px minmax(0, 300px) minmax(0, 1fr);
+          gap: clamp(16px, 3vw, 40px); align-items: start;
+          padding: clamp(28px, 3.4vw, 44px) 4px;
+          border-bottom: 1px solid ${LINE};
+          transition: background-color .25s ease;
+        }
+        .pf-step:hover { background-color: rgba(255,255,255,0.025); }
+        .pf-step-no {
+          font-family: 'Archivo', inherit; font-variation-settings: 'wdth' 84;
+          font-size: clamp(2.6rem, 4.6vw, 3.75rem); font-weight: 800; line-height: 0.9;
+          letter-spacing: -0.04em; color: rgba(255,255,255,0.16);
+          transition: color .25s ease;
+        }
+        .pf-step:hover .pf-step-no { color: ${EMERALD}; }
+        .pf-step h3 {
+          font-family: inherit; margin: 0; font-size: clamp(1.25rem, 2vw, 1.5rem); font-weight: 400;
+          line-height: 1.15; letter-spacing: -0.025em; color: ${ON_DARK};
+        }
+        .pf-step p { margin: 0; color: ${MUTED}; font-size: 1rem; line-height: 1.55; letter-spacing: -0.015em; max-width: 46ch; }
+
+        /* ── Bảng so sánh ── */
         .pf-cmp { display:grid; grid-template-columns: 1.15fr 1fr 1fr; align-items:stretch;
-                  border:1px solid ${LINE}; border-radius:22px; overflow:hidden; background:#fff; }
-        .pf-cmp > * { padding:clamp(16px, 1.8vw, 22px) clamp(18px, 2vw, 26px); border-bottom:1px solid ${LINE}; font-size:1rem; }
-        .pf-cmp > *:nth-child(3n) { background:#f5fbf8; }
-        .pf-cmp-head { font-weight:900; font-size:0.9rem !important; letter-spacing:0.02em; }
+                  border:1px solid ${LINE}; border-radius:20px; overflow:hidden; background:transparent; }
+        .pf-cmp > * { padding:clamp(16px, 1.8vw, 22px) clamp(18px, 2vw, 26px); border-bottom:1px solid ${LINE};
+                      font-size:0.9375rem; line-height:1.5; letter-spacing:-0.015em; }
+        /* Cột nextplease được tô nhẹ để mắt bám vào — đây là cột cần thắng. */
+        .pf-cmp > *:nth-child(3n) { background:rgba(16,185,129,0.06); }
+        .pf-cmp-head { font-weight:500; font-size:0.875rem !important; letter-spacing:0.01em; }
+        .pf-cmp > *:nth-last-child(-n+3) { border-bottom:0; }
 
         .pf-faq { display:grid; grid-template-columns: 0.8fr 1.2fr; gap:clamp(24px, 4vw, 56px); align-items:start; }
 
         @media (max-width: 960px) {
           .pf-hero, .pf-faq { grid-template-columns: 1fr; }
-          .pf-steps { grid-template-columns: 1fr; }
+          /* Dưới 960px số thứ tự lên một hàng riêng cùng tiêu đề, phần mô tả
+             xuống dòng dưới — ba cột ở bề ngang này thì cột nào cũng hẹp. */
+          .pf-step { grid-template-columns: 64px 1fr; gap: 14px 18px; }
+          .pf-step p { grid-column: 2; }
           /* Bảng ba cột không đọc nổi trên màn hẹp. Giữ hai cột so sánh, còn
              nhãn tiêu chí thành một dòng chạy suốt bề ngang phía trên — đọc
              một lần cho cả hai bên thay vì lặp lại ở từng ô. */
           .pf-cmp { grid-template-columns: 1fr 1fr; }
-          .pf-cmp .pf-cmp-label { grid-column: 1 / -1; background:#f7fbf9;
-                                  font-size:0.8rem !important; font-weight:800 !important;
+          .pf-cmp .pf-cmp-label { grid-column: 1 / -1; background:rgba(255,255,255,0.05);
+                                  font-size:0.8rem !important; font-weight:500 !important;
                                   padding-top:12px; padding-bottom:12px; }
           .pf-cmp .pf-cmp-head.pf-cmp-label { display:none; }
         }
       `}</style>
 
       {/* ── 1. HERO — cho xem sản phẩm, không mô tả suông ── */}
-      <section style={{ background: HERO_GRAD, color: '#fff' }}>
-        <div style={{ ...INNER }}>
+      <section style={{ position: 'relative' }}>
+        <div className="pf-bg" aria-hidden="true">
+          <HeroMesh veil="radial-gradient(100% 92% at 40% 24%, rgba(11,15,14,0) 0%, #0b0f0e 100%)" />
+        </div>
+        <div style={{ ...INNER, position: 'relative', zIndex: 1 }}>
           <div className="pf-hero">
             <div>
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 14px', borderRadius: 999,
-                background: 'rgba(255,255,255,0.14)', fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.04em',
-              }}>
-                <Sparkles size={14} /> MIỄN PHÍ TOÀN BỘ
-              </span>
+              <span className="pf-eyebrow"><i /> Miễn phí toàn bộ</span>
 
-              {/* Màu chữ phải khai tường minh trên mọi thẻ tiêu đề: reset của
-                  design-system đặt color cho :where(h1..h6) bằng light-dark(),
-                  nên giá trị kế thừa từ cha luôn thua và bám theo sáng/tối của
-                  hệ điều hành. */}
-              <h1 style={{
-                margin: '22px 0 20px', fontSize: 'clamp(2.3rem, 5vw, 4rem)', fontWeight: 800,
-                lineHeight: 1.08, letterSpacing: '-0.03em', color: '#fff',
-              }}>
+              {/* Font display in hoa chỉ dùng cho H1 của hero, và chỉ ở trang
+                  giới thiệu (trang chủ, trang này). Trang công cụ như /jobs hay
+                  /thao-luan không có tiêu đề kiểu này. */}
+              <h1 className="pf-h1">
                 Đây là hồ sơ của bạn sau ba tháng
               </h1>
 
-              <p style={{ margin: 0, maxWidth: '50ch', fontSize: 'clamp(1.04rem, 1.5vw, 1.22rem)', lineHeight: 1.75, color: 'rgba(255,255,255,0.88)' }}>
+              <p style={{ margin: 0, maxWidth: '50ch', fontSize: '1.125rem', lineHeight: 1.5, letterSpacing: '-0.015em', color: MUTED }}>
                 Không phải một bản CV tự khai. Là một trang sống, có minh chứng do tổ chức xác nhận,
                 điểm uy tín tích luỹ thật, và một đường dẫn mang tên bạn.
               </p>
@@ -301,41 +343,31 @@ export function PortfolioLandingPage() {
 
       {/* ── 2. BA BƯỚC — cách hồ sơ tự lớn lên ── */}
       <section style={{ ...INNER, padding: 'clamp(72px, 11vw, 140px) 0' }}>
-        <div style={{ textAlign: 'center', maxWidth: '58ch', margin: '0 auto clamp(40px, 5vw, 64px)' }}>
-          <h2 style={{ margin: 0, fontSize: 'clamp(1.9rem, 3.8vw, 3rem)', fontWeight: 800, lineHeight: 1.14, letterSpacing: '-0.025em', color: INK }}>
+        <div style={{ maxWidth: '58ch', margin: '0 0 clamp(32px, 4vw, 52px)' }}>
+          <h2 className="pf-h2">
             Bạn không phải tự nghĩ ra thành tích
           </h2>
-          <p style={{ margin: '18px 0 0', color: MUTED, fontSize: 'clamp(1.04rem, 1.4vw, 1.16rem)', lineHeight: 1.78 }}>
+          <p className="pf-lead">
             Hồ sơ lớn lên theo việc bạn thật sự làm. Bắt đầu từ con số không cũng được.
           </p>
         </div>
 
         <div className="pf-steps">
-          {STEPS.map((s) => {
-            const Icon = s.icon;
-            return (
-              <div key={s.no} className="pf-step">
-                <span style={{
-                  position: 'absolute', top: 20, right: 22, fontSize: '2rem', fontWeight: 900,
-                  color: MINT, letterSpacing: '-0.04em', lineHeight: 1,
-                }}>{s.no}</span>
-
-                <span style={{ display: 'grid', placeItems: 'center', width: 48, height: 48, borderRadius: 14, background: MINT, color: TEAL }}>
-                  <Icon size={23} strokeWidth={2} />
-                </span>
-                <h3 style={{ margin: '20px 0 10px', fontSize: 'clamp(1.2rem, 1.5vw, 1.35rem)', fontWeight: 800, color: INK }}>{s.title}</h3>
-                <p style={{ margin: 0, color: MUTED, fontSize: '1rem', lineHeight: 1.75 }}>{s.body}</p>
-              </div>
-            );
-          })}
+          {STEPS.map((step) => (
+            <div key={step.no} className="pf-step">
+              <span className="pf-step-no" aria-hidden="true">{step.no}</span>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* ── 3. SO SÁNH — phần thuyết phục chính ── */}
-      <section style={{ background: 'linear-gradient(180deg, #f4fbf8 0%, #ffffff 100%)' }}>
+      <section>
         <div style={{ ...INNER, padding: 'clamp(72px, 11vw, 140px) 0' }}>
-          <div style={{ textAlign: 'center', maxWidth: '54ch', margin: '0 auto clamp(36px, 5vw, 60px)' }}>
-            <h2 style={{ margin: 0, fontSize: 'clamp(1.9rem, 3.8vw, 3rem)', fontWeight: 800, lineHeight: 1.14, letterSpacing: '-0.025em', color: INK }}>
+          <div style={{ maxWidth: '54ch', margin: '0 0 clamp(28px, 4vw, 44px)' }}>
+            <h2 className="pf-h2">
               Cùng một con người, hai cách kể
             </h2>
           </div>
@@ -356,28 +388,24 @@ export function PortfolioLandingPage() {
         </div>
       </section>
 
-      {/* ── 4. DẢI NHẤN — uy tín tích luỹ ── */}
-      <section style={{ background: INK, color: '#fff' }}>
-        <div style={{ ...INNER, padding: 'clamp(68px, 10vw, 124px) 0', display: 'grid', gap: 26, justifyItems: 'center', textAlign: 'center' }}>
-          <Mascot
-            directions="/mascots/frog-directions.webp"
-            reactions="/mascots/frog-reactions.webp"
-            size={104}
-            label="Linh vật nextplease"
-          />
-          <h2 style={{ margin: 0, fontSize: 'clamp(1.7rem, 3.4vw, 2.7rem)', fontWeight: 800, lineHeight: 1.2, letterSpacing: '-0.02em', color: '#fff', maxWidth: '20ch' }}>
+      {/* ── 4. DẢI NHẤN — ba thứ hồ sơ tích luỹ ──
+             Bản trước có linh vật ếch ở giữa; đã gỡ cho khớp với trang chủ —
+             hệ này không dùng nhân vật trang trí. */}
+      <section style={{ borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }}>
+        <div style={{ ...INNER, padding: 'clamp(68px, 10vw, 124px) 0', display: 'grid', gap: 40, justifyItems: 'center', textAlign: 'center' }}>
+          <h2 className="pf-h2" style={{ maxWidth: '24ch' }}>
             Mỗi việc bạn làm đều cộng vào hồ sơ
           </h2>
 
-          <div style={{ display: 'flex', gap: 'clamp(20px, 4vw, 52px)', flexWrap: 'wrap', justifyContent: 'center', margin: '4px 0 6px' }}>
+          <div style={{ display: 'flex', gap: 'clamp(20px, 4vw, 52px)', flexWrap: 'wrap', justifyContent: 'center' }}>
             {[
               [<Star key="i" size={17} />, 'Trust Score', 'Uy tín do tổ chức xác nhận'],
               [<Zap key="i" size={17} />, 'EXP & Cấp độ', 'Tăng theo từng việc hoàn thành'],
               [<ShieldCheck key="i" size={17} />, 'Verified Proof', 'Minh chứng ai cũng kiểm được'],
             ].map(([icon, name, desc]) => (
-              <div key={name} style={{ display: 'grid', gap: 5, justifyItems: 'center', maxWidth: 200 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 900, color: EMERALD }}>{icon}{name}</span>
-                <span style={{ fontSize: '0.86rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55 }}>{desc}</span>
+              <div key={name} style={{ display: 'grid', gap: 6, justifyItems: 'center', maxWidth: 210 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 500, fontSize: '1rem', color: EMERALD }}>{icon}{name}</span>
+                <span style={{ fontSize: '0.9375rem', color: MUTED, lineHeight: 1.5, letterSpacing: '-0.015em' }}>{desc}</span>
               </div>
             ))}
           </div>
@@ -391,12 +419,12 @@ export function PortfolioLandingPage() {
       {/* ── 5. CTA LẶP LẠI — trang tham chiếu nhắc lại lời mời ngay trước FAQ,
              vì tới đây người đọc đã hiểu sản phẩm và không nên phải cuộn ngược
              lên đầu để bấm. ── */}
-      <section style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f4fbf8 100%)' }}>
+      <section>
         <div style={{ ...INNER, padding: 'clamp(64px, 9vw, 112px) 0', textAlign: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: 'clamp(1.8rem, 3.6vw, 2.8rem)', fontWeight: 800, lineHeight: 1.16, letterSpacing: '-0.025em', color: INK, maxWidth: '22ch', marginInline: 'auto' }}>
+          <h2 className="pf-h2" style={{ maxWidth: '22ch', marginInline: 'auto' }}>
             Ba tháng nữa bạn muốn hồ sơ mình trông thế nào?
           </h2>
-          <p style={{ margin: '20px auto 0', maxWidth: '54ch', color: MUTED, fontSize: 'clamp(1.02rem, 1.4vw, 1.14rem)', lineHeight: 1.78 }}>
+          <p className="pf-lead" style={{ margin: '20px auto 0', maxWidth: '54ch' }}>
             Dựng hồ sơ mất vài phút và hoàn toàn miễn phí. Phần còn lại để những việc
             bạn làm tự nói hộ.
           </p>
@@ -404,7 +432,7 @@ export function PortfolioLandingPage() {
             <Link to="/portfolio" onClick={guard} className="pf-cta solid">
               Dựng hồ sơ của tôi <ArrowRight size={17} />
             </Link>
-            <Link to="/jobs" className="pf-cta" style={{ background: '#fff', color: INK, border: `1.5px solid ${LINE}` }}>
+            <Link to="/jobs" className="pf-cta ghost">
               <BriefcaseBusiness size={16} /> Xem cơ hội đang mở
             </Link>
           </div>
@@ -415,10 +443,10 @@ export function PortfolioLandingPage() {
       <section style={{ ...INNER, padding: 'clamp(68px, 10vw, 124px) 0' }}>
         <div className="pf-faq">
           <div>
-            <h2 style={{ margin: 0, fontSize: 'clamp(1.5rem, 2.8vw, 2.1rem)', fontWeight: 800, lineHeight: 1.22, letterSpacing: '-0.01em', color: INK }}>
+            <h2 className="pf-h2">
               Câu hỏi thường gặp
             </h2>
-            <p style={{ marginTop: 14, color: MUTED, fontSize: '0.97rem', lineHeight: 1.7 }}>
+            <p className="pf-lead" style={{ marginTop: 14 }}>
               Chưa rõ chỗ nào? Đây là những thắc mắc hay gặp nhất về Portfolio.
             </p>
           </div>
@@ -444,13 +472,13 @@ export function PortfolioLandingPage() {
 function Fragmentish({ label, cv, pf }) {
   return (
     <>
-      <div className="pf-cmp-label" style={{ fontWeight: 700, color: INK }}>{label}</div>
+      <div className="pf-cmp-label" style={{ fontWeight: 500, color: ON_DARK }}>{label}</div>
       <div data-label={label} style={{ color: MUTED }}>
         <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 8 }}>
-          <CircleX size={16} style={{ color: '#f87171', flex: 'none', marginTop: 2 }} /> {cv}
+          <CircleX size={16} style={{ color: 'rgba(255,255,255,0.35)', flex: 'none', marginTop: 2 }} /> {cv}
         </span>
       </div>
-      <div data-label={label} style={{ color: INK, fontWeight: 600 }}>
+      <div data-label={label} style={{ color: ON_DARK }}>
         <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 8 }}>
           <CircleCheck size={16} style={{ color: EMERALD, flex: 'none', marginTop: 2 }} /> {pf}
         </span>

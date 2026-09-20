@@ -1,14 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Moon, Sparkles, Sun, Compass, WalletCards, FileText, LogOut } from 'lucide-react';
+import { Sparkles, Compass, WalletCards, FileText, LogOut } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient.js';
 import { getMyPortfolio } from '../../api/portfolioApi.js';
 import { logout } from '../../api/httpClient.js';
-import { useTheme } from '../../lib/themeContext.jsx';
 
 export function Header() {
   const navigate = useNavigate();
-  const { isDark: isDarkTheme, toggleTheme } = useTheme();
 
   const [session, setSession] = useState(null);
   const [portfolio, setPortfolio] = useState(null);
@@ -183,18 +181,6 @@ export function Header() {
           ) : (
             <Link to="/#about">Về chúng tôi</Link>
           )}
-
-          <button
-            aria-label={isDarkTheme ? 'Chuyển sang nền sáng' : 'Chuyển sang nền tối'}
-            className="theme-toggle"
-            onClick={toggleTheme}
-            type="button"
-          >
-            <span className="theme-toggle-icon">
-              {isDarkTheme ? <Sun size={16} /> : <Moon size={16} />}
-            </span>
-            <span>{isDarkTheme ? 'Sáng' : 'Tối'}</span>
-          </button>
         </nav>
       </div>
     </header>

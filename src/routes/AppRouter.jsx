@@ -111,9 +111,7 @@ function ProtectedDashboardRoute() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-        <CandidateContentSkeleton variant={skeletonVariantForTabSlug(tabSlug)} />
-      </div>
+      <CandidateContentSkeleton variant={skeletonVariantForTabSlug(tabSlug)} />
     );
   }
 

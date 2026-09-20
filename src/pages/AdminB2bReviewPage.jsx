@@ -2,7 +2,6 @@
 import { useEffect, useState, useRef, useLayoutEffect, useId } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { NotificationBell } from '../components/NotificationBell.jsx';
-import { useTheme } from '../lib/themeContext.jsx';
 import {
   getPendingB2bRegistrations,
   approveB2bRegistration,
@@ -1546,12 +1545,6 @@ function AdminContentSkeleton() {
 
 export function AdminB2bReviewPage() {
   const navigate = useNavigate();
-  // Admin portal is light-only (no dark mode toggle) — force the app out of
-  // dark mode on entry so it never inherits a dark preference set elsewhere.
-  const { isDark, setTheme } = useTheme();
-  useEffect(() => {
-    if (isDark) setTheme('light');
-  }, [isDark, setTheme]);
   const { tabSlug = '', subTabSlug = '' } = useParams();
   const activeTab = ROUTE_TO_TAB[tabSlug] || 'OVERVIEW';
   const [jobsSubTab, setJobsSubTab] = useState('new');

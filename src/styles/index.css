@@ -44,8 +44,8 @@
   /* Portfolio is a candidate-owned surface, so it follows the candidate
      dashboard's warm palette (see .candidate-portal-layout) rather than the
      generic blue-tinted site --bg used by marketing/auth pages. */
-  --portfolio-bg: #faf7f5;
-  --portfolio-preview-bg: #faf7f5;
+  --portfolio-bg: #0b0f0e;
+  --portfolio-preview-bg: #0b0f0e;
   --shadow: 0 24px 70px rgba(15, 23, 42, 0.09);
   --shadow-soft: 0 12px 36px rgba(15, 23, 42, 0.07);
   --cursor-x: 50%;
@@ -298,26 +298,6 @@ img {
   border-radius: 999px;
   background: var(--surface-soft);
   color: var(--primary);
-}
-
-/* Sun/moon swap: the icon is remounted via a React key, so it animates in with
-   a springy rotate + scale for a satisfying flip. Shared by every toggle. */
-.theme-toggle-icon,
-.np-floating-theme-icon,
-.adm-theme-icon {
-  animation: theme-icon-in 460ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.np-floating-theme-icon,
-.adm-theme-icon { display: inline-flex; align-items: center; justify-content: center; }
-@keyframes theme-icon-in {
-  0%   { opacity: 0; transform: rotate(-120deg) scale(0.3); }
-  60%  { opacity: 1; }
-  100% { opacity: 1; transform: rotate(0deg) scale(1); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .theme-toggle-icon,
-  .np-floating-theme-icon,
-  .adm-theme-icon { animation: none; }
 }
 
 .app-main {
@@ -3903,7 +3883,7 @@ img {
   cursor: pointer;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid var(--card-line, #ece6e2);
+  border: 1px solid var(--card-line, rgba(255,255,255,0.1));
 }
 
 .credential-file-preview img {
@@ -3967,7 +3947,7 @@ img {
   cursor: pointer;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid var(--card-line, #ece6e2);
+  border: 1px solid var(--card-line, rgba(255,255,255,0.1));
   transition: transform 0.18s ease;
 }
 
@@ -4010,7 +3990,7 @@ img {
   justify-content: space-between;
   gap: 12px;
   padding: 14px 18px;
-  border-bottom: 1px solid var(--card-line, #ece6e2);
+  border-bottom: 1px solid var(--card-line, rgba(255,255,255,0.1));
 }
 
 .file-preview-title {
@@ -8565,26 +8545,58 @@ img {
 /* ==========================================================================
    ─── Premium Candidate Portal Layout ───
    ========================================================================== */
+/* ── Khu vực ứng viên ──
+   Toàn bộ khu này style qua bộ biến --c-* (350 chỗ dùng biến, chỉ ~50 chỗ hex
+   cứng), nên đổi hệ màu = định nghĩa lại đúng khối này. Bản trước là một
+   thương hiệu thứ hai nằm trong sản phẩm: nền kem #0b0f0e, coral #10b981 ghi
+   đè cả --primary, font Plus Jakarta Sans. Giờ kéo về đúng hệ tối của site. */
 .candidate-portal-layout {
-  display: block;
+  /* `flow-root` (không phải `block`): tạo khối định dạng mới để margin-top của
+     .np-area-bar không thoát ra ngoài. Margin 92px đó từng "xuyên" qua khối
+     này và đẩy nguyên vùng tối xuống 92px, để lộ .app-shell nền sáng #f6f8fc
+     bên dưới — mà tấm mesh lại vẽ đè lên đúng dải đó, nên màu trộn với TRẮNG
+     thay vì với ink: thành dải header sáng bợt, cắt ngang một đường sắc lẹm.
+     `position: relative` để .np-area-bg (absolute) lấy khối này làm gốc toạ
+     độ, thay vì rơi lên khối chứa ở ngoài. */
+  display: flow-root;
+  position: relative;
   width: 100%;
   min-height: 100vh;
-  background: #faf7f5;
-  color: #1d1320;
-  font-family: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --c-red: #e5533f;
-  --c-red-soft: #fdeeeb;
-  --c-ink: #1d1320;
-  --c-muted: #6e6470;
-  --c-line: #ece6e2;
-  --c-line-strong: #ddd4cf;
-  --c-surface: #ffffff;
-  --c-surface-soft: #faf7f5;
-  --c-disabled: #f3ede9;
-  --c-veil: rgba(255, 255, 255, 0.4);
-  /* Recolor inherited primary to warm coral across the candidate dashboard */
-  --primary: #e5533f;
-  --primary-dark: #c8412f;
+  background: #0b0f0e;
+  color: #ffffff;
+  font-family: 'Be Vietnam Pro', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* --c-red giữ nguyên TÊN biến để 350 chỗ dùng nó không phải sửa; chỉ giá trị
+     đổi từ coral sang emerald. Đổi tên biến ở đây là phải sờ vào 350 chỗ. */
+  --c-red: #10b981;
+  --c-red-soft: rgba(16, 185, 129, 0.14);
+  --c-ink: #ffffff;
+  --c-muted: rgba(233, 247, 242, 0.62);
+  --c-line: rgba(255, 255, 255, 0.1);
+  --c-line-strong: rgba(255, 255, 255, 0.2);
+  --c-surface: #121817;
+  --c-surface-soft: #0b0f0e;
+  --c-disabled: rgba(255, 255, 255, 0.08);
+  --c-veil: rgba(11, 15, 14, 0.6);
+  --primary: #10b981;
+  --primary-dark: #0d9488;
+
+  /* Một số component dùng chung (NotificationBell, .empty-state…) style bằng
+     BIẾN TOÀN CỤC chứ không phải bộ --c-*, và nhiều chỗ lại đặt qua inline
+     style nên CSS không đè được. Định nghĩa lại chính các biến đó trong phạm vi
+     khu vực ứng viên là cách duy nhất chạm tới được: biến CSS có kế thừa nên
+     inline style `background: var(--surface)` cũng nhận giá trị mới. */
+  --bg: #0b0f0e;
+  --surface: #121817;
+  --surface-soft: rgba(255, 255, 255, 0.03);
+  --card-bg: #121817;
+  --card-bg-strong: #121817;
+  --field-bg: rgba(255, 255, 255, 0.04);
+  --ink: #ffffff;
+  --muted: rgba(233, 247, 242, 0.62);
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --accent: #10b981;
+  --accent-soft: rgba(16, 185, 129, 0.14);
 }
 
 .candidate-portal-sidebar {
@@ -8643,7 +8655,7 @@ img {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--c-red);
-  border: 1px solid rgba(229, 83, 63, 0.4);
+  border: 1px solid rgba(16, 185, 129, 0.4);
   border-radius: 6px;
   padding: 3px 6px;
 }
@@ -8656,7 +8668,7 @@ img {
   height: 34px;
   border: 1px solid var(--c-line);
   border-radius: 10px;
-  background: #faf7f5;
+  background: #0b0f0e;
   color: var(--c-muted);
   cursor: pointer;
   flex-shrink: 0;
@@ -8664,7 +8676,7 @@ img {
 }
 
 .candidate-sidebar-toggle:hover {
-  background: #f3ede9;
+  background: rgba(255,255,255,0.08);
   color: var(--c-ink);
   border-color: var(--c-line-strong);
 }
@@ -8675,7 +8687,7 @@ img {
   gap: 12px;
   padding: 14px 13px;
   border-radius: 14px;
-  background: #faf7f5;
+  background: #0b0f0e;
   border: 1px solid var(--c-line);
   margin-bottom: 22px;
 }
@@ -8756,12 +8768,12 @@ img {
 }
 
 .candidate-portal-nav-item:hover {
-  background: #f3ede9;
+  background: rgba(255,255,255,0.08);
   color: var(--c-ink);
 }
 
 .candidate-portal-nav-item.active {
-  border-color: rgba(229, 83, 63, 0.18);
+  border-color: rgba(16, 185, 129, 0.18);
   background: var(--c-red-soft);
   color: var(--c-red);
   font-weight: 700;
@@ -8816,7 +8828,7 @@ img {
   min-height: 42px;
   padding: 9px 12px;
   border-radius: 12px;
-  background: #faf7f5;
+  background: #0b0f0e;
   border: 1px solid var(--c-line);
   color: var(--c-ink);
   cursor: pointer;
@@ -8825,7 +8837,7 @@ img {
 }
 
 .candidate-wallet-chip:hover {
-  border-color: rgba(229, 83, 63, 0.3);
+  border-color: rgba(16, 185, 129, 0.3);
   background: var(--c-red-soft);
 }
 
@@ -8845,147 +8857,13 @@ img {
   padding: 30px max(24px, calc((100vw - 1200px) / 2)) 120px;
 }
 
-/* ============================================================
-   Candidate dashboard — thanh tab điều hướng khu vực (bottom bar)
-   ------------------------------------------------------------
-   Trước đây đây là một dock kiểu macOS: chỉ có icon, tên hiện ra
-   dưới dạng tooltip khi hover. Sau khi SiteHeader được thêm vào
-   trang này, dock không còn phải gánh điều hướng cấp site nữa —
-   nó chỉ còn là tab giữa các mục BÊN TRONG Khu vực của tôi. Vì vậy
-   đổi sang pill có chữ: đọc được ngay, không cần hover, và hoạt
-   động trên cảm ứng. Bảng màu lấy từ SiteHeader (teal/mint) để
-   header và thanh tab đọc như một hệ.
-   ============================================================ */
-/* Vỏ kính là .np-dock; chỉ phần tab ở giữa (.np-dock-inner) mới cuộn.
-   Logo và menu tài khoản CỐ TÌNH nằm ngoài vùng cuộn: theo spec CSS, khi
-   một trục là auto/scroll thì trục kia cũng thành auto, nên popover tài
-   khoản đặt bên trong vùng cuộn sẽ bị cắt mất. */
-.np-dock {
-  position: fixed;
-  left: 50%;
-  bottom: 16px;
-  transform: translateX(-50%);
-  z-index: 600;
-  max-width: calc(100vw - 24px);
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 7px 9px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid #e2efe9;
-  box-shadow: 0 18px 40px rgba(15, 46, 43, 0.16), 0 2px 6px rgba(15, 46, 43, 0.06);
-}
-
-.np-dock-inner {
-  display: flex;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 2px;
-  min-width: 0;
-  /* Cuộn ngang khi hẹp hoặc khi có nhiều tab tổ chức được mở. */
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: none;
-}
-
-.np-dock-inner::-webkit-scrollbar { display: none; }
-
-.np-dock-item {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  height: 40px;
-  padding: 0 14px;
-  flex-shrink: 0;
-  border-radius: 999px;
-  border: none;
-  background: transparent;
-  color: #4a635e;
-  font-size: 0.84rem;
-  font-weight: 700;
-  white-space: nowrap;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background-color 160ms ease, color 160ms ease;
-}
-
 /* Teal đậm (#0f766e) chứ không phải #0d9488: chữ 13px cần tỉ lệ tương
    phản 4.5. Trắng trên #0d9488 chỉ đạt 3.38–3.74; trên #0f766e đạt 5.5. */
-.np-dock-item:hover {
-  background: #e7f7f0;
-  color: #0f766e;
-}
 
-.np-dock-item.active {
-  background: #0f766e;
-  color: #ffffff;
-}
 
-.np-dock-label {
-  font: inherit;
-  color: inherit;
-}
 
-.np-dock-badge {
-  position: absolute;
-  top: 1px;
-  right: 4px;
-  font-size: 0.54rem;
-  font-weight: 900;
-  padding: 1px 5px;
-  border-radius: 999px;
-  text-transform: uppercase;
-  line-height: 1.4;
-}
-.np-dock-badge-new { background: #d97706; color: #fff; }
-.np-dock-badge-hot { background: #f59e0b; color: #fff; }
-.np-dock-badge-count { background: var(--primary); color: #fff; min-width: 16px; text-align: center; }
 
-.np-dock-sep {
-  width: 1px;
-  height: 22px;
-  background: #e2efe9;
-  margin: 0 5px;
-  align-self: center;
-  flex-shrink: 0;
-}
 
-.np-dock-org-tab { padding: 0 12px; gap: 7px; }
-.np-dock-org-logo {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  color: #fff;
-  font-size: 0.6rem;
-
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.np-dock-tab-close {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: rgba(29, 19, 32, 0.75);
-  color: #fff;
-  border: none;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.np-dock-org-tab:hover .np-dock-tab-close { display: flex; }
 
 /* ── Thanh tab trên màn hẹp ──
    Ở 375px không có cách nào nhét 9 pill có chữ vừa một hàng, nên thanh
@@ -8993,31 +8871,14 @@ img {
    trình duyệt khi nó nhận focus. Vẫn giữ chữ — đó là điểm của lần đổi
    này — chỉ thu nhỏ padding lại. */
 @media (max-width: 900px) {
-  .np-dock {
-    left: 0;
-    right: 0;
-    bottom: 0;
-    transform: none;
-    max-width: 100%;
-    border-radius: 16px 16px 0 0;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    padding: 7px 10px calc(7px + env(safe-area-inset-bottom));
-    background: rgba(255, 255, 255, 0.95);
-  }
 
-  .np-dock-item { height: 38px; padding: 0 12px; font-size: 0.8rem; }
 
   /* Hover vô nghĩa trên cảm ứng. */
-  .np-dock-item:hover { background: transparent; color: #4a635e; }
-  .np-dock-item.active:hover { background: #0f766e; color: #fff; }
 
   .candidate-portal-main { padding-bottom: 92px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .np-dock-item { transition: none !important; }
 }
 
 /* ─── Overview Tab ─── */
@@ -9028,17 +8889,25 @@ img {
   margin-bottom: 24px;
 }
 
+/* Cùng thang với tiêu đề section ở mọi trang khác: 32px, weight 400, viết
+   thường. KHÔNG dùng font display in hoa dù đây là "hero" của khu vực cá nhân:
+   trang giới thiệu người ta đọc một lần, còn đây là công cụ mở mỗi ngày — hét
+   tên người dùng lên mỗi lần vào là mệt chứ không phải ấn tượng. */
 .candidate-overview-title h1 {
+  font-family: inherit;
   margin: 0;
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
   color: var(--c-ink);
-  letter-spacing: -0.03em;
 }
 
 .candidate-overview-title p {
-  margin: 4px 0 0;
-  font-size: 1rem;
+  margin: 10px 0 0;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  letter-spacing: -0.015em;
   color: var(--c-muted);
 }
 
@@ -9119,7 +8988,7 @@ img {
 
 .exp-bar-fill-glow {
   height: 100%;
-  background: linear-gradient(90deg, #e5533f, #f6845f, #e5533f);
+  background: linear-gradient(90deg, #10b981, #34d399, #10b981);
   background-size: 200% auto;
   border-radius: 999px;
   transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -9240,14 +9109,14 @@ img {
   height: 310px;
   border-radius: 18px;
   overflow: hidden;
-  background: #faf7f5;
+  background: #0b0f0e;
   border: 2px solid var(--c-red-soft);
   position: relative;
   transition: all 300ms ease;
 }
 
 .avatar-3d-glow-frame:hover {
-  border-color: rgba(229, 83, 63, 0.45);
+  border-color: rgba(16, 185, 129, 0.45);
 }
 
 .avatar-quick-edit-btn {
@@ -9336,7 +9205,7 @@ img {
 
 /* ─── Premium Store ─── */
 .candidate-premium-store {
-  border: 1px solid rgba(229, 83, 63, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.12);
   background: #fff;
   border-radius: 22px;
   padding: 24px;
@@ -9356,7 +9225,7 @@ img {
   padding: 26px;
   background:
     linear-gradient(135deg, rgba(29, 19, 32, 0.92), rgba(96, 48, 43, 0.9)),
-    linear-gradient(135deg, rgba(245, 158, 11, 0.28), rgba(229, 83, 63, 0.12));
+    linear-gradient(135deg, rgba(245, 158, 11, 0.28), rgba(16, 185, 129, 0.12));
   color: #fff;
   overflow: hidden;
   position: relative;
@@ -9586,7 +9455,7 @@ img {
 
 .premium-status-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(229, 83, 63, 0.2);
+  border-color: rgba(16, 185, 129, 0.2);
   box-shadow: 0 14px 28px rgba(29, 19, 32, 0.06);
 }
 
@@ -9598,7 +9467,7 @@ img {
   height: 42px;
   flex-shrink: 0;
   border-radius: 14px;
-  background: #faf7f5;
+  background: #0b0f0e;
   font-size: 1.38rem;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
@@ -9667,7 +9536,7 @@ img {
 
 .premium-product-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(229, 83, 63, 0.22);
+  border-color: rgba(16, 185, 129, 0.22);
   box-shadow: 0 22px 40px rgba(29, 19, 32, 0.08);
 }
 
@@ -9790,7 +9659,7 @@ img {
 .premium-store-topup-btn:focus-visible,
 .premium-theme-option:focus-visible,
 .premium-store-select:focus-visible {
-  outline: 3px solid rgba(229, 83, 63, 0.18);
+  outline: 3px solid rgba(16, 185, 129, 0.18);
   outline-offset: 2px;
 }
 
@@ -9819,7 +9688,7 @@ img {
 .premium-product-action.soft { background: #e6f4ea; color: #065f46; }
 
 .premium-product-action:disabled {
-  background: #f3ede9;
+  background: rgba(255,255,255,0.08);
   color: #9a8f99;
   cursor: not-allowed;
   box-shadow: none;
@@ -9858,14 +9727,14 @@ img {
 }
 
 .premium-store-select:focus {
-  border-color: rgba(229, 83, 63, 0.42);
-  box-shadow: 0 0 0 3px rgba(229, 83, 63, 0.1);
+  border-color: rgba(16, 185, 129, 0.42);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .premium-inline-state {
   border: 1px solid var(--c-line);
   border-radius: 12px;
-  background: #faf7f5;
+  background: #0b0f0e;
   color: var(--c-muted);
   font-size: 0.8rem;
   font-weight: 700;
@@ -9929,7 +9798,7 @@ img {
 
 /* ─── Premium Store v2 ─── */
 .premium-shop {
-  border: 1px solid rgba(229, 83, 63, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.12);
   border-radius: 22px;
   background: #fff;
   padding: 22px;
@@ -10269,7 +10138,7 @@ img {
   gap: 11px;
   border: 1px solid var(--c-line);
   border-radius: 14px;
-  background: #faf7f5;
+  background: #0b0f0e;
   padding: 11px;
 }
 
@@ -10352,7 +10221,7 @@ img {
 
 .premium-service-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(229, 83, 63, 0.24);
+  border-color: rgba(16, 185, 129, 0.24);
   box-shadow: 0 20px 34px rgba(29, 19, 32, 0.07);
 }
 
@@ -10422,7 +10291,7 @@ img {
   height: 28px;
   border-radius: 999px;
   background:
-    radial-gradient(circle at 24% 50%, #e5533f 0 5px, transparent 6px),
+    radial-gradient(circle at 24% 50%, #10b981 0 5px, transparent 6px),
     radial-gradient(circle at 48% 34%, #f59e0b 0 5px, transparent 6px),
     radial-gradient(circle at 62% 62%, #10b981 0 5px, transparent 6px),
     #fff;
@@ -10476,7 +10345,7 @@ img {
 }
 
 .premium-shop-button:disabled {
-  background: #f3ede9 !important;
+  background: rgba(255,255,255,0.08) !important;
   color: #9a8f99;
   cursor: not-allowed;
   box-shadow: none;
@@ -10523,7 +10392,7 @@ img {
   width: fit-content;
   margin-bottom: 10px;
   border-radius: 999px;
-  background: rgba(229, 83, 63, 0.08);
+  background: rgba(16, 185, 129, 0.08);
   color: var(--c-red);
   padding: 6px 12px;
   font-size: 0.82rem;
@@ -10691,7 +10560,7 @@ img {
   gap: 9px;
   border: 1px solid var(--c-line);
   border-radius: 14px;
-  background: #faf7f5;
+  background: #0b0f0e;
   color: var(--c-ink);
   padding: 11px 12px;
   font-size: 0.86rem;
@@ -10745,7 +10614,7 @@ img {
   gap: 12px;
   border: 1px solid var(--c-line);
   border-radius: 14px;
-  background: #faf7f5;
+  background: #0b0f0e;
   padding: 12px;
 }
 
@@ -11062,7 +10931,7 @@ img {
   left: 10px;
   bottom: 8px;
   width: 2px;
-  background: linear-gradient(180deg, var(--c-red, #e5533f), var(--c-line, #ece6e2));
+  background: linear-gradient(180deg, var(--c-red, #10b981), var(--c-line, rgba(255,255,255,0.1)));
 }
 
 .road-map-node {
@@ -11448,8 +11317,8 @@ img {
 }
 
 .np-candf:focus {
-  border-color: var(--c-red, #e5533f) !important;
-  box-shadow: 0 0 0 3px rgba(229, 83, 63, 0.12);
+  border-color: var(--c-red, #10b981) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
 }
 
 /* ── Candidate dashboard view transitions ── */
@@ -11500,7 +11369,7 @@ img {
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
   font-size: 0.88rem;
   font-weight: 650;
-  color: var(--c-ink, #1d1320);
+  color: var(--c-ink, #ffffff);
   animation: candidateToastIn 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .candidate-toast.success { border-left: 4px solid #16a34a; }
@@ -12813,61 +12682,25 @@ img {
 }
 
 /* ============================================================
-   Global floating theme toggle — available on every page
-   (landing, auth, workspace) regardless of the Header.
-   ============================================================ */
-.np-floating-theme-toggle {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  z-index: 1200;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: 1px solid var(--line-strong);
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: var(--shadow-soft);
-  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.2s ease, background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
-}
-.np-floating-theme-toggle:hover {
-  transform: translateY(-3px) scale(1.06);
-  box-shadow: var(--shadow);
-  color: var(--primary);
-  border-color: var(--primary);
-}
-.np-floating-theme-toggle:active { transform: scale(0.95); }
-.np-floating-theme-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
-@media (prefers-reduced-motion: reduce) {
-  .np-floating-theme-toggle { transition: none; }
-  .np-floating-theme-toggle:hover { transform: none; }
-}
-
-/* ============================================================
    Landing/Wellfound palette tokens (--lp-*) — theme-aware.
    ============================================================ */
 :root {
   --lp-bg: #ffffff;
   --lp-surface: #ffffff;
-  --lp-ink: #1d1320;
-  --lp-muted: #6e6470;
-  --lp-red: #e5533f;
+  --lp-ink: #ffffff;
+  --lp-muted: rgba(233,247,242,0.62);
+  --lp-red: #10b981;
   --lp-red-soft: #f3b4a6;
   --lp-plum: #1e1320;
-  --lp-pink: #fdeeeb;
+  --lp-pink: rgba(16,185,129,0.14);
   --lp-pink-card: #fbf3f1;
   --lp-cream: #f3df9c;
   --lp-cream-ink: #6b5d2f;
   --lp-mauve: #9d7e8e;
-  --lp-line: #ece6e2;
+  --lp-line: rgba(255,255,255,0.1);
   --lp-nav-bg: rgba(255, 255, 255, 0.82);
   --lp-pill-bg: #ffffff;
-  --lp-pill-border: #ece6e2;
+  --lp-pill-border: rgba(255,255,255,0.1);
   --lp-pill-shadow: rgba(30, 19, 32, 0.10);
   --lp-on-plum: rgba(255, 255, 255, 0.65);
   --lp-on-plum-strong: #ffffff;
@@ -12926,7 +12759,7 @@ img {
 
 /* Primary (inverted) button tokens — keep high contrast in both themes.
    Light: dark button + white text. Dark: light button + dark text. */
-:root { --lp-btn-bg: #1d1320; --lp-btn-text: #ffffff; }
+:root { --lp-btn-bg: #ffffff; --lp-btn-text: #ffffff; }
 :root[data-theme='dark'] { --lp-btn-bg: #f2edef; --lp-btn-text: #16131a; }
 
 /* Swizzled Astryx Button (src/components/astryx/Button.jsx), re-skinned with
@@ -13111,19 +12944,7 @@ img {
 :root[data-theme='dark'] .checklist-item:hover { border-color: rgba(255, 111, 89, 0.35); }
 
 /* Thanh tab khu vực — kính tối thay vì kính sáng. */
-:root[data-theme='dark'] .np-dock {
-  background: rgba(24, 28, 27, 0.82);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
-}
-:root[data-theme='dark'] .np-dock-item { color: #b9c9c5; }
-:root[data-theme='dark'] .np-dock-item:hover { background: rgba(13, 148, 136, 0.2); color: #5eead4; }
-:root[data-theme='dark'] .np-dock-item.active { background: #0d9488; color: #041c1a; }
-:root[data-theme='dark'] .np-dock-sep { background: rgba(255, 255, 255, 0.12); }
 @media (max-width: 900px) {
-  :root[data-theme='dark'] .np-dock { background: rgba(20, 24, 23, 0.96); }
-  :root[data-theme='dark'] .np-dock-item:hover { background: transparent; color: #b9c9c5; }
-  :root[data-theme='dark'] .np-dock-item.active:hover { background: #0d9488; color: #041c1a; }
 }
 
 /* Candidate Premium store — dark surfaces + badge contrast. */
@@ -13247,67 +13068,253 @@ p { text-wrap: pretty; }
    ============================================================ */
 /* Nền hero lấy đúng WAVE_BASE.emerald của hero trang chủ (WaveBg.jsx), để
    bước từ trang chủ vào Khu vực của tôi không thấy như đổi sản phẩm. */
-.candidate-portal-layout { --np-passport: linear-gradient(158deg, #0f766e 0%, #0d9488 52%, #115e59 100%); }
-:root[data-theme='dark'] .candidate-portal-layout { --np-passport: linear-gradient(160deg, #0b5f58 0%, #0e857a 55%, #0a4f48 100%); }
+/* Thẻ hộ chiếu trước đây là một dải gradient teal đặc + hoạ tiết sóng, tức là
+   ngôn ngữ của trang chủ ĐỜI CŨ. Trang chủ giờ dùng quầng sáng emerald bị blur
+   trên nền tối, nên thẻ này đi theo: nền tối, một quầng emerald ở góc trên
+   trái, viền hairline. Không còn mảng màu đặc nào. */
+.candidate-portal-layout {
+  --np-passport:
+    radial-gradient(70% 120% at 12% 0%, rgba(103, 232, 249, 0.16) 0%, rgba(16, 185, 129, 0.1) 42%, rgba(0, 0, 0, 0) 72%),
+    linear-gradient(152deg, #16221f 0%, #0e1614 100%);
+
+  /* Mặt nền cho MỌI khối nội dung nằm đè lên tấm mesh. Phải đục — xem lý do
+     dài ở .np-saved-row. Cùng họ màu với --np-passport nhưng phẳng, để thẻ hộ
+     chiếu vẫn là thứ duy nhất có quầng sáng riêng.
+     #121817 chính là --c-surface, chỉ đặt tên lại để chỗ dùng nói rõ ý định là
+     "tấm nền chống chìm" chứ không phải "một sắc xám nào đó". */
+  --np-panel: #121817;
+  --np-panel-hover: #18201e;
+}
 
 .np-passport {
   position: relative;
+  overflow: hidden;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  /* Ba vùng: hình — danh tính — cấp độ, rồi dải dữ liệu chạy hết bề ngang. */
+  grid-template-columns: minmax(200px, 268px) minmax(0, 1fr) auto;
+  grid-template-areas:
+    'figure id level'
+    'strip  strip strip';
   align-items: center;
-  gap: clamp(22px, 3vw, 48px);
+  gap: clamp(20px, 3vw, 44px);
   background: var(--np-passport);
   color: #fff;
-  border-radius: 26px;
-  padding: clamp(24px, 2.6vw, 36px) clamp(26px, 3vw, 44px);
-  overflow: hidden;
-  box-shadow: 0 26px 64px rgba(30, 19, 32, 0.20);
+  border-radius: 20px;
+  border: 1px solid var(--c-line);
+  padding: clamp(26px, 3vw, 40px) clamp(26px, 3vw, 44px) 0;
   margin-bottom: 28px;
 }
 .np-passport::before {
   content: '';
   position: absolute;
-  top: -45%;
-  right: -8%;
-  width: 360px;
-  height: 360px;
-  background: radial-gradient(circle, rgba(167, 243, 208, 0.28), transparent 68%);
-  pointer-events: none;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
 }
-/* Lớp phủ tối nhẹ: emerald #0d9488 là tông trung, chữ trắng trên nó chỉ đạt
-   tương phản 3.74 — không đủ 4.5 của WCAG AA cho chữ nhỏ (nhãn chỉ số, phụ
-   đề). Phủ một lớp xanh thẫm mờ nâng nền lên ~5.3 mà không đổi màu thương
-   hiệu. Pseudo-element không phải con nên nằm dưới nội dung. */
-.np-passport::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(100deg, rgba(4, 47, 42, 0.42) 0%, rgba(4, 47, 42, 0.26) 55%, rgba(4, 47, 42, 0.40) 100%);
-  pointer-events: none;
-}
-
 .np-passport > * { position: relative; z-index: 1; }
 
-.np-pp-avatar { width: clamp(116px, 11vw, 156px); flex-shrink: 0; }
-.np-pp-avatar .avatar-3d-glow-frame {
-  width: 100%; aspect-ratio: 1; min-height: 0; padding: 0;
-  border-radius: 22px; background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+/* Avatar 3D tràn xuống dưới mép panel: trước đây nó bị nhốt trong một khung
+   kính cỡ thumbnail, trong khi đây là thứ không sản phẩm tuyển dụng nào khác
+   có. Cho nó lớn và cho phép cắt bớt ở đáy — hình bị cắt trông chủ ý hơn hình
+   thu nhỏ vừa khít. */
+.np-pp-figure {
+  grid-area: figure;
+  align-self: end;
+  width: 100%;
+  height: clamp(210px, 22vw, 290px);
+  margin-bottom: -28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
 }
-.np-pp-name { font-size: clamp(1.3rem, 2vw, 1.7rem); font-weight: 800; letter-spacing: -0.02em; }
-.np-pp-sub { font-size: 0.86rem; color: rgba(255, 255, 255, 0.92); margin-top: 2px; }
-.np-pp-expbar { height: 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
-.np-pp-expbar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f6845f, #e5533f); transition: width 0.9s cubic-bezier(0.22,1,0.36,1); }
+.np-pp-figure > * { width: 100%; height: 100%; }
 
-.np-pp-stats { display: flex; gap: clamp(14px, 1.6vw, 26px); flex-shrink: 0; }
-.np-pp-stat { text-align: left; }
-.np-pp-stat-val { font-size: clamp(1.4rem, 2vw, 1.9rem); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-.np-pp-stat-label { font-size: 0.74rem; font-weight: 700; color: rgba(255, 255, 255, 0.92); margin-top: 5px; display: flex; align-items: center; gap: 4px; }
-.np-pp-divider { width: 1px; align-self: stretch; background: rgba(255, 255, 255, 0.12); }
+.np-pp-id { grid-area: id; min-width: 0; }
+.np-pp-eyebrow {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-red);
+}
+/* Chỗ DUY NHẤT trong app dùng font display ngoài hero hai trang giới thiệu.
+   line-height 0.92 để dấu tiếng Việt không bị cắt ngọn khi in hoa. */
+.np-pp-name {
+  font-family: 'Archivo', 'Be Vietnam Pro', sans-serif;
+  font-variation-settings: 'wdth' 84;
+  margin: 10px 0 0;
+  font-size: clamp(2.2rem, 4.6vw, 3.4rem);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.022em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.np-pp-sub {
+  margin: 12px 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+  color: rgba(255, 255, 255, 0.62);
+}
+/* Dòng việc-cần-làm nằm ngay trong hộ chiếu. Trước đây nó là một dải riêng
+   phía trên kèm lời chào lặp lại tên người dùng — mà hộ chiếu đã xướng tên
+   bằng cỡ 54px ngay bên dưới. Bỏ dải đó, câu này về đúng chỗ của nó. */
+.np-pp-next {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+.np-pp-next-cap {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-red);
+  width: 100%;
+}
+.np-pp-next-text { font-size: 0.9375rem; letter-spacing: -0.015em; color: #fff; }
+.np-pp-next-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 7px 13px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--c-red);
+  color: #0b0f0e;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+.np-pp-next-cta:hover { background: #34d399; }
 
-@media (max-width: 880px) {
-  .np-passport { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 22px; }
-  .np-pp-stats { justify-content: center; }
+.np-pp-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.np-pp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.np-pp-btn:hover { background: rgba(255, 255, 255, 0.1); }
+.np-pp-btn.primary { background: var(--c-red); border-color: transparent; color: #0b0f0e; font-weight: 600; }
+.np-pp-btn.primary:hover { background: #34d399; }
+
+/* ── Cấp độ ── */
+.np-pp-level { grid-area: level; display: grid; justify-items: end; gap: 6px; text-align: right; }
+.np-pp-level-cap,
+.np-pp-cell-cap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+.np-pp-level-num {
+  font-family: 'Archivo', 'Be Vietnam Pro', sans-serif;
+  font-variation-settings: 'wdth' 84;
+  font-size: clamp(3.6rem, 7vw, 5.4rem);
+  font-weight: 800;
+  line-height: 0.86;
+  letter-spacing: -0.04em;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+/* Track chia đốt: liếc một cái là biết còn mấy đốt tới cấp sau. Thanh gradient
+   9px của bản trước không trả lời được câu đó. */
+.np-pp-track { display: flex; gap: 3px; margin-top: 4px; }
+.np-pp-track i {
+  width: 14px;
+  height: 6px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.14);
+  transition: background-color 420ms ease;
+}
+.np-pp-track i.on { background: var(--c-red); }
+.np-pp-level-exp { font-size: 0.8rem; color: rgba(255, 255, 255, 0.62); font-variant-numeric: tabular-nums; }
+
+/* ── Dải dữ liệu đáy ──
+   Mượn vùng mã máy đọc ở cuối hộ chiếu thật: chạy hết bề ngang, ngăn bằng kẻ
+   mảnh, nhãn chữ nhỏ in hoa. */
+.np-pp-strip {
+  grid-area: strip;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: clamp(24px, 3vw, 36px) clamp(-26px, -3vw, -44px) 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.np-pp-cell {
+  display: grid;
+  gap: 6px;
+  padding: 18px clamp(26px, 3vw, 44px);
+  border: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  background: none;
+  color: #fff;
+  font: inherit;
+  text-align: left;
+}
+.np-pp-cell:first-child { border-left: 0; }
+button.np-pp-cell { cursor: pointer; transition: background-color 150ms ease; }
+button.np-pp-cell:hover { background: rgba(255, 255, 255, 0.05); }
+.np-pp-cell-val {
+  font-family: 'Archivo', 'Be Vietnam Pro', sans-serif;
+  font-variation-settings: 'wdth' 84;
+  font-size: clamp(1.7rem, 2.6vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.np-pp-cell-flame { display: inline-flex; align-items: center; gap: 8px; }
+
+@media (max-width: 1080px) {
+  .np-passport {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'id     level'
+      'figure figure'
+      'strip  strip';
+  }
+  .np-pp-figure { height: clamp(190px, 30vw, 240px); }
+}
+@media (max-width: 640px) {
+  .np-passport {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'id' 'figure' 'level' 'strip';
+    gap: 18px;
+  }
+  .np-pp-level { justify-items: start; text-align: left; }
+  /* Ba ô xếp ngang ở 375px thì mỗi ô rộng ~100px, chữ số bị bóp. Xếp dọc. */
+  .np-pp-strip { grid-template-columns: 1fr; }
+  .np-pp-cell { border-left: 0; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+  .np-pp-cell:first-child { border-top: 0; }
 }
 
 /* ============================================================
@@ -15548,104 +15555,1223 @@ p { text-wrap: pretty; }
   padding: 20px;
 }
 .np-band-inner { position: relative; z-index: 1; }
-.np-band-mint { background: linear-gradient(160deg, #eafaf3 0%, #d6f3e6 100%); }
-.np-band-mint2 { background: linear-gradient(165deg, #f3faf6 0%, #e6f6ef 100%); }
 
 :root[data-theme='dark'] .np-band { border-color: rgba(255, 255, 255, 0.08); }
-/* Nền sáng của dải sóng sẽ chọi với chữ sáng ở theme tối — đổi sang nền tối
-   cùng tông teal, hoạ tiết SVG vẫn hợp vì nó dùng alpha chứ không dùng màu đặc. */
-:root[data-theme='dark'] .np-band-mint { background: linear-gradient(160deg, #10201e 0%, #0e2a27 100%); }
-:root[data-theme='dark'] .np-band-mint2 { background: linear-gradient(165deg, #121d1c 0%, #0f2422 100%); }
-
-/* Trên màn hẹp thanh tab khu vực bám sát đáy (cao ~54px kể cả safe-area),
-   nút đổi giao diện ở bottom:20px sẽ đè lên nó. Đẩy lên trên thanh tab. */
-@media (max-width: 900px) {
-  body:has(.candidate-portal-layout) .np-floating-theme-toggle {
-    bottom: calc(74px + env(safe-area-inset-bottom));
-  }
-}
 
 /* ── Logo + menu tài khoản trong thanh dock ──
    Trang này không dùng SiteHeader (hai thanh điều hướng là thừa), nên thanh
    dock phải mang luôn logo về trang chủ và menu tài khoản. */
-.np-dock-brand {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 1px;
-  padding: 0 10px 0 6px;
-  flex-shrink: 0;
-  text-decoration: none;
-  font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif;
-  font-size: 1.15rem;
-  line-height: 1;
-}
-.np-dock-brand-word { font-weight: 700; letter-spacing: -0.01em; color: #059669; }
-.np-dock-brand-colon { font-weight: 800; color: #f59e0b; }
 
-.np-dock-acct { position: relative; flex-shrink: 0; }
-.np-dock-acct-btn { gap: 5px; padding: 0 9px 0 6px; }
-.np-dock-acct-btn[aria-expanded='true'] { background: #e7f7f0; color: #0f766e; }
 
-.np-dock-acct-menu {
-  position: absolute;
-  bottom: calc(100% + 14px);
-  right: 0;
-  width: 236px;
-  padding: 8px;
-  border-radius: 16px;
-  background: var(--c-surface);
-  border: 1px solid #e2efe9;
-  box-shadow: 0 24px 48px rgba(15, 46, 43, 0.22);
-  animation: npDockMenuIn 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
 @keyframes npDockMenuIn {
   from { opacity: 0; transform: translateY(8px) scale(0.97); }
   to { opacity: 1; transform: none; }
 }
 
-.np-dock-acct-head { display: flex; align-items: center; gap: 10px; padding: 6px 8px 10px; }
-.np-dock-acct-name {
-  font-size: 0.9rem;
-  font-weight: 800;
-  color: var(--c-ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.np-dock-acct-sub { font-size: 0.74rem; color: var(--c-muted); margin-top: 2px; }
-.np-dock-acct-sep { height: 1px; background: #e2efe9; margin: 4px 0; }
 
-.np-dock-acct-item {
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 9px 10px;
-  border: none;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--c-ink);
-  font-size: 0.86rem;
-  font-weight: 700;
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color 150ms ease, color 150ms ease;
-}
-.np-dock-acct-item:hover { background: #e7f7f0; color: #0f766e; }
-.np-dock-acct-item.danger { color: #dc2626; }
-.np-dock-acct-item.danger:hover { background: rgba(220, 38, 38, 0.1); color: #b91c1c; }
 
 /* Logo chiếm chỗ quý giá trên màn hẹp, mà menu tài khoản đã có mục
    "Trang chủ" rồi — bỏ logo đi, giữ lại menu. */
 @media (max-width: 900px) {
-  .np-dock-brand { display: none; }
-  .np-dock-brand + .np-dock-sep { display: none; }
 }
 
-:root[data-theme='dark'] .np-dock-acct-menu { background: #181b21; border-color: rgba(255, 255, 255, 0.1); }
-:root[data-theme='dark'] .np-dock-acct-sep { background: rgba(255, 255, 255, 0.1); }
-:root[data-theme='dark'] .np-dock-acct-item { color: #e8ecf2; }
-:root[data-theme='dark'] .np-dock-acct-item:hover { background: rgba(13, 148, 136, 0.22); color: #5eead4; }
-:root[data-theme='dark'] .np-dock-acct-btn[aria-expanded='true'] { background: rgba(13, 148, 136, 0.22); color: #5eead4; }
+
+/* ── Thanh tab "Khu vực của tôi" ───────────────────────────────────────────
+   Thay cho .np-dock (thanh pill nổi ở đáy màn hình) của bản trước. Dock đó là
+   metaphor điều hướng của app điện thoại, đặt trong một site mà mọi trang khác
+   đều dùng thanh trên — đăng nhập xong là người dùng phải đi tìm lại nav.
+   Thanh này nằm ngay dưới SiteHeader nên cả site chỉ còn một mạch điều hướng.
+   Chỉ 4 mục nên không cần cuộn ngang trên desktop.                          */
+.np-area-bg {
+  position: absolute;
+  inset: 0 0 auto;
+  /* Quầng mesh định vị bằng % CHIỀU CAO khung này, nên chiều cao khung quyết
+     định luôn màu ở sát đỉnh trang. Khung 760px (bản trước) đẩy tâm sáng của
+     vignette lên đúng ngang header → header nổi trên một mảng sáng nhợt, khác
+     hẳn trang chủ.
+     Con số 2960px không phải chọn cho đẹp: đó là chiều cao đo được của
+     <section class="np-hero"> ở trang chủ. Chép đúng chiều cao thì mọi thứ
+     tính theo % trùng khít, và đỉnh trang này giống đỉnh trang chủ do dựng
+     giống chứ không do canh tay. Phần dưới không bị thừa: mask trong HeroMesh
+     đã ép tấm mesh mờ hẳn từ mốc 52%. */
+  /* Khung NGOÀI chỉ cao bằng vùng tối và cắt phần thừa. Trước đó chính khung
+     này cao 2960px: nó là con absolute của khối bọc nên 2960px đó vẫn tính vào
+     vùng cuộn, tạo ra gần 1000px trống dưới đáy trang mà không có gì trong đó. */
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Khung TRONG mới là khung 2960px mà các quầng tính % theo. 2960 là chiều cao
+   đo được của <section class="np-hero"> ở trang chủ — chép đúng số đó thì đỉnh
+   trang này giống đỉnh trang chủ do dựng giống, không phải do canh tay. */
+.np-area-bg-inner {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2960px;
+}
+
+/* Thanh tab cuộn trôi theo trang, KHÔNG ghim và KHÔNG có nền riêng.
+   Bản trước để nền đục rgba(11,15,14,0.86) + blur + viền trên/dưới chạy hết
+   bề ngang — cần thiết khi nó còn dính (phải che nội dung trôi bên dưới),
+   nhưng giờ nó cuộn cùng trang nên tấm nền đó chỉ còn là một dải tối cắt
+   ngang tấm mesh. Bỏ hẳn, để mesh chảy liền mạch qua thanh tab.
+   Đường kẻ phân cách cũng rút vào trong khung nội dung thay vì chạy tràn hai
+   mép — kẻ tràn mép chia đôi cả trang, kẻ trong khung chỉ ngăn nav với nội
+   dung đúng như ý định. */
+.np-area-bar {
+  position: relative;
+  margin-top: clamp(80px, 7.6vw, 92px);
+  z-index: 40;
+  background: transparent;
+}
+
+.np-area-inner {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  /* KHÔNG kẻ ngang dưới hàng tab. Gạch chân của tab đang mở đã là đường kẻ duy
+     nhất cần có; thêm một kẻ chạy suốt nữa là hai đường chồng chức năng, và nó
+     lại cắt ngang tấm mesh đúng thứ vừa bỏ đi ở nền thanh. Phần tách nav với
+     nội dung để khoảng trống lo. */
+}
+
+.np-area-tabs {
+  display: flex; align-items: center; gap: 2px; min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Với 5 tab thì ở khổ điện thoại tab cuối nằm ngoài khung. Thanh cuộn đã ẩn,
+     nên không còn dấu hiệu nào cho biết cuộn ngang được — người dùng sẽ tưởng
+     chỉ có bấy nhiêu tab. Vạt mờ ở mép phải là dấu hiệu đó. */
+  -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%);
+}
+.np-area-tabs::-webkit-scrollbar { display: none; }
+@media (min-width: 900px) {
+  /* Đủ chỗ cho cả 5 tab thì không vạt: vạt mờ ở đây sẽ làm tab cuối trông như
+     đang bị mờ đi vì lý do gì đó. */
+  .np-area-tabs { -webkit-mask-image: none; mask-image: none; }
+}
+
+.np-area-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  /* Nav làm việc chính của trang này, nên để nhỉnh hơn nav tiếp thị ở thanh
+     trên một chút — cùng cỡ thì hai hàng đọc như một khối nav rối. */
+  padding: 18px 16px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  /* 0.62 là token chữ phụ, dựng cho ĐOẠN VĂN trên nền ink phẳng. Ở đây chữ
+     nhỏ, nét mảnh, lại nằm trên tấm mesh có chỗ sáng chỗ tối — cùng một sắc độ
+     mà đọc được ở chỗ này thì chìm ở chỗ kia. Nav là thứ phải đọc được ở mọi
+     điểm nền, nên đẩy lên 0.78. */
+  color: rgba(233, 247, 242, 0.78);
+  white-space: nowrap;
+  cursor: pointer;
+  /* Gạch chân là chỉ báo tab đang mở; dùng border trong suốt ở trạng thái
+     nghỉ để chữ không nhảy 2px khi đổi tab. */
+  border-bottom: 2px solid transparent;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+.np-area-tab:hover { color: #fff; }
+.np-area-tab.active { color: #10b981; border-bottom-color: #10b981; }
+
+.np-area-side { display: flex; align-items: center; gap: 14px; flex: none; }
+.np-area-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: rgba(233, 247, 242, 0.78);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 150ms ease;
+}
+.np-area-link:hover { color: #10b981; }
+
+@media (max-width: 720px) {
+  .np-area-inner { width: calc(100% - 24px); }
+  /* Lề trên của thanh điều hướng co còn 12px ở khổ hẹp. */
+  .np-area-bar { margin-top: 76px; }
+  .np-area-tab { padding: 16px 10px; font-size: 0.875rem; }
+  /* Nhãn "Portfolio 3D" là thứ đầu tiên bỏ được khi hết chỗ — nó vẫn nằm
+     trong menu tài khoản của SiteHeader. Chuông thông báo thì giữ. */
+  .np-area-link { display: none; }
+  .np-area-side { padding-left: 8px; }
+}
+
+/* ── Lớp dùng chung còn sáng khi đặt trong khu vực ứng viên ────────────────
+   .secondary-button và .proof-card là lớp toàn cục, các trang nền sáng khác
+   (BusinessPage, AdminB2bReview, JobPostForm…) vẫn đang dùng bản sáng. Nên
+   không sửa định nghĩa gốc mà chỉ đè lại trong phạm vi .candidate-portal-layout
+   — sửa gốc là kéo theo 6 trang khác chưa chuyển hệ.                        */
+.candidate-portal-layout .secondary-button {
+  background: transparent;
+  border: 1px solid var(--c-line-strong);
+  color: var(--c-ink);
+}
+.candidate-portal-layout .secondary-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: var(--c-red);
+}
+
+.candidate-portal-layout .proof-card,
+.candidate-portal-layout .proof-card.pending,
+.candidate-portal-layout .proof-card.approved,
+.candidate-portal-layout .proof-card.rejected {
+  background: var(--c-surface);
+  color: var(--c-ink);
+  border-color: var(--c-line);
+}
+
+/* .empty-state / .empty-state-title dùng biến toàn cục (--surface-soft, --ink,
+   --muted) chứ không dùng bộ --c-*, nên không đổi theo khối biến ở trên. */
+.candidate-portal-layout .empty-state {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--c-line-strong);
+  color: var(--c-muted);
+}
+.candidate-portal-layout .empty-state-title { color: var(--c-ink); }
+.candidate-portal-layout .empty-state-desc,
+.candidate-portal-layout .empty-state p { color: var(--c-muted); }
+
+/* ── Tổng quan: lưới ô và danh sách bước ─────────────────────────────────
+   Trước đây tab này là bốn tấm xếp dọc cao 379/343/428/446px, cùng bo, cùng
+   viền, cùng sức nặng — không phải bố cục mà là một chồng bốn tấm giống hệt
+   nhau. Hai lớp dưới đây phá nhịp đó: nhiệm vụ thành hai ô cạnh nhau (bỏ tầng
+   khung bọc ngoài), Next Steps bỏ hẳn khung để thành danh sách đánh số.      */
+.candidate-portal-layout .np-tiles-inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.candidate-portal-layout .np-steps-title {
+  font-family: inherit;
+  margin: 0 0 4px;
+  font-size: clamp(1.4rem, 2.4vw, 1.75rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--c-ink);
+}
+
+/* Danh sách bước kiểu bản in — cùng mẫu với ba bước ở /tao-portfolio: số thứ
+   tự cỡ lớn làm cột mốc, các dòng ngăn bằng kẻ mảnh, KHÔNG khung bao. */
+.candidate-portal-layout .np-steps .checklist-item {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: start;
+  gap: 4px 20px;
+  padding: 22px 4px;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--c-line);
+  border-radius: 0;
+  background: transparent;
+  counter-increment: np-step;
+  transition: background-color 200ms ease;
+}
+.candidate-portal-layout .np-steps { counter-reset: np-step; }
+.candidate-portal-layout .np-steps .checklist-item:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.025);
+  border-color: var(--c-line);
+}
+/* Ô checkbox cũ thành ô số thứ tự. Dấu tick vẫn nằm trong đó khi đã xong, nên
+   số và tick không tranh chỗ: bước xong thì hiện tick, chưa xong thì hiện số. */
+.candidate-portal-layout .np-steps .checklist-item-checkbox {
+  grid-row: 1 / span 2;
+  width: auto;
+  height: auto;
+  margin: 0;
+  justify-content: flex-start;
+  align-items: baseline;
+  gap: 10px;
+  font-family: 'Archivo', 'Be Vietnam Pro', sans-serif;
+  font-variation-settings: 'wdth' 84;
+  font-size: clamp(2rem, 3.4vw, 2.75rem);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: rgba(255, 255, 255, 0.16);
+  transition: color 200ms ease;
+}
+.candidate-portal-layout .np-steps .checklist-item-checkbox::before {
+  content: counter(np-step, decimal-leading-zero);
+}
+.candidate-portal-layout .np-steps .checklist-item:hover .checklist-item-checkbox { color: var(--c-red); }
+/* Dấu tick/đồng hồ gốc bị ẩn: ở cỡ số này thêm một icon nữa là rối, trạng thái
+   đã-xong vẫn đọc được qua gạch ngang + độ mờ của tiêu đề (đặt inline). */
+.candidate-portal-layout .np-steps .checklist-item-checkbox svg { display: none; }
+
+.candidate-portal-layout .np-steps .checklist-item-title {
+  font-size: clamp(1.05rem, 1.7vw, 1.2rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--c-ink);
+}
+.candidate-portal-layout .np-steps .checklist-item-desc {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  letter-spacing: -0.015em;
+  color: var(--c-muted);
+  max-width: 62ch;
+}
+
+@media (max-width: 640px) {
+  .candidate-portal-layout .np-steps .checklist-item {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 4px 14px;
+    padding: 18px 2px;
+  }
+}
+
+/* ── Nhiệm vụ: một danh sách gộp ───────────────────────────────────────────
+   Thay hai bảng song song có viền. Cùng ngôn ngữ bản-in với danh sách bước:
+   kẻ hairline giữa các dòng, không khung bao, phần thưởng canh phải.        */
+.candidate-portal-layout .np-quests { margin-top: clamp(40px, 5vw, 64px); }
+.candidate-portal-layout .np-quests-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.candidate-portal-layout .np-quests-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+  letter-spacing: -0.015em;
+  color: var(--c-muted);
+}
+.candidate-portal-layout .np-quests-score b { color: var(--c-ink); font-weight: 600; }
+.candidate-portal-layout .np-quests-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--c-line-strong);
+}
+
+.candidate-portal-layout .np-quest-row {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 4px;
+  border-top: 1px solid var(--c-line);
+  transition: background-color 200ms ease;
+}
+.candidate-portal-layout .np-quest-row:hover { background: rgba(255, 255, 255, 0.025); }
+.candidate-portal-layout .np-quest-row.is-done .np-quest-title { color: var(--c-muted); }
+
+/* Nhãn phạm vi thay cho việc tách làm hai bảng. Ngày và Tuần khác nhau ở màu
+   viền chứ không ở vị trí, nên quét mắt một cột là đọc được cả hai nhóm. */
+.candidate-portal-layout .np-quest-scope {
+  justify-self: start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-red);
+  white-space: nowrap;
+}
+.candidate-portal-layout .np-quest-scope.weekly {
+  border-color: rgba(167, 139, 250, 0.45);
+  color: #a78bfa;
+}
+
+.candidate-portal-layout .np-quest-body { display: grid; gap: 4px; min-width: 0; }
+.candidate-portal-layout .np-quest-title {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--c-ink);
+}
+.candidate-portal-layout .np-quest-count { font-size: 0.8rem; font-weight: 600; color: var(--c-red); }
+.candidate-portal-layout .np-quest-desc {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+  color: var(--c-muted);
+}
+.candidate-portal-layout .np-quest-prog {
+  display: block;
+  height: 3px;
+  margin-top: 6px;
+  max-width: 280px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.candidate-portal-layout .np-quest-prog i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--c-red);
+  transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.candidate-portal-layout .np-quest-reward { justify-self: end; }
+.candidate-portal-layout .np-quest-claim {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.candidate-portal-layout .np-quest-claim.locked {
+  border-color: var(--c-line-strong);
+  color: var(--c-muted);
+}
+.candidate-portal-layout .np-quest-claim.claimed {
+  border-color: rgba(16, 185, 129, 0.4);
+  color: var(--c-red);
+}
+.candidate-portal-layout .np-quest-claim.ready {
+  background: var(--c-red);
+  color: #0b0f0e;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+.candidate-portal-layout .np-quest-claim.ready:hover:not(:disabled) { background: #34d399; }
+
+@media (max-width: 640px) {
+  .candidate-portal-layout .np-quest-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 14px;
+    padding: 16px 2px;
+  }
+  /* Nhãn phạm vi lên hàng riêng, phần thưởng ở lại cạnh tiêu đề. */
+  .candidate-portal-layout .np-quest-scope { grid-column: 1 / -1; }
+}
+
+/* ── Nền trang cho các trang đã chuyển sang hệ tối ─────────────────────────
+   html/body vẫn là #f6f8fc vì các trang chưa chuyển hệ (BusinessPage, khu
+   admin, JobPostForm…) dựa vào nền sáng đó. Màu tối hiện chỉ nằm trên phần tử
+   bọc của từng trang, nên mọi thứ NGOÀI phần tử đó vẫn trắng: vùng kéo quá đà
+   khi cuộn (rubber-band trên macOS/iOS), và khoảng trống nếu nội dung ngắn
+   hơn màn hình. Trên nền tối thì đó là một vệt trắng chói.
+   :has() gắn màu vào việc "trang này có phải trang tối không" thay vì phải
+   thêm class vào body ở từng route — route mới chỉ cần dùng đúng lớp bọc là
+   tự đúng màu. Trang sáng không khớp selector nên không bị đụng tới.        */
+html:has(.np-home),
+html:has(.candidate-portal-layout),
+html:has(.np-skel),
+body:has(.np-home),
+body:has(.candidate-portal-layout),
+body:has(.np-skel) {
+  background: #0b0f0e;
+}
+
+/* .app-shell (vỏ do AppLayout dựng) cũng đang giữ nền sáng #f6f8fc. Nó bọc
+   NGOÀI khối tối, nên bất cứ pixel nào khối tối không phủ tới là lộ ra trắng. */
+.app-shell:has(.np-home),
+.app-shell:has(.candidate-portal-layout),
+.app-shell:has(.np-skel) {
+  background: #0b0f0e;
+}
+
+/* ── Tab "Việc đã lưu" ─────────────────────────────────────────────────────
+   Danh sách hàng ngang, không phải lưới thẻ. Ở /jobs người dùng đang DUYỆT nên
+   thẻ lớn có ảnh và mô tả là đúng; ở đây họ đã chọn xong và chỉ còn quyết định
+   nộp hay bỏ, nên mỗi hàng chỉ nói ba điều: việc gì, trả bao nhiêu, còn bao
+   lâu. Hàng ngang cũng cho so sánh dọc theo cột — thứ lưới thẻ không làm được.
+   Bảng <table> thì hỏng ở khổ hẹp, nên dùng grid và xếp lại ở mobile.        */
+.np-saved-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: clamp(20px, 2.4vw, 28px);
+}
+.np-saved-title {
+  margin: 0 0 6px;
+  font-family: inherit; /* index.css gán Baloo 2 cho h1-h3 */
+  font-size: clamp(1.7rem, 2.6vw, 2rem);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  color: #fff;
+}
+.np-saved-sub { margin: 0; font-size: 0.95rem; color: var(--c-muted); }
+.np-saved-sub strong { color: #fff; font-weight: 600; }
+.np-saved-urgent { color: #f59e0b; }
+
+.np-saved-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+
+.np-saved-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: clamp(12px, 1.6vw, 22px);
+  padding: 16px 20px;
+  border: 1px solid var(--c-line);
+  border-radius: 16px;
+  /* Nền ĐỤC, không phải rgba(255,255,255,0.016).
+     Sắc độ 0.016 đó là token thẻ của trang chủ, và nó hợp lệ ở đó vì thẻ trang
+     chủ nằm dưới hero, trên nền ink phẳng — 1.6% trắng trên nền tối là đủ tách
+     lớp. Ở đây thẻ nằm ĐÈ LÊN tấm mesh đang sáng, nên 1.6% trắng gần như trong
+     suốt: mắt nhìn xuyên qua thẻ thấy mesh, thẻ tan vào nền.
+     Thẻ hộ chiếu ở tab Tổng quan đọc tốt chính vì nó đục hẳn (--np-passport là
+     một linear-gradient đặc). Các khối nội dung khác đi theo cùng nguyên tắc:
+     mesh là trang trí, nội dung luôn có mặt nền riêng để đứng lên. */
+  background: var(--np-panel);
+  transition: border-color 150ms ease, background 150ms ease;
+}
+.np-saved-row:hover { border-color: rgba(16, 185, 129, 0.45); background: var(--np-panel-hover); }
+
+.np-saved-logo {
+  width: 44px; height: 44px; border-radius: 12px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid var(--c-line);
+  font-size: 1rem; font-weight: 600; color: var(--c-muted);
+}
+.np-saved-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+.np-saved-main { min-width: 0; }
+.np-saved-job {
+  display: block; color: #fff; text-decoration: none;
+  font-size: 1rem; font-weight: 500; letter-spacing: -0.015em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.np-saved-job:hover { color: #10b981; }
+.np-saved-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 4px; font-size: 0.83rem; color: var(--c-muted); }
+/* Dấu chấm ngăn cách gắn vào CUỐI mục trước, không phải đầu mục sau. Đặt ở
+   đầu (::before) thì khi xuống dòng ở khổ hẹp, dấu chấm trôi xuống thành ký tự
+   mồ côi mở đầu dòng mới. Gắn ở cuối thì nó luôn ở lại với dòng trên. */
+.np-saved-meta span:not(:last-child)::after { content: ' ·'; }
+
+.np-saved-pay { font-size: 0.92rem; font-weight: 500; color: #10b981; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.np-saved-deadline { font-size: 0.83rem; color: var(--c-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.np-saved-deadline.soon { color: #f59e0b; }
+
+.np-saved-actions { display: flex; align-items: center; gap: 8px; }
+.np-saved-apply {
+  display: inline-flex; align-items: center; white-space: nowrap;
+  padding: 9px 15px; border-radius: 8px;
+  background: #10b981; color: #0b0f0e;
+  font-size: 0.86rem; font-weight: 500; text-decoration: none;
+  transition: background 150ms ease;
+}
+.np-saved-apply:hover { background: #34d399; }
+.np-saved-unsave {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 8px; flex: none;
+  border: 1px solid var(--c-line); background: transparent;
+  /* Trái tim ở đây LUÔN được tô đầy: mọi tin trong danh sách đều đang được
+     lưu, nên nút này chỉ có một việc là bỏ lưu. */
+  color: #f472b6; cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+.np-saved-unsave:hover:not(:disabled) { border-color: #f472b6; background: rgba(244, 114, 182, 0.1); }
+.np-saved-unsave:disabled { opacity: 0.5; cursor: default; }
+
+.np-saved-note { margin: 18px 0 0; font-size: 0.82rem; color: var(--c-muted); }
+
+.np-saved-state, .np-saved-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: clamp(48px, 7vw, 72px) 24px; text-align: center;
+  border: 1px dashed var(--c-line); border-radius: 20px; color: var(--c-muted);
+  background: var(--np-panel);
+}
+.np-saved-empty svg { color: #f472b6; }
+.np-saved-empty h3 { margin: 6px 0 0; font-family: inherit; font-size: 1.15rem; font-weight: 500; color: #fff; }
+.np-saved-empty p, .np-saved-state p { margin: 0; max-width: 46ch; font-size: 0.9rem; line-height: 1.55; }
+.np-saved-cta {
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 10px;
+  padding: 11px 18px; border-radius: 8px; background: #10b981; color: #0b0f0e;
+  font-size: 0.9rem; font-weight: 500; text-decoration: none; transition: background 150ms ease;
+}
+.np-saved-cta:hover { background: #34d399; }
+.np-spin { color: #10b981; animation: spin 1.4s linear infinite; }
+
+@media (max-width: 900px) {
+  /* Dưới 900px năm cột bóp nhau đến mức tên việc chỉ còn vài ký tự. Xếp lại
+     thành hai hàng: thông tin trên, tiền + hạn + nút dưới. */
+  .np-saved-row { grid-template-columns: 44px minmax(0, 1fr); row-gap: 14px; }
+  .np-saved-pay { grid-column: 2; }
+  .np-saved-deadline { grid-column: 2; }
+  .np-saved-actions { grid-column: 1 / -1; }
+  .np-saved-apply { flex: 1; justify-content: center; }
+}
+
+/* ── Tab "Ứng tuyển" — đè lại phần trình bày ───────────────────────────────
+   Định nghĩa gốc (~dòng 13512) dựng cho nền SÁNG và bảng màu coral cũ: ô số
+   liệu có khung, tab đang chọn tô đặc màu nhấn, nút Insight tím / Boost hổ
+   phách. Đặt nguyên vào nền tối thì thành một mảng hộp xám và bốn màu nhấn
+   đánh nhau. Đè ở đây thay vì sửa gốc vì .apptrack-* còn dùng ở khu doanh
+   nghiệp và khu admin — hai nơi vẫn là nền sáng.                            */
+.candidate-portal-layout .apptrack-stats {
+  /* Bốn số liệu, ngăn nhau bằng ĐƯỜNG KẺ DỌC chứ không phải bốn cái hộp. Hộp
+     làm mỗi số trông như một thẻ bấm được; kẻ dọc thì đọc đúng bản chất: bốn
+     lát cắt của cùng một tổng. Giống dải dữ liệu ở hộ chiếu phía Tổng quan. */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0;
+  margin-bottom: clamp(24px, 3vw, 34px);
+  border: 1px solid var(--c-line);
+  border-radius: 18px;
+  background: var(--np-panel);
+  overflow: hidden;
+}
+.candidate-portal-layout .apptrack-stat {
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--c-line);
+  border-radius: 0;
+  padding: 18px 22px;
+}
+.candidate-portal-layout .apptrack-stat:first-child { border-left: 0; }
+.candidate-portal-layout .apptrack-stat-val {
+  font-size: clamp(1.7rem, 2.6vw, 2.1rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+.candidate-portal-layout .apptrack-stat-label {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+.candidate-portal-layout .apptrack-tabs {
+  background: var(--np-panel);
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  padding: 3px;
+}
+.candidate-portal-layout .apptrack-tab { font-weight: 500; font-size: 0.9rem; border-radius: 7px; }
+/* Tab đang chọn KHÔNG tô đặc emerald: emerald là màu của hành động (nút ứng
+   tuyển), tô cả tab lên thì trên cùng màn hình có hai thứ emerald tranh nhau
+   được bấm. Nền nhạt + chữ trắng là đủ để biết đang ở đâu. */
+.candidate-portal-layout .apptrack-tab.active { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.candidate-portal-layout .apptrack-tab-count { font-weight: 500; background: rgba(255, 255, 255, 0.08); color: var(--c-muted); }
+.candidate-portal-layout .apptrack-tab.active .apptrack-tab-count { background: rgba(16, 185, 129, 0.18); color: #10b981; }
+
+.candidate-portal-layout .apptrack-search input,
+.candidate-portal-layout .apptrack-select {
+  background: var(--np-panel);
+  border-color: var(--c-line);
+  border-radius: 10px;
+  color: #fff;
+}
+.candidate-portal-layout .apptrack-search input:focus { border-color: #10b981; box-shadow: none; }
+
+.candidate-portal-layout .apptrack-btn {
+  background: transparent;
+  border-color: var(--c-line);
+  border-radius: 8px;
+  font-weight: 500;
+  color: rgba(233, 247, 242, 0.78);
+}
+.candidate-portal-layout .apptrack-btn:hover:not(:disabled) { border-color: rgba(255, 255, 255, 0.35); color: #fff; }
+/* Insight và Boost trước đây mỗi nút một màu riêng (tím, hổ phách). Chúng là
+   hành động phụ nằm cạnh "Chi tiết" và "Rút đơn" — cho màu riêng là nói rằng
+   chúng quan trọng hơn, mà thật ra không. Về chung một kiểu viền mảnh. */
+.candidate-portal-layout .apptrack-btn.insight,
+.candidate-portal-layout .apptrack-btn.boost {
+  color: rgba(233, 247, 242, 0.78);
+  border-color: var(--c-line);
+  background: transparent;
+}
+.candidate-portal-layout .apptrack-btn.insight:hover:not(:disabled),
+.candidate-portal-layout .apptrack-btn.boost:hover:not(:disabled) {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.08);
+  color: #10b981;
+}
+.candidate-portal-layout .apptrack-btn.boosted {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+}
+
+.candidate-portal-layout .appcard {
+  background: var(--np-panel);
+  border: 1px solid var(--c-line);
+  /* Viền trái 4px đổi theo trạng thái được giữ: đó là chỉ báo duy nhất đọc
+     được khi lướt nhanh cả danh sách mà không phải dừng lại đọc chữ. */
+  border-left: 3px solid var(--app-status);
+  border-radius: 16px;
+}
+.candidate-portal-layout .appcard:hover {
+  box-shadow: none;
+  transform: none;
+  border-color: rgba(16, 185, 129, 0.35);
+  border-left-color: var(--app-status);
+  background: var(--np-panel-hover);
+}
+.candidate-portal-layout .appcard-logo { background: rgba(255, 255, 255, 0.05); border-color: var(--c-line); border-radius: 12px; }
+.candidate-portal-layout .appcard-logo.quest { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.25); }
+.candidate-portal-layout .appcard-title { font-weight: 500; font-size: 1rem; }
+.candidate-portal-layout .appcard-status { font-weight: 500; }
+.candidate-portal-layout .appcard-reject {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.22);
+  font-weight: 400;
+}
+.candidate-portal-layout .apptrack-error {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.22);
+  border-radius: 12px;
+  font-weight: 400;
+}
+.candidate-portal-layout .apptrack-error button { color: #f87171; }
+
+.candidate-portal-layout .apptrack-state,
+.candidate-portal-layout .apptrack-empty {
+  background: var(--np-panel);
+  border: 1px dashed var(--c-line);
+  border-radius: 20px;
+  padding: clamp(48px, 7vw, 72px) 24px;
+}
+.candidate-portal-layout .apptrack-state p,
+.candidate-portal-layout .apptrack-empty p { font-weight: 400; }
+
+/* ── Hộp thoại trong khu vực ứng viên ──────────────────────────────────────
+   .glass-modal-* là lớp toàn cục, và nền của nó là rgba(255,255,255,0.9) —
+   một tấm kính TRẮNG. Bản tối chỉ tồn tại dưới :root[data-theme='dark'], mà
+   theme đã bị ghim ở 'light' khi bỏ công tắc sáng/tối. Nên trên nền tối, các
+   popup này hiện ra trắng, và tệ hơn: chữ bên trong dùng var(--ink) — vốn đã
+   được định nghĩa lại thành #ffffff trong phạm vi khu vực ứng viên — nên thành
+   chữ trắng trên kính trắng, gần như không đọc được.
+   Đè trong phạm vi .candidate-portal-layout, không sửa lớp gốc, vì khu doanh
+   nghiệp và khu admin vẫn là nền sáng và vẫn cần bản kính trắng.            */
+.candidate-portal-layout .glass-modal-overlay {
+  /* Màn phủ cũ là rgba(15,23,42,0.55) — xanh navy, ám lạnh khi phủ lên nền
+     ink xanh lục. Dùng chính màu nền trang, đậm hơn để hộp thoại nổi hẳn. */
+  background: rgba(6, 9, 8, 0.72);
+  backdrop-filter: blur(6px);
+}
+.candidate-portal-layout .glass-modal-content {
+  /* Đục, không phải kính mờ. Kính mờ trên một tấm mesh nhiều màu thì mỗi lần
+     mở ở vị trí khác nhau hộp thoại lại một sắc khác — không ổn định được. */
+  background: #121817;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  backdrop-filter: none;
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.7);
+}
+.candidate-portal-layout .glass-modal-header {
+  border-bottom-color: var(--c-line);
+  padding: 22px 26px 16px;
+}
+.candidate-portal-layout .glass-modal-header h2 {
+  font-family: inherit;
+  /* 900 là độ đậm của tiêu đề trang, không phải của một hộp thoại. Cả hệ đã
+     chuyển sang cân nặng nhẹ + cỡ chữ làm thứ bậc. */
+  font-size: 1.2rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.candidate-portal-layout .glass-modal-body { padding: 18px 26px; color: #fff; }
+.candidate-portal-layout .glass-modal-footer {
+  border-top-color: var(--c-line);
+  padding: 16px 26px 20px;
+  gap: 10px;
+}
+
+/* Hai nút dưới chân hộp thoại. .button/.primary-button/.secondary-button là
+   lớp toàn cục của hệ SÁNG (bo 12px, đậm 800, có đổ bóng màu) — đặt nguyên
+   vào đây thì lạc hẳn so với nút ở phần còn lại của khu vực ứng viên. */
+.candidate-portal-layout .glass-modal-footer .button,
+.candidate-portal-layout .glass-modal-content .button {
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.92rem;
+  box-shadow: none;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.candidate-portal-layout .glass-modal-content .button:hover { transform: none; box-shadow: none; }
+.candidate-portal-layout .glass-modal-content .secondary-button {
+  background: transparent;
+  border: 1px solid var(--c-line-strong);
+  color: rgba(233, 247, 242, 0.78);
+}
+.candidate-portal-layout .glass-modal-content .secondary-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+.candidate-portal-layout .glass-modal-content .primary-button {
+  background: #10b981;
+  /* Chữ TỐI trên nút emerald. Emerald đủ sáng để chữ trắng chỉ còn ~2:1 — đây
+     là quy tắc chung của nút chính trên cả site, không riêng hộp thoại. */
+  color: #0b0f0e;
+  border-color: transparent;
+}
+.candidate-portal-layout .glass-modal-content .primary-button:hover { background: #34d399; }
+
+/* Vạch màu 3px ở mép trên hộp thoại (đặt bằng inline style theo từng loại) là
+   thứ duy nhất phân biệt hộp thoại xác nhận với hộp thoại thông tin, nên giữ —
+   nhưng bo góc trên phải theo đúng bán kính mới. */
+.candidate-portal-layout .glass-modal-header[style*="border-top"] {
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+/* ── Tab Premium ───────────────────────────────────────────────────────────
+   Toàn bộ lớp .candidate-premium-* và .premium-* là của hệ SÁNG (nền trắng,
+   nút gradient tím, chip màu pastel). Trên nền tối thì khối "Dịch vụ tăng tốc
+   hồ sơ" hiện ra như một tấm giấy trắng dán giữa trang, chữ mô tả gần như
+   không đọc được. Đè lại ở đây, không sửa lớp gốc — khu doanh nghiệp và khu
+   admin vẫn dùng bản sáng.
+
+   Ba quyết định về nội dung, không chỉ về màu:
+     1. Bỏ panel "Trạng thái dịch vụ" ở cột phải. Nó lặp lại đúng thứ mà mỗi
+        hàng dịch vụ đã nói ("Đang hoạt động" / "Đã mở khóa") — người dùng đọc
+        hai lần cùng một thông tin ở hai chỗ, và khi lệch nhau thì không biết
+        tin cái nào.
+     2. Bốn màu nút (xanh lá / tím / hổ phách / emerald) gộp về một. Màu khác
+        nhau ở đây không mang thông tin gì: cả năm đều là "mua dịch vụ này".
+        Giá tiền mới là thứ phân biệt chúng, nên giá được đẩy lên làm điểm nhìn.
+     3. Trang này là một BẢNG GIÁ. Mỗi hàng phải trả lời đúng ba câu theo cùng
+        một thứ tự: dịch vụ gì, bao nhiêu NP, bấm vào đâu.                    */
+
+.candidate-portal-layout .candidate-premium-workspace { display: block; }
+
+/* ── Dải số dư ví ── */
+.candidate-portal-layout .np-premium-wallet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 18px 22px;
+  margin-bottom: clamp(20px, 2.4vw, 28px);
+  border: 1px solid var(--c-line);
+  border-radius: 16px;
+  background: var(--np-panel);
+}
+
+/* ── Thẻ Premium Pass ── */
+.candidate-portal-layout .candidate-premium-layout { display: block; }
+.candidate-portal-layout .candidate-premium-pass-card {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(24px, 3vw, 34px);
+  border: 1px solid var(--c-line);
+  border-radius: 20px;
+  /* Cùng công thức với thẻ hộ chiếu: nền tối + một quầng emerald ở góc. Đây là
+     sản phẩm chính của trang nên được phép có quầng sáng riêng; năm dịch vụ
+     phụ bên dưới thì không, để thứ bậc đọc được ngay từ xa. */
+  background:
+    radial-gradient(70% 120% at 88% 0%, rgba(103, 232, 249, 0.14) 0%, rgba(16, 185, 129, 0.09) 44%, rgba(0, 0, 0, 0) 74%),
+    linear-gradient(152deg, #16221f 0%, #0e1614 100%);
+}
+.candidate-portal-layout .candidate-premium-pass-card::before { display: none; }
+.candidate-portal-layout .candidate-premium-card-header { margin-bottom: 14px; }
+.candidate-portal-layout .candidate-premium-card-title span {
+  font-size: 0.72rem; font-weight: 400; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--c-muted);
+}
+.candidate-portal-layout .candidate-premium-card-title h2 {
+  font-family: inherit;
+  font-size: clamp(1.4rem, 2.2vw, 1.75rem);
+  font-weight: 400; letter-spacing: -0.02em; color: #fff;
+}
+.candidate-portal-layout .candidate-premium-mark {
+  width: 46px; height: 46px; border-radius: 13px;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  color: #10b981;
+}
+.candidate-portal-layout .candidate-premium-status {
+  /* Giá là thứ người ta tìm đầu tiên trên một bảng giá, nên để nó là số rõ
+     ràng trên nền trong suốt, không phải một viên thuốc màu. */
+  background: transparent; border: 0; padding: 0;
+  font-size: 1rem; font-weight: 500; color: #10b981;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.candidate-portal-layout .candidate-premium-status.success { color: #34d399; }
+.candidate-portal-layout .candidate-premium-pass-copy {
+  max-width: 62ch; font-size: 0.95rem; line-height: 1.6; color: var(--c-muted);
+}
+.candidate-portal-layout .candidate-premium-benefit-list {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;
+}
+.candidate-portal-layout .candidate-premium-benefit-list span {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 0.88rem; font-weight: 400; color: #fff;
+}
+.candidate-portal-layout .candidate-premium-benefit-list svg { color: #10b981; }
+.candidate-portal-layout .candidate-premium-full-button { width: auto; min-width: 220px; }
+.candidate-portal-layout .candidate-premium-owned {
+  display: inline-flex; align-items: center; gap: 7px;
+  color: #34d399; font-size: 0.9rem; font-weight: 500;
+}
+
+/* ── Tiêu đề nhóm dịch vụ ── */
+.candidate-portal-layout .np-prem-heading { margin: clamp(32px, 4vw, 44px) 0 16px; }
+.candidate-portal-layout .np-prem-heading h3 {
+  margin: 0 0 4px; font-family: inherit;
+  font-size: 1.25rem; font-weight: 400; letter-spacing: -0.02em; color: #fff;
+}
+.candidate-portal-layout .np-prem-heading p { margin: 0; font-size: 0.9rem; color: var(--c-muted); }
+
+/* ── Danh sách dịch vụ ── */
+.candidate-portal-layout .candidate-premium-service-list {
+  display: flex; flex-direction: column; gap: 10px;
+  background: transparent; border: 0; padding: 0;
+}
+.candidate-portal-layout .candidate-premium-service-row {
+  display: grid;
+  /* Cột mô tả co giãn, cột thao tác cố định. Bản cũ để cả hai tự co nên hàng
+     nào có <select> thì cột phải phình ra, hàng chỉ có nút thì hẹp lại — năm
+     hàng lệch nhau năm kiểu, đọc như năm khối rời chứ không phải một bảng. */
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+  align-items: start;
+  gap: clamp(16px, 2.4vw, 32px);
+  padding: 20px 22px;
+  border: 1px solid var(--c-line);
+  border-radius: 16px;
+  background: var(--np-panel);
+  transition: border-color 150ms ease;
+}
+.candidate-portal-layout .candidate-premium-service-row:hover { border-color: rgba(16, 185, 129, 0.35); }
+.candidate-portal-layout .candidate-premium-service-row.active { border-color: rgba(16, 185, 129, 0.45); }
+
+.candidate-portal-layout .candidate-premium-service-copy { display: flex; gap: 14px; min-width: 0; }
+.candidate-portal-layout .candidate-premium-service-copy .candidate-premium-mark {
+  width: 40px; height: 40px; border-radius: 11px; flex: none;
+}
+.candidate-portal-layout .candidate-premium-service-title {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap; margin-bottom: 5px;
+}
+.candidate-portal-layout .candidate-premium-service-title h3 {
+  margin: 0; font-family: inherit;
+  font-size: 1rem; font-weight: 500; letter-spacing: -0.015em; color: #fff;
+}
+.candidate-portal-layout .candidate-premium-service-top span,
+.candidate-portal-layout .candidate-premium-service-title > span {
+  background: transparent; border: 0; padding: 0;
+  font-size: 0.9rem; font-weight: 500; color: #10b981;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.candidate-portal-layout .candidate-premium-service-copy p {
+  margin: 0; font-size: 0.87rem; line-height: 1.55; color: var(--c-muted);
+}
+
+.candidate-portal-layout .candidate-premium-row-action {
+  display: flex; flex-direction: column; gap: 8px; min-width: 0;
+}
+.candidate-portal-layout .candidate-premium-row-action .button { width: 100%; justify-content: center; }
+.candidate-portal-layout .premium-field-label {
+  font-size: 0.72rem; font-weight: 400; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--c-muted);
+}
+.candidate-portal-layout .premium-store-select {
+  width: 100%; box-sizing: border-box;
+  padding: 10px 12px; border-radius: 8px;
+  border: 1px solid var(--c-line);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff; font-family: inherit; font-size: 0.88rem;
+}
+.candidate-portal-layout .premium-store-select:focus { border-color: #10b981; outline: none; box-shadow: none; }
+.candidate-portal-layout .premium-inline-state {
+  padding: 10px 12px; border-radius: 8px;
+  border: 1px solid var(--c-line);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.82rem; line-height: 1.5; font-weight: 400; color: var(--c-muted);
+}
+/* "Chưa có đơn ứng tuyển nào" không phải LỖI — đó là trạng thái bình thường
+   của một tài khoản mới. Bản cũ tô đỏ/vàng cả hai, làm người dùng tưởng mình
+   làm sai. Giữ màu trung tính, chỉ đổi màu khi thật sự có gì đó hỏng. */
+.candidate-portal-layout .premium-inline-state.danger,
+.candidate-portal-layout .premium-inline-state.warning {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--c-line);
+  color: var(--c-muted);
+}
+
+/* ── Lưới chọn theme (chỉ hiện sau khi đã mở khóa) ── */
+.candidate-portal-layout .premium-theme-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+.candidate-portal-layout .premium-theme-option {
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--c-muted);
+  font-size: 0.76rem; font-weight: 400;
+  padding: 9px 10px;
+}
+.candidate-portal-layout .premium-theme-option.active {
+  border-color: #10b981; background: rgba(16, 185, 129, 0.1); color: #fff;
+}
+
+.candidate-portal-layout .candidate-premium-alert {
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.22);
+  border-radius: 12px;
+  color: #f87171;
+}
+.candidate-portal-layout .candidate-premium-inline-link { color: #f87171; font-weight: 500; }
+
+@media (max-width: 860px) {
+  .candidate-portal-layout .candidate-premium-service-row { grid-template-columns: 1fr; }
+}
+
+/* Khối chữ phải chiếm hết chiều ngang còn lại, nếu không nó co vừa nội dung và
+   giá mỗi hàng dừng ở một điểm khác nhau. Cả trang là bảng giá mà cột giá không
+   thẳng hàng thì mất đúng cái lợi của bảng: quét dọc một cột để so tiền. */
+.candidate-portal-layout .candidate-premium-service-copy > div:last-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Nút chưa chọn mục tiêu (chưa chọn đơn / minh chứng) phải trông TẮT, không
+   phải trông xanh nhạt. Emerald mờ đi vẫn đọc là "nút chính", nên người dùng
+   bấm rồi không thấy gì xảy ra. */
+.candidate-portal-layout .candidate-premium-row-action .button:disabled {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--c-line);
+  color: rgba(233, 247, 242, 0.45);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+/* ── Tab Minh chứng ────────────────────────────────────────────────────────
+   Hai khối: văn bằng tự tải lên, và minh chứng hoạt động chờ admin duyệt.
+   Chúng KHÁC NHAU về mức tin cậy, nên phải nhìn ra khác nhau — bản cũ vẽ cả
+   hai thành thẻ giống hệt, còn gắn nhãn "Đã xác minh" màu xanh lên MỌI văn
+   bằng dù chưa ai kiểm cái nào. Nhãn đó đã bỏ (xem ghi chú ở JSX).          */
+.candidate-portal-layout .np-cred-subhead {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.candidate-portal-layout .np-cred-subhead h3 {
+  margin: 0 0 3px; font-family: inherit;
+  font-size: 1.2rem; font-weight: 400; letter-spacing: -0.02em; color: #fff;
+}
+.candidate-portal-layout .np-cred-subhead p { margin: 0; font-size: 0.87rem; color: var(--c-muted); }
+.candidate-portal-layout .credentials-list-section { margin-bottom: clamp(36px, 4.4vw, 52px); }
+
+/* ── Văn bằng ── */
+.candidate-portal-layout .np-cred-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px;
+}
+.candidate-portal-layout .np-cred-card {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 16px 18px;
+  border: 1px solid var(--c-line); border-radius: 16px;
+  background: var(--np-panel);
+}
+.candidate-portal-layout .np-cred-mark {
+  width: 36px; height: 36px; border-radius: 10px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--c-line);
+  color: var(--c-muted);
+}
+.candidate-portal-layout .np-cred-card h4 {
+  margin: 0; font-family: inherit;
+  font-size: 0.95rem; font-weight: 500; letter-spacing: -0.015em; color: #fff;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.candidate-portal-layout .np-cred-issuer,
+.candidate-portal-layout .np-cred-date { display: block; font-size: 0.82rem; color: var(--c-muted); }
+.candidate-portal-layout .np-cred-issuer { margin-top: 3px; }
+.candidate-portal-layout .np-cred-date { margin-top: 1px; font-variant-numeric: tabular-nums; }
+
+/* ── Minh chứng hoạt động ── */
+.candidate-portal-layout .np-proof-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.candidate-portal-layout .np-proof-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--c-line);
+  /* Vạch trạng thái bên trái là thứ đọc được khi lướt nhanh cả danh sách mà
+     không dừng lại đọc chữ — cùng cách làm với thẻ đơn ứng tuyển. */
+  border-left: 3px solid var(--proof-color);
+  border-radius: 16px;
+  background: var(--np-panel);
+}
+.candidate-portal-layout .np-proof-row.pending  { --proof-color: #f59e0b; }
+.candidate-portal-layout .np-proof-row.approved { --proof-color: #10b981; }
+.candidate-portal-layout .np-proof-row.rejected { --proof-color: #f87171; }
+
+.candidate-portal-layout .np-proof-titleline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.candidate-portal-layout .np-proof-titleline h4 {
+  margin: 0; font-family: inherit;
+  font-size: 1rem; font-weight: 500; letter-spacing: -0.015em; color: #fff;
+}
+.candidate-portal-layout .np-proof-express {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b; font-size: 0.72rem; font-weight: 500;
+}
+/* Loại hình và cấp bậc trước đây là ba viên thuốc chàm / hổ phách / xanh trời.
+   Chúng chỉ là thuộc tính mô tả, không phải trạng thái — tô màu là cướp sự chú
+   ý khỏi vạch trạng thái, thứ duy nhất thật sự cần màu ở đây. */
+.candidate-portal-layout .np-proof-meta {
+  display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 5px;
+  font-size: 0.83rem; color: var(--c-muted);
+}
+.candidate-portal-layout .np-proof-meta span:not(:last-child)::after { content: ' ·'; }
+
+.candidate-portal-layout .np-proof-link {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 9px;
+  font-size: 0.82rem; color: #10b981; text-decoration: none;
+}
+.candidate-portal-layout .np-proof-link:hover { text-decoration: underline; }
+.candidate-portal-layout .np-proof-reject {
+  margin: 10px 0 0; padding: 9px 12px; border-radius: 10px;
+  background: rgba(248, 113, 113, 0.08); border: 1px solid rgba(248, 113, 113, 0.22);
+  font-size: 0.83rem; color: #f87171;
+}
+.candidate-portal-layout .np-proof-reward { margin: 9px 0 0; font-size: 0.83rem; font-weight: 500; color: #34d399; }
+.candidate-portal-layout .np-proof-pending-note { margin: 9px 0 0; font-size: 0.83rem; color: var(--c-muted); }
+
+.candidate-portal-layout .np-proof-side {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 9px; flex: none;
+}
+.candidate-portal-layout .np-proof-status {
+  font-size: 0.83rem; font-weight: 500; white-space: nowrap; color: var(--proof-color);
+}
+.candidate-portal-layout .np-proof-express-btn {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  padding: 7px 12px; border-radius: 8px;
+  border: 1px solid var(--c-line); background: transparent;
+  color: rgba(233, 247, 242, 0.78);
+  font-family: inherit; font-size: 0.78rem; font-weight: 500; cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+}
+.candidate-portal-layout .np-proof-express-btn:hover:not(:disabled) {
+  border-color: rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.1); color: #f59e0b;
+}
+.candidate-portal-layout .np-proof-express-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Form nộp minh chứng ── */
+.candidate-portal-layout .credential-submit-form {
+  background: var(--np-panel);
+  border: 1px solid var(--c-line);
+  border-radius: 20px;
+  margin-bottom: 18px;
+}
+.candidate-portal-layout .credential-submit-mark {
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  color: #10b981;
+}
+.candidate-portal-layout .credential-submit-topline h3 {
+  font-family: inherit; font-size: 1.1rem; font-weight: 500; letter-spacing: -0.02em; color: #fff;
+}
+.candidate-portal-layout .credential-submit-topline p { color: var(--c-muted); font-weight: 400; }
+.candidate-portal-layout .credential-submit-form .form-label {
+  font-size: 0.78rem; font-weight: 400; color: var(--c-muted); letter-spacing: 0;
+  text-transform: none;
+}
+.candidate-portal-layout .credential-submit-form .form-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  color: #fff;
+}
+.candidate-portal-layout .credential-submit-form .form-input::placeholder { color: rgba(233, 247, 242, 0.38); }
+.candidate-portal-layout .credential-submit-form .form-input:focus {
+  border-color: #10b981; box-shadow: none; outline: none;
+}
+
+@media (max-width: 720px) {
+  .candidate-portal-layout .np-proof-row { grid-template-columns: 1fr; }
+  .candidate-portal-layout .np-proof-side { flex-direction: row; align-items: center; justify-content: space-between; width: 100%; }
+}
+
+/* ── Dải mở đầu form + bộ chọn tháng ───────────────────────────────────────
+   Cả hai đều xây quanh màu lam #2563eb và nền trắng, và cũng chỉ có bản tối
+   dưới :root[data-theme='dark'] — nhánh đã chết từ khi bỏ công tắc sáng/tối.
+   Đây là chỗ cuối cùng trong khu vực ứng viên còn sót lại kiểu đó.          */
+.candidate-portal-layout .credential-submit-topline {
+  background: rgba(16, 185, 129, 0.07);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+.candidate-portal-layout .credential-submit-mark { background: rgba(16, 185, 129, 0.14); }
+
+.candidate-portal-layout .credential-month-trigger {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--c-line);
+  border-radius: 10px;
+  color: rgba(233, 247, 242, 0.45);
+  font-weight: 400;
+}
+.candidate-portal-layout .credential-month-trigger.has-value { color: #fff; }
+.candidate-portal-layout .credential-month-trigger svg { color: var(--c-muted); }
+.candidate-portal-layout .credential-month-trigger:hover,
+.candidate-portal-layout .credential-month-trigger[aria-expanded='true'] {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: #10b981;
+  box-shadow: none;
+}
+.candidate-portal-layout .credential-month-trigger-dot { background: #10b981; }
+.candidate-portal-layout .credential-month-helper { color: var(--c-muted); }
+
+.candidate-portal-layout .credential-month-popover {
+  background: #121817;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+.candidate-portal-layout .credential-month-year + .credential-month-year { border-top-color: var(--c-line); }
+.candidate-portal-layout .credential-month-year-label { font-weight: 400; color: var(--c-muted); }
+.candidate-portal-layout .credential-month-option {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--c-line);
+  border-radius: 9px;
+  color: rgba(233, 247, 242, 0.78);
+  font-weight: 400;
+}
+.candidate-portal-layout .credential-month-option:hover:not(:disabled) {
+  transform: none;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #fff;
+}
+.candidate-portal-layout .credential-month-option.selected {
+  background: #10b981;
+  border-color: #10b981;
+  color: #0b0f0e;
+  box-shadow: none;
+}
+.candidate-portal-layout .credential-month-option:disabled {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.06);
+  color: rgba(233, 247, 242, 0.25);
+}

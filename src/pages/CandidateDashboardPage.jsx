@@ -2,6 +2,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
+  LayoutDashboard,
+  ClipboardCheck,
+  Boxes,
   ArrowRight,
   Award,
   BriefcaseBusiness,
@@ -37,23 +40,23 @@ import {
   LogOut,
   Copy,
   Bookmark,
-  BookmarkCheck, Link2,} from 'lucide-react';
-import { Skeleton } from '@astryxdesign/core/Skeleton';
+  BookmarkCheck, Link2, Heart,
+} from 'lucide-react';
 import { getMyPortfolio, updateMySlug } from '../api/portfolioApi.js';
-import { WaveBg } from '../components/WaveBg.jsx';
 import { UserAvatar } from '../components/UserAvatar.jsx';
-import { clearMyProfileCache } from '../lib/useMyProfile.js';
-import { logout } from '../api/httpClient.js';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
 import { ApplicationTimeline } from '../components/ApplicationTimeline.jsx';
 import { InlineStatusTimeline } from '../components/InlineStatusTimeline.jsx';
 import { getMyUserId } from '../api/accountApi.js';
 import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
-import { getJobs, getCompanies, getCompanyDetail, getJobDetail, getFollowedCompanyIds, followCompany, unfollowCompany, getSavedJobIds, getSavedJobs, saveJob, unsaveJob } from '../api/jobApi.js';
+import { getJobs, getCompanies, getCompanyDetail, getJobDetail, getFollowedCompanyIds, followCompany, unfollowCompany, getSavedJobs } from '../api/jobApi.js';
+import { useSavedJobs } from '../lib/savedJobs.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
 import { applyToJob, getMyApplications, withdrawApplication } from '../api/applicationApi.js';
 import { NotificationBell } from '../components/NotificationBell.jsx';
+import { HeroMesh } from '../components/HeroMesh.jsx';
+import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { getWallet, topUp, buyPremium } from '../api/walletApi.js';
 import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication, getSavedQuestIds, getSavedQuests, saveQuest, unsaveQuest } from '../api/questApi.js';
 import {
@@ -267,14 +270,14 @@ function CandidateProfilePreview({ portfolio, candidateRs, currentLevel, current
 
       {/* Avatar + name + headline + school */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#e5533f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.05rem', color: '#fff', flexShrink: 0 }}>
+        <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.05rem', color: '#fff', flexShrink: 0 }}>
           {portfolio?.name ? portfolio.name.slice(0, 2).toUpperCase() : 'UV'}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <strong style={{ fontSize: '0.94rem', display: 'block', color: 'var(--ink)' }}>{portfolio?.name || 'Ứng viên'}</strong>
           {portfolio?.headline && <span style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'block' }}>{portfolio.headline}</span>}
           {portfolio?.school && (
-            <span style={{ fontSize: '0.76rem', color: '#e5533f', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+            <span style={{ fontSize: '0.76rem', color: '#10b981', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
               <BadgeCheck size={13} /> {portfolio.school}
             </span>
           )}
@@ -283,7 +286,7 @@ function CandidateProfilePreview({ portfolio, candidateRs, currentLevel, current
 
       {/* Stats */}
       <div style={{ display: 'flex', gap: '8px' }}>
-        {[{ label: 'RS', val: rs, color: '#e5533f' }, { label: 'Level', val: currentLevel, color: '#d97706' }, { label: 'EXP', val: currentExp, color: '#7c3aed' }].map(s => (
+        {[{ label: 'RS', val: rs, color: '#10b981' }, { label: 'Level', val: currentLevel, color: '#f59e0b' }, { label: 'EXP', val: currentExp, color: '#67e8f9' }].map(s => (
           <div key={s.label} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', background: `${s.color}08`, borderRadius: '10px', border: `1px solid ${s.color}20` }}>
             <strong style={{ fontSize: '0.9rem', color: s.color, display: 'block' }}>{s.val}</strong>
             <span style={{ fontSize: '0.68rem', color: 'var(--muted)', fontWeight: '700' }}>{s.label}</span>
@@ -401,44 +404,60 @@ function ApplyModal({
 }
 
 /* Daily / weekly quest panel — Duolingo-style task list with claimable EXP rewards. */
-function QuestPanel({ title, subtitle, icon, accent, accentSoft, quests, scope, onClaim, claiming }) {
-  const doneCount = quests.filter((q) => q.completed).length;
+/* Nhiệm vụ: MỘT danh sách gộp, không phải hai bảng song song.
+   Bản trước là hai thẻ cạnh nhau ("hằng ngày" / "tuần"), mỗi thẻ một hộp có
+   viền — cộng với hộ chiếu và Next Steps là bốn hộp giống nhau xếp dọc. Ở đây
+   gộp làm một, mỗi dòng đeo một nhãn phạm vi, ngăn nhau bằng kẻ mảnh. Cùng
+   ngôn ngữ bản-in với danh sách bước bên dưới. */
+function QuestList({ daily, weekly, onClaim, claiming }) {
+  const rows = [
+    ...daily.map((q) => ({ ...q, scope: 'DAILY', scopeLabel: 'Ngày' })),
+    ...weekly.map((q) => ({ ...q, scope: 'WEEKLY', scopeLabel: 'Tuần' })),
+  ];
+  const doneDaily = daily.filter((q) => q.completed).length;
+  const doneWeekly = weekly.filter((q) => q.completed).length;
+
   return (
-    <section className="np-quest-card">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '9px', fontSize: '1.02rem', fontWeight: '800', color: 'var(--ink)' }}>
-          <span className="np-quest-icon" style={{ background: accentSoft, color: accent, width: '32px', height: '32px' }}>{icon}</span>
-          {title}
-        </span>
-        <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--muted)' }}>{doneCount}/{quests.length} · {subtitle}</span>
+    <section className="np-quests">
+      <div className="np-quests-head">
+        <h2 className="np-steps-title">Nhiệm vụ</h2>
+        <div className="np-quests-score">
+          <span><b>{doneDaily}</b>/{daily.length} hôm nay</span>
+          <span className="np-quests-dot" aria-hidden="true" />
+          <span><b>{doneWeekly}</b>/{weekly.length} tuần này</span>
+        </div>
       </div>
-      <div>
-        {quests.map((q) => {
+
+      <div className="np-quests-list">
+        {rows.map((q) => {
           const pct = Math.min(100, Math.round((q.progress / Math.max(1, q.target)) * 100));
           const ready = q.completed && !q.claimed;
           return (
-            <div key={q.key} className="np-quest-row">
-              <span className="np-quest-icon" style={{ background: q.completed ? '#e7f6ec' : accentSoft, color: q.completed ? '#16a34a' : accent }}>
-                {q.completed ? <Check size={18} /> : <Target size={17} />}
-              </span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--ink)' }}>{q.title}</span>
-                  {q.target > 1 && (
-                    <span style={{ fontSize: '0.74rem', fontWeight: '800', color: q.completed ? '#16a34a' : accent }}>{Math.min(q.progress, q.target)}/{q.target}</span>
-                  )}
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{q.desc}</div>
+            <div key={`${q.scope}-${q.key}`} className={`np-quest-row${q.completed ? ' is-done' : ''}`}>
+              <span className={`np-quest-scope${q.scope === 'WEEKLY' ? ' weekly' : ''}`}>{q.scopeLabel}</span>
+
+              <div className="np-quest-body">
+                <span className="np-quest-title">
+                  {q.title}
+                  {q.target > 1 && <b className="np-quest-count">{Math.min(q.progress, q.target)}/{q.target}</b>}
+                </span>
+                <span className="np-quest-desc">{q.desc}</span>
                 {!q.completed && q.target > 1 && (
-                  <div className="np-quest-prog"><span style={{ width: `${pct}%`, background: accent }} /></div>
+                  <span className="np-quest-prog"><i style={{ width: `${pct}%` }} /></span>
                 )}
               </div>
-              <div style={{ flexShrink: 0, textAlign: 'right' }}>
+
+              <div className="np-quest-reward">
                 {q.claimed ? (
                   <span className="np-quest-claim claimed"><Check size={14} /> +{q.exp}</span>
                 ) : ready ? (
-                  <button className="np-quest-claim ready" disabled={claiming === q.key} onClick={() => onClaim(scope, q.key)}>
-                    <Gift size={14} /> {claiming === q.key ? '...' : `Nhận +${q.exp}`}
+                  <button
+                    type="button"
+                    className="np-quest-claim ready"
+                    disabled={claiming === q.key}
+                    onClick={() => onClaim(q.scope, q.key)}
+                  >
+                    <Gift size={14} /> {claiming === q.key ? '…' : `Nhận +${q.exp}`}
                   </button>
                 ) : (
                   <span className="np-quest-claim locked">+{q.exp} EXP</span>
@@ -452,13 +471,42 @@ function QuestPanel({ title, subtitle, icon, accent, accentSoft, quests, scope, 
   );
 }
 
+/* Khu vực cá nhân chỉ giữ những gì THUỘC VỀ người dùng. Cơ hội / Quest /
+   Doanh nghiệp đã chuyển hẳn sang /jobs — chúng làm lại đúng việc trang đó
+   đang làm, và để song song hai nơi tìm việc thì người dùng phải học cả hai. */
+const AREA_TABS = [
+  { view: 'OVERVIEW', slug: 'overview', label: 'Tổng quan', icon: LayoutDashboard },
+  { view: 'SAVED', slug: 'saved', label: 'Việc đã lưu', icon: Heart },
+  { view: 'MY_APPLICATIONS', slug: 'my_applications', label: 'Ứng tuyển', icon: ClipboardCheck },
+  { view: 'CREDENTIALS', slug: 'credentials', label: 'Minh chứng', icon: ShieldCheck },
+  { view: 'PREMIUM_STORE', slug: 'premium_store', label: 'Premium', icon: Sparkles },
+];
+
+/* Slug cũ không còn tab riêng nữa → đưa về đúng nơi phụ trách việc đó. */
+const RETIRED_TABS = {
+  OPPORTUNITIES: '/jobs',
+  QUESTS: '/jobs',
+  ORGANIZATIONS: '/jobs',
+  RECOMMENDATIONS: '/candidates/dashboard/overview',
+};
+
+const EMERALD_ACCENT = '#10b981';
+
+/* Mốc tan của tấm mesh, tính bằng PX chứ không phải % chiều cao khung.
+   Khung mesh cao 2960px là để mượn nguyên hình học quầng của hero trang chủ
+   (xem .np-area-bg), nhưng nội dung trang này ngắn hơn thế nhiều. Nếu để mốc
+   tan mặc định (52% → 100% của khung, tức 1539px → 2960px) thì mesh vẫn còn
+   ~2/3 độ đậm ở chỗ nội dung kết thúc — cắt ngang một đường. Tan hẳn ở 940px
+   thì mọi tab, dù ngắn hay dài, đều kết thúc trên nền ink phẳng. */
+const AREA_MESH_MASK = 'linear-gradient(to bottom, #000 0px, #000 300px, transparent 940px)';
+
 // Which tabSlug values (from the /candidates/dashboard/:tabSlug route) render
 // as a card grid (job/quest/company browsing) vs a flat list (applications,
 // submitted credentials) vs the overview stats layout. Used to pick a shape
 // that resembles the tab actually being loaded, instead of always showing the
 // same generic layout regardless of which tab the URL points to.
 const SKELETON_GRID_TABS = new Set(['opportunities', 'quests', 'recommendations', 'premium_store', 'organizations']);
-const SKELETON_LIST_TABS = new Set(['my_applications', 'credentials']);
+const SKELETON_LIST_TABS = new Set(['saved', 'my_applications', 'credentials']);
 
 export function skeletonVariantForTabSlug(tabSlug) {
   if (!tabSlug) return 'overview';
@@ -470,77 +518,114 @@ export function skeletonVariantForTabSlug(tabSlug) {
 }
 
 /**
- * Full-page loading placeholder shown on hard refresh / first load, before
- * `portfolio` resolves. Replaces the old plain-text "Đang tải..." state with
- * real Astryx `Skeleton` blocks. Shape varies by `variant` so the placeholder
- * roughly resembles whichever tab the URL points to (2026-07-07 feedback: a
- * single fixed shape looked "off" no matter which tab you refreshed on).
+ * Khung chờ toàn trang khi F5 / vào lần đầu, trước lúc `portfolio` về.
+ *
+ * Bản trước dùng <Skeleton> của Astryx: các khối xám nhạt dựng cho nền SÁNG,
+ * đặt trong một khung nền trắng. Kết quả là mỗi lần tải lại màn hình chớp
+ * trắng toàn bộ rồi mới sập về nền tối — đúng thứ phá vỡ "cả site một mặt
+ * phẳng". Nên khung chờ tự vẽ khối bằng token của hệ tối, và mang luôn nền
+ * ink + thanh header giả, để cái hiện ra trước và cái hiện ra sau là cùng
+ * một trang chứ không phải hai.
+ *
+ * Hình dạng đổi theo `variant` để khung chờ na ná đúng tab mà URL trỏ tới.
  */
+function SkelBar({ w, h, r = 6 }) {
+  return <span className="np-skel-bar" style={{ width: w, height: h, borderRadius: r }} />;
+}
+
 export function CandidateContentSkeleton({ variant = 'overview' }) {
+  const card = { border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' };
+
   return (
-    <div style={{ width: '100%', maxWidth: '1180px', margin: '0 auto', padding: '48px 24px 140px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <Skeleton width={64} height={64} radius="rounded" index={0} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <Skeleton width={200} height={18} index={1} />
-          <Skeleton width={140} height={12} index={2} />
-        </div>
+    <div className="np-skel">
+      <style>{`
+        .np-skel { position: relative; min-height: 100vh; background: #0b0f0e; overflow: hidden; }
+        .np-skel-inner {
+          position: relative; z-index: 1;
+          width: 100%; max-width: 1180px; margin: 0 auto;
+          padding: clamp(120px, 12vw, 172px) 24px 140px;
+          display: flex; flex-direction: column; gap: 28px;
+        }
+        /* Khối chờ phải MỜ HƠN nội dung thật, nếu không mắt đọc nó như dữ liệu.
+           Sáng dần rồi tối lại thay vì quét ngang: không có hướng chuyển động
+           nào để đoán sai, và nhẹ hơn cho máy yếu. */
+        .np-skel-bar {
+          display: block; flex: none;
+          background: rgba(255, 255, 255, 0.07);
+          animation: npSkelPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes npSkelPulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { .np-skel-bar { animation: none; } }
+      `}</style>
+
+      <div className="np-area-bg" aria-hidden="true">
+        <div className="np-area-bg-inner"><HeroMesh fadeMask={AREA_MESH_MASK} /></div>
       </div>
 
-      {variant === 'grid' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={i} style={{ border: '1px solid var(--line)', borderRadius: '16px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Skeleton width={36} height={36} radius="rounded" index={i * 3 + 3} />
-                <Skeleton width="60%" height={12} index={i * 3 + 4} />
-              </div>
-              <Skeleton width="90%" height={10} index={i * 3 + 5} />
-              <Skeleton width="40%" height={10} index={i * 3 + 6} />
-            </div>
-          ))}
+      <div className="np-skel-inner" role="status" aria-label="Đang tải khu vực của bạn">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <SkelBar w={64} h={64} r={20} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <SkelBar w={200} h={18} />
+            <SkelBar w={140} h={12} />
+          </div>
         </div>
-      )}
 
-      {variant === 'list' && (
-        <div style={{ border: '1px solid var(--line)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          {[0, 1, 2, 3, 4, 5].map((rowIndex) => (
-            <div key={rowIndex} style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <Skeleton width={40} height={40} radius="rounded" index={rowIndex * 3 + 3} />
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <Skeleton width="45%" height={13} index={rowIndex * 3 + 4} />
-                <Skeleton width="70%" height={10} index={rowIndex * 3 + 5} />
-              </div>
-              <Skeleton width={80} height={22} radius="rounded" index={rowIndex * 3 + 6} />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {variant === 'overview' && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-            {[0, 1, 2].map((i) => (
-              <div key={i} style={{ border: '1px solid var(--line)', borderRadius: '16px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <Skeleton width={90} height={12} index={i + 3} />
-                <Skeleton width={70} height={26} index={i + 6} />
-                <Skeleton width="80%" height={10} index={i + 9} />
+        {variant === 'grid' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} style={card}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <SkelBar w={36} h={36} r={12} />
+                  <SkelBar w="60%" h={12} />
+                </div>
+                <SkelBar w="90%" h={10} />
+                <SkelBar w="40%" h={10} />
               </div>
             ))}
           </div>
+        )}
 
-          <div style={{ border: '1px solid var(--line)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <Skeleton width={160} height={14} index={12} />
-            {[0, 1, 2, 3].map((rowIndex) => (
+        {variant === 'list' && (
+          <div style={{ ...card, padding: '20px', gap: '18px' }}>
+            {[0, 1, 2, 3, 4, 5].map((rowIndex) => (
               <div key={rowIndex} style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <Skeleton width={32} height={32} radius="rounded" index={rowIndex * 3 + 13} />
-                <Skeleton width="55%" height={12} index={rowIndex * 3 + 14} />
-                <Skeleton width={70} height={12} index={rowIndex * 3 + 15} />
+                <SkelBar w={40} h={40} r={12} />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <SkelBar w="45%" h={13} />
+                  <SkelBar w="70%" h={10} />
+                </div>
+                <SkelBar w={80} h={22} r={11} />
               </div>
             ))}
           </div>
-        </>
-      )}
+        )}
+
+        {variant === 'overview' && (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+              {[0, 1, 2].map((i) => (
+                <div key={i} style={card}>
+                  <SkelBar w={90} h={12} />
+                  <SkelBar w={70} h={26} />
+                  <SkelBar w="80%" h={10} />
+                </div>
+              ))}
+            </div>
+
+            <div style={{ ...card, padding: '20px', gap: '16px' }}>
+              <SkelBar w={160} h={14} />
+              {[0, 1, 2, 3].map((rowIndex) => (
+                <div key={rowIndex} style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <SkelBar w={32} h={32} r={10} />
+                  <SkelBar w="55%" h={12} />
+                  <SkelBar w={70} h={12} />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -726,11 +811,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDockProfileMenu]);
 
-  /* Trên màn hẹp thanh tab cuộn ngang (9 pill ~1030px so với 373px), nên tab
-     đang mở có thể nằm ngoài tầm nhìn. Kéo nó vào giữa mỗi khi đổi tab. */
-  const dockRef = useRef(null);
+  /* Trên màn hẹp thanh tab vẫn cuộn ngang được, nên tab đang mở có thể nằm
+     ngoài tầm nhìn. Kéo nó vào giữa mỗi khi đổi tab. (Với 4 mục thì hiếm khi
+     cần, nhưng nhãn tiếng Việt dài và màn 320px thì vẫn tràn.) */
+  const areaTabsRef = useRef(null);
   useEffect(() => {
-    const active = dockRef.current?.querySelector('.np-dock-item.active');
+    const active = areaTabsRef.current?.querySelector('.np-area-tab.active');
     active?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
   }, [activeView]);
 
@@ -905,7 +991,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [followedCompanyIds, setFollowedCompanyIds] = useState(() => new Set());
   const [followBusyId, setFollowBusyId] = useState(null);
   // Saved (bookmarked) jobs — ids for card state, full list for the "Đã lưu" view.
-  const [savedJobIds, setSavedJobIds] = useState(() => new Set());
+  /* Danh sách id đã lưu lấy từ kho dùng chung (lib/savedJobs.js) thay vì state
+     riêng của trang. Trước đây mỗi nơi giữ một bản: /jobs ghi localStorage,
+     trang này đọc API — bấm tim ở /jobs thì ở đây không thấy gì. */
+  const { savedIds, toggleSave: toggleSavedJobId } = useSavedJobs();
   const [savingJobId, setSavingJobId] = useState(null);
   const [showSavedJobsOnly, setShowSavedJobsOnly] = useState(false);
   const [savedJobsList, setSavedJobsList] = useState([]);
@@ -916,7 +1005,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [showSavedQuestsOnly, setShowSavedQuestsOnly] = useState(false);
   const [savedQuestsList, setSavedQuestsList] = useState([]);
   const [savedQuestsLoading, setSavedQuestsLoading] = useState(false);
-  const [openOrgTabs, setOpenOrgTabs] = useState([]); // viewed company tabs spawned in Sidebar
+  // Danh sách tổ chức đã mở. Dock cũ vẽ chúng thành tab ghim; giờ không còn
+  // tab ghim nữa nên chỉ còn setter được gọi — giữ lại để hai nhánh dưới không
+  // phải sửa, và để dành khi làm lại trang chi tiết tổ chức.
+  const [, setOpenOrgTabs] = useState([]);
   const [orgSearchQuery, setOrgSearchQuery] = useState('');
   const [orgTypeFilter, setOrgTypeFilter] = useState('ALL'); // ALL, BUSINESS, CLUB
   const [selectedOrg, setSelectedOrg] = useState(null); // Detailed view object
@@ -991,18 +1083,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     return () => { isMounted = false; };
   }, [refreshKey]);
 
-  // Load the set of saved (bookmarked) job ids.
+  /* Nạp thẻ đầy đủ khi đang ở tab "Việc đã lưu".
+     Điều kiện cũ là `activeView === 'OPPORTUNITIES' && showSavedJobsOnly` — mà
+     tab OPPORTUNITIES đã bỏ từ lần rút 9 tab xuống 4, nên effect này không còn
+     chạy lần nào: đó là một nửa lý do danh sách luôn trống. */
   useEffect(() => {
-    let isMounted = true;
-    getSavedJobIds()
-      .then(ids => { if (isMounted) setSavedJobIds(new Set((ids || []).map(String))); })
-      .catch(err => console.error('Lỗi tải tin đã lưu:', err));
-    return () => { isMounted = false; };
-  }, [refreshKey]);
-
-  // Load full saved-job cards only while the "Đã lưu" view is active.
-  useEffect(() => {
-    if (activeView !== 'OPPORTUNITIES' || !showSavedJobsOnly) return undefined;
+    if (activeView !== 'SAVED') return undefined;
     let isMounted = true;
     setSavedJobsLoading(true);
     getSavedJobs()
@@ -1010,7 +1096,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .catch(err => console.error('Lỗi tải tin đã lưu:', err))
       .finally(() => { if (isMounted) setSavedJobsLoading(false); });
     return () => { isMounted = false; };
-  }, [activeView, showSavedJobsOnly, savedJobIds, refreshKey]);
+  }, [activeView, savedIds, refreshKey]);
 
   // Load the set of saved (bookmarked) quest ids.
   useEffect(() => {
@@ -1035,19 +1121,26 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   // Sync tabSlug to activeView
   useEffect(() => {
-    if (tabSlug) {
-      const upperTab = tabSlug.toUpperCase();
-      if (['OVERVIEW', 'OPPORTUNITIES', 'QUESTS', 'CREDENTIALS', 'ORGANIZATIONS', 'MY_APPLICATIONS', 'RECOMMENDATIONS', 'PREMIUM_STORE'].includes(upperTab)) {
-        setActiveView(upperTab);
-        setSelectedOrg(null);
-      } else if (tabSlug.startsWith('org-')) {
-        setActiveView('ORGANIZATION_DETAIL');
-      } else {
-        navigate('/candidates/dashboard/overview', { replace: true });
-      }
-    } else {
+    if (!tabSlug) {
       navigate('/candidates/dashboard/overview', { replace: true });
+      return;
     }
+    const upperTab = tabSlug.toUpperCase();
+    if (AREA_TABS.some((t) => t.view === upperTab)) {
+      setActiveView(upperTab);
+      setSelectedOrg(null);
+      return;
+    }
+    // Link cũ (bookmark, email, lịch sử trình duyệt) vẫn phải tới đúng chỗ.
+    if (RETIRED_TABS[upperTab]) {
+      navigate(RETIRED_TABS[upperTab], { replace: true });
+      return;
+    }
+    if (tabSlug.startsWith('org-')) {
+      navigate('/jobs', { replace: true });
+      return;
+    }
+    navigate('/candidates/dashboard/overview', { replace: true });
   }, [tabSlug, navigate]);
 
   // Fetch detailed B2B information and its jobs when viewing a specific company detail
@@ -1439,25 +1532,16 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     e.preventDefault();
     if (savingJobId) return;
     const id = String(jobId);
-    const currentlySaved = savedJobIds.has(id);
+    const currentlySaved = savedIds.has(id);
     setSavingJobId(id);
-    setSavedJobIds(prev => {
-      const next = new Set(prev);
-      if (currentlySaved) next.delete(id); else next.add(id);
-      return next;
-    });
-    // Keep the saved-view list in sync when un-saving from within it.
+    // Bỏ lưu ngay trong chính danh sách này thì thẻ phải biến mất luôn, không
+    // đợi lượt nạp sau.
     if (currentlySaved) setSavedJobsList(prev => prev.filter(j => String(j.id) !== id));
     try {
-      if (currentlySaved) await unsaveJob(id);
-      else await saveJob(id);
+      await toggleSavedJobId(id);
     } catch (err) {
       console.error('Lỗi khi cập nhật lưu tin:', err);
-      setSavedJobIds(prev => {
-        const next = new Set(prev);
-        if (currentlySaved) next.add(id); else next.delete(id);
-        return next;
-      });
+      if (currentlySaved) setRefreshKey(k => k + 1);
     } finally {
       setSavingJobId(null);
     }
@@ -1530,17 +1614,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     });
   }
 
-  const handleCloseOrgTab = (e, orgId) => {
-    e.stopPropagation();
-    // Remove tab from active spawned tabs
-    const updatedTabs = openOrgTabs.filter(t => String(t.id) !== String(orgId));
-    setOpenOrgTabs(updatedTabs);
-    
-    // If the closed tab is currently active, navigate to organizations directory
-    if (tabSlug === `org-${orgId}`) {
-      navigate('/candidates/dashboard/organizations');
-    }
-  };
 
   const updateSearchUrl = (field, value) => {
     const searchParams = new URLSearchParams(location.search);
@@ -1552,11 +1625,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     navigate(`/candidates/dashboard/opportunities?${searchParams.toString()}`, { replace: true });
   };
 
-  async function handleLogout() {
-    clearMyProfileCache();
-    await logout();
-    navigate('/');
-  }
 
   function handleApplyJob(job) {
     viewOpportunityOnce(job.id || job.jobId);
@@ -1623,7 +1691,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       title: 'Đẩy tin nổi bật (Profile Boost)',
       message: `Hệ thống sẽ trừ ${premiumConfig.boostPriceNp.toLocaleString()} NP để ghim đơn ứng tuyển này lên đầu danh sách của nhà tuyển dụng trong ${premiumConfig.boostDurationHours || 48} giờ.`,
       confirmText: 'Boost ngay',
-      accent: '#d97706',
+      accent: '#f59e0b',
       onConfirm: async () => {
         const loadingKey = encodePremiumTarget(applicationType, applicationId);
         setBoostLoadingId(loadingKey);
@@ -1668,7 +1736,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       title: 'Mở khóa Application Insight',
       message: `Hệ thống sẽ trừ ${premiumConfig.insightPriceNp.toLocaleString()} NP để mở khóa thứ hạng và phân tích cạnh tranh cho đơn ứng tuyển này.`,
       confirmText: 'Mở khóa',
-      accent: '#7c3aed',
+      accent: '#10b981',
       onConfirm: async () => {
         try {
           const res = await unlockInsight(targetId, applicationType);
@@ -1688,7 +1756,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       title: 'Xác thực nhanh 24h (Express)',
       message: `Hệ thống sẽ trừ ${premiumConfig.expressPriceNp.toLocaleString()} NP để ưu tiên thẩm định minh chứng này trong 24 giờ.`,
       confirmText: 'Nâng cấp Express',
-      accent: '#d97706',
+      accent: '#f59e0b',
       onConfirm: async () => {
         setExpressLoadingId(experienceId);
         try {
@@ -1711,7 +1779,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       title: 'Đăng ký Job Match Alert',
       message: `Hệ thống sẽ trừ ${(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP cho gói 30 ngày: gợi ý việc làm cá nhân hóa + xem sớm tin mới.`,
       confirmText: 'Đăng ký ngay',
-      accent: '#059669',
+      accent: '#10b981',
       onConfirm: async () => {
         setSubscribingMatchAlert(true);
         try {
@@ -1776,17 +1844,18 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const hasApplications = appliedJobs.length > 0;
 
 
-  /* Việc cần làm tiếp theo — cùng thứ tự với checklist "Next Steps" bên
-     dưới. Tiêu đề trang nói thẳng bước kế tiếp thay vì một câu chung chung,
-     để mở dashboard lên là biết ngay phải làm gì. */
+  /* Việc cần làm tiếp theo — cùng thứ tự với danh sách bước bên dưới. Hiện
+     ngay trong hộ chiếu để mở lên là biết phải làm gì. Trước đây nó nằm ở một
+     dải riêng phía trên, kèm lời chào lặp lại tên người dùng — mà hộ chiếu đã
+     xướng tên bằng cỡ 54px ngay bên dưới rồi. */
   const nextStep = !has3D
-    ? { text: 'Bước tiếp theo: khởi tạo Portfolio 3D để nhà tuyển dụng thấy được bạn.', cta: 'Khởi tạo ngay', to: '/portfolio' }
+    ? { text: 'Khởi tạo Portfolio 3D để nhà tuyển dụng thấy được bạn.', cta: 'Khởi tạo ngay', to: '/portfolio' }
     : !hasSchool
-      ? { text: 'Bước tiếp theo: bổ sung trường học vào hồ sơ để tăng độ tin cậy.', cta: 'Cập nhật hồ sơ', to: '/portfolio/edit' }
+      ? { text: 'Bổ sung trường học vào hồ sơ để tăng độ tin cậy.', cta: 'Cập nhật hồ sơ', to: '/portfolio/edit' }
       : !hasCredentials
         ? { text: 'Bước tiếp theo: tải lên minh chứng đầu tiên để nâng Trust Score.', cta: 'Thêm minh chứng', view: 'CREDENTIALS' }
         : !hasApplications
-          ? { text: 'Bước tiếp theo: ứng tuyển cơ hội đầu tiên của bạn.', cta: 'Xem cơ hội', view: 'OPPORTUNITIES' }
+          ? { text: 'Ứng tuyển cơ hội đầu tiên của bạn.', cta: 'Xem cơ hội', to: '/jobs' }
           : { text: 'Hồ sơ đã đủ. Giữ streak và hoàn thành nhiệm vụ để lên hạng.', cta: null };
 
   // Filters candidates jobs by RS threshold if checked
@@ -1859,199 +1928,71 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   return (
     <div className="candidate-portal-layout">
-      <NotificationBell accent="#e5533f" />
+      {/* ─── Vỏ chung với toàn site ───
+          Trước đây khu vực này KHÔNG có SiteHeader; nó tự dựng một thanh pill
+          nổi ở đáy màn hình (.np-dock) chứa 9 mục, tức là một metaphor điều
+          hướng hoàn toàn khác phần còn lại của site. Đăng nhập xong là người
+          dùng phải đi tìm lại nav ở chỗ khác.
 
-      {/* ─── Thanh điều hướng duy nhất của trang ───
-          Ở đây CỐ TÌNH không dùng SiteHeader: hai thanh điều hướng cùng lúc
-          là thừa. Nhưng như vậy thanh này phải gánh cả ba thứ chỉ header mới
-          có — đường về trang chủ, avatar thật, và nút đăng xuất — nếu không
-          thì vào dashboard là không còn lối ra. Vì vậy: logo ở đầu thanh,
-          menu tài khoản ở cuối thanh, các tab khu vực nằm giữa. */}
-      <nav className="np-dock" aria-label="Điều hướng chính">
-        <Link to="/" className="np-dock-brand" aria-label="Về trang chủ nextplease">
-          <span className="np-dock-brand-word">nextplease</span>
-          <span className="np-dock-brand-colon">:</span>
-        </Link>
+          Giờ dùng đúng SiteHeader của trang chủ, và khu vực cá nhân chỉ còn một
+          thanh tab phụ 4 mục ngay dưới. Bốn tab cũ (Cơ hội, Quest, Doanh
+          nghiệp, Gợi ý AI) đã bỏ: ba cái đầu làm lại đúng việc /jobs đang làm
+          nên chuyển hẳn sang đó, còn Gợi ý AI gộp vào Tổng quan. */}
+      {/* Nền mesh dùng chung với trang chủ / jobs / thảo luận: quầng emerald
+          bị blur 90px + vignette. Đặt ở tầng nền của CẢ trang chứ không nhét
+          vào một khối thấp — quầng định vị bằng % nên khung thấp thì màu không
+          kịp loang, và tâm sáng bị kéo lên ngang header. Chiều cao + hình học
+          vignette bám theo hero trang chủ, xem .np-area-bg trong index.css. */}
+      <div className="np-area-bg" aria-hidden="true">
+        <div className="np-area-bg-inner"><HeroMesh fadeMask={AREA_MESH_MASK} /></div>
+      </div>
 
-        <div className="np-dock-inner" ref={dockRef}>
-          <button
-            className={`np-dock-item ${activeView === 'OVERVIEW' ? 'active' : ''}`}
-            onClick={() => handleTabChange('OVERVIEW')}
-            type="button"
-          >
-            <UserRound size={18} />
-            <span className="np-dock-label">Tổng quan</span>
-          </button>
+      {/* Trong suốt trên nền mesh như trang chủ, nhưng KHÔNG ghim: khu vực này
+          là công cụ để đọc và thao tác, người dùng cuộn xuống là muốn xem nội
+          dung chứ không cần thanh điều hướng bám theo. Thanh tab bên dưới cũng
+          cuộn trôi cùng. */}
+      <SiteHeader overlay pinned={false} />
 
-          <button
-            className={`np-dock-item ${activeView === 'OPPORTUNITIES' ? 'active' : ''}`}
-            onClick={() => handleTabChange('OPPORTUNITIES')}
-            type="button"
-          >
-            <BriefcaseBusiness size={18} />
-            <span className="np-dock-label">Cơ hội</span>
-          </button>
-
-          <button
-            className={`np-dock-item ${activeView === 'QUESTS' ? 'active' : ''}`}
-            onClick={() => handleTabChange('QUESTS')}
-            type="button"
-          >
-            <Zap size={18} />
-            <span className="np-dock-label">Quest</span>
-          </button>
-
-          <button
-            className={`np-dock-item ${activeView === 'RECOMMENDATIONS' ? 'active' : ''}`}
-            onClick={() => handleTabChange('RECOMMENDATIONS')}
-            type="button"
-          >
-            <Sparkles size={18} color={wallet?.hasJobMatchAlert ? '#facc15' : 'currentColor'} />
-            <span className="np-dock-badge np-dock-badge-new">NEW</span>
-            <span className="np-dock-label">Gợi ý AI</span>
-          </button>
-
-          <button
-            className={`np-dock-item ${activeView === 'PREMIUM_STORE' ? 'active' : ''}`}
-            onClick={() => handleTabChange('PREMIUM_STORE')}
-            type="button"
-            style={{ color: '#f59e0b' }}
-          >
-            <Crown size={18} color="#f59e0b" />
-            <span className="np-dock-badge np-dock-badge-hot">HOT</span>
-            <span className="np-dock-label">Premium</span>
-          </button>
-
-          <button
-            className={`np-dock-item ${activeView === 'ORGANIZATIONS' ? 'active' : ''}`}
-            onClick={() => handleTabChange('ORGANIZATIONS')}
-            type="button"
-          >
-            <Building size={18} />
-            <span className="np-dock-label">Doanh nghiệp</span>
-          </button>
-
-          {/* Dynamic tabs spawned when viewing companies */}
-          {openOrgTabs.length > 0 && <span className="np-dock-sep" />}
-          {openOrgTabs.map((org) => {
-            const isActive = activeView === 'ORGANIZATION_DETAIL' && selectedOrg?.id === org.id;
-            return (
+      <div className="np-area-bar">
+        <div className="np-area-inner">
+          <div className="np-area-tabs" role="tablist" aria-label="Khu vực của tôi" ref={areaTabsRef}>
+            {AREA_TABS.map((tab) => (
               <button
-                key={org.id}
-                className={`np-dock-item np-dock-org-tab ${isActive ? 'active' : ''}`}
-                onClick={() => handleTabChange(`org-${org.id}`)}
+                key={tab.view}
                 type="button"
+                role="tab"
+                aria-selected={activeView === tab.view}
+                className={`np-area-tab${activeView === tab.view ? ' active' : ''}`}
+                onClick={() => handleTabChange(tab.view)}
               >
-                <div className="np-dock-org-logo" style={{ background: org.logoUrl ? 'transparent' : org.logoColor }}>
-                  {org.logoUrl ? (
-                    <img src={org.logoUrl} alt={org.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    org.name.slice(0, 1).toUpperCase()
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className="np-dock-tab-close"
-                  aria-label={`Đóng tab ${org.name}`}
-                  onClick={(e) => handleCloseOrgTab(e, org.id)}
-                >
-                  <X size={11} />
-                </button>
-                <span className="np-dock-label">{org.name}</span>
+                <tab.icon size={17} strokeWidth={1.9} />
+                {tab.label}
               </button>
-            );
-          })}
+            ))}
+          </div>
 
-          <span className="np-dock-sep" />
-
-          <button
-            className={`np-dock-item ${activeView === 'MY_APPLICATIONS' ? 'active' : ''}`}
-            onClick={() => handleTabChange('MY_APPLICATIONS')}
-            type="button"
-          >
-            <Clock3 size={18} />
-            {(appliedJobs.length + questApplications.length) > 0 && (
-              <span className="np-dock-badge np-dock-badge-count">{appliedJobs.length + questApplications.length}</span>
-            )}
-            <span className="np-dock-label">Ứng tuyển</span>
-          </button>
-
-          <button
-            className={`np-dock-item ${activeView === 'CREDENTIALS' ? 'active' : ''}`}
-            onClick={() => handleTabChange('CREDENTIALS')}
-            type="button"
-          >
-            <Award size={18} />
-            <span className="np-dock-label">Minh chứng</span>
-          </button>
-
-          {has3D ? (
-            <Link className="np-dock-item" to="/portfolio/edit">
-              <FileText size={18} />
-              <span className="np-dock-label">Portfolio 3D</span>
+          <div className="np-area-side">
+            <Link className="np-area-link" to={portfolio?.onboardingCompleted ? '/portfolio/edit' : '/portfolio'}>
+              <Boxes size={16} /> Portfolio 3D
             </Link>
-          ) : (
-            <Link className="np-dock-item" to="/portfolio">
-              <FileText size={18} />
-              <span className="np-dock-label">Portfolio 3D</span>
-            </Link>
-          )}
-
+            {/* Mặc định NotificationBell tự neo `position: fixed` ở góc trên
+                phải — di sản từ hồi khu vực này chưa có thanh điều hướng. Giờ
+                có SiteHeader rồi nên nó đè lên menu tài khoản; kéo về nằm
+                trong thanh tab. Dùng `relative` (không phải `static`) để bảng
+                thông báo vẫn neo đúng vào nút. Hai trang còn lại dùng component
+                này (BusinessPage, AdminB2bReview) vẫn giữ mặc định cũ. */}
+            <NotificationBell
+              accent={EMERALD_ACCENT}
+              style={{ position: 'relative', top: 'auto', right: 'auto', zIndex: 'auto' }}
+              buttonStyle={{
+                width: '38px', height: '38px', borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.2)', background: 'transparent',
+                boxShadow: 'none', color: 'rgba(233,247,242,0.62)',
+              }}
+            />
+          </div>
         </div>
-
-          {/* Menu tài khoản — thay cho menu avatar của SiteHeader. */}
-        <div className="np-dock-acct" ref={dockProfileRef}>
-          <button
-            type="button"
-            className="np-dock-item np-dock-acct-btn"
-            aria-haspopup="menu"
-            aria-expanded={showDockProfileMenu}
-            aria-label="Menu tài khoản"
-            onClick={() => setShowDockProfileMenu((v) => !v)}
-          >
-            <UserAvatar src={portfolio?.avatarUrl} name={portfolio?.name || 'Ứng viên'} size={26} />
-            <ChevronDown size={14} />
-          </button>
-
-          {showDockProfileMenu && (
-            <div className="np-dock-acct-menu" role="menu">
-              <div className="np-dock-acct-head">
-                <UserAvatar src={portfolio?.avatarUrl} name={portfolio?.name || 'Ứng viên'} size={38} />
-                <div style={{ minWidth: 0 }}>
-                  <div className="np-dock-acct-name">{portfolio?.name || 'Ứng viên'}</div>
-                  <div className="np-dock-acct-sub">Candidate Talent · Cấp độ {currentLevel}</div>
-                </div>
-              </div>
-
-              <div className="np-dock-acct-sep" />
-
-              <Link className="np-dock-acct-item" role="menuitem" to="/" onClick={() => setShowDockProfileMenu(false)}>
-                <House size={16} /> Trang chủ
-              </Link>
-              <Link className="np-dock-acct-item" role="menuitem" to="/jobs" onClick={() => setShowDockProfileMenu(false)}>
-                <BriefcaseBusiness size={16} /> Việc làm
-              </Link>
-              <Link className="np-dock-acct-item" role="menuitem" to="/thao-luan" onClick={() => setShowDockProfileMenu(false)}>
-                <MessagesSquare size={16} /> Thảo luận
-              </Link>
-
-              <div className="np-dock-acct-sep" />
-
-              <button
-                type="button"
-                role="menuitem"
-                className="np-dock-acct-item"
-                onClick={() => { setShowSettingsModal(true); setShowDockProfileMenu(false); }}
-              >
-                <Settings size={16} /> Cài đặt tài khoản
-              </button>
-              <button type="button" role="menuitem" className="np-dock-acct-item danger" onClick={handleLogout}>
-                <LogOut size={16} /> Đăng xuất
-              </button>
-            </div>
-          )}
-        </div>
-      </nav>
+      </div>
 
       {/* ─── Main Workspace Content ─── */}
       <main className="candidate-portal-main">
@@ -2100,85 +2041,76 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               .np-quest-prog { height:7px; border-radius:999px; background:var(--c-line); overflow:hidden; margin-top:6px; }
               .np-quest-prog > span { display:block; height:100%; border-radius:999px; transition: width 0.6s cubic-bezier(0.22,1,0.36,1); }
               .np-quest-claim { border:none; cursor:pointer; font-weight:800; font-size:0.8rem; padding:7px 14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
-              .np-quest-claim:hover { transform: translateY(-2px); box-shadow:0 10px 22px rgba(229,83,63,0.25); }
+              .np-quest-claim:hover { transform: translateY(-2px); box-shadow:0 10px 22px rgba(16, 185, 129,0.25); }
               .np-quest-claim:active { transform: scale(0.96); }
-              .np-quest-claim.ready { background:#e5533f; color:#fff; animation: npQuestPop 0.4s ease both; }
+              .np-quest-claim.ready { background:#10b981; color:#fff; animation: npQuestPop 0.4s ease both; }
               .np-quest-claim.claimed { background:#e7f6ec; color:#16a34a; cursor:default; }
               .np-quest-claim.locked { background:var(--c-line); color:var(--c-muted); cursor:default; }
               @media (prefers-reduced-motion: reduce) { .np-streak-flame, .np-quest-card, .np-quest-claim.ready { animation:none !important; } }
             `}</style>
-            <header className="candidate-overview-header" style={{ marginBottom: '20px' }}>
-              <div className="candidate-overview-title">
-                <h1>Chào {portfolio?.name || 'bạn'}</h1>
-                <p>
-                  {nextStep.text}
+            {/* ── HỘ CHIẾU NĂNG LỰC ──
+                Dựng như một tấm giấy tờ tuỳ thân, không phải khay widget.
+                Bản trước nhồi 5 việc vào một thẻ ngang: danh tính, cấp độ, ví,
+                điểm uy tín và ba nút hành động — không có thứ gì dẫn mắt.
+                Giờ tách làm ba tầng rõ ràng:
+                  1. Avatar 3D cỡ lớn tràn ra mép trái (tài sản đặc trưng nhất
+                     của sản phẩm, trước bị nhốt trong khung kính cỡ thumbnail).
+                  2. Tên bằng font display nén in hoa — chỗ DUY NHẤT trong app
+                     dùng font này ngoài hero hai trang giới thiệu, và nó xứng
+                     đáng: giấy tờ tuỳ thân là thứ thỉnh thoảng ngắm.
+                  3. Dải dữ liệu chạy dọc đáy, ngăn bằng kẻ mảnh, nhãn chữ nhỏ
+                     in hoa — mượn vùng mã máy đọc ở cuối hộ chiếu thật. */}
+            <section className="np-passport" style={{ marginTop: 'clamp(28px, 3.4vw, 44px)' }}>
+              <div className="np-pp-figure">
+                <PortfolioAvatar3D avatar={portfolio?.avatar} />
+              </div>
+
+              <div className="np-pp-id">
+                <span className="np-pp-eyebrow">Hộ chiếu năng lực</span>
+                <h2 className="np-pp-name">{portfolio?.name || 'Ứng viên'}</h2>
+                <p className="np-pp-sub">
+                  {has3D
+                    ? 'Hồ sơ 3D đã kích hoạt, đang hiển thị với nhà tuyển dụng'
+                    : 'Hồ sơ 3D chưa thiết lập, hoàn thiện để nổi bật hơn'}
+                </p>
+
+                <div className="np-pp-next">
+                  <span className="np-pp-next-cap">Bước tiếp theo</span>
+                  <span className="np-pp-next-text">{nextStep.text}</span>
                   {nextStep.cta && (nextStep.to ? (
-                    <Link to={nextStep.to} className="candidate-nextstep-cta">{nextStep.cta} <ArrowRight size={14} /></Link>
+                    <Link to={nextStep.to} className="np-pp-next-cta">{nextStep.cta} <ArrowRight size={14} /></Link>
                   ) : (
-                    <button type="button" className="candidate-nextstep-cta" onClick={() => handleTabChange(nextStep.view)}>
+                    <button type="button" className="np-pp-next-cta" onClick={() => handleTabChange(nextStep.view)}>
                       {nextStep.cta} <ArrowRight size={14} />
                     </button>
                   ))}
-                </p>
-              </div>
-            </header>
-
-            {/* Reputation Passport - hero focal point */}
-            <section className="np-passport">
-              {/* Cùng hoạ tiết sóng với hero trang chủ. Quy tắc
-                  `.np-passport > * { z-index: 1 }` áp cho cả svg này, nên nó
-                  nằm cùng tầng với nội dung và thứ tự DOM quyết định — đặt đầu
-                  tiên là nó ở dưới. */}
-              <WaveBg variant="emerald" pattern="waves" />
-
-              <div className="np-pp-avatar">
-                <div className="avatar-3d-glow-frame">
-                  <PortfolioAvatar3D avatar={portfolio?.avatar} />
                 </div>
-              </div>
 
-              <div style={{ minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                  <span className="np-pp-name">{portfolio?.name || 'Ứng viên'}</span>
-                  <span className="exp-level-badge">LV. <CountUp value={currentLevel} format={(n) => Math.round(n).toString()} /></span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(249,115,22,0.18)', padding: '5px 12px', borderRadius: '999px', fontSize: '0.8rem', fontWeight: '800', color: '#fb923c' }} title={`Chuỗi dài nhất: ${gamification?.longestStreak ?? 0} ngày`}>
-                    <Flame className="np-streak-flame" size={15} color="#fb923c" fill={streak > 0 ? '#fb923c' : 'none'} /> {streak} ngày streak
-                  </span>
-                </div>
-                <div className="np-pp-sub">{has3D ? 'Hồ sơ 3D đã kích hoạt, đang hiển thị với nhà tuyển dụng' : 'Hồ sơ 3D chưa thiết lập, hoàn thiện để nổi bật hơn'}</div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '18px 0 7px' }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'rgba(255,255,255,0.6)' }}>Tiến độ lên cấp {currentLevel + 1}</span>
-                  <span style={{ fontSize: '0.85rem', fontWeight: '800' }}><span style={{ color: '#f6845f' }}><CountUp value={Number(currentExp)} /></span> / {Number(nextLevelExp).toLocaleString('vi-VN')} EXP</span>
-                </div>
-                <div className="np-pp-expbar"><span style={{ width: `${expPercentage}%` }} /></div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
-                  <Link to={has3D ? '/portfolio/edit' : '/portfolio'} style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.1)', padding: '9px 16px', borderRadius: '999px', textDecoration: 'none' }}>
-                    <UserRound size={15} /> {has3D ? 'Chỉnh sửa Portfolio 3D' : 'Thiết lập Portfolio 3D'} <ArrowRight size={14} />
+                <div className="np-pp-actions">
+                  <Link to={has3D ? '/portfolio/edit' : '/portfolio'} className="np-pp-btn primary">
+                    <UserRound size={15} /> {has3D ? 'Chỉnh sửa Portfolio 3D' : 'Thiết lập Portfolio 3D'}
                   </Link>
                   {has3D && (
                     <button
                       type="button"
+                      className="np-pp-btn"
                       onClick={handleCopyPortfolioLink}
                       disabled={copyLinkStatus === 'copying'}
                       title="Sao chép link Portfolio công khai để chia sẻ"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: copyLinkStatus === 'done' ? 'rgba(74,222,128,0.22)' : 'rgba(255,255,255,0.1)', border: 'none', padding: '9px 16px', borderRadius: '999px', cursor: copyLinkStatus === 'copying' ? 'default' : 'pointer' }}
                     >
                       <Copy size={15} />
-                      {copyLinkStatus === 'done' ? 'Đã sao chép!' : copyLinkStatus === 'error' ? 'Lỗi, thử lại' : 'Sao chép link Portfolio'}
+                      {copyLinkStatus === 'done' ? 'Đã sao chép' : copyLinkStatus === 'error' ? 'Lỗi, thử lại' : 'Sao chép link'}
                     </button>
                   )}
                   {has3D && (
                     <button
                       type="button"
+                      className="np-pp-btn"
                       onClick={handleOpenPortfolioForPdf}
                       disabled={openingPdfView}
                       title="Mở bản xem trước Portfolio để xuất PDF"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '0.86rem', fontWeight: '700', color: '#fff', background: 'rgba(255,255,255,0.1)', border: 'none', padding: '9px 16px', borderRadius: '999px', cursor: openingPdfView ? 'default' : 'pointer' }}
                     >
-                      <FileText size={15} />
-                      Xuất Portfolio PDF
+                      <FileText size={15} /> Xuất PDF
                     </button>
                   )}
                 </div>
@@ -2189,111 +2121,76 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 />
               </div>
 
-              <div className="np-pp-stats">
-                <button type="button" onClick={() => setShowTopUpModal(true)} title="Nhấn để nạp NP" className="np-pp-stat" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', padding: 0, textAlign: 'left' }}>
-                  <div className="np-pp-stat-val" style={{ color: '#fff' }}>{walletLoading ? '...' : <CountUp value={wallet?.npBalance ?? 0} />}</div>
-                  <div className="np-pp-stat-label"><WalletCards size={13} /> Ví NP {wallet?.isPremium && <Crown size={11} color="#fbbf24" style={{ marginLeft: '2px' }} />}</div>
+              {/* Cấp độ: một chữ số khổng lồ thay cho cái huy hiệu "LV. 1" nhỏ
+                  xíu. Track chia đốt bên dưới cho biết còn bao xa tới cấp sau —
+                  thanh 9px cũ là thứ mảnh nhất màn hình dù mang tin quan trọng
+                  nhất. */}
+              <div className="np-pp-level">
+                <span className="np-pp-level-cap">Cấp độ</span>
+                <span className="np-pp-level-num">
+                  <CountUp value={currentLevel} format={(n) => Math.round(n).toString()} />
+                </span>
+                <div
+                  className="np-pp-track"
+                  role="progressbar"
+                  aria-valuenow={Math.round(expPercentage)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`Tiến độ lên cấp ${currentLevel + 1}`}
+                >
+                  {Array.from({ length: 10 }, (_, i) => (
+                    <i key={i} className={expPercentage >= (i + 1) * 10 ? 'on' : ''} />
+                  ))}
+                </div>
+                <span className="np-pp-level-exp">
+                  <CountUp value={Number(currentExp)} /> / {Number(nextLevelExp).toLocaleString('vi-VN')} EXP
+                </span>
+              </div>
+
+              {/* Dải dữ liệu đáy hộ chiếu */}
+              <div className="np-pp-strip">
+                <button
+                  type="button"
+                  className="np-pp-cell"
+                  onClick={() => setShowTopUpModal(true)}
+                  title="Nhấn để nạp NP"
+                >
+                  <span className="np-pp-cell-val">{walletLoading ? '—' : <CountUp value={wallet?.npBalance ?? 0} />}</span>
+                  <span className="np-pp-cell-cap">
+                    <WalletCards size={12} /> Ví NP
+                    {wallet?.isPremium && <Crown size={11} color="#fbbf24" style={{ marginLeft: '2px' }} />}
+                  </span>
                 </button>
-                <div className="np-pp-divider" />
-                <div className="np-pp-stat">
-                  <div className="np-pp-stat-val" style={{ color: '#fff' }}><CountUp value={portfolio?.reputationScore ?? 0} format={(n) => Math.round(n).toString()} /></div>
-                  <div className="np-pp-stat-label"><ShieldCheck size={13} /> Trust Score (RS)</div>
+                <div className="np-pp-cell">
+                  <span className="np-pp-cell-val">
+                    <CountUp value={portfolio?.reputationScore ?? 0} format={(n) => Math.round(n).toString()} />
+                  </span>
+                  <span className="np-pp-cell-cap"><ShieldCheck size={12} /> Trust Score</span>
+                </div>
+                <div className="np-pp-cell">
+                  <span className="np-pp-cell-val np-pp-cell-flame">
+                    {streak}
+                    <Flame size={18} color="#fb923c" fill={streak > 0 ? '#fb923c' : 'none'} />
+                  </span>
+                  <span className="np-pp-cell-cap">Chuỗi ngày · dài nhất {gamification?.longestStreak ?? 0}</span>
                 </div>
               </div>
             </section>
 
-
-            {/* Daily & weekly quests */}
             {gamification && (
-              /* Mỗi nhóm nội dung một dải sóng riêng, cùng hệ hoạ tiết với
-                 trang chủ: hero emerald/waves → nhiệm vụ mint/layers →
-                 Next Steps mint2/ripple. */
-              <section className="np-band np-band-mint" style={{ marginTop: '20px' }}>
-                <WaveBg variant="mint" pattern="layers" />
-                <div className="np-band-inner" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
-                <QuestPanel
-                  title="Nhiệm vụ hằng ngày"
-                  subtitle="đặt lại mỗi ngày"
-                  icon={<Target size={17} />}
-                  accent="#e5533f"
-                  accentSoft="rgba(229,83,63,0.1)"
-                  quests={dailyQuests}
-                  scope="DAILY"
-                  onClaim={handleClaimQuest}
-                  claiming={claimingQuest}
-                />
-                <QuestPanel
-                  title="Nhiệm vụ tuần"
-                  subtitle="đặt lại mỗi tuần"
-                  icon={<Award size={17} />}
-                  accent="#7c3aed"
-                  accentSoft="rgba(124,58,237,0.1)"
-                  quests={weeklyQuests}
-                  scope="WEEKLY"
-                  onClaim={handleClaimQuest}
-                  claiming={claimingQuest}
-                />
-                </div>
-              </section>
+              <QuestList
+                daily={dailyQuests}
+                weekly={weeklyQuests}
+                onClaim={handleClaimQuest}
+                claiming={claimingQuest}
+              />
             )}
 
-            <section className="np-band np-band-mint2" style={{ marginTop: '20px' }}>
-              <WaveBg variant="mint2" pattern="ripple" />
-              <div className="np-band-inner candidate-checklist-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
-              <h2 className="candidate-checklist-title">
-                <CheckCircle2 size={20} color="var(--primary)" />
-                Hành trình phát triển hồ sơ (Next Steps)
-              </h2>
-
-              <div className="checklist-item">
-                <div className="checklist-item-checkbox">
-                  {has3D ? <CheckCircle2 size={18} color="#22c55e" /> : <Clock3 size={18} color="var(--muted)" />}
-                </div>
-                <div className="checklist-item-content">
-                  <span className="checklist-item-title" style={{ textDecoration: has3D ? 'line-through' : 'none', opacity: has3D ? 0.6 : 1 }}>
-                    Khởi tạo và lưu hồ sơ Portfolio 3D
-                  </span>
-                  <span className="checklist-item-desc">Thiết lập nhân vật avatar đại diện 3D và điền các kỹ năng chuyên môn cốt lõi.</span>
-                </div>
-              </div>
-
-              <div className="checklist-item">
-                <div className="checklist-item-checkbox">
-                  {hasSchool ? <CheckCircle2 size={18} color="#22c55e" /> : <Clock3 size={18} color="var(--muted)" />}
-                </div>
-                <div className="checklist-item-content">
-                  <span className="checklist-item-title" style={{ textDecoration: hasSchool ? 'line-through' : 'none', opacity: hasSchool ? 0.6 : 1 }}>
-                    Bổ sung thông tin trường học & học vấn
-                  </span>
-                  <span className="checklist-item-desc">Điền thông tin trường cao đẳng/đại học để hỗ trợ bộ lọc tin tuyển dụng.</span>
-                </div>
-              </div>
-
-              <div className="checklist-item">
-                <div className="checklist-item-checkbox">
-                  {hasCredentials ? <CheckCircle2 size={18} color="#22c55e" /> : <Clock3 size={18} color="var(--muted)" />}
-                </div>
-                <div className="checklist-item-content">
-                  <span className="checklist-item-title" style={{ textDecoration: hasCredentials ? 'line-through' : 'none', opacity: hasCredentials ? 0.6 : 1 }}>
-                    Đăng tải minh chứng chứng chỉ / bằng cấp
-                  </span>
-                  <span className="checklist-item-desc">Nộp file minh chứng để nâng điểm danh tiếng (Reputation Score) tối đa.</span>
-                </div>
-              </div>
-
-              <div className="checklist-item">
-                <div className="checklist-item-checkbox">
-                  {hasApplications ? <CheckCircle2 size={18} color="#22c55e" /> : <Clock3 size={18} color="var(--muted)" />}
-                </div>
-                <div className="checklist-item-content">
-                  <span className="checklist-item-title" style={{ textDecoration: hasApplications ? 'line-through' : 'none', opacity: hasApplications ? 0.6 : 1 }}>
-                    Tìm kiếm và ứng tuyển Quest đầu tiên
-                  </span>
-                  <span className="checklist-item-desc">Khám phá Bảng cơ hội và gửi đơn ứng tuyển vào dự án phù hợp với năng lực.</span>
-                </div>
-              </div>
-              </div>
-            </section>
+            {/* Danh sách "Hành trình phát triển hồ sơ" đã bỏ: hộ chiếu phía trên
+                đã nói thẳng BƯỚC KẾ TIẾP, lấy từ đúng chuỗi điều kiện sinh ra
+                danh sách này — nên nó chỉ là cùng một thông tin viết dài ra. Khi
+                đã xong vài bước thì phần lớn dòng bị gạch ngang, chiếm chỗ mà
+                không nói thêm gì. */}
           </div>
         )}
 
@@ -2390,7 +2287,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   </button>
                   <button type="button" onClick={() => setShowSavedJobsOnly(true)}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '7px', border: 0, fontSize: '0.82rem', fontWeight: '800', cursor: 'pointer', background: showSavedJobsOnly ? 'var(--c-red)' : 'transparent', color: showSavedJobsOnly ? '#fff' : 'var(--c-muted)' }}>
-                    <Bookmark size={13} fill={showSavedJobsOnly ? 'currentColor' : 'none'} /> Đã lưu{savedJobIds.size > 0 ? ` (${savedJobIds.size})` : ''}
+                    <Bookmark size={13} fill={showSavedJobsOnly ? 'currentColor' : 'none'} /> Đã lưu{savedIds.size > 0 ? ` (${savedIds.size})` : ''}
                   </button>
                 </div>
                 <span style={{ fontSize: '0.88rem', color: 'var(--c-muted)', fontWeight: '700' }}><strong style={{ color: 'var(--c-ink)' }}>{jobsSource.length}</strong> kết quả</span>
@@ -2445,11 +2342,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                             type="button"
                             onClick={(e) => toggleSaveJob(e, job.id)}
                             disabled={savingJobId === String(job.id)}
-                            title={savedJobIds.has(String(job.id)) ? 'Bỏ lưu tin này' : 'Lưu tin để xem lại sau'}
-                            aria-label={savedJobIds.has(String(job.id)) ? 'Bỏ lưu tin' : 'Lưu tin'}
-                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '9px', border: `1px solid ${savedJobIds.has(String(job.id)) ? 'var(--c-red)' : 'var(--c-line)'}`, background: savedJobIds.has(String(job.id)) ? 'var(--c-red-soft)' : 'transparent', color: savedJobIds.has(String(job.id)) ? 'var(--c-red)' : 'var(--c-muted)', cursor: savingJobId === String(job.id) ? 'default' : 'pointer', flexShrink: 0 }}
+                            title={savedIds.has(String(job.id)) ? 'Bỏ lưu tin này' : 'Lưu tin để xem lại sau'}
+                            aria-label={savedIds.has(String(job.id)) ? 'Bỏ lưu tin' : 'Lưu tin'}
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '9px', border: `1px solid ${savedIds.has(String(job.id)) ? 'var(--c-red)' : 'var(--c-line)'}`, background: savedIds.has(String(job.id)) ? 'var(--c-red-soft)' : 'transparent', color: savedIds.has(String(job.id)) ? 'var(--c-red)' : 'var(--c-muted)', cursor: savingJobId === String(job.id) ? 'default' : 'pointer', flexShrink: 0 }}
                           >
-                            {savedJobIds.has(String(job.id)) ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+                            {savedIds.has(String(job.id)) ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
                           </button>
                           <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(job.id)} className="np-job-detail">Chi tiết</a>
                           <button type="button" disabled={isLocked || alreadyApplied} onClick={() => handleApplyJob(job)}
@@ -2616,9 +2513,131 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           </section>
         )}
 
+        {/* 2b-bis. VIỆC ĐÃ LƯU ─────────────────────────────────────────────
+            Tab riêng, đặt giữa "Tổng quan" và "Ứng tuyển" vì đó đúng thứ tự
+            người dùng đi qua: xem mình đang ở đâu → chỗ để dành → chỗ đã nộp.
+
+            Không dựng lại thành lưới thẻ như /jobs. Ở đây người dùng không
+            duyệt để khám phá — họ đã chọn rồi, giờ là quyết định nộp hay bỏ.
+            Nên là danh sách hàng ngang, mỗi hàng nói đúng ba điều cần cho
+            quyết định đó: việc gì, trả bao nhiêu, còn bao lâu. */}
+        {activeView === 'SAVED' && (() => {
+          const rows = savedJobsList || [];
+          /* Số ngày còn lại, làm tròn LÊN: hạn lúc 23:59 hôm nay mà báo
+             "còn 0 ngày" thì đọc như đã hết hạn. */
+          const daysLeft = (iso) => {
+            if (!iso) return null;
+            const ms = new Date(iso).getTime() - Date.now();
+            return ms <= 0 ? 0 : Math.ceil(ms / 86400000);
+          };
+          const urgent = rows.filter(j => { const d = daysLeft(j.deadlineAt); return d !== null && d <= 3; }).length;
+
+          return (
+            <section className="np-view np-saved">
+              <div className="np-saved-head">
+                <div>
+                  <h2 className="np-saved-title">Việc đã lưu</h2>
+                  <p className="np-saved-sub">
+                    {rows.length === 0
+                      ? 'Những tin bạn bấm tim sẽ nằm ở đây.'
+                      : <>Bạn đang để dành <strong>{rows.length}</strong> tin{urgent > 0 ? <> · <span className="np-saved-urgent">{urgent} tin sắp hết hạn</span></> : null}</>}
+                  </p>
+                </div>
+                {renderReloadButton()}
+              </div>
+
+              {savedJobsLoading ? (
+                <div className="np-saved-state"><RefreshCw size={20} className="np-spin" /><p>Đang tải danh sách đã lưu…</p></div>
+              ) : rows.length === 0 ? (
+                <div className="np-saved-empty">
+                  <Heart size={26} />
+                  <h3>Chưa có tin nào được lưu</h3>
+                  <p>Bấm biểu tượng trái tim trên bất kỳ tin tuyển dụng nào để để dành lại, rồi quay về đây khi bạn sẵn sàng nộp.</p>
+                  <Link className="np-saved-cta" to="/jobs"><Search size={15} /> Tìm việc làm</Link>
+                </div>
+              ) : (
+                <>
+                  <ul className="np-saved-list">
+                    {rows.map(job => {
+                      const d = daysLeft(job.deadlineAt);
+                      const pay = job.compensation > 0 ? `${Number(job.compensation).toLocaleString('vi-VN')} VND` : 'Thỏa thuận';
+                      const type = JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType || '—';
+                      const place = job.isRemote ? 'Remote' : (job.location || 'Chưa rõ nơi làm');
+                      return (
+                        <li className="np-saved-row" key={job.id}>
+                          <div className="np-saved-logo" aria-hidden="true">
+                            {job.companyLogo
+                              ? <img src={job.companyLogo} alt="" />
+                              : <span>{(job.companyName || '?').trim().charAt(0).toUpperCase()}</span>}
+                          </div>
+
+                          <div className="np-saved-main">
+                            <Link className="np-saved-job" to={`/jobs/${job.id}`}>{job.title}</Link>
+                            <div className="np-saved-meta">
+                              <span>{job.companyName || 'Đối tác'}</span>
+                              <span>{place}</span>
+                              <span>{type}</span>
+                            </div>
+                          </div>
+
+                          <div className="np-saved-pay">{pay}</div>
+
+                          {/* Hạn nộp chỉ đổi màu khi còn ≤3 ngày. Tô màu mọi
+                              hàng thì màu hết mang thông tin. */}
+                          <div className={`np-saved-deadline${d !== null && d <= 3 ? ' soon' : ''}`}>
+                            {d === null ? 'Không giới hạn' : d === 0 ? 'Hết hạn hôm nay' : `Còn ${d} ngày`}
+                          </div>
+
+                          <div className="np-saved-actions">
+                            <Link className="np-saved-apply" to={`/jobs/${job.id}`}>Xem &amp; ứng tuyển</Link>
+                            <button
+                              type="button"
+                              className="np-saved-unsave"
+                              onClick={(e) => toggleSaveJob(e, job.id)}
+                              disabled={savingJobId === String(job.id)}
+                              title="Bỏ lưu tin này"
+                              aria-label={`Bỏ lưu ${job.title}`}
+                            >
+                              <Heart size={16} fill="currentColor" />
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  {/* Nói thẳng quy tắc thay vì để tin lặng lẽ biến mất rồi người
+                      dùng tưởng mình bấm nhầm. Backend chỉ trả tin còn mở và
+                      chưa quá hạn (SavedJobService.getSavedJobs). */}
+                  <p className="np-saved-note">
+                    Tin đã đóng hoặc quá hạn sẽ tự rời khỏi danh sách này.
+                  </p>
+                </>
+              )}
+            </section>
+          );
+        })()}
+
         {/* 2c. MY APPLICATIONS VIEW */}
         {activeView === 'MY_APPLICATIONS' && (() => {
-          const JOB_STATUS_COLOR = { SUBMITTED: '#d97706', VIEWED: '#2563eb', SHORTLISTED: '#7c3aed', ACCEPTED: '#16a34a', REJECTED: '#dc2626', COMPLETED: '#0ea5e9', WITHDRAWN: '#6b7280' };
+          /* Bảng màu cũ là bảy màu mặc định của Tailwind (#d97706 hổ phách,
+             #2563eb lam, #7c3aed tím, #16a34a lục, #0ea5e9 xanh trời…) — không
+             màu nào thuộc hệ của site, và bảy màu cùng độ rực thì không màu nào
+             nổi hơn màu nào, nên mắt không đọc được đâu là tin tốt.
+             Bảng mới chỉ dùng màu đã có trong hệ, và phân theo Ý NGHĨA chứ
+             không phải theo thứ tự cầu vồng: hai trạng thái "chưa có gì xảy ra"
+             để màu chữ phụ, tin tốt dùng emerald, đang-chờ-phản-hồi dùng hổ
+             phách (cùng màu với "sắp hết hạn" ở tab Việc đã lưu), và chỉ từ
+             chối mới là đỏ. */
+          const JOB_STATUS_COLOR = {
+            SUBMITTED: 'rgba(233,247,242,0.62)',
+            VIEWED: '#67e8f9',
+            SHORTLISTED: '#f59e0b',
+            ACCEPTED: '#10b981',
+            COMPLETED: '#34d399',
+            REJECTED: '#f87171',
+            WITHDRAWN: 'rgba(233,247,242,0.45)',
+          };
           const JOB_STATUS_LABEL = { SUBMITTED: 'Đã nộp', VIEWED: 'Đã xem', SHORTLISTED: 'Vào vòng tiếp', ACCEPTED: 'Chấp thuận', REJECTED: 'Từ chối', COMPLETED: 'Hoàn thành', WITHDRAWN: 'Rút đơn' };
           const filteredBizApps = appliedJobs.filter(app => {
             const title = (app.job_title || app.title || '').toLowerCase();
@@ -2637,29 +2656,31 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
           const bizCount = (s) => appliedJobs.filter(a => (a.status || 'SUBMITTED') === s).length;
           const clubCount = (s) => questApplications.filter(a => a.status === s).length;
+          /* Sáu ô số liệu cũ đều cùng cỡ, cùng khung, xếp đều nhau — nên
+             "Tổng đơn" trông ngang hàng với "Từ chối", trong khi chúng không
+             cùng loại thông tin. Rút còn bốn: một tổng, rồi ba nhóm theo VIỆC
+             NGƯỜI DÙNG CẦN LÀM — đang chờ (không phải làm gì), có tiến triển
+             (nên chuẩn bị), đã khép lại (rút kinh nghiệm). */
           const statCards = myAppsTab === 'BUSINESS'
             ? [
-                { label: 'Tổng đơn', val: appliedJobs.length, color: 'var(--c-ink)' },
-                { label: 'Đang chờ', val: bizCount('SUBMITTED') + bizCount('VIEWED'), color: '#d97706' },
-                { label: 'Vào vòng tiếp', val: bizCount('SHORTLISTED'), color: '#7c3aed' },
-                { label: 'Chấp thuận', val: bizCount('ACCEPTED'), color: '#16a34a' },
-                { label: 'Hoàn thành', val: bizCount('COMPLETED'), color: '#0ea5e9' },
-                { label: 'Từ chối', val: bizCount('REJECTED'), color: '#dc2626' },
+                { label: 'Tổng đơn đã nộp', val: appliedJobs.length, color: '#fff' },
+                { label: 'Đang chờ phản hồi', val: bizCount('SUBMITTED') + bizCount('VIEWED'), color: 'rgba(233,247,242,0.62)' },
+                { label: 'Có tiến triển', val: bizCount('SHORTLISTED') + bizCount('ACCEPTED') + bizCount('COMPLETED'), color: '#10b981' },
+                { label: 'Đã khép lại', val: bizCount('REJECTED') + bizCount('WITHDRAWN'), color: 'rgba(233,247,242,0.45)' },
               ]
             : [
-                { label: 'Tổng đơn', val: questApplications.length, color: 'var(--c-ink)' },
-                { label: 'Đã nộp', val: clubCount('SUBMITTED'), color: '#d97706' },
-                { label: 'Chấp thuận', val: clubCount('ACCEPTED'), color: '#16a34a' },
-                { label: 'Hoàn thành', val: clubCount('COMPLETED'), color: '#2563eb' },
-                { label: 'Từ chối', val: clubCount('REJECTED'), color: '#dc2626' },
+                { label: 'Tổng đơn đã nộp', val: questApplications.length, color: '#fff' },
+                { label: 'Đang chờ phản hồi', val: clubCount('SUBMITTED'), color: 'rgba(233,247,242,0.62)' },
+                { label: 'Có tiến triển', val: clubCount('ACCEPTED') + clubCount('COMPLETED'), color: '#10b981' },
+                { label: 'Đã khép lại', val: clubCount('REJECTED') + clubCount('WITHDRAWN'), color: 'rgba(233,247,242,0.45)' },
               ];
 
           return (
             <section className="np-view apptrack">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '20px' }}>
+              <div className="np-saved-head">
                 <div>
-                  <h2 style={{ margin: '0 0 4px', fontSize: 'clamp(1.6rem, 2.4vw, 2rem)', fontWeight: '800', letterSpacing: '-0.035em', color: 'var(--c-ink)' }}>Theo dõi ứng tuyển</h2>
-                  <p style={{ margin: 0, fontSize: '0.96rem', color: 'var(--c-muted)' }}>Trạng thái các đơn ứng tuyển việc làm và Quest của bạn.</p>
+                  <h2 className="np-saved-title">Ứng tuyển</h2>
+                  <p className="np-saved-sub">Trạng thái các đơn bạn đã nộp cho doanh nghiệp và CLB.</p>
                 </div>
                 {renderReloadButton()}
               </div>
@@ -2793,7 +2814,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   ) : (
                     <div className="np-stagger apptrack-list">
                       {filteredClubApps.map((qa, idx) => {
-                        const QUEST_SC = { SUBMITTED: '#d97706', ACCEPTED: '#16a34a', REJECTED: '#dc2626', COMPLETED: '#2563eb', WITHDRAWN: '#6b7280' };
+                        // Cùng quy tắc với JOB_STATUS_COLOR ở trên: màu theo ý
+                        // nghĩa, chỉ dùng màu đã có trong hệ.
+                        const QUEST_SC = { SUBMITTED: 'rgba(233,247,242,0.62)', ACCEPTED: '#10b981', REJECTED: '#f87171', COMPLETED: '#34d399', WITHDRAWN: 'rgba(233,247,242,0.45)' };
                         const sc = QUEST_SC[qa.status] || '#6b7280';
                         return (
                           <div className="appcard" key={qa.id || idx} style={{ '--app-status': sc, '--app-status-soft': `${sc}1a` }}>
@@ -2851,8 +2874,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           );
         })()}
 
-        {/* 2d. PERSONALIZED AI RECOMMENDATIONS VIEW */}
-        {activeView === 'RECOMMENDATIONS' && (
+        {/* 2d. GỢI Ý AI — không còn là tab riêng, render như một dải nằm dưới
+            phần Tổng quan (điều kiện đổi từ RECOMMENDATIONS sang OVERVIEW). */}
+        {activeView === 'OVERVIEW' && (
           <section className="np-view">
             <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
               <div>
@@ -2981,13 +3005,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         {/* 2e. PREMIUM STORE VIEW */}
         {activeView === 'PREMIUM_STORE' && (
           <section className="candidate-premium-workspace np-view">
-            <header className="candidate-overview-header candidate-premium-header">
-              <div className="candidate-overview-title">
-                <h1>Cửa hàng Premium</h1>
-                <p>Nâng cấp trải nghiệm và tăng tốc hồ sơ bằng số dư NP.</p>
+            <div className="np-saved-head">
+              <div>
+                <h2 className="np-saved-title">Cửa hàng Premium</h2>
+                <p className="np-saved-sub">Nâng cấp trải nghiệm và tăng tốc hồ sơ bằng số dư NP.</p>
               </div>
               {renderReloadButton()}
-            </header>
+            </div>
 
             {buyPremiumError && (
               <div className="alert-banner error candidate-premium-alert">
@@ -3050,36 +3074,17 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 )}
               </section>
 
-              <aside className="candidate-premium-side-card">
-                <h3>Trạng thái dịch vụ</h3>
-                <div className="candidate-premium-state-list">
-                  <div>
-                    <span className={wallet?.isPremium ? 'active' : ''} />
-                    <div><strong>Premium Pass</strong><p>{wallet?.isPremium ? 'Đang sở hữu' : 'Chưa kích hoạt'}</p></div>
-                  </div>
-                  <div>
-                    <span className={wallet?.hasJobMatchAlert ? 'active' : ''} />
-                    <div><strong>Job Match Alert</strong><p>{wallet?.hasJobMatchAlert ? 'Đang bật' : 'Chưa đăng ký'}</p></div>
-                  </div>
-                  <div>
-                    <span className={portfolio?.themeUnlocked ? 'active' : ''} />
-                    <div><strong>Portfolio Theme</strong><p>{portfolio?.themeUnlocked ? 'Đã mở khóa' : 'Chưa mở khóa'}</p></div>
-                  </div>
-                </div>
-              </aside>
             </div>
 
-            <div className="candidate-premium-section-heading">
-              <div>
-                <h2>Dịch vụ tăng tốc hồ sơ</h2>
-              </div>
-              <p>Giúp bạn nổi bật và ứng tuyển hiệu quả hơn.</p>
+            <div className="np-prem-heading">
+              <h3>Dịch vụ tăng tốc hồ sơ</h3>
+              <p>Mua lẻ bằng NP, không cần Premium Pass.</p>
             </div>
 
             <div className="candidate-premium-service-list np-stagger">
               <article className={`candidate-premium-service-row ${wallet?.hasJobMatchAlert ? 'active' : ''}`}>
                 <div className="candidate-premium-service-copy">
-                  <div className="candidate-premium-mark green"><Sparkles size={20} /></div>
+                  <div className="candidate-premium-mark"><Sparkles size={20} /></div>
                   <div>
                     <div className="candidate-premium-service-title">
                       <h3>Job Match Alert & Đề xuất AI</h3>
@@ -3089,7 +3094,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   </div>
                 </div>
                 <div className="candidate-premium-row-action">
-                  <button type="button" className={`button ${wallet?.hasJobMatchAlert ? 'secondary-button' : 'primary-button accent-green'}`} onClick={handleSubscribeMatchAlert} disabled={subscribingMatchAlert}>
+                  <button type="button" className={`button ${wallet?.hasJobMatchAlert ? 'secondary-button' : 'primary-button'}`} onClick={handleSubscribeMatchAlert} disabled={subscribingMatchAlert}>
                     {subscribingMatchAlert ? <><span className="premium-loading-dot" aria-hidden="true" /> Đang xử lý...</> : wallet?.hasJobMatchAlert ? 'Gia hạn 30 ngày' : 'Đăng ký ngay'}
                   </button>
                 </div>
@@ -3097,7 +3102,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
               <article className={`candidate-premium-service-row ${portfolio?.themeUnlocked ? 'active' : ''}`}>
                 <div className="candidate-premium-service-copy">
-                  <div className="candidate-premium-mark violet"><Palette size={20} /></div>
+                  <div className="candidate-premium-mark"><Palette size={20} /></div>
                   <div>
                     <div className="candidate-premium-service-title">
                       <h3>Visual Upgrade</h3>
@@ -3110,7 +3115,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   {portfolio?.themeUnlocked ? (
                     <div className="premium-theme-grid candidate-premium-theme-grid">
                       {[
-                        { id: 'DEFAULT', name: 'Classic Default', colorBox: ['#e5533f', '#f3ede9'] },
+                        { id: 'DEFAULT', name: 'Classic Default', colorBox: ['#10b981', 'rgba(255,255,255,0.08)'] },
                         { id: 'DARK_GOLD', name: 'Luxury Gold', colorBox: ['#eab308', '#fef08a'] },
                         { id: 'CYBERPUNK', name: 'Cyberpunk Neon', colorBox: ['#ec4899', '#06b6d4'] },
                         { id: 'EMERALD_CLASSIC', name: 'Emerald Executive', colorBox: ['#10b981', '#a7f3d0'] }
@@ -3148,7 +3153,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         title: 'Mở khóa Visual Upgrade',
                         message: `Hệ thống sẽ trừ ${(premiumConfig.themePriceNp || 50000).toLocaleString()} NP để mở khóa trọn đời bộ theme cho link portfolio công khai.`,
                         confirmText: 'Mua trọn đời',
-                        accent: '#7c3aed',
+                        accent: '#10b981',
                         onConfirm: async () => {
                           try {
                             const res = await unlockTheme();
@@ -3166,7 +3171,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                           }
                         },
                       })}
-                      className="button primary-button accent-violet"
+                      className="button primary-button"
                     >
                       Mua trọn đời
                     </button>
@@ -3197,7 +3202,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 return (
                   <article className="candidate-premium-service-row">
                     <div className="candidate-premium-service-copy">
-                      <div className="candidate-premium-mark amber"><ExternalLink size={19} /></div>
+                      <div className="candidate-premium-mark"><ExternalLink size={19} /></div>
                       <div>
                         <div className="candidate-premium-service-title">
                           <h3>Profile Boost</h3>
@@ -3226,7 +3231,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       )}
                       <button
                         type="button"
-                        className="button primary-button accent-amber"
+                        className="button primary-button"
                         disabled={!selectedBoostAppId || boostLoadingId === selectedBoostAppId}
                         onClick={async () => {
                           const target = decodePremiumTarget(selectedBoostAppId);
@@ -3246,7 +3251,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 return (
                   <article className="candidate-premium-service-row">
                     <div className="candidate-premium-service-copy">
-                      <div className="candidate-premium-mark amber"><Zap size={20} /></div>
+                      <div className="candidate-premium-mark"><Zap size={20} /></div>
                       <div>
                         <div className="candidate-premium-service-title">
                           <h3>Duyệt nhanh 24h Express</h3>
@@ -3269,7 +3274,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       )}
                       <button
                         type="button"
-                        className="button primary-button accent-amber"
+                        className="button primary-button"
                         disabled={!selectedExpressSubId || expressLoadingId === selectedExpressSubId}
                         onClick={async () => {
                           await handleExpressVerification(selectedExpressSubId);
@@ -3304,7 +3309,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 return (
                   <article className="candidate-premium-service-row">
                     <div className="candidate-premium-service-copy">
-                      <div className="candidate-premium-mark violet"><Award size={20} /></div>
+                      <div className="candidate-premium-mark"><Award size={20} /></div>
                       <div>
                         <div className="candidate-premium-service-title">
                           <h3>Application Insight</h3>
@@ -3331,7 +3336,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       )}
                       <button
                         type="button"
-                        className="button primary-button accent-violet"
+                        className="button primary-button"
                         disabled={!selectedInsightJobId || insightLoadingJobId === selectedInsightJobId}
                         onClick={async () => {
                           const target = decodePremiumTarget(selectedInsightJobId);
@@ -3746,16 +3751,31 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         )}
 
         {/* 5. CREDENTIALS & STATUS VIEW */}
-        {activeView === 'CREDENTIALS' && (
+        {activeView === 'CREDENTIALS' && (() => {
+          const pendingProofCount = credentialSubmissions.filter(x => (x.verification_status || 'PENDING') === 'PENDING').length;
+          return (
           <div className="candidate-credentials-workspace np-view">
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>{renderReloadButton()}</div>
+            {/* Bốn tab kia đều mở đầu bằng tiêu đề + một câu tóm tắt; riêng tab
+                này trước đó chỉ có một nút "Tải lại" trôi nổi ở góc phải, nên
+                người dùng chuyển sang đây là mất mốc định vị. */}
+            <div className="np-saved-head">
+              <div>
+                <h2 className="np-saved-title">Minh chứng</h2>
+                <p className="np-saved-sub">
+                  {pendingProofCount > 0
+                    ? <>Bạn có <strong>{pendingProofCount}</strong> minh chứng đang chờ admin duyệt.</>
+                    : 'Hoạt động thật đã được duyệt sẽ cộng EXP và Reputation Score vào hồ sơ.'}
+                </p>
+              </div>
+              {renderReloadButton()}
+            </div>
 
             {/* Certifications & Diplomas Grid (My Credentials) */}
             <section className="credentials-list-section">
-              <div style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Award size={20} color="var(--primary)" />
-                  <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '850', color: 'var(--ink)' }}>Văn bằng & Chứng chỉ đã tải</h2>
+              <div className="np-cred-subhead">
+                <div>
+                  <h3>Văn bằng &amp; Chứng chỉ</h3>
+                  <p>Bạn tự tải lên từ trình chỉnh sửa Portfolio.</p>
                 </div>
                 {has3D ? (
                   <Link className="button secondary-button" to="/portfolio/edit" style={{ fontSize: '0.8rem', padding: '6px 12px', borderRadius: '8px' }}>
@@ -3769,39 +3789,20 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </div>
 
               {!portfolio?.credentials || portfolio.credentials.length === 0 || !portfolio.credentials.some(c => c.name?.trim()) ? (
-                <div style={{ textAlign: 'center', padding: '40px 20px', border: '1px dashed var(--line)', borderRadius: '16px', background: 'var(--surface-soft)' }}>
-                  <Award size={26} color="var(--muted)" style={{ marginBottom: '8px' }} />
-                  <p style={{ margin: '0 0 8px', color: 'var(--muted)', fontSize: '0.9rem', fontWeight: '600' }}>Chưa có chứng chỉ nào được xác thực.</p>
-                  <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.82rem' }}>Hãy truy cập Chỉnh sửa Portfolio để tải lên văn bằng chứng chỉ, giúp nâng điểm Reputation Score của bạn.</p>
+                <div className="np-saved-empty">
+                  <Award size={26} />
+                  <h3>Chưa có văn bằng nào</h3>
+                  <p>Tải văn bằng, chứng chỉ lên từ trình chỉnh sửa Portfolio để nhà tuyển dụng thấy được nền tảng của bạn.</p>
                 </div>
               ) : (
-                <div className="np-stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+                <div className="np-stagger np-cred-grid">
                   {portfolio.credentials.filter(c => c.name?.trim()).map((cred) => (
-                    <article key={cred.id} style={{
-                      border: '1px solid var(--c-line)',
-                      borderRadius: '16px',
-                      padding: '16px',
-                      background: 'var(--c-surface)',
-                      display: 'flex',
-                      gap: '12px',
-                      alignItems: 'flex-start'
-                    }}>
-                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--c-red-soft)', color: 'var(--c-red)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Award size={18} />
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                        <h4 style={{ margin: 0, fontSize: '0.94rem', fontWeight: '800', color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={cred.name}>
-                          {cred.name}
-                        </h4>
-                        <span style={{ fontSize: '0.82rem', color: 'var(--muted)', marginTop: '2px' }}>Cấp bởi: {cred.issuer || 'Chưa rõ'}</span>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', borderTop: '1px solid var(--line)', paddingTop: '8px' }}>
-                          <span style={{ fontSize: '0.78rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Calendar size={12} /> Cấp: {cred.issuedAt || 'Chưa rõ'}
-                          </span>
-                          <span style={{ fontSize: '0.74rem', fontWeight: '800', color: '#22c55e', background: 'rgba(34, 197, 94, 0.12)', padding: '2px 6px', borderRadius: '4px' }}>
-                            Đã xác minh
-                          </span>
-                        </div>
+                    <article key={cred.id} className="np-cred-card">
+                      <div className="np-cred-mark"><Award size={18} /></div>
+                      <div style={{ minWidth: 0 }}>
+                        <h4 title={cred.name}>{cred.name}</h4>
+                        <span className="np-cred-issuer">{cred.issuer || 'Chưa rõ nơi cấp'}</span>
+                        <span className="np-cred-date">{cred.issuedAt || 'Chưa rõ ngày cấp'}</span>
                       </div>
                     </article>
                   ))}
@@ -3811,10 +3812,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
             {/* Proof of Work submission section */}
             <section className="credentials-list-section" style={{ marginTop: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <ShieldCheck size={20} color="var(--primary)" />
-                  <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '850', color: 'var(--ink)' }}>Nộp Minh chứng Hoạt động</h2>
+              <div className="np-cred-subhead">
+                <div>
+                  <h3>Minh chứng hoạt động</h3>
+                  <p>Admin xét duyệt, rồi EXP và RS được cộng tự động.</p>
                 </div>
                 <button
                   className="button primary-button"
@@ -3826,7 +3827,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </div>
 
               {credentialFormSuccess && (
-                <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#16a34a', fontSize: '0.88rem', marginBottom: '14px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', fontSize: '0.88rem', marginBottom: '14px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                   <CheckCircle2 size={16} style={{ flexShrink: 0, marginTop: '1px' }} />
                   {credentialFormSuccess}
                 </div>
@@ -3911,7 +3912,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                           <div key={i} style={{ position: 'relative', width: '92px', height: '92px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--line)' }}>
                             <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             <button type="button" onClick={() => removeProofImage(i)} aria-label="Gỡ ảnh"
-                              style={{ position: 'absolute', top: '4px', right: '4px', width: '22px', height: '22px', borderRadius: '50%', border: 'none', background: 'rgba(220,38,38,0.92)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              style={{ position: 'absolute', top: '4px', right: '4px', width: '22px', height: '22px', borderRadius: '50%', border: 'none', background: 'rgba(248,113,113,0.92)', color: '#2b0d0d', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <X size={13} />
                             </button>
                           </div>
@@ -3944,84 +3945,87 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 </form>
               )}
 
-              {/* List of submitted proofs */}
+              {/* ── Danh sách minh chứng đã nộp ──────────────────────────────
+                  Mỗi dòng phải trả lời được "nó tới đâu rồi" ngay từ cái liếc
+                  đầu tiên: vạch trạng thái bên trái + nhãn trạng thái bên phải,
+                  hai thứ này nằm ở hai mép nên không cần đọc giữa. */}
               {credentialSubmissionsLoading ? (
-                <div className="empty-state">
-                  <div className="empty-state-icon"><ShieldCheck size={28} /></div>
-                  <p className="empty-state-title">Đang tải minh chứng...</p>
-                </div>
+                <div className="np-saved-state"><RefreshCw size={20} className="np-spin" /><p>Đang tải minh chứng…</p></div>
               ) : credentialSubmissions.length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-state-icon"><ShieldCheck size={28} /></div>
-                  <p className="empty-state-title">Chưa có minh chứng nào được nộp.</p>
-                  <p className="empty-state-desc">Nhấn "+ Nộp minh chứng mới" để bắt đầu tích luỹ EXP và RS thực tế.</p>
+                <div className="np-saved-empty">
+                  <ShieldCheck size={26} />
+                  <h3>Chưa nộp minh chứng nào</h3>
+                  <p>Mỗi hoạt động thật được duyệt sẽ cộng EXP và Reputation Score — đây là thứ phân biệt hồ sơ của bạn với một bản CV tự khai.</p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <ul className="np-proof-list">
                   {credentialSubmissions.map(sub => {
                     const categoryLabels = { CLUB_SMALL: 'Sự kiện CLB', SCHOOL_CAMPAIGN: 'Chiến dịch Trường', COMPANY_PROJECT: 'Dự án DN', SHORT_INTERNSHIP: 'Thực tập', FREELANCE_GIG: 'Freelance' };
                     const expRewards = { CLUB_SMALL: 100, SCHOOL_CAMPAIGN: 300, COMPANY_PROJECT: 500, SHORT_INTERNSHIP: 500, FREELANCE_GIG: 500 };
-                    const statusKey = (sub.verification_status || '').toLowerCase();
-                    const statusLabel = sub.verification_status === 'APPROVED' ? 'Đã duyệt' : sub.verification_status === 'REJECTED' ? 'Từ chối' : 'Chờ duyệt';
+                    const status = sub.verification_status || 'PENDING';
+                    const statusKey = status.toLowerCase();
+                    const statusLabel = status === 'APPROVED' ? 'Đã duyệt' : status === 'REJECTED' ? 'Từ chối' : 'Chờ duyệt';
+                    const isLeader = sub.role_level === 'LEADER';
                     return (
-                      <div key={sub.id} className={`proof-card ${statusKey}`}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', flexWrap: 'wrap' }}>
-                            <h4 style={{ margin: 0, fontSize: '0.94rem', fontWeight: '800', color: 'var(--ink)' }}>{sub.project_name}</h4>
-                            <span className="proof-chip category">{categoryLabels[sub.category] || sub.category}</span>
-                            <span className={`proof-chip ${(sub.role_level || 'MEMBER').toLowerCase()}`}>{sub.role_level === 'LEADER' ? 'Trưởng nhóm' : 'Thành viên'}</span>
+                      <li key={sub.id} className={`np-proof-row ${statusKey}`}>
+                        <div className="np-proof-main">
+                          <div className="np-proof-titleline">
+                            <h4>{sub.project_name}</h4>
+                            {sub.expressVerification && <span className="np-proof-express"><Zap size={11} /> Express</span>}
                           </div>
-                          <p style={{ margin: '0 0 6px', fontSize: '0.84rem', color: 'var(--muted)' }}>{sub.position}</p>
+                          <div className="np-proof-meta">
+                            <span>{sub.position}</span>
+                            <span>{categoryLabels[sub.category] || sub.category}</span>
+                            <span>{isLeader ? 'Trưởng nhóm' : 'Thành viên'}</span>
+                            {sub.created_at && <span>Nộp {new Date(sub.created_at).toLocaleDateString('vi-VN')}</span>}
+                          </div>
+
                           {sub.proof_link && (
-                            <a href={sub.proof_link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.8rem', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <a className="np-proof-link" href={sub.proof_link} target="_blank" rel="noopener noreferrer">
                               <ExternalLink size={12} /> Link minh chứng
                             </a>
                           )}
-                          {sub.verification_status === 'REJECTED' && sub.reject_reason && (
-                            <div className="alert-banner error" style={{ marginTop: '8px', marginBottom: 0, padding: '6px 10px' }}>
-                              <AlertTriangle size={13} style={{ flexShrink: 0 }} />
-                              Lý do từ chối: {sub.reject_reason}
-                            </div>
+
+                          {status === 'REJECTED' && sub.reject_reason && (
+                            <p className="np-proof-reject">Lý do từ chối: {sub.reject_reason}</p>
                           )}
-                          {sub.verification_status === 'APPROVED' && (
-                            <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: '#16a34a', fontWeight: '700' }}>
-                              +{expRewards[sub.category] || 100} EXP · +{sub.role_level === 'LEADER' ? 10 : 5} RS đã được cộng
+                          {status === 'APPROVED' && (
+                            <p className="np-proof-reward">
+                              Đã cộng +{expRewards[sub.category] || 100} EXP · +{isLeader ? 10 : 5} RS
+                            </p>
+                          )}
+                          {/* Nói trước phần thưởng khi còn chờ duyệt: đó là lý
+                              do người dùng chịu khó nộp và chịu khó chờ. */}
+                          {status === 'PENDING' && (
+                            <p className="np-proof-pending-note">
+                              Nếu được duyệt: +{expRewards[sub.category] || 100} EXP · +{isLeader ? 10 : 5} RS
                             </p>
                           )}
                         </div>
-                        <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            {sub.expressVerification && (
-                              <span style={{ fontSize: '0.72rem', fontWeight: '800', border: '1px solid #f59e0b', color: '#d97706', background: 'rgba(245,158,11,0.1)', padding: '3px 9px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                <Zap size={11} /> Express
-                              </span>
-                            )}
-                            <span className={`proof-status-badge ${statusKey}`}>{statusLabel}</span>
-                          </div>
-                          
-                          {!sub.expressVerification && sub.verification_status === 'PENDING' && (
+
+                        <div className="np-proof-side">
+                          <span className={`np-proof-status ${statusKey}`}>{statusLabel}</span>
+                          {!sub.expressVerification && status === 'PENDING' && (
                             <button
+                              type="button"
+                              className="np-proof-express-btn"
                               onClick={() => handleExpressVerification(sub.id)}
                               disabled={expressLoadingId === sub.id}
-                              style={{ fontSize: '0.72rem', fontWeight: '700', color: '#d97706', background: 'none', border: '1px solid rgba(217,119,6,0.35)', borderRadius: '6px', padding: '3px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', transition: 'all 0.2s' }}
                               title={`Nâng cấp duyệt nhanh 24h với ${premiumConfig.expressPriceNp.toLocaleString()} NP`}
                             >
-                              {expressLoadingId === sub.id ? '...' : <><Zap size={11} /> Duyệt nhanh 24h</>}
+                              {expressLoadingId === sub.id ? 'Đang xử lý…' : <><Zap size={11} /> Duyệt nhanh 24h</>}
                             </button>
                           )}
-
-                          <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--muted)' }}>
-                            {sub.created_at ? new Date(sub.created_at).toLocaleDateString('vi-VN') : ''}
-                          </p>
                         </div>
-                      </div>
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
               )}
             </section>
           </div>
-        )}
+          );
+        })()}
       </main>
 
       {/* ─── Quest Apply Modal ─── */}
@@ -4097,7 +4101,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       {/* ─── Application detail (tracking) Modal ─── */}
       {viewingApp && (() => {
         const { app, isQuest } = viewingApp;
-        const accent = isQuest ? '#f59e0b' : '#2563eb';
+        const accent = isQuest ? '#f59e0b' : '#10b981';
         const title = isQuest ? app.questTitle : (app.job_title || app.title);
         const company = isQuest ? app.companyName : (app.company_name || app.companyName);
         const coverNote = app.cover_note || app.coverNote || '';
@@ -4177,10 +4181,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         <div className="glass-modal-overlay" onClick={() => { if (!withdrawingId) setWithdrawConfirm(null); }}>
           <div className="glass-modal-content" style={{ maxWidth: '420px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px', padding: '24px' }}>
-              <span style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(220,38,38,0.1)', color: '#dc2626', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(248,113,113,0.12)', color: '#f87171', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                 <AlertTriangle size={26} />
               </span>
-              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: 'var(--ink)' }}>Rút đơn ứng tuyển?</h2>
+              <h2 style={{ margin: 0, fontFamily: 'inherit', fontSize: '1.2rem', fontWeight: '500', letterSpacing: '-0.02em', color: 'var(--ink)' }}>Rút đơn ứng tuyển?</h2>
               <p style={{ margin: 0, fontSize: '0.92rem', color: 'var(--muted)', lineHeight: 1.5 }}>
                 Bạn có chắc muốn rút đơn{withdrawConfirm.title ? <> cho <strong style={{ color: 'var(--ink)' }}>"{withdrawConfirm.title}"</strong></> : ''}? Thao tác này không thể hoàn tác — nếu muốn tham gia lại bạn sẽ phải nộp đơn mới.
               </p>
@@ -4188,7 +4192,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <button type="button" className="button secondary-button" style={{ flex: 1, minHeight: '44px' }} onClick={() => setWithdrawConfirm(null)} disabled={!!withdrawingId}>
                   Giữ lại
                 </button>
-                <button type="button" className="button" style={{ flex: 1, minHeight: '44px', background: '#dc2626', color: '#fff', border: 'none' }} onClick={confirmWithdraw} disabled={!!withdrawingId}>
+                <button type="button" className="button" style={{ flex: 1, minHeight: '44px', background: '#f87171', color: '#2b0d0d', border: 'none' }} onClick={confirmWithdraw} disabled={!!withdrawingId}>
                   {withdrawingId ? 'Đang rút...' : 'Rút đơn'}
                 </button>
               </div>
@@ -4330,8 +4334,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="glass-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={20} color="#7c3aed" />
-                <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Phân tích cạnh tranh</h2>
+                <Sparkles size={20} color="#10b981" />
+                <h2 style={{ margin: 0, fontFamily: 'inherit', fontSize: '1.2rem', fontWeight: '500', letterSpacing: '-0.02em' }}>Phân tích cạnh tranh</h2>
               </div>
               <button 
                 onClick={() => { setInsightModalJob(null); setInsightData(null); }}
@@ -4390,11 +4394,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden', marginBottom: '20px' }}>
                 <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: '750', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px', textAlign: 'center' }}>Tỷ lệ phần trăm cạnh tranh</span>
                 <div style={{ filter: !insightData?.unlocked ? 'blur(4px)' : 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                  <strong style={{ fontSize: '1.6rem', fontWeight: '950', color: '#7c3aed' }}>
+                  <strong style={{ fontSize: '1.6rem', fontWeight: '500', color: '#10b981' }}>
                     {insightData?.unlocked ? `Giỏi hơn ${insightData.percentile}%` : 'Giỏi hơn 85%'}
                   </strong>
                   <div style={{ width: '100%', height: '8px', background: 'var(--c-line)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ width: insightData?.unlocked ? `${insightData.percentile}%` : '85%', height: '100%', background: '#7c3aed', borderRadius: '4px' }} />
+                    <div style={{ width: insightData?.unlocked ? `${insightData.percentile}%` : '85%', height: '100%', background: '#10b981', borderRadius: '4px' }} />
                   </div>
                   <span style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>
                     {insightData?.unlocked ? 'Hồ sơ của bạn vượt trội hơn ' + insightData.percentile + '% số ứng viên khác.' : 'Độ cạnh tranh so với các đối thủ khác'}
@@ -4415,7 +4419,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   </p>
                   <button
                     onClick={() => handleUnlockInsight(insightModalJob.targetId, insightModalJob.applicationType)}
-                    style={{ background: '#7c3aed', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: '800', cursor: 'pointer', boxShadow: '0 4px 12px rgba(124,58,237,0.2)' }}
+                    style={{ background: '#10b981', border: 'none', color: '#0b0f0e', padding: '11px 20px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '500', cursor: 'pointer' }}
                   >
                     Mở khóa ngay ({premiumConfig.insightPriceNp.toLocaleString()} NP)
                   </button>
