@@ -49,7 +49,7 @@ import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
 import { ApplicationTimeline } from '../components/ApplicationTimeline.jsx';
 import { InlineStatusTimeline } from '../components/InlineStatusTimeline.jsx';
 import { getMyUserId } from '../api/accountApi.js';
-import { PortfolioAvatar3D } from './CandidatePortfolioPage.jsx';
+import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
 import { getJobs, getCompanies, getCompanyDetail, getJobDetail, getFollowedCompanyIds, followCompany, unfollowCompany, getSavedJobs } from '../api/jobApi.js';
 import { useSavedJobs } from '../lib/savedJobs.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
@@ -1849,7 +1849,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
      dải riêng phía trên, kèm lời chào lặp lại tên người dùng — mà hộ chiếu đã
      xướng tên bằng cỡ 54px ngay bên dưới rồi. */
   const nextStep = !has3D
-    ? { text: 'Khởi tạo Portfolio 3D để nhà tuyển dụng thấy được bạn.', cta: 'Khởi tạo ngay', to: '/portfolio' }
+    ? { text: 'Khởi tạo Portfolio để nhà tuyển dụng thấy được bạn.', cta: 'Khởi tạo ngay', to: '/portfolio' }
     : !hasSchool
       ? { text: 'Bổ sung trường học vào hồ sơ để tăng độ tin cậy.', cta: 'Cập nhật hồ sơ', to: '/portfolio/edit' }
       : !hasCredentials
@@ -1973,7 +1973,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
           <div className="np-area-side">
             <Link className="np-area-link" to={portfolio?.onboardingCompleted ? '/portfolio/edit' : '/portfolio'}>
-              <Boxes size={16} /> Portfolio 3D
+              <Boxes size={16} /> Portfolio
             </Link>
             {/* Mặc định NotificationBell tự neo `position: fixed` ở góc trên
                 phải — di sản từ hồi khu vực này chưa có thanh điều hướng. Giờ
@@ -2062,7 +2062,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                      in hoa — mượn vùng mã máy đọc ở cuối hộ chiếu thật. */}
             <section className="np-passport" style={{ marginTop: 'clamp(28px, 3.4vw, 44px)' }}>
               <div className="np-pp-figure">
-                <PortfolioAvatar3D avatar={portfolio?.avatar} />
+                <PortfolioMascot avatar={portfolio?.avatar} size={210} />
               </div>
 
               <div className="np-pp-id">
@@ -2070,8 +2070,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <h2 className="np-pp-name">{portfolio?.name || 'Ứng viên'}</h2>
                 <p className="np-pp-sub">
                   {has3D
-                    ? 'Hồ sơ 3D đã kích hoạt, đang hiển thị với nhà tuyển dụng'
-                    : 'Hồ sơ 3D chưa thiết lập, hoàn thiện để nổi bật hơn'}
+                    ? 'Hồ sơ đã kích hoạt, đang hiển thị với nhà tuyển dụng'
+                    : 'Hồ sơ chưa thiết lập, hoàn thiện để nổi bật hơn'}
                 </p>
 
                 <div className="np-pp-next">
@@ -2088,7 +2088,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
                 <div className="np-pp-actions">
                   <Link to={has3D ? '/portfolio/edit' : '/portfolio'} className="np-pp-btn primary">
-                    <UserRound size={15} /> {has3D ? 'Chỉnh sửa Portfolio 3D' : 'Thiết lập Portfolio 3D'}
+                    <UserRound size={15} /> {has3D ? 'Chỉnh sửa Portfolio' : 'Thiết lập Portfolio'}
                   </Link>
                   {has3D && (
                     <button

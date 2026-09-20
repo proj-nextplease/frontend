@@ -30,7 +30,7 @@ const STEPS = [
     no: '01',
     icon: UserRound,
     title: 'Dựng hồ sơ',
-    body: 'Chọn nhân vật 3D, điền kỹ năng và học vấn. Mất vài phút, và bạn đã có một đường dẫn mang tên mình.',
+    body: 'Chọn linh vật, điền kỹ năng và học vấn. Mất vài phút, và bạn đã có một đường dẫn mang tên mình.',
   },
   {
     no: '02',
@@ -52,7 +52,7 @@ const COMPARISON = [
   ['Khi bạn có kinh nghiệm mới', 'Sửa file, gửi lại từ đầu', 'Link tự cập nhật'],
   ['Nhà tuyển dụng kiểm chứng', 'Phải gọi hỏi từng nơi', 'Bấm vào là thấy'],
   ['Thứ bạn tích luỹ được', 'Không có gì', 'Điểm uy tín, EXP, cấp độ'],
-  ['Trông giống ai', 'Giống mọi CV khác', 'Nhân vật 3D và trang của riêng bạn'],
+  ['Trông giống ai', 'Giống mọi CV khác', 'Linh vật và trang của riêng bạn'],
 ];
 
 const FAQS = [

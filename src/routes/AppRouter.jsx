@@ -188,7 +188,7 @@ function ProtectedPortfolioRoute({ isEditing = false }) {
   }
 
   return (
-    <Suspense fallback={<div className="route-loading">Đang dựng Portfolio 3D...</div>}>
+    <Suspense fallback={<div className="route-loading">Đang dựng Portfolio...</div>}>
       <CandidatePortfolioPage isEditing={isEditing} />
     </Suspense>
   );

@@ -247,7 +247,7 @@ export function CandidateRegisterPage() {
       }
       setCurrentStep(3);
       window.sessionStorage.removeItem(candidateRegisterDraftKey);
-      setStatus({ type: 'success', message: 'Xác thực hoàn tất. Bạn có thể bắt đầu dựng Portfolio 3D ngay bây giờ.' });
+      setStatus({ type: 'success', message: 'Xác thực hoàn tất. Bạn có thể bắt đầu dựng Portfolio ngay bây giờ.' });
     } catch (error) {
       setStatus({ type: 'error', message: error?.response?.data?.message || error.message || 'Không thể xác thực OTP ứng viên.' });
     }

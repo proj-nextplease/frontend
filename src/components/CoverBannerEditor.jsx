@@ -90,7 +90,7 @@ export function CoverBannerEditor({ url, pos, onChange, height = 180 }) {
           border: '1px dashed var(--line, #cbd5e1)',
           background: url
             ? `url(${url}) ${banner.x}% ${banner.y}% / ${banner.z * 100}% auto no-repeat`
-            : 'linear-gradient(120deg, #ecfdf5, #eff6ff)',
+            : 'rgba(255,255,255,0.03)',
           cursor: url ? 'grab' : 'default',
           touchAction: 'none',
         }}

@@ -15098,193 +15098,371 @@ button.np-pp-cell:hover { background: rgba(255, 255, 255, 0.05); }
 .portfolio-submit-panel .button.primary-button:active { transform: scale(.97); }
 
 /* =========================================================================
-   PORTFOLIO PUBLIC — "VERIFIED PASSPORT" (editorial premium redesign)
+   TRANG PORTFOLIO CÔNG KHAI  (/p/:slug)
+   =========================================================================
+   Đây là trang DUY NHẤT trong sản phẩm không dùng hệ tối nextplease-dark, và
+   đó là chủ ý. Mọi trang khác là nơi người dùng *làm việc*; trang này là thứ
+   họ *gửi cho người khác* — dán vào bio Instagram, gửi cho nhà tuyển dụng,
+   khoe với bạn cùng lớp. Nó phải trông như một tấm poster của riêng họ, không
+   phải như một màn hình khác của ứng dụng.
+
+   Ngôn ngữ: nền giấy ấm, viền đen dày, bóng đổ CỨNG (không mờ), bo góc lớn,
+   sticker xoay nhẹ, chữ tên cỡ khổng lồ. Vài thứ cố tình lệch khỏi lưới.
+
+   Nguyên tắc giữ cho nó không thành trò đùa: LOUD Ở VỎ, CALM Ở RUỘT. Phần
+   khung — hero, nhãn mục, sticker, dải chạy — được phép ồn ào. Phần nội dung
+   thật (mô tả kinh nghiệm, tên chứng chỉ) giữ cỡ chữ và độ tương phản của một
+   tài liệu đọc được, vì người đọc nó có thể là người sắp quyết định tuyển.
    ========================================================================= */
+
 .vp-page {
-  --vp-accent: var(--primary);
-  --vp-verified: #15803d;
-  --vp-verified-bg: rgba(21, 128, 61, 0.09);
-  width: 100vw; min-height: 100vh; margin-left: calc(50% - 50vw);
-  padding: 26px max(20px, calc((100vw - 900px) / 2)) 120px;
-  background: var(--portfolio-bg); color: var(--ink); box-sizing: border-box;
-}
-:root[data-theme='dark'] .vp-page { --vp-verified:#34d399; --vp-verified-bg:rgba(52,211,153,0.12); }
+  --vp-paper: #fbf7ef;
+  --vp-ink: #16150f;
+  --vp-lime: #c9f24b;
+  --vp-violet: #6c4bf2;
+  --vp-coral: #ff6b4a;
+  /* Emerald của thương hiệu chỉ còn giữ ĐÚNG MỘT việc: dấu đã xác thực. Đó là
+     tuyên bố duy nhất trên trang này mà nextplease bảo chứng, nên nó phải mang
+     màu của nextplease chứ không phải màu trang trí của trang. */
+  --vp-verified: #0f9d6e;
+  --vp-shadow: 4px 4px 0 var(--vp-ink);
+  --vp-shadow-lg: 7px 7px 0 var(--vp-ink);
 
-.vp-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:70vh; gap:16px; color:var(--muted); font-weight:600; }
-.vp-spinner { width:34px; height:34px; border:3px solid var(--line); border-top-color:var(--vp-accent); border-radius:50%; animation:vp-spin .8s linear infinite; }
-@keyframes vp-spin { to { transform:rotate(360deg); } }
-
-.vp-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:40px; }
-.vp-close { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer; font-size:0.92rem; font-weight:650; font-family:inherit; transition:background .18s ease, transform .18s ease; }
-.vp-close:hover { background:var(--surface-soft); transform:translateX(-2px); }
-.vp-brand { display:inline-flex; align-items:center; gap:6px; font-size:0.86rem; font-weight:650; color:var(--muted); }
-.vp-brand svg { color:var(--vp-verified); }
-
-.vp-shell { max-width:960px; margin:0 auto; }
-
-.vp-reveal { animation:vp-rise .7s cubic-bezier(.16,1,.3,1) backwards; }
-@keyframes vp-rise { from { transform:translateY(22px); opacity:.001; } to { transform:translateY(0); opacity:1; } }
-.vp-reveal:nth-child(1){animation-delay:.02s} .vp-reveal:nth-child(2){animation-delay:.1s}
-.vp-reveal:nth-child(3){animation-delay:.18s} .vp-reveal:nth-child(4){animation-delay:.26s}
-.vp-reveal:nth-child(5){animation-delay:.34s} .vp-reveal:nth-child(n+6){animation-delay:.42s}
-@media (prefers-reduced-motion: reduce){ .vp-reveal { animation:none; } }
-
-/* Ảnh bìa portfolio: dải ngang phía trên phần hero. Chiều cao co theo bề
-   rộng màn hình để tỉ lệ không vỡ trên điện thoại. */
-.vp-cover { height:clamp(140px, 22vw, 260px); border-radius:20px; margin-bottom:28px; background-color:#e2e8f0; }
-@media print { .vp-cover { break-inside:avoid; } }
-
-.vp-hero { display:flex; gap:38px; align-items:center; flex-wrap:wrap; margin-bottom:44px; }
-.vp-portrait-stage { width:200px; height:236px; border-radius:20px; overflow:hidden; flex-shrink:0; background:radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--vp-accent) 14%, transparent), transparent 62%), var(--surface-soft); }
-.vp-portrait-stage .portfolio-avatar-canvas { width:200px !important; height:236px !important; }
-.vp-identity { flex:1; min-width:250px; }
-.vp-badges { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
-.vp-badge { display:inline-flex; align-items:center; gap:5px; font-size:0.84rem; font-weight:700; padding:6px 12px; border-radius:999px; }
-.vp-badge.sm { font-size:0.76rem; padding:4px 9px; }
-.vp-badge.verified { background:var(--vp-verified-bg); color:var(--vp-verified); }
-.vp-badge.open { background:color-mix(in srgb, var(--vp-accent) 12%, transparent); color:var(--vp-accent); }
-.vp-name { margin:0 0 10px; font-size:clamp(2.6rem, 5.5vw, 3.8rem); line-height:1.04; font-weight:800; letter-spacing:-.035em; color:var(--ink); }
-.vp-headline { margin:0 0 18px; font-size:1.28rem; color:var(--muted); line-height:1.55; max-width:48ch; }
-.vp-meta { display:flex; gap:22px; flex-wrap:wrap; font-size:1rem; color:var(--muted); }
-.vp-meta span { display:inline-flex; align-items:center; gap:6px; }
-.vp-social { display:flex; gap:10px; flex-wrap:wrap; margin-top:20px; }
-.vp-social-link { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:999px; border:1px solid var(--line); color:var(--ink); font-size:0.92rem; font-weight:600; transition:all .18s ease; }
-.vp-social-link:hover { border-color:var(--vp-accent); color:var(--vp-accent); transform:translateY(-2px); }
-
-.vp-stats { display:flex; gap:0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:8px; }
-.vp-stat { flex:1; padding:22px 26px; display:flex; flex-direction:column; gap:7px; }
-.vp-stat + .vp-stat { border-left:1px solid var(--line); }
-.vp-stat-label { font-size:0.88rem; color:var(--muted); font-weight:600; }
-.vp-stat-value { font-size:2.3rem; font-weight:800; letter-spacing:-.03em; color:var(--ink); line-height:1; font-variant-numeric:tabular-nums; }
-.vp-stat-bar { margin-top:6px; height:5px; border-radius:999px; background:var(--surface-soft); overflow:hidden; }
-.vp-stat-bar span { display:block; height:100%; border-radius:999px; background:var(--vp-accent); transition:width 1s cubic-bezier(.16,1,.3,1) .3s; }
-
-.vp-section { border-top:1px solid var(--line); padding-top:32px; margin-top:40px; }
-.vp-section-title { margin:0 0 22px; font-size:1.52rem; font-weight:800; letter-spacing:-.02em; color:var(--ink); }
-.vp-bio { margin:0; max-width:65ch; font-size:1.2rem; line-height:1.8; color:var(--ink); }
-.vp-empty { color:var(--muted); text-align:center; padding:36px 0; font-size:1.05rem; }
-
-.vp-timeline { border-left:2px solid var(--line); margin-left:5px; padding-left:26px; display:flex; flex-direction:column; gap:32px; }
-.vp-tl-item { position:relative; }
-.vp-tl-dot { position:absolute; left:-33px; top:6px; width:12px; height:12px; border-radius:50%; background:var(--vp-verified); box-shadow:0 0 0 4px var(--bg); }
-.vp-tl-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.vp-tl-head h3 { margin:0; font-size:1.22rem; font-weight:750; color:var(--ink); }
-.vp-tl-meta { font-size:0.95rem; color:var(--muted); margin-top:5px; }
-.vp-tl-detail { margin:12px 0 0; font-size:1.08rem; line-height:1.7; color:var(--ink); opacity:.92; max-width:60ch; }
-.vp-tl-foot { display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-top:12px; }
-.vp-reward { font-size:0.86rem; font-weight:700; color:var(--vp-verified); }
-.vp-prooflink { display:inline-flex; align-items:center; gap:4px; font-size:0.92rem; font-weight:650; color:var(--vp-accent); }
-.vp-prooflink:hover { text-decoration:underline; }
-
-.vp-cred-list { display:flex; flex-direction:column; }
-.vp-cred { display:flex; align-items:center; gap:14px; padding:18px 0; border-bottom:1px solid var(--line); }
-.vp-cred:last-child { border-bottom:none; }
-.vp-cred > svg { color:var(--vp-accent); flex-shrink:0; }
-.vp-cred h3 { margin:0; font-size:1.14rem; font-weight:750; color:var(--ink); }
-.vp-cred span { font-size:0.94rem; color:var(--muted); }
-
-.vp-skills { display:flex; flex-wrap:wrap; gap:10px; }
-.vp-skill { font-size:1rem; font-weight:600; padding:9px 17px; border-radius:999px; border:1px solid var(--line); color:var(--ink); transition:all .16s ease; }
-.vp-skill:hover { border-color:var(--vp-accent); color:var(--vp-accent); transform:translateY(-2px); }
-
-@media (max-width:620px){
-  .vp-stats { flex-direction:column; }
-  .vp-stat + .vp-stat { border-left:none; border-top:1px solid var(--line); }
-  .vp-hero { gap:24px; }
+  position: relative;
+  width: 100vw;
+  min-height: 100vh;
+  margin-left: calc(50% - 50vw);
+  padding: 20px max(18px, calc((100vw - 980px) / 2)) 120px;
+  box-sizing: border-box;
+  background: var(--vp-paper);
+  color: var(--vp-ink);
+  font-family: 'Be Vietnam Pro', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  overflow-x: clip;
 }
 
-/* =========================================================================
-   PORTFOLIO EDITOR — flatten to match "Verified Passport" editorial language
-   Removes AI-slop gradient blobs / two-tone accent badges / bright CTA banner.
-   Single accent, hairline borders, flat surfaces — same tokens as .vp-*.
-   ========================================================================= */
-.portfolio-studio {
-  background: var(--card-bg);
-  border: 1px solid var(--line);
+/* Lớp hạt mịn phủ toàn trang. Không có nó thì nền giấy chỉ là một mảng màu
+   phẳng và mấy khối viền đen trông như mockup Figma hơn là vật in. */
+.vp-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.38'/%3E%3C/svg%3E");
 }
-.avatar-stage {
-  border-color: var(--line);
-  background: var(--surface-soft);
-}
-:root[data-theme='dark'] .portfolio-studio { background: var(--card-bg); }
-:root[data-theme='dark'] .avatar-stage { border-color: var(--line); background: var(--surface-soft); }
+.vp-page > * { position: relative; z-index: 1; }
 
-.gender-option.active {
-  background: color-mix(in srgb, var(--primary) 10%, var(--card-bg));
-}
+/* Cây DOM này nằm trong phạm vi design-system Astryx, nơi màu chữ được đặt
+   bằng `light-dark()` qua một adopted stylesheet. Máy đang để dark mode thì
+   tiêu đề và đoạn văn nhận màu #fafafa — chữ trắng trên giấy trắng, gần như
+   vô hình. `.vp-page` có màu đúng nhưng con của nó KHÔNG thừa kế, vì rule kia
+   nhắm thẳng vào từng thẻ. Ép thừa kế lại ở đây.
+   (Cùng cái bẫy đã ghi trong EmptyStateMascot.jsx.) */
+.vp-page h1, .vp-page h2, .vp-page h3, .vp-page h4,
+.vp-page p, .vp-page span, .vp-page div, .vp-page li,
+.vp-page strong, .vp-page em, .vp-page a, .vp-page button { color: inherit; }
 
-/* Section headings: plain label + hairline underline instead of colored gradient box */
-.experience-editor .form-section-heading,
-.credential-editor .form-section-heading {
-  background: none;
-  border-radius: 0;
-  padding: 0 0 16px;
-  border-bottom: 1px solid var(--line);
+/* ── Thanh trên ── */
+.vp-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 26px;
 }
-:root[data-theme='dark'] .experience-editor .form-section-heading,
-:root[data-theme='dark'] .credential-editor .form-section-heading { background: none; }
+.vp-brand {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px;
+  border: 2px solid var(--vp-ink); border-radius: 999px;
+  background: var(--vp-lime);
+  font-size: 0.8rem; font-weight: 600; letter-spacing: -0.01em;
+}
+.vp-page .vp-close {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 15px;
+  border: 2px solid var(--vp-ink); border-radius: 999px;
+  background: #fff; color: var(--vp-ink);
+  font: inherit; font-size: 0.85rem; font-weight: 600;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--vp-ink);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.vp-close:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--vp-ink); }
+.vp-close:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--vp-ink); }
 
-/* One accent for both experience and credential index badges (was orange + cyan) */
-.edit-card-index span,
-.edit-card-index.credential span {
-  background: color-mix(in srgb, var(--primary) 12%, transparent);
-  color: var(--primary);
-}
+.vp-shell { display: grid; gap: clamp(18px, 2.4vw, 26px); }
 
-.credential-edit-card { background: var(--card-bg); }
-:root[data-theme='dark'] .credential-edit-card { background: var(--card-bg); }
-
-.portfolio-preview-action-panel { background: var(--card-bg); }
-:root[data-theme='dark'] .portfolio-preview-action-panel { background: var(--card-bg); }
-
-/* Final CTA panel: was a bright blue gradient banner with a white uppercase pill.
-   Flattened to match the editorial, single-accent language of the rest of the page. */
-.portfolio-submit-panel {
-  background: var(--card-bg);
-  border: 1px solid var(--line);
-  border-top: 2px solid var(--primary);
-  color: var(--ink);
-  box-shadow: none;
-}
-.portfolio-submit-panel span {
-  background: none;
-  color: var(--muted);
-  padding: 0;
-  text-transform: none;
-  letter-spacing: normal;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-.portfolio-submit-panel h2 { color: var(--ink); }
-.portfolio-submit-panel p { color: var(--muted); }
-.portfolio-submit-panel .ready-submit-button {
-  background: var(--primary);
-  color: #fff;
-}
-:root[data-theme='dark'] .portfolio-submit-panel {
-  background: var(--card-bg);
-  border-color: var(--line);
-  border-top: 2px solid var(--primary);
-}
-.portfolio-submit-panel .ready-submit-button:hover { background: var(--primary-hover, var(--primary)); filter: brightness(1.08); }
-
-/* Verified Passport — draft-mode badge + Enhancv-inspired "pull quote" summary */
-.vp-badge.draft { background: var(--surface-soft); color: var(--muted); }
-.vp-section-bio .vp-bio {
-  border-left: 3px solid var(--vp-accent);
-  padding-left: 24px;
-  font-size: 1.3rem;
-  line-height: 1.75;
+/* ── Ảnh bìa ── */
+.vp-cover {
+  height: clamp(130px, 22vw, 210px);
+  border: 2px solid var(--vp-ink);
+  border-radius: 26px;
+  box-shadow: var(--vp-shadow);
 }
 
-/* Verified Passport — inline proof image thumbnails + credential file link */
-.vp-tl-proof-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
-.vp-tl-proof-thumb { width:72px; height:72px; border-radius:10px; overflow:hidden; border:1px solid var(--line); padding:0; cursor:pointer; background:var(--surface-soft); transition:border-color .16s ease, transform .16s ease; }
-.vp-tl-proof-thumb:hover { border-color:var(--vp-accent); transform:translateY(-2px); }
-.vp-tl-proof-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-.vp-cred { position:relative; }
-.vp-cred-file { margin-left:auto; display:inline-flex; align-items:center; gap:6px; font-size:0.86rem; font-weight:650; color:var(--vp-accent); background:none; border:1px solid var(--line); border-radius:999px; padding:7px 13px; cursor:pointer; flex-shrink:0; transition:border-color .16s ease; }
-.vp-cred-file:hover { border-color:var(--vp-accent); }
+/* ── Hero ── */
+.vp-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(18px, 3vw, 34px);
+  align-items: center;
+  padding: clamp(22px, 3.4vw, 38px);
+  border: 2px solid var(--vp-ink);
+  border-radius: 30px;
+  background: #fff;
+  box-shadow: var(--vp-shadow-lg);
+}
+.vp-portrait-stage {
+  width: clamp(150px, 20vw, 210px);
+  height: clamp(150px, 20vw, 210px);
+  display: grid; place-items: center;
+  border: 2px solid var(--vp-ink);
+  border-radius: 50%;
+  background: var(--vp-lime);
+  /* Lệch 3 độ. Một khối vuông vắn tuyệt đối đọc ra "template"; nghiêng một
+     chút thì đọc ra "ai đó dán nó vào đây". */
+  transform: rotate(-3deg);
+}
+
+.vp-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.vp-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  border: 2px solid var(--vp-ink); border-radius: 999px;
+  background: #fff;
+  font-size: 0.8rem; font-weight: 600;
+}
+.vp-badge.sm { font-size: 0.72rem; padding: 3px 9px; border-width: 1.5px; }
+.vp-page .vp-badge.verified { background: var(--vp-verified); color: #fff; }
+.vp-page .vp-badge.open { background: var(--vp-coral); color: #fff; }
+.vp-badge.draft { background: #fff; }
+/* Mỗi sticker nghiêng một hướng khác nhau. Cùng một góc cho tất cả thì lại
+   thành một lưới nghiêng — vẫn là lưới. */
+.vp-badges .vp-badge:nth-child(odd) { transform: rotate(-2deg); }
+.vp-badges .vp-badge:nth-child(even) { transform: rotate(1.5deg); }
+
+.vp-page .vp-name {
+  margin: 0 0 10px;
+  font-family: 'Archivo', 'Be Vietnam Pro', sans-serif;
+  /* Archivo đã nạp sẵn cho trang chủ ở dạng NÉN (wdth 84). Ở đây kéo sang
+     dạng GIÃN — cùng một font, hai tính cách, không tốn thêm lần tải nào. */
+  font-variation-settings: 'wdth' 116;
+  font-weight: 900;
+  font-size: clamp(2.6rem, 7vw, 5rem);
+  /* Tiếng Việt viết hoa có dấu Ẫ/Ộ/Ế đội lên cao; dưới 0.95 là bị cắt ngọn. */
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  word-break: break-word;
+}
+.vp-headline {
+  margin: 0 0 16px;
+  max-width: 46ch;
+  font-size: clamp(1.05rem, 1.6vw, 1.28rem);
+  line-height: 1.45;
+  font-weight: 500;
+}
+.vp-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.vp-meta span {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--vp-ink); border-radius: 999px;
+  background: var(--vp-paper);
+  font-size: 0.86rem; font-weight: 500;
+}
+
+.vp-social { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.vp-page .vp-social-link {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 14px;
+  border: 2px solid var(--vp-ink); border-radius: 999px;
+  background: #fff; color: var(--vp-ink);
+  font-size: 0.85rem; font-weight: 600; text-decoration: none;
+  box-shadow: 2px 2px 0 var(--vp-ink);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+.vp-page .vp-social-link:hover {
+  background: var(--vp-violet); color: #fff;
+  transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--vp-ink);
+}
+
+/* ── Dải kỹ năng chạy ngang ──
+   Kỹ năng trước đây nằm cuối trang, sau cả chứng chỉ — tức là thứ ít người
+   cuộn tới nhất. Nhưng với sinh viên thì đó thường là dòng thông tin đắt giá
+   nhất. Đưa lên ngay dưới hero và cho nó chạy: vừa nhấn mạnh, vừa nhét được
+   danh sách dài mà không chiếm chiều cao. */
+.vp-marquee {
+  border: 2px solid var(--vp-ink);
+  border-radius: 18px;
+  background: var(--vp-violet);
+  box-shadow: var(--vp-shadow);
+  overflow: hidden;
+  padding: 12px 0;
+  --vp-mq-duration: 26s;
+}
+.vp-marquee-track {
+  display: flex; align-items: center; gap: 30px; width: max-content;
+  animation: vp-marquee var(--vp-mq-duration) linear infinite;
+}
+.vp-marquee:hover .vp-marquee-track { animation-play-state: paused; }
+.vp-page .vp-marquee-item {
+  display: inline-flex; align-items: center; gap: 30px;
+  color: #fff; font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.vp-page .vp-marquee-item::after { content: '✦'; color: var(--vp-lime); font-size: 0.9rem; }
+@keyframes vp-marquee { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .vp-marquee-track { animation: none; flex-wrap: wrap; width: auto; padding: 0 16px; }
+}
+
+/* ── Số liệu ── */
+.vp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.vp-stat {
+  padding: 20px 22px;
+  border: 2px solid var(--vp-ink); border-radius: 22px;
+  background: #fff;
+  box-shadow: var(--vp-shadow);
+}
+.vp-stat:nth-child(2) { background: var(--vp-lime); }
+.vp-stat-label {
+  display: block; margin-bottom: 4px;
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.vp-page .vp-stat-value {
+  display: block;
+  font-family: 'Archivo', sans-serif; font-variation-settings: 'wdth' 116; font-weight: 900;
+  font-size: clamp(2rem, 4vw, 2.8rem); line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Mục nội dung ── */
+.vp-section {
+  padding: clamp(20px, 2.8vw, 30px);
+  border: 2px solid var(--vp-ink); border-radius: 26px;
+  background: #fff;
+  box-shadow: var(--vp-shadow);
+}
+.vp-section-title {
+  display: inline-block;
+  margin: 0 0 18px;
+  padding: 7px 15px;
+  border: 2px solid var(--vp-ink); border-radius: 999px;
+  background: var(--vp-lime);
+  font-family: inherit;
+  font-size: 0.86rem; font-weight: 700; letter-spacing: 0.02em;
+  transform: rotate(-1.4deg);
+}
+.vp-bio { margin: 0; font-size: 1.02rem; line-height: 1.7; max-width: 62ch; }
+
+/* ── Kinh nghiệm ──
+   Đánh số bằng CSS counter, không phải bằng markup: thứ tự hiển thị là việc
+   của trình bày, và nếu sau này lọc bớt mục thì số vẫn liền mạch. */
+.vp-timeline { counter-reset: vp-exp; display: grid; gap: 14px; }
+.vp-tl-item {
+  counter-increment: vp-exp;
+  position: relative;
+  padding: 20px 22px 20px 62px;
+  border: 2px solid var(--vp-ink); border-radius: 20px;
+  background: var(--vp-paper);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.vp-page .vp-tl-item::before {
+  content: counter(vp-exp, decimal-leading-zero);
+  position: absolute; top: 18px; left: 18px;
+  display: grid; place-items: center;
+  width: 30px; height: 30px;
+  border: 2px solid var(--vp-ink); border-radius: 50%;
+  background: var(--vp-coral); color: #fff;
+  font-family: 'Archivo', sans-serif; font-weight: 900; font-size: 0.78rem;
+}
+.vp-tl-item:hover { transform: translate(-2px, -2px); box-shadow: var(--vp-shadow); }
+.vp-tl-dot { display: none; }
+.vp-tl-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vp-tl-head h3 { margin: 0; font-family: inherit; font-size: 1.1rem; font-weight: 700; letter-spacing: -0.015em; }
+.vp-tl-meta { margin-top: 3px; font-size: 0.88rem; font-weight: 500; opacity: 0.72; }
+.vp-tl-detail { margin: 10px 0 0; font-size: 0.95rem; line-height: 1.6; max-width: 60ch; }
+.vp-tl-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.vp-reward {
+  padding: 4px 11px;
+  border: 1.5px solid var(--vp-ink); border-radius: 999px;
+  background: var(--vp-lime);
+  font-size: 0.78rem; font-weight: 700;
+}
+.vp-page .vp-prooflink {
+  display: inline-flex; align-items: center; gap: 5px;
+  color: var(--vp-violet); font-size: 0.85rem; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.vp-tl-proof-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.vp-tl-proof-thumb {
+  width: 76px; height: 76px; padding: 0;
+  border: 2px solid var(--vp-ink); border-radius: 12px;
+  overflow: hidden; background: #fff; cursor: pointer;
+  transition: transform 140ms ease;
+}
+.vp-tl-proof-thumb:hover { transform: rotate(-2deg) scale(1.04); }
+.vp-tl-proof-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ── Bằng cấp ── */
+.vp-cred-list { display: grid; gap: 12px; }
+.vp-cred {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px;
+  border: 2px solid var(--vp-ink); border-radius: 18px;
+  background: var(--vp-paper);
+}
+.vp-cred > svg { flex: none; }
+.vp-cred h3 { margin: 0; font-family: inherit; font-size: 1rem; font-weight: 700; }
+.vp-cred span { font-size: 0.86rem; opacity: 0.72; }
+.vp-page .vp-cred-file {
+  margin-left: auto; flex: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  border: 2px solid var(--vp-ink); border-radius: 999px;
+  background: #fff; color: var(--vp-ink);
+  font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  box-shadow: 2px 2px 0 var(--vp-ink);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.vp-cred-file:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--vp-ink); }
+
+/* ── Kỹ năng (bản tĩnh, khi không đủ để chạy dải) ── */
+.vp-skills { display: flex; gap: 9px; flex-wrap: wrap; }
+.vp-skill {
+  padding: 8px 14px;
+  border: 2px solid var(--vp-ink); border-radius: 999px;
+  background: #fff; font-size: 0.88rem; font-weight: 600;
+}
+.vp-skill:nth-child(3n+1) { background: var(--vp-lime); }
+.vp-skill:nth-child(3n+2) { background: #fff; }
+.vp-skill:nth-child(3n) { background: var(--vp-paper); }
+
+.vp-empty { margin: 0; text-align: center; font-size: 0.95rem; opacity: 0.7; }
+
+/* ── Trạng thái tải / lỗi ── */
+.vp-loading {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 70vh; gap: 16px; font-weight: 600;
+}
+.vp-spinner {
+  width: 34px; height: 34px;
+  border: 3px solid var(--vp-ink); border-top-color: var(--vp-lime);
+  border-radius: 50%; animation: vp-spin .8s linear infinite;
+}
+@keyframes vp-spin { to { transform: rotate(360deg); } }
+
+.vp-reveal { animation: vp-rise .5s cubic-bezier(.16,1,.3,1) backwards; }
+.vp-reveal:nth-of-type(2) { animation-delay: .06s; }
+.vp-reveal:nth-of-type(3) { animation-delay: .12s; }
+@keyframes vp-rise { from { opacity: 0; transform: translateY(14px); } }
+@media (prefers-reduced-motion: reduce) { .vp-reveal { animation: none; } }
+
+@media (max-width: 720px) {
+  .vp-hero { grid-template-columns: 1fr; justify-items: start; }
+  .vp-tl-item { padding: 52px 18px 18px; }
+  .vp-tl-item::before { top: 16px; left: 18px; }
+  .vp-cred { flex-wrap: wrap; }
+  .vp-cred-file { margin-left: 0; }
+}
 
 /* Custom scale-up of admin font size to make it more legible and custom warning animation */
 @keyframes admFadeIn {
@@ -16775,3 +16953,512 @@ body:has(.np-skel) {
   border-color: rgba(255, 255, 255, 0.06);
   color: rgba(233, 247, 242, 0.25);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TRÌNH DỰNG PORTFOLIO (/portfolio, /portfolio/edit)
+   ═══════════════════════════════════════════════════════════════════════════
+   Dùng CHUNG ngôn ngữ với trang portfolio công khai (.vp-page): nền giấy ấm,
+   viền đen, bóng đổ cứng, sticker. Lý do: người dùng ngồi đây để làm ra đúng
+   tấm poster đó, nên nơi làm và thứ làm ra phải cùng một thế giới.
+
+   Nhưng đây là BIỂU MẪU dài ~3200px với hơn 30 ô nhập, không phải một trang
+   để đọc trong 30 giây. Nên vay ngôn ngữ ở mức VỎ, không ở mức từng ô:
+     - Bóng đổ cứng chỉ dành cho các tấm lớn (studio, panel, nút chính). Nếu
+       gắn cho từng ô nhập thì 30 cái bóng chồng nhau xuống một cột, mắt không
+       còn bám được vào đâu.
+     - KHÔNG xoay bất cứ thứ gì nhận thao tác nhập. Mép các ô lệch nhau thì
+       quét mắt xuống một cột biểu mẫu khó hẳn lên. Chỉ nhãn và sticker được
+       xoay — chúng là thứ để nhìn, không phải để gõ vào.
+     - Viền ô nhập 1.5px chứ không 2px, và bo 12px chứ không 20px: ô nhập cần
+       đọc ra là "chỗ gõ chữ", không phải "một tấm thẻ nữa".
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.portfolio-page {
+  --pf-paper: #fbf7ef;
+  --pf-ink: #16150f;
+  --pf-lime: #c9f24b;
+  --pf-violet: #6c4bf2;
+  --pf-coral: #ff6b4a;
+  --pf-shadow: 4px 4px 0 var(--pf-ink);
+  --pf-shadow-lg: 7px 7px 0 var(--pf-ink);
+
+  /* Token toàn cục định nghĩa lại trong phạm vi trang. Nhiều component con
+     style bằng biến toàn cục qua inline style nên CSS không đè được — đây là
+     cách duy nhất chạm tới. */
+  --portfolio-bg: var(--pf-paper);
+  --ink: var(--pf-ink);
+  --nav-text: var(--pf-ink);
+  --muted: rgba(22, 21, 15, 0.62);
+  --line: var(--pf-ink);
+  --line-strong: var(--pf-ink);
+  --card-bg: #ffffff;
+  --card-bg-strong: #ffffff;
+  --soft-card-bg: var(--pf-paper);
+  --surface: #ffffff;
+  --surface-soft: var(--pf-paper);
+  --field-bg: #ffffff;
+  --primary: var(--pf-violet);
+  --accent: var(--pf-violet);
+
+  background: var(--pf-paper);
+  color: var(--pf-ink);
+  font-family: 'Be Vietnam Pro', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  padding-top: clamp(40px, 5vw, 62px);
+  overflow-x: clip;
+}
+
+/* Hạt mịn, cùng công thức với trang công khai. */
+.portfolio-page::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.38'/%3E%3C/svg%3E");
+}
+/* CHỈ nâng hai khối nội dung, KHÔNG dùng `.portfolio-page > *` — hộp thoại xác
+   nhận cũng là con trực tiếp, và `position: relative` sẽ đè mất `fixed` của
+   nó, biến lớp phủ thành một khối nằm lọt trong dòng chảy trang. */
+.portfolio-page > .portfolio-hero,
+.portfolio-page > .portfolio-builder { position: relative; z-index: 1; }
+
+/* Nền mesh của hệ tối không còn chỗ ở đây. */
+.pf-bg { display: none; }
+
+/* Cùng bẫy Astryx như trang công khai: màu chữ đặt bằng light-dark() qua
+   adopted stylesheet, máy để dark mode thì tiêu đề thành #fafafa — trắng trên
+   giấy trắng. Ép thừa kế lại cho từng thẻ. */
+.portfolio-page h1, .portfolio-page h2, .portfolio-page h3, .portfolio-page h4,
+.portfolio-page p, .portfolio-page span, .portfolio-page div, .portfolio-page li,
+.portfolio-page label, .portfolio-page strong, .portfolio-page em { color: inherit; }
+
+/* ── Mở đầu trang ── */
+.portfolio-page .portfolio-hero { margin-bottom: clamp(24px, 3vw, 34px); }
+.portfolio-page .portfolio-hero h1 {
+  font-family: 'Archivo', 'Be Vietnam Pro', sans-serif;
+  font-variation-settings: 'wdth' 116;
+  font-weight: 900;
+  font-size: clamp(2rem, 4.6vw, 3.2rem);
+  /* Chữ hoa tiếng Việt: dưới 0.95 là dấu Ẫ/Ộ/Ế bị cắt ngọn. */
+  line-height: 0.96;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--pf-ink);
+}
+.portfolio-page .portfolio-hero > div > p:last-child {
+  max-width: 56ch; margin-top: 14px;
+  font-size: 1.02rem; line-height: 1.6; color: var(--pf-ink); opacity: 0.72;
+}
+.portfolio-page .portfolio-back-link {
+  padding: 9px 15px;
+  border: 2px solid var(--pf-ink); border-radius: 999px;
+  background: #fff !important; color: var(--pf-ink) !important;
+  font-weight: 600 !important; font-size: 0.85rem !important;
+  box-shadow: 2px 2px 0 var(--pf-ink);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.portfolio-page .portfolio-back-link:hover {
+  transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--pf-ink);
+}
+
+/* ── Hai tấm lớn ── */
+.portfolio-page .portfolio-studio,
+.portfolio-page .portfolio-form-panel,
+.portfolio-page .portfolio-preview-card,
+.portfolio-page .portfolio-preview-action-panel,
+.portfolio-page .avatar-customizer,
+.portfolio-page .preview-empty-state {
+  background: #fff;
+  border: 2px solid var(--pf-ink);
+  border-radius: 26px;
+  box-shadow: var(--pf-shadow);
+}
+.portfolio-page .portfolio-studio { padding: 16px; box-shadow: var(--pf-shadow-lg); }
+.portfolio-page .portfolio-form-panel { padding: clamp(20px, 2.6vw, 30px); box-shadow: var(--pf-shadow-lg); }
+
+/* ── Sân khấu linh vật ──
+   Nền lime đặc như vòng tròn ở trang công khai, nhưng KHÔNG xoay: ở đây nó là
+   khung xem trước đang đổi theo lựa chọn bên dưới, nghiêng đi thì mỗi lần đổi
+   linh vật lại thấy như cả khung nhúc nhích. */
+.portfolio-page .avatar-stage {
+  min-height: 0;
+  height: clamp(240px, 46vw, 300px);
+  display: grid; place-items: center;
+  padding: 18px; box-sizing: border-box;
+  border: 2px solid var(--pf-ink); border-radius: 22px;
+  background: var(--pf-lime);
+}
+
+/* ── Bộ chọn linh vật ── */
+.pf-mascot-picker { display: grid; gap: 10px; margin-top: 14px; }
+.pf-mascot-picker-label {
+  display: inline-block; width: fit-content;
+  padding: 6px 13px;
+  border: 2px solid var(--pf-ink); border-radius: 999px;
+  background: var(--pf-lime);
+  font-size: 0.76rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase;
+  transform: rotate(-1.4deg);
+}
+.pf-mascot-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.pf-mascot-option {
+  display: grid; justify-items: center; gap: 6px;
+  padding: 10px 6px 9px;
+  border: 2px solid var(--pf-ink); border-radius: 14px;
+  background: #fff; color: var(--pf-ink);
+  font: inherit; font-size: 0.74rem; font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+.pf-mascot-option:hover { transform: translate(-1px, -1px); box-shadow: 2px 2px 0 var(--pf-ink); }
+.pf-mascot-option.active { background: var(--pf-lime); box-shadow: 2px 2px 0 var(--pf-ink); }
+.pf-mascot-thumb {
+  width: 46px; height: 46px; border-radius: 10px;
+  /* Sheet là lưới 3×3; phóng nền 300% rồi canh giữa thì lọt đúng ô nhìn thẳng. */
+  background-size: 300% 300%; background-position: center; background-repeat: no-repeat;
+}
+
+/* ── Thẻ xem trước ở cột trái ── */
+.portfolio-page .portfolio-preview-card { padding: 20px; }
+.portfolio-page .portfolio-preview-card h2 {
+  margin: 0 0 6px;
+  font-family: 'Archivo', sans-serif; font-variation-settings: 'wdth' 116;
+  font-weight: 900; font-size: 1.5rem; line-height: 1; letter-spacing: -0.025em;
+  text-transform: uppercase;
+}
+.portfolio-page .preview-meta span,
+.portfolio-page .skill-cloud span {
+  padding: 6px 12px;
+  border: 1.5px solid var(--pf-ink); border-radius: 999px;
+  background: var(--pf-paper);
+  font-size: 0.82rem; font-weight: 600;
+}
+.portfolio-page .skill-cloud span:nth-child(3n+1) { background: var(--pf-lime); }
+
+/* ── Tiêu đề các mục trong biểu mẫu ──
+   Nhãn sticker, giống .vp-section-title. Đây là thứ để NHÌN nên được xoay. */
+.portfolio-page .form-section-heading { align-items: center; gap: 10px; }
+.portfolio-page .form-section-heading svg { color: var(--pf-ink); }
+.portfolio-page .form-section-heading h2 {
+  align-self: flex-start;
+  display: inline-block;
+  margin: 0;
+  padding: 6px 14px;
+  border: 2px solid var(--pf-ink); border-radius: 999px;
+  background: var(--pf-lime);
+  font-family: inherit;
+  font-size: 0.86rem; font-weight: 700; letter-spacing: 0.02em;
+  transform: rotate(-1.3deg);
+}
+.portfolio-page .form-section-heading p { font-size: 0.88rem; opacity: 0.7; }
+.portfolio-page .experience-editor .form-section-heading,
+.portfolio-page .credential-editor .form-section-heading {
+  background: none; border-radius: 0; padding: 0 0 14px;
+  border-bottom: 2px dashed rgba(22, 21, 15, 0.22);
+}
+.portfolio-page .portfolio-form-panel:hover .form-section-heading > svg,
+.portfolio-page .experience-editor:hover .form-section-heading svg,
+.portfolio-page .credential-editor:hover .form-section-heading svg { transform: none; }
+
+/* ── Ô nhập ──
+   Viền mảnh hơn thẻ, bo nhỏ hơn thẻ, KHÔNG bóng, KHÔNG xoay. Xem ghi chú đầu
+   khối về lý do. */
+.portfolio-page .form-input,
+.portfolio-page input[type='text'],
+.portfolio-page input[type='url'],
+.portfolio-page input[type='email'],
+.portfolio-page select,
+.portfolio-page textarea {
+  border: 1.5px solid var(--pf-ink);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--pf-ink);
+  box-shadow: none;
+  transition: box-shadow 120ms ease, background 120ms ease;
+}
+.portfolio-page input::placeholder,
+.portfolio-page textarea::placeholder { color: rgba(22, 21, 15, 0.38); }
+.portfolio-page .form-input:focus,
+.portfolio-page input:focus,
+.portfolio-page select:focus,
+.portfolio-page textarea:focus {
+  outline: none;
+  border-color: var(--pf-ink);
+  /* Ô đang gõ nhận bóng cứng — chỉ MỘT ô có nó tại một thời điểm, nên nó chỉ
+     đường chứ không thành nhiễu như khi gắn cho cả 30 ô. */
+  box-shadow: 3px 3px 0 var(--pf-violet);
+}
+.portfolio-page label,
+.portfolio-page .form-label {
+  font-size: 0.82rem; font-weight: 600; color: var(--pf-ink); opacity: 0.78;
+}
+
+/* ── Khối kinh nghiệm / chứng chỉ ── */
+.portfolio-page .experience-edit-card,
+.portfolio-page .credential-edit-card {
+  padding: 18px;
+  border: 2px solid var(--pf-ink); border-radius: 20px;
+  background: var(--pf-paper);
+  box-shadow: none;
+}
+.portfolio-page .experience-edit-card:hover,
+.portfolio-page .credential-edit-card:hover {
+  transform: none;
+  box-shadow: var(--pf-shadow);
+}
+.portfolio-page .edit-card-remove {
+  padding: 7px 13px;
+  border: 2px solid var(--pf-ink); border-radius: 999px;
+  background: var(--pf-coral); color: #fff;
+  font-weight: 600; font-size: 0.8rem;
+}
+.portfolio-page .edit-card-remove:hover { transform: none; box-shadow: 2px 2px 0 var(--pf-ink); }
+.portfolio-page .select-field-label em {
+  padding: 2px 9px;
+  border: 1.5px solid var(--pf-ink); border-radius: 999px;
+  background: var(--pf-paper); color: var(--pf-ink);
+  font-weight: 600; opacity: 0.7;
+}
+
+/* ── Công tắc "Đang tìm việc" ── */
+.portfolio-page .pf-avail-card {
+  padding: 16px 18px;
+  border: 2px solid var(--pf-ink); border-radius: 18px;
+  background: var(--pf-paper);
+}
+.portfolio-page .pf-avail-title { font-weight: 700; }
+.portfolio-page .pf-avail-title svg { color: var(--pf-violet); }
+.portfolio-page .pf-switch { background: #fff; border: 2px solid var(--pf-ink); }
+.portfolio-page .pf-switch .pf-switch-knob { background: var(--pf-ink); box-shadow: none; top: 2px; left: 2px; }
+.portfolio-page .pf-switch.on { background: var(--pf-lime); }
+.portfolio-page .pf-switch.on .pf-switch-knob { transform: translateX(21px); }
+.portfolio-page .pf-social-input {
+  border: 1.5px solid var(--pf-ink); border-radius: 12px; background: #fff;
+}
+.portfolio-page .pf-social-input:focus-within { box-shadow: 3px 3px 0 var(--pf-violet); }
+
+/* ── Tấm xem trước & tấm hoàn tất ── */
+.portfolio-page .portfolio-preview-action-panel { padding: 20px 22px; }
+.portfolio-page .portfolio-submit-panel {
+  padding: clamp(22px, 2.6vw, 30px);
+  border: 2px solid var(--pf-ink); border-radius: 26px;
+  background: var(--pf-violet);
+  color: #fff;
+  box-shadow: var(--pf-shadow-lg);
+}
+.portfolio-page .portfolio-submit-panel span {
+  display: inline-block; width: fit-content;
+  margin-bottom: 10px; padding: 5px 12px;
+  border: 2px solid var(--pf-ink); border-radius: 999px;
+  background: var(--pf-lime); color: var(--pf-ink) !important;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  transform: rotate(-1.5deg);
+}
+.portfolio-page .portfolio-submit-panel h2 {
+  font-family: 'Archivo', sans-serif; font-variation-settings: 'wdth' 116;
+  font-weight: 900; font-size: clamp(1.3rem, 2.2vw, 1.7rem); line-height: 1.05;
+  letter-spacing: -0.025em; text-transform: uppercase; color: #fff !important;
+}
+.portfolio-page .portfolio-submit-panel p { color: rgba(255, 255, 255, 0.86) !important; }
+
+/* ── Nút ── */
+.portfolio-page .button {
+  border-radius: 999px;
+  border: 2px solid var(--pf-ink);
+  font-weight: 600;
+  box-shadow: 2px 2px 0 var(--pf-ink);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+.portfolio-page .button:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--pf-ink); }
+.portfolio-page .button:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--pf-ink); }
+.portfolio-page .button.primary-button {
+  background: var(--pf-lime); color: var(--pf-ink);
+}
+.portfolio-page .button.primary-button:hover { background: #d8ff63; }
+.portfolio-page .button.secondary-button,
+.portfolio-page .ghost-link-button { background: #fff; color: var(--pf-ink); }
+.portfolio-page .portfolio-submit-panel .ready-submit-button,
+.portfolio-page .portfolio-submit-panel .button.primary-button {
+  background: var(--pf-lime); color: var(--pf-ink); box-shadow: 3px 3px 0 var(--pf-ink);
+  filter: none;
+}
+.portfolio-page .portfolio-submit-panel .ready-submit-button:hover { background: #d8ff63; }
+
+/* ── Vùng tải ảnh ── */
+.portfolio-page .preview-empty-state,
+.portfolio-page [class*='upload'],
+.portfolio-page [class*='dropzone'] {
+  background: var(--pf-paper); border-color: var(--pf-ink); color: var(--pf-ink);
+}
+
+/* ── Dải mở đầu form ── */
+.portfolio-page .credential-submit-topline {
+  border: 2px solid var(--pf-ink); border-radius: 18px; background: var(--pf-lime);
+}
+.portfolio-page .credential-submit-mark {
+  border: 2px solid var(--pf-ink); background: #fff; color: var(--pf-ink);
+}
+
+/* ── Bộ chọn tháng/năm ── */
+.portfolio-page .credential-month-trigger {
+  border: 1.5px solid var(--pf-ink); border-radius: 12px;
+  background: #fff; color: rgba(22, 21, 15, 0.45); font-weight: 500;
+}
+.portfolio-page .credential-month-trigger.has-value { color: var(--pf-ink); }
+.portfolio-page .credential-month-trigger svg { color: var(--pf-violet); }
+.portfolio-page .credential-month-trigger:hover,
+.portfolio-page .credential-month-trigger[aria-expanded='true'] {
+  background: #fff; border-color: var(--pf-ink); box-shadow: 3px 3px 0 var(--pf-violet);
+}
+.portfolio-page .credential-month-trigger-dot { background: var(--pf-violet); }
+.portfolio-page .credential-month-helper { color: rgba(22, 21, 15, 0.6); }
+.portfolio-page .credential-month-popover {
+  border: 2px solid var(--pf-ink); border-radius: 20px;
+  background: #fff; box-shadow: var(--pf-shadow);
+}
+.portfolio-page .credential-month-year-label { color: var(--pf-ink); font-weight: 700; }
+.portfolio-page .credential-month-option {
+  border: 1.5px solid var(--pf-ink); border-radius: 10px;
+  background: var(--pf-paper); color: var(--pf-ink); font-weight: 600;
+}
+.portfolio-page .credential-month-option:hover:not(:disabled) {
+  transform: none; background: var(--pf-lime); border-color: var(--pf-ink); color: var(--pf-ink);
+}
+.portfolio-page .credential-month-option.selected {
+  background: var(--pf-violet); border-color: var(--pf-ink); color: #fff; box-shadow: none;
+}
+.portfolio-page .credential-month-option:disabled {
+  background: #fff; border-color: rgba(22, 21, 15, 0.18); color: rgba(22, 21, 15, 0.28);
+}
+
+@media (max-width: 420px) {
+  .pf-mascot-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ── Hộp thoại "Xác nhận gửi Portfolio" ────────────────────────────────────
+   Cùng hệ giấy/sticker với trang dựng. Lưu ý: .confirm-overlay là tên lớp
+   THẬT trong JSX (không phải .confirm-modal-overlay). */
+.confirm-overlay {
+  background: rgba(22, 21, 15, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.confirm-modal {
+  --pf-ink: #16150f;
+  --pf-paper: #fbf7ef;
+  --pf-lime: #c9f24b;
+  --pf-violet: #6c4bf2;
+  background: #fff;
+  border: 2px solid var(--pf-ink);
+  border-radius: 28px;
+  box-shadow: 8px 8px 0 var(--pf-ink);
+  color: var(--pf-ink);
+  --ink: #16150f;
+  --muted: rgba(22, 21, 15, 0.62);
+  --line: #16150f;
+  --surface: #ffffff;
+  --surface-soft: #fbf7ef;
+  --primary: #6c4bf2;
+}
+.confirm-modal h1, .confirm-modal h2, .confirm-modal h3,
+.confirm-modal p, .confirm-modal span, .confirm-modal div,
+.confirm-modal strong, .confirm-modal em { color: inherit; }
+.confirm-modal-header { border-bottom: 2px dashed rgba(22, 21, 15, 0.22); }
+.confirm-modal-header h2 {
+  font-family: 'Archivo', sans-serif; font-variation-settings: 'wdth' 116;
+  font-weight: 900; font-size: 1.2rem; letter-spacing: -0.02em; text-transform: uppercase;
+}
+.confirm-avatar-box {
+  display: grid; place-items: center;
+  border: 2px solid var(--pf-ink); border-radius: 22px;
+  background: var(--pf-lime);
+}
+.confirm-modal .confirm-section h3 {
+  /* .confirm-section là flex column, nên `inline-block` vẫn bị kéo dãn hết
+     chiều ngang — nhãn sticker phải ôm sát chữ mới ra sticker. */
+  align-self: flex-start;
+  display: inline-block;
+  margin: 0;
+  padding: 5px 12px;
+  border: 2px solid var(--pf-ink); border-radius: 999px;
+  background: var(--pf-lime);
+  font-family: inherit; font-size: 0.74rem; font-weight: 700;
+  letter-spacing: 0.03em; text-transform: uppercase;
+  border-left-width: 2px; padding-left: 12px;
+  transform: rotate(-1.3deg);
+}
+/* .confirm-grid / .confirm-label / .confirm-tag được dùng trong JSX nhưng chưa
+   từng có CSS — không layout thì bốn cặp nhãn–giá trị dính liền thành một dòng
+   kiểu "Họ và tên:Tài PhátHeadline:…". */
+.confirm-grid {
+  display: grid; grid-template-columns: minmax(96px, auto) minmax(0, 1fr);
+  gap: 7px 14px; align-items: baseline;
+}
+.confirm-label { font-size: 0.83rem; opacity: 0.66; white-space: nowrap; }
+.confirm-modal .confirm-field { font-size: 0.94rem; font-weight: 500; }
+.confirm-tag {
+  display: inline-flex; align-items: center;
+  padding: 5px 12px;
+  border: 1.5px solid var(--pf-ink); border-radius: 999px;
+  background: var(--pf-paper); font-size: 0.83rem; font-weight: 600;
+}
+.confirm-modal-footer { border-top: 2px dashed rgba(22, 21, 15, 0.22); }
+.confirm-modal .button {
+  border: 2px solid var(--pf-ink); border-radius: 999px;
+  font-weight: 600; box-shadow: 2px 2px 0 var(--pf-ink);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.confirm-modal .button:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--pf-ink); }
+.confirm-modal .button.primary-button { background: var(--pf-lime); color: var(--pf-ink); }
+.confirm-modal .button.secondary-button { background: #fff; color: var(--pf-ink); }
+
+/* ── Màn báo lưu thành công ──
+   Là section ANH EM của .portfolio-page chứ không nằm trong, nên token cục bộ
+   ở đó không với tới. */
+.portfolio-success-page {
+  --portfolio-bg: #fbf7ef;
+  --surface: #ffffff;
+  --ink: #16150f;
+  --muted: rgba(22, 21, 15, 0.62);
+  --line: #16150f;
+  --shadow: none;
+  --primary: #6c4bf2;
+  background: #fbf7ef;
+  color: #16150f;
+}
+.portfolio-success-page h1, .portfolio-success-page p,
+.portfolio-success-page span, .portfolio-success-page div { color: inherit; }
+.portfolio-success-page .success-card {
+  border: 2px solid #16150f !important;
+  border-radius: 28px;
+  box-shadow: 8px 8px 0 #16150f !important;
+}
+.portfolio-success-page .success-icon-wrapper {
+  background: #c9f24b !important;
+  border: 2px solid #16150f;
+  box-shadow: none !important;
+}
+.portfolio-success-page .success-icon-wrapper svg { color: #16150f !important; }
+.portfolio-success-page h1 {
+  font-family: 'Archivo', sans-serif; font-variation-settings: 'wdth' 116;
+  font-weight: 900 !important; letter-spacing: -0.03em; text-transform: uppercase;
+  line-height: 0.96;
+}
+.portfolio-success-page .button {
+  border: 2px solid #16150f; border-radius: 999px;
+  font-weight: 600 !important; box-shadow: 3px 3px 0 #16150f;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.portfolio-success-page .button:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 #16150f; }
+.portfolio-success-page .button.primary-button { background: #c9f24b; color: #16150f; }
+.portfolio-success-page .button.secondary-button { background: #fff; color: #16150f; }
+
+/* Nền trang cho hai route dùng hệ giấy. Không có nó thì vùng kéo quá đà khi
+   cuộn, và khoảng trống dưới nội dung ngắn, vẫn lộ ra #f6f8fc của .app-shell —
+   một sắc xám xanh lệch hẳn với giấy ấm. */
+html:has(.portfolio-page),
+html:has(.portfolio-success-page),
+body:has(.portfolio-page),
+body:has(.portfolio-success-page),
+.app-shell:has(.portfolio-page),
+.app-shell:has(.portfolio-success-page) {
+  background: #fbf7ef;
+}
+/* Trang portfolio công khai cũng vậy. */
+html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #fbf7ef; }

@@ -152,7 +152,7 @@ export function Header() {
                   {portfolio.onboardingCompleted ? (
                     <Link className="dropdown-item" to="/portfolio/edit" onClick={() => setShowDropdown(false)}>
                       <Sparkles size={16} />
-                      Chỉnh sửa Portfolio 3D
+                      Chỉnh sửa Portfolio
                     </Link>
                   ) : (
                     <Link className="dropdown-item" to="/portfolio" onClick={() => setShowDropdown(false)}>

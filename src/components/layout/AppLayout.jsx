@@ -14,6 +14,11 @@ export function AppLayout() {
   // global header would be redundant. These are opened in a new browser tab.
   const isStandaloneTab = location.pathname.startsWith('/jobs/')
     || location.pathname.startsWith('/quests/')
+    // '/p/:slug' là ĐƯỜNG DẪN CHIA SẺ — chính là link người dùng dán vào bio
+    // hay gửi cho nhà tuyển dụng. Trước đây chỉ '/portfolio/view/' (link cũ)
+    // được liệt kê, nên đúng cái link hay dùng nhất lại đội thêm header của
+    // ứng dụng, kèm nút đăng nhập, trên trang giới thiệu bản thân của họ.
+    || location.pathname.startsWith('/p/')
     || location.pathname.startsWith('/portfolio/view/')
     || location.pathname.startsWith('/portfolio/preview');
   // The portfolio builder (create + edit) is a workspace tool like the candidate
@@ -26,6 +31,7 @@ export function AppLayout() {
   // mesh-gradient (blue/orange corner blobs) peeks through the `.app-main` top
   // padding that used to sit under the now-removed header.
   const isPortfolioNoHeaderRoute = isPortfolioBuilder
+    || location.pathname.startsWith('/p/')
     || location.pathname.startsWith('/portfolio/view/')
     || location.pathname.startsWith('/portfolio/preview');
 
