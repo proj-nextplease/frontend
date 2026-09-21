@@ -17481,3 +17481,339 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
 @media (prefers-reduced-motion: reduce) {
   .portfolio-success-page .pf-success-redirect::after { animation: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TRANG PHÁP LÝ (/terms, /privacy)
+   ═══════════════════════════════════════════════════════════════════════════
+   Đây là TÀI LIỆU ĐỂ ĐỌC, không phải trang tiếp thị. Nên: hệ tối như phần còn
+   lại của site, không font hiển thị, bề rộng dòng chữ giữ ở mức đọc được, và
+   có mục lục dính để tra cứu — người ta hiếm khi đọc mười mục từ đầu tới cuối,
+   họ đi tìm một điều cụ thể.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.np-legal {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  /* .app-main có padding-top 34px — khoảng chừa cho Header cũ, mà mấy trang
+     này không dựng Header. Không huỷ nó thì 34px đó để lộ .app-shell bên dưới,
+     nơi còn một lớp gradient trang trí xanh lam / cam từ hệ sáng cũ: thành
+     một dải sáng chạy ngang đỉnh trang.
+     Mọi trang tối khác (HomePage, JobsPage, DiscussionPage, PortfolioLanding)
+     đều đã huỷ bằng đúng cách này; bản viết lại của trang pháp lý bỏ sót. */
+  margin-top: -34px;
+  background: #0b0f0e;
+  color: #fff;
+  overflow-x: clip;
+  font-family: 'Be Vietnam Pro', 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+.np-legal-bg {
+  position: absolute; inset: 0 0 auto;
+  /* Chỉ phủ phần mở đầu. Trước đây cao 900px nên quầng sáng còn lan xuống sau
+     lưng văn bản, làm nền tài liệu chỗ đậm chỗ nhạt. */
+  height: 620px; overflow: hidden; pointer-events: none; z-index: 0;
+}
+.np-legal-bg-inner { position: absolute; inset: 0 0 auto; height: 2960px; }
+/* Nâng nội dung lên trên tấm mesh. KHÔNG dùng `.np-legal > *` — nó sẽ đè lên
+   position của những thứ cần fixed/absolute bên trong. */
+.np-legal-head, .np-legal-body, .np-legal > footer { position: relative; z-index: 1; }
+
+/* Cùng bẫy Astryx như các trang khác: màu chữ đặt bằng light-dark() qua adopted
+   stylesheet, máy để dark mode thì tiêu đề thành #fafafa. Ép thừa kế lại. */
+.np-legal h1, .np-legal h2, .np-legal p, .np-legal li,
+.np-legal span, .np-legal a, .np-legal ol, .np-legal ul { color: inherit; }
+
+/* ── Phần mở đầu ── */
+.np-legal-head {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: clamp(120px, 13vw, 170px) 0 clamp(40px, 5vw, 56px);
+}
+.np-legal-eyebrow {
+  display: inline-block; margin-bottom: 14px;
+  font-size: 0.78rem; font-weight: 400; letter-spacing: 0.1em;
+  text-transform: uppercase; color: #10b981;
+}
+.np-legal-title {
+  margin: 0;
+  /* index.css gán 'Baloo 2' cho h1-h3 nên phải khai báo lại. */
+  font-family: inherit;
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  font-weight: 400; line-height: 1.12; letter-spacing: -0.03em; color: #fff;
+}
+.np-legal-updated {
+  margin: 14px 0 0;
+  font-size: 0.86rem; color: rgba(233, 247, 242, 0.62);
+  font-variant-numeric: tabular-nums;
+}
+.np-legal-intro {
+  margin: 20px 0 0; max-width: 62ch;
+  font-size: 1.05rem; line-height: 1.7; color: rgba(233, 247, 242, 0.78);
+}
+
+/* ── Thân trang: mục lục + văn bản ── */
+.np-legal-body {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding-bottom: clamp(72px, 9vw, 110px);
+  display: grid;
+  grid-template-columns: minmax(200px, 250px) minmax(0, 1fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: start;
+}
+
+.np-legal-toc {
+  position: sticky; top: 104px;
+  /* Mục lục KHÔNG dùng cùng mặt nền với tài liệu: nó là công cụ điều hướng,
+     không phải một phần của văn bản. Nền mờ hơn, viền mảnh hơn. */
+  padding: 16px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.np-legal-toc-label {
+  display: block; margin: 0 0 12px 10px;
+  font-size: 0.74rem; font-weight: 400; letter-spacing: 0.1em;
+  text-transform: uppercase; color: rgba(233, 247, 242, 0.45);
+}
+.np-legal-toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
+.np-legal-toc a {
+  display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px;
+  padding: 7px 10px; border-radius: 8px;
+  /* Viền trái là chỉ báo mục đang đọc. Trong suốt khi nghỉ để chữ không nhảy
+     ngang 2px mỗi lần cuộn qua một mục. */
+  border-left: 2px solid transparent;
+  font-size: 0.86rem; line-height: 1.4; text-decoration: none;
+  color: rgba(233, 247, 242, 0.62);
+  transition: color 150ms ease, background 150ms ease, border-color 150ms ease;
+}
+.np-legal-toc a:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
+.np-legal-toc a.active {
+  color: #34d399; border-left-color: #10b981; background: rgba(16, 185, 129, 0.08);
+}
+.np-legal-toc-num { color: rgba(233, 247, 242, 0.35); font-variant-numeric: tabular-nums; }
+.np-legal-toc a.active .np-legal-toc-num { color: #10b981; }
+
+/* ── Văn bản ── */
+.np-legal-doc {
+  min-width: 0;
+  /* MẶT NỀN ĐỤC cho cả văn bản.
+     Bản trước để chữ nằm trực tiếp trên nền trang: không có mép nào nói "đây
+     là tài liệu", phần trên lại chồng lên tấm mesh nên chữ đọc ra như bị rửa
+     trôi. Thiết kế cũ (thẻ giấy A4 trắng) đúng ở chỗ CÓ khung — chỉ sai màu.
+     Bỏ cả khung lẫn màu là sửa quá tay. */
+  background: #121817;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  padding: clamp(26px, 3.4vw, 44px);
+}
+.np-legal-section {
+  padding-bottom: clamp(26px, 3vw, 36px);
+  margin-bottom: clamp(26px, 3vw, 36px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  /* Chừa chỗ cho header khi nhảy tới mục bằng liên kết #. */
+  scroll-margin-top: 104px;
+}
+.np-legal-section:last-of-type { border-bottom: 0; }
+.np-legal-section h2 {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: baseline;
+  margin: 0 0 14px;
+  font-family: inherit;
+  font-size: 1.22rem; font-weight: 500; letter-spacing: -0.02em; color: #fff;
+}
+.np-legal-num {
+  font-size: 0.82rem; font-weight: 400; color: #10b981;
+  font-variant-numeric: tabular-nums;
+}
+.np-legal-section p {
+  /* 68ch: dưới ngưỡng này thì dòng ngắn khiến mắt phải nhảy dòng liên tục,
+     trên ngưỡng thì dễ lạc dòng khi xuống hàng. */
+  margin: 0 0 12px; max-width: 68ch;
+  /* 0.9 chứ không 0.82: đây là văn bản dài, người ta đọc từng câu chứ không
+     lướt. Chữ phụ mờ hợp với nhãn và chú thích, không hợp với thân bài. */
+  font-size: 1rem; line-height: 1.8; color: rgba(233, 247, 242, 0.9);
+}
+.np-legal-section p:last-child { margin-bottom: 0; }
+.np-legal-section ul {
+  margin: 14px 0; padding: 16px 20px; max-width: 68ch;
+  list-style: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  display: grid; gap: 10px;
+}
+.np-legal-section li {
+  position: relative; padding-left: 18px;
+  font-size: 0.97rem; line-height: 1.7; color: rgba(233, 247, 242, 0.9);
+}
+/* Dấu đầu dòng là một chấm trung tính, KHÔNG phải dấu tick xanh như bản trước:
+   tick ngụ ý "đã hoàn thành / đã đạt", sai nghĩa ở một văn bản chỉ đang liệt
+   kê điều khoản. */
+.np-legal-section li::before {
+  content: ''; position: absolute; left: 2px; top: 0.72em;
+  width: 5px; height: 5px; border-radius: 50%; background: #10b981;
+}
+
+@media (max-width: 900px) {
+  /* Mục lục dính không còn nghĩa lý khi nó nằm chồng lên văn bản theo chiều
+     dọc — ở khổ hẹp nó thành một khối đứng yên ở đầu trang. */
+  .np-legal-body { grid-template-columns: 1fr; }
+  .np-legal-toc { position: static; }
+  .np-legal-toc ol { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+}
+
+/* ── Hộp thoại xin đồng ý điều khoản (bước đăng ký) ────────────────────────
+   Hai khung cuộn tách rời, mỗi khung một văn bản. Gộp chung một khung dài thì
+   thanh cuộn dài gấp đôi và người dùng không biết mình đang ở đâu giữa hai
+   văn bản khác nhau; tách ra thì mỗi khung có đích riêng và nhãn "đã đọc" cho
+   thấy tiến độ thật.                                                        */
+.np-consent-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  display: grid; place-items: center;
+  padding: clamp(12px, 3vw, 32px);
+  background: rgba(6, 9, 8, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.np-consent-box {
+  width: min(980px, 100%);
+  max-height: calc(100dvh - 48px);
+  display: flex; flex-direction: column;
+  background: #121817;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-family: 'Be Vietnam Pro', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  overflow: hidden;
+}
+.np-consent-box h2, .np-consent-box h3, .np-consent-box h4,
+.np-consent-box p, .np-consent-box span, .np-consent-box li,
+.np-consent-box strong, .np-consent-box em, .np-consent-box a { color: inherit; }
+
+.np-consent-head { padding: 22px 26px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+.np-consent-head h2 {
+  margin: 0 0 6px; font-family: inherit;
+  font-size: 1.2rem; font-weight: 500; letter-spacing: -0.02em;
+}
+.np-consent-head p { margin: 0; font-size: 0.9rem; line-height: 1.55; color: rgba(233, 247, 242, 0.62); }
+
+.np-consent-panes {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  padding: 18px 26px; min-height: 0; flex: 1;
+}
+.np-consent-pane { display: flex; flex-direction: column; min-height: 0; gap: 8px; }
+.np-consent-pane-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.np-consent-pane-head h3 { margin: 0; font-family: inherit; font-size: 0.98rem; font-weight: 500; }
+.np-consent-flag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 0.74rem; font-weight: 400; white-space: nowrap;
+  color: rgba(233, 247, 242, 0.55);
+}
+.np-consent-flag.done {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.np-consent-scroll {
+  flex: 1; min-height: 220px; overflow-y: auto;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  /* Người dùng phải cuộn hết, nên thanh cuộn phải NHÌN THẤY được — đây là chỗ
+     duy nhất trong sản phẩm cố tình không ẩn nó đi. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+.np-consent-scroll:focus-visible { outline: 2px solid #10b981; outline-offset: 2px; }
+.np-consent-scroll .np-consent-intro {
+  margin: 0 0 16px; font-size: 0.88rem; line-height: 1.6;
+  color: rgba(233, 247, 242, 0.62);
+}
+.np-consent-scroll section { margin-bottom: 16px; }
+.np-consent-scroll h4 {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: baseline;
+  margin: 0 0 8px; font-family: inherit;
+  font-size: 0.92rem; font-weight: 500; letter-spacing: -0.015em;
+}
+.np-consent-scroll h4 span { font-size: 0.74rem; color: #10b981; font-variant-numeric: tabular-nums; }
+.np-consent-scroll p { margin: 0 0 8px; font-size: 0.86rem; line-height: 1.7; color: rgba(233, 247, 242, 0.88); }
+.np-consent-scroll ul { margin: 8px 0; padding: 0 0 0 4px; list-style: none; display: grid; gap: 7px; }
+.np-consent-scroll li {
+  position: relative; padding-left: 15px;
+  font-size: 0.85rem; line-height: 1.6; color: rgba(233, 247, 242, 0.88);
+}
+.np-consent-scroll li::before {
+  content: ''; position: absolute; left: 1px; top: 0.66em;
+  width: 4px; height: 4px; border-radius: 50%; background: #10b981;
+}
+.np-consent-end {
+  margin: 18px 0 0 !important; text-align: center;
+  font-size: 0.78rem !important; color: rgba(233, 247, 242, 0.4) !important;
+}
+
+.np-consent-open {
+  display: inline-flex; align-items: center; gap: 5px; width: fit-content;
+  font-size: 0.78rem; color: rgba(233, 247, 242, 0.62); text-decoration: none;
+}
+.np-consent-open:hover { color: #10b981; }
+
+.np-consent-foot {
+  padding: 16px 26px 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.np-consent-check {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 0.88rem; line-height: 1.5; cursor: pointer; max-width: 56ch;
+}
+.np-consent-check input { margin-top: 3px; width: 17px; height: 17px; accent-color: #10b981; flex: none; }
+.np-consent-check.is-locked { cursor: not-allowed; color: rgba(233, 247, 242, 0.5); }
+.np-consent-check em { font-style: normal; color: rgba(233, 247, 242, 0.5); }
+.np-consent-check strong { font-weight: 500; color: #10b981; }
+
+.np-consent-actions { display: flex; gap: 10px; flex: none; }
+.np-consent-btn {
+  padding: 11px 18px; border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2); background: transparent;
+  color: rgba(233, 247, 242, 0.78);
+  font: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.np-consent-btn:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+.np-consent-btn.primary { background: #10b981; border-color: transparent; color: #0b0f0e; }
+.np-consent-btn.primary:hover:not(:disabled) { background: #34d399; }
+.np-consent-btn.primary:disabled {
+  background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(233, 247, 242, 0.4); cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  /* Một cột: hai khung cạnh nhau ở khổ điện thoại thì mỗi khung chỉ còn ~160px
+     bề ngang, chữ vỡ thành từng mẩu hai ba từ. */
+  .np-consent-panes {
+    grid-template-columns: 1fr;
+    /* Xếp dọc thì hai khung không còn nhét vừa chiều cao hộp thoại nữa. Cho
+       chính vùng này cuộn, và bỏ ràng buộc chiều cao trên từng khung — nếu
+       không, grid chia đôi chiều cao còn lại và nội dung tràn ra đè lên nhau.
+       (Ở màn hẹp trước đó đúng là chữ "Mở ở tab riêng" của khung trên đè lên
+       tiêu đề khung dưới.) */
+    overflow-y: auto;
+    align-content: start;
+    gap: 22px;
+  }
+  .np-consent-pane { min-height: auto; }
+  .np-consent-scroll { flex: none; height: 200px; min-height: 0; }
+  .np-consent-foot { flex-direction: column; align-items: stretch; }
+  .np-consent-actions .np-consent-btn { flex: 1; }
+}
+
+.np-consent-error {
+  align-self: center;
+  font-size: 0.83rem;
+  color: #f87171;
+}
