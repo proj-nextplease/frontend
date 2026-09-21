@@ -1543,6 +1543,13 @@ function AdminContentSkeleton() {
   );
 }
 
+/* Một tài khoản coi là đã xoá khi admin bấm "Xoá tài khoản": backend đặt
+   status='DELETED' và deleted_at=now(). Kiểm cả hai vì dữ liệu cũ có thể chỉ
+   có một trong hai. */
+function isDeletedUser(u) {
+  return (u?.userStatus || '').toUpperCase() === 'DELETED' || Boolean(u?.deletedAt);
+}
+
 export function AdminB2bReviewPage() {
   const navigate = useNavigate();
   const { tabSlug = '', subTabSlug = '' } = useParams();
@@ -1605,6 +1612,10 @@ export function AdminB2bReviewPage() {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchUserQuery, setSearchUserQuery] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('ALL');
+  /* Mặc định GIẤU tài khoản đã xoá. Nút "Xoá tài khoản" của admin là xoá mềm
+     (status='DELETED'), dòng vẫn nằm trong app_users — trước đây chúng trộn
+     lẫn vào danh sách và bị tính vào mọi con số như tài khoản đang sống. */
+  const [showDeletedUsers, setShowDeletedUsers] = useState(false);
   const [selectedUserDetail, setSelectedUserDetail] = useState(null);
   const [userViewMode, setUserViewMode] = useState('grid');
   const [userCurrentPage, setUserCurrentPage] = useState(1);
@@ -1910,7 +1921,7 @@ export function AdminB2bReviewPage() {
 
   // 2. Users Filter
   useEffect(() => {
-    let result = [...users];
+    let result = users.filter((u) => showDeletedUsers || !isDeletedUser(u));
     if (userRoleFilter !== 'ALL') {
       result = result.filter((user) => {
         const rolesStr = (user.roles || '').toLowerCase();
@@ -1930,7 +1941,7 @@ export function AdminB2bReviewPage() {
     }
     setFilteredUsers(result);
     setUserCurrentPage(1);
-  }, [users, userRoleFilter, searchUserQuery]);
+  }, [users, userRoleFilter, searchUserQuery, showDeletedUsers]);
 
   // 3. Jobs Filter
   useEffect(() => {
@@ -2278,7 +2289,10 @@ export function AdminB2bReviewPage() {
         <div className="adm-grid-2">
           <div className="adm-card adm-fade-item" style={{ animationDelay: '90ms' }}>
             <div className="adm-card-head"><h3>Cơ cấu người dùng & tổ chức</h3></div>
-            <DonutCard data={userComp} centerValue={userTotal} centerLabel="Tài khoản" />
+            {/* "Tài khoản" là nhãn SAI: hai phần sau là dòng trong bảng companies,
+                tức tổ chức chứ không phải tài khoản người dùng. Cộng người với
+                tổ chức rồi gọi chung là tài khoản thì con số tổng vô nghĩa. */}
+            <DonutCard data={userComp} centerValue={userTotal} centerLabel="Người dùng & tổ chức" />
           </div>
           <div className="adm-card adm-fade-item" style={{ animationDelay: '140ms' }}>
             <div className="adm-card-head"><h3>Nội dung hệ thống</h3></div>
@@ -2529,15 +2543,19 @@ export function AdminB2bReviewPage() {
   }
 
   function renderUsers() {
-    // Calculate dashboard statistics dynamically for the users tab
-    const totalUsers = users.length;
-    const adminCount = users.filter(u => (u.roles || '').toLowerCase().includes('admin')).length;
-    const candidateCount = users.filter(u => (u.roles || '').toLowerCase().includes('candidate')).length;
-    const partnerCount = users.filter(u => (u.roles || '').toLowerCase().includes('employer') || (u.roles || '').toLowerCase().includes('organizer')).length;
+    /* Mọi con số ở đây đếm trên tập ĐANG SỐNG, không phải trên `users` thô —
+       `users` còn chứa cả tài khoản đã xoá mềm. */
+    const liveUsers = users.filter(u => !isDeletedUser(u));
+    const deletedCount = users.length - liveUsers.length;
 
-    const premiumCount = users.filter(u => u.premiumUntil && new Date(u.premiumUntil) > new Date()).length;
-    const verifiedStudentCount = users.filter(u => u.studentEmailVerified).length;
-    const activeStatusCount = users.filter(u => {
+    const totalUsers = liveUsers.length;
+    const adminCount = liveUsers.filter(u => (u.roles || '').toLowerCase().includes('admin')).length;
+    const candidateCount = liveUsers.filter(u => (u.roles || '').toLowerCase().includes('candidate')).length;
+    const partnerCount = liveUsers.filter(u => (u.roles || '').toLowerCase().includes('employer') || (u.roles || '').toLowerCase().includes('organizer')).length;
+
+    const premiumCount = liveUsers.filter(u => u.premiumUntil && new Date(u.premiumUntil) > new Date()).length;
+    const verifiedStudentCount = liveUsers.filter(u => u.studentEmailVerified).length;
+    const activeStatusCount = liveUsers.filter(u => {
       const rolesStr = (u.roles || '').toLowerCase();
       const isPartner = rolesStr.includes('employer') || rolesStr.includes('organizer');
       if (isPartner) {
@@ -2673,6 +2691,21 @@ export function AdminB2bReviewPage() {
                 </button>
               );
             })}
+            {/* Tài khoản đã xoá: mặc định giấu, nhưng KHÔNG bỏ hẳn — admin vẫn
+                cần tra được ai đã bị xoá và lúc nào. Chỉ hiện nút khi thật sự
+                có tài khoản đã xoá, để đỡ một nút chết trên màn hình. */}
+            {deletedCount > 0 && (
+              <button
+                onClick={() => setShowDeletedUsers(v => !v)}
+                className={`admin-filter-tab ${showDeletedUsers ? 'active' : ''}`}
+                type="button"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                title={showDeletedUsers ? 'Ẩn tài khoản đã xoá' : 'Hiện tài khoản đã xoá'}
+              >
+                Đã xoá
+                <span className="admin-tab-count">{deletedCount}</span>
+              </button>
+            )}
           </div>
 
           {/* Search Wrap */}
