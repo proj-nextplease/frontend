@@ -35,3 +35,12 @@ export async function updateMyPortfolio(payload, isDraft = false) {
   }
   return response.data;
 }
+
+/** Ghi nhận người dùng hiện tại đã đồng ý với một phiên bản văn bản pháp lý. */
+export async function acceptLegalConsent(version) {
+  const response = await httpClient.post('/me/legal-consent', { version });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể ghi nhận đồng ý.');
+  }
+  return response.data;
+}
