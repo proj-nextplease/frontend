@@ -4,12 +4,12 @@ import {
   ChevronDown, MapPin, Wallet, Clock, Users, Briefcase,
   Heart, List, LayoutGrid, RotateCcw, Building2, Check, Search,
   X, Share2, ArrowRight, Link2, GraduationCap, Zap, ShieldCheck,
-  Star, Award, Sparkles, FolderOpen,
+  Star, Award, Sparkles, FolderOpen, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { HeroMesh } from '../components/HeroMesh.jsx';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
-import { loadJobs, getCachedJobs } from '../api/jobsCache.js';
+import { loadOpportunities, getCachedOpportunities } from '../api/jobsCache.js';
 import { EmptyStateMascot } from '../components/EmptyStateMascot.jsx';
 import { extractProvince } from '../lib/vnProvince.js';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
@@ -40,8 +40,14 @@ const JOB_TYPE_LABELS = {
   FREELANCE: 'Freelance',
   EVENT_STAFF: 'Event Staff',
   MICRO_INTERNSHIP: 'Thực tập ngắn hạn',
+  // Quest dùng `category` làm loại. Enum đầy đủ nằm ở ràng buộc ck_quests_category
+  // trong V2: SMALL_EVENT, SCHOOL_CAMPAIGN, COMPANY_PROJECT, SHORT_INTERNSHIP,
+  // FREELANCE_GIG. Thiếu nhãn nào thì thẻ tin hiện nguyên mã hoa in đậm.
   SMALL_EVENT: 'Sự kiện CLB',
   SCHOOL_CAMPAIGN: 'Chiến dịch trường',
+  COMPANY_PROJECT: 'Dự án doanh nghiệp',
+  SHORT_INTERNSHIP: 'Thực tập ngắn hạn',
+  FREELANCE_GIG: 'Việc tự do ngắn',
   CLUB_RECRUITMENT: 'Tuyển thành viên CLB',
   CLUB_QUEST: 'Quest / Thử thách CLB',
 };
@@ -115,6 +121,55 @@ function formatSalary(comp) {
 }
 
 /* Map a raw BE job into the display shape the cards + panel expect. */
+/**
+ * Đưa một quest về đúng hình dạng mà normalizeJob mong đợi.
+ *
+ * Hai payload lệch nhau ở vài chỗ nhỏ nhưng đủ để hỏng nếu bỏ qua:
+ *   applicantCount (số ít) ≠ applicantsCount (số nhiều)
+ *   quest không có jobType, không có compensation, và KHÔNG có createdAt
+ *   quest dùng endsAt thay cho deadlineAt
+ *
+ * createdAt trước đây không có trong payload quest, khiến relativeTime() rơi về
+ * "Vừa đăng" — một mốc thời gian bịa. Đã bổ sung cột đó ở QuestService thay vì
+ * lấy tạm startsAt, vì startsAt là ngày BẮT ĐẦU hoạt động và thường nằm ở tương
+ * lai, nghĩa hoàn toàn khác.
+ */
+function questToJobShape(raw) {
+  return {
+    ...raw,
+    jobType: raw.category,              // SMALL_EVENT, SCHOOL_CAMPAIGN… đã có nhãn sẵn trong JOB_TYPE_LABELS
+    compensation: null,                 // quest trả thưởng bằng EXP/NP chứ không phải tiền
+    deadlineAt: raw.endsAt || null,
+    applicantsCount: raw.applicantCount,
+    isRemote: /remote|từ xa/i.test(raw.location || ''),
+    givesProof: true,                   // mọi quest đều sinh minh chứng khi hoàn thành
+  };
+}
+
+/** Điểm vào duy nhất: tin tuyển dụng đi thẳng, quest đi qua bước chuyển dạng. */
+function toCard(raw) {
+  return normalizeJob(raw.__kind === 'QUEST' ? questToJobShape(raw) : raw);
+}
+
+/**
+ * Dãy số trang hiển thị: luôn có trang đầu, trang cuối, trang hiện tại và hai
+ * trang kề bên; phần bị bỏ qua thay bằng '…'.
+ *
+ * Mục đích là giữ thanh phân trang có chiều rộng ổn định. Liệt kê hết số trang
+ * thì với 20 trang thanh này sẽ tràn ngang trên điện thoại.
+ */
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const out = [1];
+  const from = Math.max(2, current - 1);
+  const to = Math.min(total - 1, current + 1);
+  if (from > 2) out.push('…');
+  for (let n = from; n <= to; n += 1) out.push(n);
+  if (to < total - 1) out.push('…');
+  out.push(total);
+  return out;
+}
+
 function normalizeJob(raw) {
   // Only the organization's own type decides CLB vs doanh nghiệp — a job type
   // like EVENT_STAFF or a company name containing "CLB" is not evidence.
@@ -145,6 +200,10 @@ function normalizeJob(raw) {
 
   return {
     id: String(raw.id),
+    /* Quest và tin tuyển dụng nằm ở hai bảng, hai endpoint, hai trang chi tiết.
+       Sau khi trộn vào một danh sách thì phải mang theo dấu vết đó, nếu không
+       bấm vào một quest sẽ nhảy sang /jobs/:id và ra trang trống. */
+    kind: raw.__kind === 'QUEST' ? 'QUEST' : 'JOB',
     title: raw.title || 'Chưa đặt tên',
     company: raw.companyName || (isClub ? 'CLB Sinh Viên' : 'Nhà tuyển dụng'),
     companyLogo: raw.companyLogo || null,
@@ -557,10 +616,10 @@ export function JobsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [jobs, setJobs] = useState(() => {
-    const raw = getCachedJobs();
-    return Array.isArray(raw) ? raw.map(normalizeJob) : [];
+    const raw = getCachedOpportunities();
+    return Array.isArray(raw) ? raw.map(toCard) : [];
   });
-  const [loading, setLoading] = useState(() => !getCachedJobs());
+  const [loading, setLoading] = useState(() => !getCachedOpportunities());
   const [loadError, setLoadError] = useState(null);
   const [selectedId, setSelectedId] = useState(() => searchParams.get('preview'));
   const [closing, setClosing] = useState(false);
@@ -573,10 +632,10 @@ export function JobsPage() {
   // Load real job postings
   useEffect(() => {
     let alive = true;
-    loadJobs({ limit: 60 })
+    loadOpportunities({ limit: 60 })
       .then((data) => {
         if (!alive) return;
-        setJobs(Array.isArray(data) ? data.map(normalizeJob) : []);
+        setJobs(Array.isArray(data) ? data.map(toCard) : []);
       })
       .catch(() => {
         if (alive) {
@@ -629,6 +688,48 @@ export function JobsPage() {
     return Object.entries(filters).every(([key, vals]) => !vals || vals.length === 0 || vals.includes(job[key]));
   }), [query, filters, jobs, activeOrgTab]);
 
+  /* ── Phân trang ────────────────────────────────────────────────────────
+     Cắt trang ở phía client vì toàn bộ dữ liệu đã nằm sẵn trong bộ nhớ (60 tin
+     + quest, lấy một lần rồi cache). Không gọi lại API theo từng trang: bộ lọc
+     và ô tìm kiếm cũng đang chạy hoàn toàn ở client, nên nếu phân trang ở
+     server thì hai bên sẽ đếm lệch nhau.
+
+     Khi nào số cơ hội vượt vài trăm thì phải chuyển cả lọc lẫn phân trang sang
+     server một lượt, chứ không nửa này nửa kia. */
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
+  const listTopRef = useRef(null);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  /* Kẹp trong khoảng hợp lệ ngay lúc render thay vì sửa state trong effect:
+     đổi bộ lọc làm số trang tụt xuống, và nếu chờ effect thì có một nhịp render
+     hiện danh sách rỗng. */
+  const safePage = Math.min(page, pageCount);
+  const paged = useMemo(
+    () => filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [filtered, safePage],
+  );
+
+  /* Đổi bộ lọc / từ khoá / tab thì quay về trang đầu.
+
+     Chỉnh state ngay trong lúc render thay vì trong useEffect: đây là cách
+     React khuyến nghị cho loại "state phụ thuộc state khác", và useEffect ở
+     đây vừa vi phạm quy tắc lint vừa tạo thêm một nhịp render trung gian mà
+     người dùng thấy được. */
+  const filterSignature = `${query}|${activeOrgTab}|${JSON.stringify(filters)}`;
+  const [lastSignature, setLastSignature] = useState(filterSignature);
+  if (lastSignature !== filterSignature) {
+    setLastSignature(filterSignature);
+    setPage(1);
+  }
+
+  function goToPage(next) {
+    const target = Math.min(Math.max(1, next), pageCount);
+    setPage(target);
+    // Cuộn về đầu danh sách, nếu không người dùng sang trang mới mà vẫn đang ở giữa trang.
+    listTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   const activeCount = Object.values(filters).filter((v) => v && v.length).length;
 
   function pick(key, opt) {
@@ -672,7 +773,9 @@ export function JobsPage() {
       openLoginModal('candidate');
       return;
     }
-    navigate(`/jobs/${jobId}`);
+    // Quest có trang chi tiết riêng (/quests/:id); gửi nhầm sang /jobs/:id là ra trang trống.
+    const item = jobs.find((j) => j.id === jobId);
+    navigate(item?.kind === 'QUEST' ? `/quests/${jobId}` : `/jobs/${jobId}`);
   }
 
   function handleToggleSave(id) {
@@ -851,6 +954,24 @@ export function JobsPage() {
         .jb-detail-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
         .jb-detail h2 { font-family: inherit; margin: 0; font-size: 1.125rem; font-weight: 500; letter-spacing: -0.015em; color: ${ON_DARK}; }
         .jb-detail-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .jb-pager { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .jb-pagebtn {
+          min-width: 38px; height: 38px; padding: 0 10px;
+          display: inline-flex; align-items: center; justify-content: center;
+          background: transparent; color: rgba(233,247,242,0.72);
+          border: 1px solid rgba(255,255,255,0.14); border-radius: 8px;
+          font: inherit; font-size: 0.9375rem; cursor: pointer;
+          transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+        }
+        .jb-pagebtn:hover:not(:disabled) { background: rgba(255,255,255,0.06); color: #fff; border-color: rgba(255,255,255,0.28); }
+        .jb-pagebtn.active { background: ${EMERALD}; color: ${INK}; border-color: ${EMERALD}; font-weight: 600; }
+        /* Nút đã tắt vẫn chiếm chỗ để thanh không nhảy khi sang trang đầu/cuối. */
+        .jb-pagebtn:disabled { opacity: 0.35; cursor: default; }
+        .jb-pagegap { min-width: 22px; text-align: center; color: rgba(233,247,242,0.45); user-select: none; }
+        .jb-pageinfo { margin-left: auto; font-size: 0.875rem; color: rgba(233,247,242,0.62); }
+        @media (max-width: 560px) {
+          .jb-pageinfo { margin-left: 0; width: 100%; order: 2; }
+        }
         .jb-apply { display: inline-flex; align-items: center; gap: 6px; background: ${EMERALD}; color: ${INK}; border: none; border-radius: 8px; padding: 11px 18px; font: inherit; font-weight: 500; font-size: 0.9375rem; text-decoration: none; cursor: pointer; white-space: nowrap; transition: background-color 150ms ease; }
         .jb-apply:hover { background: #34d399; }
         .jb-iconbtn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid ${LINE_STRONG}; background: transparent; color: ${MUTED}; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: color 0.2s, border-color 0.2s, background-color 0.2s; }
@@ -976,7 +1097,7 @@ export function JobsPage() {
           </button>
         </div>
 
-        <div className="jb-listhead">
+        <div className="jb-listhead" ref={listTopRef}>
           <h1>
             Đang hiển thị <b>{filtered.length}</b> {activeOrgTab === 'CLUB' ? 'hoạt động / Quest CLB' : activeOrgTab === 'BUSINESS' ? 'việc làm từ doanh nghiệp' : 'cơ hội việc làm & CLB'}
           </h1>
@@ -991,7 +1112,7 @@ export function JobsPage() {
         <div className={`jb-results${selectedJob ? ' split' : ''}`}>
           <div className="jb-col-list">
             <div className={`jb-list${view === 'grid' && !selectedJob ? ' grid' : ''}`}>
-              {filtered.map((job, i) => (
+              {paged.map((job, i) => (
                 <article
                   key={job.id}
                   data-job-id={job.id}
@@ -1101,6 +1222,52 @@ export function JobsPage() {
                 </div>
               )}
             </div>
+
+            {/* Thanh phân trang — chỉ hiện khi thật sự có nhiều hơn một trang. */}
+            {!loading && !loadError && pageCount > 1 && (
+              <nav className="jb-pager" aria-label="Phân trang danh sách cơ hội">
+                <button
+                  type="button"
+                  className="jb-pagebtn"
+                  onClick={() => goToPage(safePage - 1)}
+                  disabled={safePage === 1}
+                  aria-label="Trang trước"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                {pageNumbers(safePage, pageCount).map((n, i) =>
+                  n === '…' ? (
+                    <span key={`gap-${i}`} className="jb-pagegap" aria-hidden="true">…</span>
+                  ) : (
+                    <button
+                      type="button"
+                      key={n}
+                      className={`jb-pagebtn${n === safePage ? ' active' : ''}`}
+                      onClick={() => goToPage(n)}
+                      aria-current={n === safePage ? 'page' : undefined}
+                      aria-label={`Trang ${n}`}
+                    >
+                      {n}
+                    </button>
+                  ),
+                )}
+
+                <button
+                  type="button"
+                  className="jb-pagebtn"
+                  onClick={() => goToPage(safePage + 1)}
+                  disabled={safePage === pageCount}
+                  aria-label="Trang sau"
+                >
+                  <ChevronRight size={16} />
+                </button>
+
+                <span className="jb-pageinfo">
+                  Trang {safePage}/{pageCount} · {filtered.length} cơ hội
+                </span>
+              </nav>
+            )}
           </div>
 
           {selectedJob && (
