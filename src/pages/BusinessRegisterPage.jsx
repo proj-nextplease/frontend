@@ -1,5 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from 'react';
+import { SCHOOLS } from '../lib/schools.js';
+import { validateTaxCode, normalizeTaxCode, validatePhone, normalizePhone } from '../lib/vnValidation.js';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -48,12 +50,6 @@ const companyTypes = [
   { value: 'ENTERPRISE', label: 'Tập đoàn / Doanh nghiệp lớn' },
 ];
 
-const mockSchools = [
-  { value: '11111111-1111-1111-1111-111111111111', label: 'Trường Đại học FPT TP.HCM' },
-  { value: '22222222-2222-2222-2222-222222222222', label: 'Trường Đại học Kinh tế TP.HCM (UEH)' },
-  { value: '33333333-3333-3333-3333-333333333333', label: 'Trường Đại học Bách Khoa TP.HCM (HCMUT)' },
-  { value: '44444444-4444-4444-4444-444444444444', label: 'Trường Đại học Quốc tế - ĐHQG TP.HCM (IU)' },
-];
 
 const initialForm = {
   email: '',
@@ -129,8 +125,11 @@ export function BusinessRegisterPage() {
   function updateField(event) {
     const { name, value } = event.target;
     if (name === 'representativePhone' || name === 'advisorPhone') {
-      const filteredValue = value.replace(/\D/g, '');
-      setFormData((current) => ({ ...current, [name]: filteredValue }));
+      setFormData((current) => ({ ...current, [name]: normalizePhone(value) }));
+      return;
+    }
+    if (name === 'taxCode') {
+      setFormData((current) => ({ ...current, [name]: normalizeTaxCode(value) }));
       return;
     }
     setFormData((current) => ({ ...current, [name]: value }));
@@ -175,10 +174,10 @@ export function BusinessRegisterPage() {
     if (!formData.representativeName || !formData.representativePhone) {
       return 'Vui lòng cung cấp đầy đủ thông tin người đại diện liên hệ.';
     }
-    const repPhoneClean = (formData.representativePhone || '').replace(/\D/g, '');
-    if (repPhoneClean.length < 10 || repPhoneClean.length > 11) {
-      return 'Số điện thoại liên hệ của người đại diện phải từ 10 đến 11 số.';
-    }
+    /* Dùng chung validatePhone với form sửa hồ sơ. Trước đây hai form ràng
+       buộc khác nhau nên cùng một số lọt được ở đây lại bị chặn ở kia. */
+    const repPhoneError = validatePhone(formData.representativePhone, { label: 'Số điện thoại người đại diện' });
+    if (repPhoneError) return repPhoneError;
     if (activeTab === 'BUSINESS') {
       if (!agreeProvideTaxInfo) {
         return 'Bạn phải đồng ý cung cấp thông tin mã số thuế doanh nghiệp (MST).';
@@ -186,6 +185,8 @@ export function BusinessRegisterPage() {
       if (!formData.companyName || !formData.taxCode || !formData.documentUrl) {
         return 'Vui lòng điền Tên doanh nghiệp, Mã số thuế và upload Giấy phép kinh doanh.';
       }
+      const taxError = validateTaxCode(formData.taxCode);
+      if (taxError) return taxError;
       if (!formData.address.trim()) {
         return 'Vui lòng nhập địa chỉ doanh nghiệp.';
       }
@@ -197,10 +198,8 @@ export function BusinessRegisterPage() {
         return 'Vui lòng nhập địa chỉ sinh hoạt của CLB.';
       }
       if (formData.advisorPhone) {
-        const advPhoneClean = formData.advisorPhone.replace(/\D/g, '');
-        if (advPhoneClean.length < 10 || advPhoneClean.length > 11) {
-          return 'Số điện thoại của Giảng viên cố vấn phải từ 10 đến 11 số.';
-        }
+        const advPhoneError = validatePhone(formData.advisorPhone, { label: 'Số điện thoại cố vấn' });
+        if (advPhoneError) return advPhoneError;
       }
     }
     return null;
@@ -227,7 +226,10 @@ export function BusinessRegisterPage() {
       address: formData.address.trim(),
       description: formData.description,
       websiteUrl: formData.websiteUrl,
-      logoUrl: formData.logoUrl || 'https://images.unsplash.com/photo-1620121692029-d088224ddc74?auto=format&fit=crop&w=300&q=80',
+      /* Trước đây chỗ này nhét một ảnh stock Unsplash khi đối tác không có logo,
+         nên MỌI tổ chức thiếu logo đều mang chung một tấm ảnh lạ, và hồ sơ trông
+         như đã có logo thật. Để null và cho UI tự vẽ chữ cái đầu. */
+      logoUrl: formData.logoUrl || null,
       documentUrl: formData.documentUrl,
       taxCode: activeTab === 'BUSINESS' ? formData.taxCode : null,
       schoolId: activeTab === 'CLUB' ? formData.schoolId : null,
@@ -412,7 +414,7 @@ export function BusinessRegisterPage() {
                       <div style={{ position: 'relative' }}>
                         <span style={ICON}><GraduationCap size={18} /></span>
                         <select className="np-bizf" name="schoolId" value={formData.schoolId} onChange={updateField} style={{ ...FIELD, appearance: 'none', cursor: 'pointer' }}>
-                          {mockSchools.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                          {SCHOOLS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                         </select>
                       </div>
                       <div style={{ position: 'relative' }}>

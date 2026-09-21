@@ -1,5 +1,7 @@
 /* eslint-disable no-unused-vars, react-hooks/set-state-in-effect */
 import { useEffect, useState } from 'react';
+import { SCHOOLS, schoolNameById, parseAdvisorContact } from '../lib/schools.js';
+import { validateTaxCode, normalizeTaxCode, validatePhone, normalizePhone } from '../lib/vnValidation.js';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -37,6 +39,7 @@ import {
   Compass,
   Trophy,
   Users,
+  Upload,
 } from 'lucide-react';
 import { UserAvatar } from '../components/UserAvatar.jsx';
 import {
@@ -1194,6 +1197,40 @@ function getTabPath(tabKey) {
   const tab = ALL_TABS.find((item) => item.key === tabKey);
   if (!tab?.route) return DASHBOARD_BASE_PATH;
   return `${DASHBOARD_BASE_PATH}/${tab.route}`;
+}
+
+/**
+ * Logo tổ chức, có sẵn phương án dự phòng.
+ *
+ * Link logo do đối tác tự dán vào nên hỏng là chuyện bình thường (ảnh bị xoá,
+ * hotlink bị chặn). Trình duyệt gặp <img> hỏng sẽ vẽ icon ảnh vỡ — xấu hơn hẳn
+ * so với việc không có logo. Nên bắt onError rồi rơi về chữ cái đầu của tên.
+ */
+function CompanyLogo({ src, name, size = 44 }) {
+  const [failed, setFailed] = useState(false);
+  const initials = (name || 'N P').trim().slice(0, 2).toUpperCase();
+  const box = {
+    width: size, height: size, borderRadius: Math.round(size * 0.27), flexShrink: 0,
+    border: '1px solid var(--line)', overflow: 'hidden',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  };
+  if (!src || failed) {
+    return (
+      <div style={{ ...box, background: '#eef2ff', color: '#4338ca', fontWeight: '800', fontSize: size * 0.34 }}>
+        {initials}
+      </div>
+    );
+  }
+  return (
+    <div style={{ ...box, background: '#fff' }}>
+      <img
+        src={src}
+        alt={name || 'Logo tổ chức'}
+        onError={() => setFailed(true)}
+        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+      />
+    </div>
+  );
 }
 
 function DetailItem({ label, value, href, onClick }) {
@@ -2689,6 +2726,16 @@ function AccountDetailView({ account, company, onRefresh }) {
     fanpageUrl: company?.fanpageUrl || '',
     description: company?.description || '',
     documentUrl: company?.documentUrl || '',
+    /* logoUrl / schoolId / advisor* PHẢI nằm trong formData. handleSave gửi
+       nguyên formData lên, mà câu update ở backend gán cả logo_url, school_id
+       và advisor_contact — thiếu ở đây thì mỗi lần đối tác bấm Lưu là ba cột
+       đó bị ghi null. Đó là lý do hồ sơ CLB không bao giờ giữ được trường và
+       giảng viên cố vấn. */
+    logoUrl: company?.logoUrl || '',
+    schoolId: company?.schoolId || '',
+    advisorName: parseAdvisorContact(company?.advisorContact)?.name || '',
+    advisorPhone: parseAdvisorContact(company?.advisorContact)?.phone || '',
+    advisorEmail: parseAdvisorContact(company?.advisorContact)?.email || '',
   });
   const [uploadedFile, setUploadedFile] = useState(null);
   const [actionStatus, setActionStatus] = useState({ type: 'idle', message: '' });
@@ -2706,22 +2753,68 @@ function AccountDetailView({ account, company, onRefresh }) {
         fanpageUrl: company.fanpageUrl || '',
         description: company.description || '',
         documentUrl: company.documentUrl || '',
+        logoUrl: company.logoUrl || '',
+        schoolId: company.schoolId || '',
+        advisorName: parseAdvisorContact(company.advisorContact)?.name || '',
+        advisorPhone: parseAdvisorContact(company.advisorContact)?.phone || '',
+        advisorEmail: parseAdvisorContact(company.advisorContact)?.email || '',
       });
       setAgreeProvideTaxInfo(Boolean(company.taxCode));
     }
   }, [company]);
 
   const companyTypeLabel = getPartnerTypeLabel(company?.companyType);
+  /* Hai biến chứ không một: form phải theo lựa chọn ĐANG gõ (đổi loại đối tác
+     thì các ô đổi theo ngay), còn thẻ xem phải theo dữ liệu ĐÃ LƯU. */
+  const isClub = formData.companyType === 'CLUB';
+  const isClubSaved = company?.companyType === 'CLUB';
+  const advisor = parseAdvisorContact(company?.advisorContact);
   const verificationTone = getVerificationTone(company?.verificationStatus);
 
   function handleInputChange(e) {
     const { name, value } = e.target;
-    if (name === 'representativePhone') {
-      const cleaned = value.replace(/\D/g, '').slice(0, 11);
-      setFormData((prev) => ({ ...prev, [name]: cleaned }));
+    if (name === 'representativePhone' || name === 'advisorPhone') {
+      setFormData((prev) => ({ ...prev, [name]: normalizePhone(value) }));
+    } else if (name === 'taxCode') {
+      setFormData((prev) => ({ ...prev, [name]: normalizeTaxCode(value) }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
+  }
+
+  /* Logo lưu thành data URL trong companies.logo_url, giống hệt cách "Tài liệu
+     xác minh" đang làm — dự án chưa có endpoint upload tệp nào, và thêm một
+     đường lưu trữ thứ hai chỉ vì cái logo thì không đáng.
+
+     Đổi lại phải giữ tệp thật nhỏ: base64 phình khoảng 33%, nên 512KB ảnh
+     thành ~683KB chữ nằm trong một cột text, và cột đó được đọc kèm mỗi lần
+     lấy hồ sơ công ty. Giới hạn của tài liệu xác minh là 2MB vì nó là bản scan
+     và hiếm khi đọc tới; logo thì ngược lại. */
+  const LOGO_MAX_BYTES = 512 * 1024;
+
+  function handleLogoChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setActionStatus({ type: 'error', message: 'Logo phải là tệp ảnh (PNG, JPG, WEBP hoặc SVG).' });
+      return;
+    }
+    if (file.size > LOGO_MAX_BYTES) {
+      const kb = Math.round(file.size / 1024);
+      setActionStatus({ type: 'error', message: `Ảnh logo ${kb}KB, vượt giới hạn 512KB. Hãy nén hoặc thu nhỏ ảnh trước.` });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData((prev) => ({ ...prev, logoUrl: reader.result }));
+      setActionStatus({ type: 'idle', message: '' });
+    };
+    reader.onerror = () => {
+      setActionStatus({ type: 'error', message: 'Không đọc được tệp ảnh này.' });
+    };
+    reader.readAsDataURL(file);
+    // Cho phép chọn lại đúng tệp vừa chọn (onChange không bắn nếu value không đổi).
+    e.target.value = '';
   }
 
   function handleFileChange(e) {
@@ -2757,17 +2850,31 @@ function AccountDetailView({ account, company, onRefresh }) {
       setActionStatus({ type: 'error', message: 'Tên người đại diện không được để trống.' });
       return;
     }
-    if (!formData.representativePhone.trim()) {
-      setActionStatus({ type: 'error', message: 'Số điện thoại không được để trống.' });
+    /* Ràng buộc cũ là "10 hoặc 11 chữ số", nên số 11 chữ số theo đầu số trước
+       2018 — loại không còn tồn tại — vẫn lọt. validatePhone siết đúng 10 số và
+       kiểm tra cả đầu số. */
+    const phoneError = validatePhone(formData.representativePhone, { label: 'Số điện thoại người đại diện' });
+    if (phoneError) {
+      setActionStatus({ type: 'error', message: phoneError });
       return;
     }
-    if (!/^[0-9]{10,11}$/.test(formData.representativePhone)) {
-      setActionStatus({ type: 'error', message: 'Số điện thoại liên hệ phải chứa từ 10 đến 11 chữ số.' });
+    if (formData.companyType === 'CLUB' && formData.advisorPhone.trim()) {
+      const advisorPhoneError = validatePhone(formData.advisorPhone, { label: 'Số điện thoại cố vấn' });
+      if (advisorPhoneError) {
+        setActionStatus({ type: 'error', message: advisorPhoneError });
+        return;
+      }
+    }
+    if (formData.companyType === 'CLUB' && !formData.schoolId) {
+      setActionStatus({ type: 'error', message: 'Vui lòng chọn trường trực thuộc của CLB.' });
       return;
     }
-    if (agreeProvideTaxInfo && !formData.taxCode.trim()) {
-      setActionStatus({ type: 'error', message: 'Vui lòng nhập Mã số thuế khi đã đồng ý cung cấp.' });
-      return;
+    if (formData.companyType !== 'CLUB' && agreeProvideTaxInfo) {
+      const taxError = validateTaxCode(formData.taxCode);
+      if (taxError) {
+        setActionStatus({ type: 'error', message: taxError });
+        return;
+      }
     }
     if (!formData.description.trim() || formData.description.trim().length < 30) {
       setActionStatus({ type: 'error', message: 'Mô tả tổ chức không được để trống và phải có tối thiểu 30 ký tự.' });
@@ -2777,9 +2884,22 @@ function AccountDetailView({ account, company, onRefresh }) {
     setActionStatus({ type: 'loading', message: 'Đang cập nhật hồ sơ...' });
 
     try {
+      /* Gửi theo loại tổ chức: CLB không có mã số thuế, doanh nghiệp không có
+         trường trực thuộc hay giảng viên cố vấn. Gửi chéo thì dữ liệu rác nằm
+         lại trong DB và admin duyệt sẽ thấy trường vô nghĩa. */
+      const isClubNow = formData.companyType === 'CLUB';
       await updateB2bProfile({
         ...formData,
-        taxCode: agreeProvideTaxInfo ? formData.taxCode.trim() : null
+        taxCode: isClubNow ? null : (agreeProvideTaxInfo ? formData.taxCode.trim() : null),
+        logoUrl: formData.logoUrl || null,
+        schoolId: isClubNow ? (formData.schoolId || null) : null,
+        advisorContact: isClubNow && formData.advisorName.trim()
+          ? JSON.stringify({
+              name: formData.advisorName.trim(),
+              phone: formData.advisorPhone.trim(),
+              email: formData.advisorEmail.trim(),
+            })
+          : null,
       });
       setActionStatus({ type: 'success', message: 'Cập nhật hồ sơ đối tác thành công! Hồ sơ đang chờ duyệt.' });
       setTimeout(() => {
@@ -2808,6 +2928,16 @@ function AccountDetailView({ account, company, onRefresh }) {
       fanpageUrl: company?.fanpageUrl || '',
       description: company?.description || '',
       documentUrl: company?.documentUrl || '',
+    /* logoUrl / schoolId / advisor* PHẢI nằm trong formData. handleSave gửi
+       nguyên formData lên, mà câu update ở backend gán cả logo_url, school_id
+       và advisor_contact — thiếu ở đây thì mỗi lần đối tác bấm Lưu là ba cột
+       đó bị ghi null. Đó là lý do hồ sơ CLB không bao giờ giữ được trường và
+       giảng viên cố vấn. */
+    logoUrl: company?.logoUrl || '',
+    schoolId: company?.schoolId || '',
+    advisorName: parseAdvisorContact(company?.advisorContact)?.name || '',
+    advisorPhone: parseAdvisorContact(company?.advisorContact)?.phone || '',
+    advisorEmail: parseAdvisorContact(company?.advisorContact)?.email || '',
     });
     setAgreeProvideTaxInfo(Boolean(company?.taxCode));
   }
@@ -2816,8 +2946,10 @@ function AccountDetailView({ account, company, onRefresh }) {
     <section className="dashboard-page partner-account-page" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div className="partner-account-hero" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-          <div className="b2b-company-avatar" style={{ boxShadow: '0 4px 12px rgba(13,27,51,0.1)' }}>
-            {(company?.name || account?.email || 'P').slice(0, 2).toUpperCase()}
+          {/* Hiện logo thật nếu có; CompanyLogo tự rơi về chữ cái đầu khi thiếu
+              link hoặc link hỏng, nên vẫn giữ nguyên hình thức cũ ở ca xấu. */}
+          <div className="b2b-company-avatar" style={{ boxShadow: '0 4px 12px rgba(13,27,51,0.1)', padding: 0, background: 'transparent', border: 'none' }}>
+            <CompanyLogo src={company?.logoUrl} name={company?.name || account?.email} size={56} />
           </div>
           <div className="partner-account-hero-copy">
             <span className="b2b-type-badge" style={{ ...verificationTone, display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 8px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 'bold' }}>
@@ -2909,13 +3041,16 @@ function AccountDetailView({ account, company, onRefresh }) {
                   </select>
                 </div>
 
+                {/* Mã số thuế chỉ dành cho doanh nghiệp. CLB không có MST, trước
+                    đây ô này vẫn hiện và người dùng dễ gõ nhầm CCCD vào. */}
+                {!isClub && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Mã số thuế</label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <input
                       type="text"
                       name="taxCode"
-                      placeholder={agreeProvideTaxInfo ? "Nhập mã số thuế" : "Cần tích đồng ý bên dưới để điền"}
+                      placeholder={agreeProvideTaxInfo ? "10 chữ số, vd 0312345678" : "Cần tích đồng ý bên dưới để điền"}
                       value={formData.taxCode}
                       disabled={!agreeProvideTaxInfo}
                       onChange={handleInputChange}
@@ -2947,6 +3082,46 @@ function AccountDetailView({ account, company, onRefresh }) {
                     </label>
                   </div>
                 </div>
+                )}
+
+                {/* Đối ứng cho CLB: hai trường này form đăng ký đã thu từ đầu, nhưng
+                    hồ sơ chưa bao giờ hiện ra để xem hay sửa lại. */}
+                {isClub && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Trường trực thuộc *</label>
+                    <select
+                      name="schoolId"
+                      value={formData.schoolId}
+                      onChange={handleInputChange}
+                      className="input-field"
+                      style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', height: '42px', cursor: 'pointer' }}
+                      required
+                    >
+                      <option value="">— Chọn trường —</option>
+                      {SCHOOLS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {isClub && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: '1 / -1' }}>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Giảng viên cố vấn</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                      <input type="text" name="advisorName" value={formData.advisorName} onChange={handleInputChange}
+                        className="input-field" maxLength={140} placeholder="Họ tên cố vấn"
+                        style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)' }} />
+                      <input type="tel" name="advisorPhone" value={formData.advisorPhone} onChange={handleInputChange}
+                        className="input-field" maxLength={11} placeholder="Số điện thoại"
+                        style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)' }} />
+                      <input type="email" name="advisorEmail" value={formData.advisorEmail} onChange={handleInputChange}
+                        className="input-field" maxLength={200} placeholder="Email"
+                        style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)' }} />
+                    </div>
+                    <span style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>
+                      Admin dùng thông tin này để đối chiếu khi duyệt hồ sơ CLB.
+                    </span>
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Người đại diện *</label>
@@ -2962,7 +3137,9 @@ function AccountDetailView({ account, company, onRefresh }) {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Số điện thoại *</label>
+                  {/* Nhãn cũ chỉ ghi "Số điện thoại", đứng cạnh ô Người đại diện nên
+                    không rõ là số của tổ chức hay của cá nhân đó. */}
+                <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Số điện thoại người đại diện *</label>
                   <input
                     type="text"
                     name="representativePhone"
@@ -2973,6 +3150,32 @@ function AccountDetailView({ account, company, onRefresh }) {
                     style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)' }}
                     required
                   />
+                </div>
+
+                {/* Logo là thứ ứng viên nhìn thấy đầu tiên trên mỗi thẻ việc làm, nhưng
+                    hồ sơ chưa từng cho xem hay sửa. Nhận URL vì luồng upload ảnh
+                    riêng chưa có; ô xem trước bên dưới để biết link sống hay chết. */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--muted)' }}>Logo tổ chức</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <CompanyLogo src={formData.logoUrl} name={formData.companyName} size={52} />
+                    <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '10px', border: '1px dashed var(--line)', background: 'var(--bg)', cursor: 'pointer' }}>
+                      <Upload size={16} style={{ color: '#2563eb', flexShrink: 0 }} />
+                      <span style={{ fontSize: '0.88rem', color: 'var(--muted)' }}>
+                        {formData.logoUrl ? 'Chọn ảnh khác' : 'Chọn ảnh logo (PNG, JPG, SVG — tối đa 512KB)'}
+                      </span>
+                      <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={handleLogoChange} style={{ display: 'none' }} />
+                    </label>
+                    {formData.logoUrl && (
+                      <button type="button" onClick={() => setFormData((prev) => ({ ...prev, logoUrl: '' }))}
+                        style={{ padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--bg)', color: '#dc2626', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer', flexShrink: 0 }}>
+                        Gỡ logo
+                      </button>
+                    )}
+                  </div>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>
+                    Ảnh vuông, nền trong suốt là đẹp nhất. Để trống thì thẻ tin đăng hiển thị chữ cái đầu của tên tổ chức.
+                  </span>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -3056,14 +3259,33 @@ function AccountDetailView({ account, company, onRefresh }) {
                 label="Địa chỉ tổ chức"
                 value={company?.address || <span style={{ color: '#94a3b8', fontStyle: 'italic', fontWeight: '500' }}>Chưa cung cấp</span>}
               />
-              <DetailItem
-                label="Mã số thuế"
-                value={company?.taxCode || <span style={{ color: '#94a3b8', fontStyle: 'italic', fontWeight: '500' }}>Chưa cung cấp</span>}
-              />
+              {/* MST cho doanh nghiệp; CLB thì thay bằng trường trực thuộc — dữ liệu
+                  đã nằm sẵn trong companies.school_id từ lúc đăng ký. */}
+              {isClubSaved ? (
+                <DetailItem
+                  label="Trường trực thuộc"
+                  value={schoolNameById(company?.schoolId) || <span style={{ color: '#94a3b8', fontStyle: 'italic', fontWeight: '500' }}>Chưa cung cấp</span>}
+                />
+              ) : (
+                <DetailItem
+                  label="Mã số thuế"
+                  value={company?.taxCode || <span style={{ color: '#94a3b8', fontStyle: 'italic', fontWeight: '500' }}>Chưa cung cấp</span>}
+                />
+              )}
               <DetailItem label="Người đại diện" value={company?.representativeName} />
               <DetailItem label="Số điện thoại" value={company?.representativePhone} />
               <DetailItem label="Website" value={company?.websiteUrl} href={company?.websiteUrl} />
               <DetailItem label="Fanpage" value={company?.fanpageUrl} href={company?.fanpageUrl} />
+              {isClubSaved && (
+                <DetailItem
+                  label="Giảng viên cố vấn"
+                  value={
+                    advisor
+                      ? [advisor.name, advisor.phone, advisor.email].filter(Boolean).join(' · ')
+                      : <span style={{ color: '#94a3b8', fontStyle: 'italic', fontWeight: '500' }}>Chưa cung cấp</span>
+                  }
+                />
+              )}
               <DetailItem
                 label="Tài liệu xác minh"
                 value={
