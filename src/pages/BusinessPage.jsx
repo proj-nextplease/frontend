@@ -126,6 +126,12 @@ function CandidatesView() {
   /* Chỉ nhận MỘT lần: sau khi đã mở đúng chỗ, người dùng bấm sang tin khác
      thì không được kéo họ quay lại. */
   const deepLinkDone = useRef(false);
+  /* Thông báo trỏ tới một tin KHÔNG có trong danh sách của tổ chức đang mở.
+     Xảy ra thật: một người có thể là thành viên của nhiều tổ chức, nhưng bảng
+     điều khiển chỉ mở được MỘT (CompanyAccessService.resolveCompanyForUser
+     lấy limit 1, ưu tiên OWNER rồi MANAGER). Thất bại âm thầm ở đây nghĩa là
+     người dùng bấm thông báo, thấy một danh sách tin lạ, và không hiểu vì sao. */
+  const [deepLinkMiss, setDeepLinkMiss] = useState(false);
 
   const [pipeline, setPipeline] = useState([]);
   useEffect(() => { getOrgPipeline().then(setPipeline).catch(() => setPipeline([])); }, []);
@@ -151,6 +157,7 @@ function CandidatesView() {
     if (deepLinkDone.current || !wantPostingId || postingsLoading) return;
     const target = postings.find((p) => String(p.id) === String(wantPostingId));
     deepLinkDone.current = true;
+    setDeepLinkMiss(!target);
     if (target) {
       // Tin có thể nằm ở tab "Đã đóng"; chuyển tab trước, nếu không thì chọn
       // xong mà danh sách bên trái vẫn không thấy nó đâu.
@@ -263,6 +270,20 @@ function CandidatesView() {
 
     return (
       <div>
+        {/* Thông báo dẫn tới một tin không thuộc tổ chức đang mở.
+            Nói rõ chuyện gì đã xảy ra thay vì im lặng bỏ qua: người dùng vừa
+            bấm một thông báo và có quyền biết vì sao không thấy tin đâu. */}
+        {deepLinkMiss && (
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '13px 15px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.09)', border: '1px solid rgba(245, 158, 11, 0.35)', marginBottom: '18px' }}>
+            <AlertCircle size={18} color="#b45309" style={{ flexShrink: 0, marginTop: '1px' }} />
+            <p style={{ margin: 0, fontSize: '0.86rem', lineHeight: 1.55, color: '#78350f' }}>
+              <strong>Không tìm thấy tin đăng mà thông báo trỏ tới.</strong> Tin đó nhiều khả năng
+              thuộc một tổ chức khác mà bạn cũng là thành viên — bảng điều khiển hiện chỉ mở được
+              một tổ chức tại một thời điểm.
+            </p>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
