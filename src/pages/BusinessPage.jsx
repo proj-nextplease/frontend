@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars, react-hooks/set-state-in-effect */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SCHOOLS, schoolNameById, parseAdvisorContact } from '../lib/schools.js';
 import { validateTaxCode, normalizeTaxCode, validatePhone, normalizePhone } from '../lib/vnValidation.js';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   BadgeCheck,
@@ -65,7 +65,7 @@ import { getOrganizerJobs, getOrganizerJobById, closeJob, deleteJob, getJobDetai
 import { NotificationBell } from '../components/NotificationBell.jsx';
 import { getOrganizerQuests, getOrganizerQuestById, closeQuest, deleteQuest, getQuestApplicants, updateQuestApplicationStatus } from '../api/questApi.js';
 import { getRating, createRating, updateRating } from '../api/ratingApi.js';
-import { Crown, ArrowLeft, Check, Calendar, Award, ChevronRight, ExternalLink as ExtLink, Loader2 } from 'lucide-react';
+import { Crown, ArrowLeft, Check, Calendar, Award, ChevronRight, ExternalLink as ExtLink, Loader2, AlertCircle } from 'lucide-react';
 
 
 const DASHBOARD_BASE_PATH = '/businesses/dashboard';
@@ -103,6 +103,10 @@ function CandidatesView() {
   const [selectedPosting, setSelectedPosting] = useState(null);
   const [applicants, setApplicants] = useState([]);
   const [applicantsLoading, setApplicantsLoading] = useState(false);
+  /* Lỗi tải ứng viên. Phải hiện ra màn hình: một danh sách rỗng vì mạng hỏng
+     trông y hệt một danh sách rỗng vì chưa ai nộp, và tổ chức sẽ kết luận tin
+     của mình không ai quan tâm. */
+  const [applicantsError, setApplicantsError] = useState('');
   const [applicantSearch, setApplicantSearch] = useState('');
   const [applicantStatusFilter, setApplicantStatusFilter] = useState('');
 
@@ -113,6 +117,16 @@ function CandidatesView() {
   const [actionMsg, setActionMsg] = useState({ type: 'idle', text: '' });
 
   // Custom pipeline (labels/colors/visibility over canonical statuses)
+  /* Mở thẳng đúng tin và đúng đơn khi vào từ thông báo.
+     Không có phần này thì link trong thông báo chỉ dẫn tới cửa bảng điều
+     khiển và người nhận phải tự dò lại xem ai vừa nộp vào tin nào. */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const wantPostingId = searchParams.get('posting');
+  const wantAppId = searchParams.get('app');
+  /* Chỉ nhận MỘT lần: sau khi đã mở đúng chỗ, người dùng bấm sang tin khác
+     thì không được kéo họ quay lại. */
+  const deepLinkDone = useRef(false);
+
   const [pipeline, setPipeline] = useState([]);
   useEffect(() => { getOrgPipeline().then(setPipeline).catch(() => setPipeline([])); }, []);
   const pipeMap = pipeline.reduce((acc, s) => { acc[s.status] = s; return acc; }, {});
@@ -133,12 +147,45 @@ function CandidatesView() {
 
   useEffect(() => { loadPostings(); }, []);
 
+  useEffect(() => {
+    if (deepLinkDone.current || !wantPostingId || postingsLoading) return;
+    const target = postings.find((p) => String(p.id) === String(wantPostingId));
+    deepLinkDone.current = true;
+    if (target) {
+      // Tin có thể nằm ở tab "Đã đóng"; chuyển tab trước, nếu không thì chọn
+      // xong mà danh sách bên trái vẫn không thấy nó đâu.
+      const closed = ['CLOSED', 'REJECTED', 'COMPLETED', 'CANCELLED']
+        .includes(String(target.status || '').toUpperCase());
+      setPostingStatusTab(closed ? 'closed' : 'active');
+      selectPosting(target);
+    }
+    // Dọn query để F5 không mở lại, và để link chia sẻ không mang theo id đơn.
+    setSearchParams({}, { replace: true });
+  }, [postings, postingsLoading, wantPostingId]);
+
+  /* Mở sẵn đơn được trỏ tới, ngay khi danh sách ứng viên về. */
+  const pendingAppRef = useRef(wantAppId);
+  useEffect(() => {
+    const id = pendingAppRef.current;
+    if (!id || applicantsLoading || applicants.length === 0) return;
+    const app = applicants.find((a) => String(a.id) === String(id));
+    pendingAppRef.current = null;
+    if (app) openApplicant(app);
+  }, [applicants, applicantsLoading]);
+
   function selectPosting(posting) {
     setSelectedPosting(posting);
     setSelectedApplicant(null);
     setApplicants([]);
     setApplicantSearch('');
     setApplicantStatusFilter('');
+    setApplicantsError('');
+    setApplicantsLoading(true);
+    loadApplicants(posting);
+  }
+
+  function loadApplicants(posting) {
+    setApplicantsError('');
     setApplicantsLoading(true);
     const fetchFn = posting.postType === 'QUEST' ? getQuestApplicants(posting.id) : getJobApplications(posting.id);
     fetchFn
@@ -147,7 +194,12 @@ function CandidatesView() {
         // update count on the posting list in real time
         setPostings(prev => prev.map(p => p.id === posting.id ? { ...p, _count: (data || []).length } : p));
       })
-      .catch(err => console.error('Lỗi tải ứng viên:', err))
+      .catch(err => {
+        console.error('Lỗi tải ứng viên:', err);
+        /* KHÔNG để danh sách rỗng nói thay lỗi. Giữ applicants rỗng nhưng bật
+           cờ lỗi để phần hiển thị nói đúng chuyện gì đã xảy ra. */
+        setApplicantsError(err?.message || 'Không tải được danh sách ứng viên.');
+      })
       .finally(() => setApplicantsLoading(false));
   }
 
@@ -351,7 +403,7 @@ function CandidatesView() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <h2 style={{ margin: '0 0 2px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)' }}>{selectedPosting.title}</h2>
           <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--muted)' }}>
-            {isQuest ? 'Quest' : 'Tin tuyển dụng'} · {applicantsLoading ? '...' : `${applicants.length} ứng viên đã nộp`}
+            {isQuest ? 'Quest' : 'Tin tuyển dụng'} · {applicantsLoading ? '...' : applicantsError ? 'chưa tải được' : `${applicants.length} ứng viên đã nộp`}
             {!applicantsLoading && applicants.some(isBoosted) && (
               <span style={{ color: '#d97706', fontWeight: '750' }}>
                 {' '}· {applicants.filter(isBoosted).length} đang Boost
@@ -393,6 +445,19 @@ function CandidatesView() {
         <div>
           {applicantsLoading ? (
             <div className="empty-state" style={{ padding: '40px 0' }}><div className="empty-state-icon"><UsersRound size={28} /></div><p className="empty-state-title">Đang tải ứng viên...</p></div>
+          ) : applicantsError ? (
+            <div className="empty-state" style={{ padding: '40px 0' }}>
+              <div className="empty-state-icon" style={{ color: '#dc2626' }}><AlertCircle size={28} /></div>
+              <p className="empty-state-title">Không tải được danh sách ứng viên.</p>
+              <p className="empty-state-desc">{applicantsError}</p>
+              <button
+                type="button"
+                onClick={() => selectedPosting && loadApplicants(selectedPosting)}
+                style={{ marginTop: '14px', padding: '9px 18px', borderRadius: '999px', border: `1.5px solid ${accent}`, background: 'transparent', color: accent, fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer' }}
+              >
+                Thử lại
+              </button>
+            </div>
           ) : filteredApplicants.length === 0 ? (
             <div className="empty-state" style={{ padding: '40px 0' }}>
               <div className="empty-state-icon"><UsersRound size={28} /></div>

@@ -43,6 +43,11 @@ function StatusBanner({ status }) {
 export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
   const isEdit = Boolean(initialData);
 
+  /* Khác tin tuyển dụng: QuestService đẩy MỌI trạng thái về PENDING khi sửa
+     ("Any status can be edited; always resets to PENDING"), nên chỉ cần đang
+     sửa là phải cảnh báo. */
+  const questWasOpen = isEdit && String(initialData?.status || '').toUpperCase() === 'OPEN';
+
   const [form, setForm] = useState({
     title: initialData?.title ?? '',
     description: initialData?.description ?? '',
@@ -229,6 +234,22 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
         </p>
       </div>
 
+      {/* Nói HẬU QUẢ, không chỉ nói thủ tục.
+          "Sẽ được gửi lại để duyệt" nghe như một bước hành chính vô hại. Điều
+          thật sự xảy ra là Quest tạm ẩn khỏi danh sách và ngừng nhận đăng ký
+          cho tới khi có người duyệt. Khác tin tuyển dụng ở chỗ QuestService
+          đẩy MỌI trạng thái về PENDING, không riêng Quest đang mở. */}
+      {isEdit && (
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '13px 15px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.09)', border: '1px solid rgba(245, 158, 11, 0.35)', marginBottom: '26px' }}>
+          <AlertTriangle size={18} color="#b45309" style={{ flexShrink: 0, marginTop: '1px' }} />
+          <p style={{ margin: 0, fontSize: '0.86rem', lineHeight: 1.55, color: '#78350f' }}>
+            {questWasOpen
+              ? <><strong>Quest này đang hiển thị công khai.</strong> Khi bạn lưu, Quest chuyển về <strong>Chờ duyệt</strong>: tạm ẩn khỏi danh sách và ngừng nhận đăng ký cho tới khi Admin duyệt lại. Người đã đăng ký vẫn được giữ nguyên.</>
+              : <>Mọi thay đổi đều đưa Quest về trạng thái <strong>Chờ duyệt</strong>, kể cả khi Quest đang đóng. Quest chỉ hiển thị lại sau khi Admin duyệt.</>}
+          </p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
         {/* Banner */}
@@ -246,6 +267,7 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
                 <Sparkles size={26} />
                 <span style={{ fontSize: '0.84rem', fontWeight: '600' }}>Chưa có banner — sẽ dùng ảnh mặc định của hệ thống</span>
               </div>
+
             )}
             {form.bannerUrl && (
               <div style={{ position: 'absolute', left: '12px', top: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 11px', borderRadius: '999px', background: 'rgba(13,27,51,0.7)', color: '#fff', fontWeight: '700', fontSize: '0.76rem', backdropFilter: 'blur(4px)', pointerEvents: 'none' }}>
