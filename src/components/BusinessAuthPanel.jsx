@@ -16,10 +16,18 @@ const features = [
   'Đánh giá ứng viên và trao thưởng minh bạch',
 ];
 
+/* Ba câu này phải ĐÚNG ở mọi quy mô.
+   Bản cũ ghi "500+ Tổ chức tin dùng" và "12k+ Hồ sơ có proof" trong khi
+   bảng companies có 8 dòng — sai hai bậc độ lớn, đặt ngay trang bán hàng.
+   Một con số bịa chỉ cần một người tra là sập cả phần còn lại của trang.
+   "24h Duyệt hồ sơ" cũng không có gì bảo đảm: Admin duyệt tay, không có
+   cam kết thời gian nào trong hệ thống.
+
+   Thay bằng những điều đúng do THIẾT KẾ, không phụ thuộc số người dùng. */
 const metrics = [
-  { value: '500+', label: 'Tổ chức tin dùng' },
-  { value: '12k+', label: 'Hồ sơ có proof' },
-  { value: '24h', label: 'Duyệt hồ sơ' },
+  { value: '100%', label: 'Minh chứng qua Admin duyệt' },
+  { value: 'RS', label: 'Uy tín từ nhật ký sự kiện' },
+  { value: '3 bước', label: 'Đăng tin → duyệt → nhận đơn' },
 ];
 
 const partners = [

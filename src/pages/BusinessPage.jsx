@@ -76,7 +76,8 @@ const SIDEBAR_TABS = [
   { key: 'dashboard', route: '', label: 'Bảng điều khiển', icon: { business: BriefcaseBusiness, club: Grid }, lockable: false },
   { key: 'create-job', route: 'create-job', label: 'Đăng tin tuyển dụng', icon: { business: Plus, club: Compass }, lockable: true },
   { key: 'manage-jobs', route: 'manage-jobs', label: 'Quản lý tin đăng', icon: { business: FileText, club: Trophy }, lockable: true },
-  { key: 'find-talent', route: 'find-talent', label: 'Tìm kiếm Talent', icon: { business: Search, club: Sparkles }, lockable: true },
+  // comingSoon: tab vẫn hiện để giữ lộ trình, nhưng KHÔNG giả vờ là đã có.
+  { key: 'find-talent', route: 'find-talent', label: 'Tìm kiếm Talent', icon: { business: Search, club: Sparkles }, lockable: true, comingSoon: true },
   { key: 'candidates', route: 'candidates', label: 'Quản lý ứng viên', icon: { business: UsersRound, club: Users }, lockable: true },
   { key: 'members', route: 'members', label: 'Thành viên & Phân quyền', icon: { business: ShieldCheck, club: GraduationCap }, lockable: true },
   { key: 'pipeline', route: 'pipeline', label: 'Quy trình tuyển dụng', icon: { business: Filter, club: TrendingUp }, lockable: true },
@@ -1233,7 +1234,8 @@ function TabPlaceholderView({ icon: Icon, title, desc }) {
         <Icon size={30} />
       </div>
       <h2 className="partner-placeholder-title">{title}</h2>
-      <p className="partner-placeholder-desc">{desc}</p>
+      {/* pre-line để xuống dòng trong desc hiện đúng, không dính thành một khối. */}
+      <p className="partner-placeholder-desc" style={{ whiteSpace: 'pre-line' }}>{desc}</p>
     </div>
   );
 }
@@ -3589,8 +3591,10 @@ export function BusinessPage() {
         return (
           <TabPlaceholderView
             icon={Search}
-            title="Tìm kiếm Talent"
-            desc="Hệ thống lọc thông minh theo trường học, nhóm kỹ năng chuyên môn, minh chứng thực tế và Reputation Score giúp bạn kết nối nhanh nhất."
+            title="Tìm kiếm Talent — đang phát triển"
+            desc={'Tính năng này chưa có. Dự kiến cho phép lọc ứng viên theo trường, kỹ năng, '
+              + 'minh chứng đã duyệt và điểm uy tín.\n\n'
+              + 'Hiện tại bạn xem được hồ sơ ứng viên trong mục Quản lý ứng viên, sau khi họ nộp đơn.'}
           />
         );
       case 'candidates':
@@ -3683,6 +3687,14 @@ export function BusinessPage() {
               >
                 <Icon size={18} />
                 <span>{label}</span>
+                {/* Nói TRƯỚC khi bấm rằng tính năng chưa có. Một mục nằm ngang
+                    hàng với các mục thật, bấm vào mới biết là rỗng, là cách
+                    làm người dùng mất lòng tin vào cả thanh điều hướng. */}
+                {tab.comingSoon && !isLocked && (
+                  <span style={{ marginLeft: 'auto', fontSize: '0.62rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#b45309', background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.3)', padding: '2px 6px', borderRadius: '999px', whiteSpace: 'nowrap' }}>
+                    Sắp có
+                  </span>
+                )}
                 {isLocked && <Lock size={13} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />}
               </button>
             );
