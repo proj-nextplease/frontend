@@ -46,6 +46,11 @@ function StatusBanner({ status }) {
 export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
   const isEdit = Boolean(initialData);
 
+  /* Chỉ tin đang OPEN mới bị đẩy về chờ duyệt khi sửa
+     (JobService: OPEN → PENDING, các trạng thái khác giữ nguyên).
+     Cảnh báo cho tin đã đóng là doạ người dùng vì một chuyện không xảy ra. */
+  const editingLivePost = isEdit && String(initialData?.status || '').toUpperCase() === 'OPEN';
+
   // specialty stored as comma-separated string; split for multi-select
   const initSpecialties = initialData?.specialty
     ? initialData.specialty.split(',').map((s) => s.trim()).filter(Boolean)
@@ -318,6 +323,23 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
           </p>
         </div>
       </div>
+
+      {/* Nói HẬU QUẢ, không chỉ nói thủ tục.
+          "Sẽ được gửi lại để duyệt" nghe như một bước hành chính vô hại. Điều
+          thật sự xảy ra là tin đang chạy BIẾN MẤT khỏi trang việc làm và ngừng
+          nhận đơn cho tới khi có người duyệt — sửa một lỗi chính tả lúc 9h
+          sáng có thể tốn cả ngày hiển thị. Người dùng phải biết trước để chọn
+          thời điểm, chứ không phải biết sau khi đã bấm Lưu. */}
+      {editingLivePost && (
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '13px 15px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.09)', border: '1px solid rgba(245, 158, 11, 0.35)', marginBottom: '26px' }}>
+          <AlertTriangle size={18} color="#b45309" style={{ flexShrink: 0, marginTop: '1px' }} />
+          <p style={{ margin: 0, fontSize: '0.86rem', lineHeight: 1.55, color: '#78350f' }}>
+            <strong>Tin này đang hiển thị công khai.</strong> Khi bạn lưu thay đổi, tin sẽ
+            chuyển về trạng thái <strong>Chờ duyệt</strong>: nó tạm ẩn khỏi trang việc làm và
+            ngừng nhận đơn mới cho tới khi Admin duyệt lại. Các đơn đã nộp vẫn được giữ nguyên.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
 

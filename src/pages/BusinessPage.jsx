@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars, react-hooks/set-state-in-effect */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SCHOOLS, schoolNameById, parseAdvisorContact } from '../lib/schools.js';
 import { validateTaxCode, normalizeTaxCode, validatePhone, normalizePhone } from '../lib/vnValidation.js';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   BadgeCheck,
@@ -65,7 +65,7 @@ import { getOrganizerJobs, getOrganizerJobById, closeJob, deleteJob, getJobDetai
 import { NotificationBell } from '../components/NotificationBell.jsx';
 import { getOrganizerQuests, getOrganizerQuestById, closeQuest, deleteQuest, getQuestApplicants, updateQuestApplicationStatus } from '../api/questApi.js';
 import { getRating, createRating, updateRating } from '../api/ratingApi.js';
-import { Crown, ArrowLeft, Check, Calendar, Award, ChevronRight, ExternalLink as ExtLink, Loader2 } from 'lucide-react';
+import { Crown, ArrowLeft, Check, Calendar, Award, ChevronRight, ExternalLink as ExtLink, Loader2, AlertCircle } from 'lucide-react';
 
 
 const DASHBOARD_BASE_PATH = '/businesses/dashboard';
@@ -76,7 +76,8 @@ const SIDEBAR_TABS = [
   { key: 'dashboard', route: '', label: 'Bảng điều khiển', icon: { business: BriefcaseBusiness, club: Grid }, lockable: false },
   { key: 'create-job', route: 'create-job', label: 'Đăng tin tuyển dụng', icon: { business: Plus, club: Compass }, lockable: true },
   { key: 'manage-jobs', route: 'manage-jobs', label: 'Quản lý tin đăng', icon: { business: FileText, club: Trophy }, lockable: true },
-  { key: 'find-talent', route: 'find-talent', label: 'Tìm kiếm Talent', icon: { business: Search, club: Sparkles }, lockable: true },
+  // comingSoon: tab vẫn hiện để giữ lộ trình, nhưng KHÔNG giả vờ là đã có.
+  { key: 'find-talent', route: 'find-talent', label: 'Tìm kiếm Talent', icon: { business: Search, club: Sparkles }, lockable: true, comingSoon: true },
   { key: 'candidates', route: 'candidates', label: 'Quản lý ứng viên', icon: { business: UsersRound, club: Users }, lockable: true },
   { key: 'members', route: 'members', label: 'Thành viên & Phân quyền', icon: { business: ShieldCheck, club: GraduationCap }, lockable: true },
   { key: 'pipeline', route: 'pipeline', label: 'Quy trình tuyển dụng', icon: { business: Filter, club: TrendingUp }, lockable: true },
@@ -103,6 +104,10 @@ function CandidatesView() {
   const [selectedPosting, setSelectedPosting] = useState(null);
   const [applicants, setApplicants] = useState([]);
   const [applicantsLoading, setApplicantsLoading] = useState(false);
+  /* Lỗi tải ứng viên. Phải hiện ra màn hình: một danh sách rỗng vì mạng hỏng
+     trông y hệt một danh sách rỗng vì chưa ai nộp, và tổ chức sẽ kết luận tin
+     của mình không ai quan tâm. */
+  const [applicantsError, setApplicantsError] = useState('');
   const [applicantSearch, setApplicantSearch] = useState('');
   const [applicantStatusFilter, setApplicantStatusFilter] = useState('');
 
@@ -113,6 +118,22 @@ function CandidatesView() {
   const [actionMsg, setActionMsg] = useState({ type: 'idle', text: '' });
 
   // Custom pipeline (labels/colors/visibility over canonical statuses)
+  /* Mở thẳng đúng tin và đúng đơn khi vào từ thông báo.
+     Không có phần này thì link trong thông báo chỉ dẫn tới cửa bảng điều
+     khiển và người nhận phải tự dò lại xem ai vừa nộp vào tin nào. */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const wantPostingId = searchParams.get('posting');
+  const wantAppId = searchParams.get('app');
+  /* Chỉ nhận MỘT lần: sau khi đã mở đúng chỗ, người dùng bấm sang tin khác
+     thì không được kéo họ quay lại. */
+  const deepLinkDone = useRef(false);
+  /* Thông báo trỏ tới một tin KHÔNG có trong danh sách của tổ chức đang mở.
+     Xảy ra thật: một người có thể là thành viên của nhiều tổ chức, nhưng bảng
+     điều khiển chỉ mở được MỘT (CompanyAccessService.resolveCompanyForUser
+     lấy limit 1, ưu tiên OWNER rồi MANAGER). Thất bại âm thầm ở đây nghĩa là
+     người dùng bấm thông báo, thấy một danh sách tin lạ, và không hiểu vì sao. */
+  const [deepLinkMiss, setDeepLinkMiss] = useState(false);
+
   const [pipeline, setPipeline] = useState([]);
   useEffect(() => { getOrgPipeline().then(setPipeline).catch(() => setPipeline([])); }, []);
   const pipeMap = pipeline.reduce((acc, s) => { acc[s.status] = s; return acc; }, {});
@@ -133,12 +154,46 @@ function CandidatesView() {
 
   useEffect(() => { loadPostings(); }, []);
 
+  useEffect(() => {
+    if (deepLinkDone.current || !wantPostingId || postingsLoading) return;
+    const target = postings.find((p) => String(p.id) === String(wantPostingId));
+    deepLinkDone.current = true;
+    setDeepLinkMiss(!target);
+    if (target) {
+      // Tin có thể nằm ở tab "Đã đóng"; chuyển tab trước, nếu không thì chọn
+      // xong mà danh sách bên trái vẫn không thấy nó đâu.
+      const closed = ['CLOSED', 'REJECTED', 'COMPLETED', 'CANCELLED']
+        .includes(String(target.status || '').toUpperCase());
+      setPostingStatusTab(closed ? 'closed' : 'active');
+      selectPosting(target);
+    }
+    // Dọn query để F5 không mở lại, và để link chia sẻ không mang theo id đơn.
+    setSearchParams({}, { replace: true });
+  }, [postings, postingsLoading, wantPostingId]);
+
+  /* Mở sẵn đơn được trỏ tới, ngay khi danh sách ứng viên về. */
+  const pendingAppRef = useRef(wantAppId);
+  useEffect(() => {
+    const id = pendingAppRef.current;
+    if (!id || applicantsLoading || applicants.length === 0) return;
+    const app = applicants.find((a) => String(a.id) === String(id));
+    pendingAppRef.current = null;
+    if (app) openApplicant(app);
+  }, [applicants, applicantsLoading]);
+
   function selectPosting(posting) {
     setSelectedPosting(posting);
     setSelectedApplicant(null);
     setApplicants([]);
     setApplicantSearch('');
     setApplicantStatusFilter('');
+    setApplicantsError('');
+    setApplicantsLoading(true);
+    loadApplicants(posting);
+  }
+
+  function loadApplicants(posting) {
+    setApplicantsError('');
     setApplicantsLoading(true);
     const fetchFn = posting.postType === 'QUEST' ? getQuestApplicants(posting.id) : getJobApplications(posting.id);
     fetchFn
@@ -147,7 +202,12 @@ function CandidatesView() {
         // update count on the posting list in real time
         setPostings(prev => prev.map(p => p.id === posting.id ? { ...p, _count: (data || []).length } : p));
       })
-      .catch(err => console.error('Lỗi tải ứng viên:', err))
+      .catch(err => {
+        console.error('Lỗi tải ứng viên:', err);
+        /* KHÔNG để danh sách rỗng nói thay lỗi. Giữ applicants rỗng nhưng bật
+           cờ lỗi để phần hiển thị nói đúng chuyện gì đã xảy ra. */
+        setApplicantsError(err?.message || 'Không tải được danh sách ứng viên.');
+      })
       .finally(() => setApplicantsLoading(false));
   }
 
@@ -211,6 +271,20 @@ function CandidatesView() {
 
     return (
       <div>
+        {/* Thông báo dẫn tới một tin không thuộc tổ chức đang mở.
+            Nói rõ chuyện gì đã xảy ra thay vì im lặng bỏ qua: người dùng vừa
+            bấm một thông báo và có quyền biết vì sao không thấy tin đâu. */}
+        {deepLinkMiss && (
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '13px 15px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.09)', border: '1px solid rgba(245, 158, 11, 0.35)', marginBottom: '18px' }}>
+            <AlertCircle size={18} color="#b45309" style={{ flexShrink: 0, marginTop: '1px' }} />
+            <p style={{ margin: 0, fontSize: '0.86rem', lineHeight: 1.55, color: '#78350f' }}>
+              <strong>Không tìm thấy tin đăng mà thông báo trỏ tới.</strong> Tin đó nhiều khả năng
+              thuộc một tổ chức khác mà bạn cũng là thành viên — bảng điều khiển hiện chỉ mở được
+              một tổ chức tại một thời điểm.
+            </p>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
@@ -351,7 +425,7 @@ function CandidatesView() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <h2 style={{ margin: '0 0 2px', fontSize: '1.05rem', fontWeight: '800', color: 'var(--ink)' }}>{selectedPosting.title}</h2>
           <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--muted)' }}>
-            {isQuest ? 'Quest' : 'Tin tuyển dụng'} · {applicantsLoading ? '...' : `${applicants.length} ứng viên đã nộp`}
+            {isQuest ? 'Quest' : 'Tin tuyển dụng'} · {applicantsLoading ? '...' : applicantsError ? 'chưa tải được' : `${applicants.length} ứng viên đã nộp`}
             {!applicantsLoading && applicants.some(isBoosted) && (
               <span style={{ color: '#d97706', fontWeight: '750' }}>
                 {' '}· {applicants.filter(isBoosted).length} đang Boost
@@ -393,6 +467,19 @@ function CandidatesView() {
         <div>
           {applicantsLoading ? (
             <div className="empty-state" style={{ padding: '40px 0' }}><div className="empty-state-icon"><UsersRound size={28} /></div><p className="empty-state-title">Đang tải ứng viên...</p></div>
+          ) : applicantsError ? (
+            <div className="empty-state" style={{ padding: '40px 0' }}>
+              <div className="empty-state-icon" style={{ color: '#dc2626' }}><AlertCircle size={28} /></div>
+              <p className="empty-state-title">Không tải được danh sách ứng viên.</p>
+              <p className="empty-state-desc">{applicantsError}</p>
+              <button
+                type="button"
+                onClick={() => selectedPosting && loadApplicants(selectedPosting)}
+                style={{ marginTop: '14px', padding: '9px 18px', borderRadius: '999px', border: `1.5px solid ${accent}`, background: 'transparent', color: accent, fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer' }}
+              >
+                Thử lại
+              </button>
+            </div>
           ) : filteredApplicants.length === 0 ? (
             <div className="empty-state" style={{ padding: '40px 0' }}>
               <div className="empty-state-icon"><UsersRound size={28} /></div>
@@ -1147,7 +1234,8 @@ function TabPlaceholderView({ icon: Icon, title, desc }) {
         <Icon size={30} />
       </div>
       <h2 className="partner-placeholder-title">{title}</h2>
-      <p className="partner-placeholder-desc">{desc}</p>
+      {/* pre-line để xuống dòng trong desc hiện đúng, không dính thành một khối. */}
+      <p className="partner-placeholder-desc" style={{ whiteSpace: 'pre-line' }}>{desc}</p>
     </div>
   );
 }
@@ -3503,8 +3591,10 @@ export function BusinessPage() {
         return (
           <TabPlaceholderView
             icon={Search}
-            title="Tìm kiếm Talent"
-            desc="Hệ thống lọc thông minh theo trường học, nhóm kỹ năng chuyên môn, minh chứng thực tế và Reputation Score giúp bạn kết nối nhanh nhất."
+            title="Tìm kiếm Talent — đang phát triển"
+            desc={'Tính năng này chưa có. Dự kiến cho phép lọc ứng viên theo trường, kỹ năng, '
+              + 'minh chứng đã duyệt và điểm uy tín.\n\n'
+              + 'Hiện tại bạn xem được hồ sơ ứng viên trong mục Quản lý ứng viên, sau khi họ nộp đơn.'}
           />
         );
       case 'candidates':
@@ -3597,6 +3687,14 @@ export function BusinessPage() {
               >
                 <Icon size={18} />
                 <span>{label}</span>
+                {/* Nói TRƯỚC khi bấm rằng tính năng chưa có. Một mục nằm ngang
+                    hàng với các mục thật, bấm vào mới biết là rỗng, là cách
+                    làm người dùng mất lòng tin vào cả thanh điều hướng. */}
+                {tab.comingSoon && !isLocked && (
+                  <span style={{ marginLeft: 'auto', fontSize: '0.62rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#b45309', background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.3)', padding: '2px 6px', borderRadius: '999px', whiteSpace: 'nowrap' }}>
+                    Sắp có
+                  </span>
+                )}
                 {isLocked && <Lock size={13} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />}
               </button>
             );

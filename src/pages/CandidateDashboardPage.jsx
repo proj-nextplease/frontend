@@ -40,7 +40,7 @@ import {
   LogOut,
   Copy,
   Bookmark,
-  BookmarkCheck, Link2, Heart,
+  BookmarkCheck, Link2, Heart, AlertCircle,
 } from 'lucide-react';
 import { getMyPortfolio, updateMySlug } from '../api/portfolioApi.js';
 import { UserAvatar } from '../components/UserAvatar.jsx';
@@ -1074,12 +1074,44 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     return () => { isMounted = false; };
   }, [refreshKey]);
 
+  /* Lỗi tải, gom về MỘT chỗ.
+     Trước đây cả 11 nơi nạp dữ liệu đều chỉ console.error rồi thôi. Hậu quả
+     giống hệt lỗi đã sửa bên trang Doanh nghiệp: mạng hỏng thì state giữ
+     nguyên mảng rỗng ban đầu, loading tắt, và màn hình nói "Bạn chưa ứng
+     tuyển vị trí nào" — một câu khẳng định SAI về dữ liệu của chính người
+     dùng. Danh sách rỗng vì lỗi và danh sách rỗng vì chưa có gì phải trông
+     khác nhau. */
+  const [loadErrors, setLoadErrors] = useState({});
+  const noteLoadError = (key, err) => {
+    console.error(`Lỗi tải ${key}:`, err);
+    setLoadErrors(prev => ({ ...prev, [key]: err?.message || 'Không tải được dữ liệu.' }));
+  };
+  /* Màn "tải hỏng" thay cho màn "bạn chưa có gì". Hai chuyện khác nhau và
+     phải trông khác nhau — kèm nút thử lại để người dùng có đường ra. */
+  const renderLoadError = (key) => (
+    <div className="apptrack-empty" style={{ color: '#fca5a5' }}>
+      <AlertCircle size={28} />
+      <p style={{ margin: '8px 0 0' }}>Không tải được dữ liệu.</p>
+      <p style={{ margin: '4px 0 0', fontSize: '0.82rem', opacity: 0.8 }}>{loadErrors[key]}</p>
+      <button
+        type="button"
+        onClick={() => setRefreshKey(k => k + 1)}
+        style={{ marginTop: 14, padding: '8px 18px', borderRadius: 999, border: '1.5px solid currentColor', background: 'transparent', color: 'inherit', fontWeight: 700, fontSize: '0.84rem', cursor: 'pointer' }}
+      >
+        Thử lại
+      </button>
+    </div>
+  );
+
+  const clearLoadError = (key) =>
+    setLoadErrors(prev => (prev[key] ? { ...prev, [key]: undefined } : prev));
+
   // Load the set of partners the candidate follows (bookmarks).
   useEffect(() => {
     let isMounted = true;
     getFollowedCompanyIds()
-      .then(ids => { if (isMounted) setFollowedCompanyIds(new Set((ids || []).map(String))); })
-      .catch(err => console.error('Lỗi tải đối tác đang theo dõi:', err));
+      .then(ids => { if (isMounted) { setFollowedCompanyIds(new Set((ids || []).map(String))); clearLoadError('doi-tac'); } })
+      .catch(err => { if (isMounted) noteLoadError('doi-tac', err); });
     return () => { isMounted = false; };
   }, [refreshKey]);
 
@@ -1092,8 +1124,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     let isMounted = true;
     setSavedJobsLoading(true);
     getSavedJobs()
-      .then(list => { if (isMounted) setSavedJobsList(list || []); })
-      .catch(err => console.error('Lỗi tải tin đã lưu:', err))
+      .then(list => { if (isMounted) { setSavedJobsList(list || []); clearLoadError('tin-da-luu'); } })
+      .catch(err => { if (isMounted) noteLoadError('tin-da-luu', err); })
       .finally(() => { if (isMounted) setSavedJobsLoading(false); });
     return () => { isMounted = false; };
   }, [activeView, savedIds, refreshKey]);
@@ -1103,7 +1135,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     let isMounted = true;
     getSavedQuestIds()
       .then(ids => { if (isMounted) setSavedQuestIds(new Set((ids || []).map(String))); })
-      .catch(err => console.error('Lỗi tải quest đã lưu:', err));
+      .catch(err => { if (isMounted) noteLoadError('quest-da-luu', err); });
     return () => { isMounted = false; };
   }, [refreshKey]);
 
@@ -1113,8 +1145,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     let isMounted = true;
     setSavedQuestsLoading(true);
     getSavedQuests()
-      .then(list => { if (isMounted) setSavedQuestsList(list || []); })
-      .catch(err => console.error('Lỗi tải quest đã lưu:', err))
+      .then(list => { if (isMounted) { setSavedQuestsList(list || []); clearLoadError('quest-da-luu'); } })
+      .catch(err => { if (isMounted) noteLoadError('quest-da-luu', err); })
       .finally(() => { if (isMounted) setSavedQuestsLoading(false); });
     return () => { isMounted = false; };
   }, [activeView, showSavedQuestsOnly, savedQuestIds, refreshKey]);
@@ -1326,8 +1358,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     let isMounted = true;
     setCredentialSubmissionsLoading(true);
     getMyCredentialSubmissions()
-      .then(data => { if (isMounted) setCredentialSubmissions(data || []); })
-      .catch(err => console.error('Lỗi tải minh chứng:', err))
+      .then(data => { if (isMounted) { setCredentialSubmissions(data || []); clearLoadError('minh-chung'); } })
+      .catch(err => { if (isMounted) noteLoadError('minh-chung', err); })
       .finally(() => { if (isMounted) setCredentialSubmissionsLoading(false); });
     return () => { isMounted = false; };
   }, [activeView, refreshKey]);
@@ -1337,8 +1369,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     let isMounted = true;
     setApplicationsLoading(true);
     getMyApplications()
-      .then(data => { if (isMounted) setAppliedJobs(data || []); })
-      .catch(err => console.error('Lỗi tải ứng tuyển:', err))
+      .then(data => { if (isMounted) { setAppliedJobs(data || []); clearLoadError('ung-tuyen'); } })
+      .catch(err => { if (isMounted) noteLoadError('ung-tuyen', err); })
       .finally(() => { if (isMounted) setApplicationsLoading(false); });
     return () => { isMounted = false; };
   }, [activeView, refreshKey]);
@@ -1348,8 +1380,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     let isMounted = true;
     setWalletLoading(true);
     getWallet()
-      .then(data => { if (isMounted) setWallet(data); })
-      .catch(err => console.error('Lỗi tải ví:', err))
+      .then(data => { if (isMounted) { setWallet(data); clearLoadError('vi'); } })
+      .catch(err => { if (isMounted) noteLoadError('vi', err); })
       .finally(() => { if (isMounted) setWalletLoading(false); });
     return () => { isMounted = false; };
   }, [refreshKey]);
@@ -1357,8 +1389,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   // Load premium config and recommendations on mount/update
   useEffect(() => {
     getPremiumConfig()
-      .then(setPremiumConfig)
-      .catch(err => console.error('Lỗi tải cấu hình premium:', err));
+      .then(cfg => { setPremiumConfig(cfg); clearLoadError('gia-premium'); })
+      .catch(err => noteLoadError('gia-premium', err));
   }, [refreshKey]);
 
   useEffect(() => {
@@ -1366,8 +1398,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     let isMounted = true;
     setRecommendationsLoading(true);
     getPersonalizedRecommendations()
-      .then(data => { if (isMounted) setRecommendations(data); })
-      .catch(err => console.error('Lỗi tải gợi ý cá nhân hóa:', err))
+      .then(data => { if (isMounted) { setRecommendations(data); clearLoadError('goi-y'); } })
+      .catch(err => { if (isMounted) noteLoadError('goi-y', err); })
       .finally(() => { if (isMounted) setRecommendationsLoading(false); });
     return () => { isMounted = false; };
   }, [wallet, refreshKey]);
@@ -1377,8 +1409,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     let isMounted = true;
     setQuestsLoading(true);
     searchQuests(questSearchFilter, questCategoryFilter)
-      .then(data => { if (isMounted) setQuestsList(data || []); })
-      .catch(err => console.error('Lỗi tải Quest:', err))
+      .then(data => { if (isMounted) { setQuestsList(data || []); clearLoadError('quest'); } })
+      .catch(err => { if (isMounted) noteLoadError('quest', err); })
       .finally(() => { if (isMounted) setQuestsLoading(false); });
     return () => { isMounted = false; };
   }, [questSearchFilter, questCategoryFilter, refreshKey]);
@@ -1388,8 +1420,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     let isMounted = true;
     setQuestApplicationsLoading(true);
     getMyQuestApplications()
-      .then(data => { if (isMounted) setQuestApplications(data || []); })
-      .catch(err => console.error('Lỗi tải đơn Quest:', err))
+      .then(data => { if (isMounted) { setQuestApplications(data || []); clearLoadError('don-quest'); } })
+      .catch(err => { if (isMounted) noteLoadError('don-quest', err); })
       .finally(() => { if (isMounted) setQuestApplicationsLoading(false); });
     return () => { isMounted = false; };
   }, [refreshKey]);
@@ -2661,15 +2693,19 @@ export function CandidateDashboardPage({ initialPortfolio }) {
              cùng loại thông tin. Rút còn bốn: một tổng, rồi ba nhóm theo VIỆC
              NGƯỜI DÙNG CẦN LÀM — đang chờ (không phải làm gì), có tiến triển
              (nên chuẩn bị), đã khép lại (rút kinh nghiệm). */
+          /* Nhãn ô đầu phải nói ĐÚNG PHẠM VI nó đang đếm.
+             Cả bốn ô đều tính riêng cho tab đang mở, nhưng ô đầu lại ghi
+             "Tổng đơn đã nộp": tab Doanh nghiệp hiện 3, tab CLB/Quest hiện 1,
+             không tab nào hiện 4. Người dùng đọc "tổng" thì tin đó là tổng. */
           const statCards = myAppsTab === 'BUSINESS'
             ? [
-                { label: 'Tổng đơn đã nộp', val: appliedJobs.length, color: '#fff' },
+                { label: 'Đơn tới doanh nghiệp', val: appliedJobs.length, color: '#fff' },
                 { label: 'Đang chờ phản hồi', val: bizCount('SUBMITTED') + bizCount('VIEWED'), color: 'rgba(233,247,242,0.62)' },
                 { label: 'Có tiến triển', val: bizCount('SHORTLISTED') + bizCount('ACCEPTED') + bizCount('COMPLETED'), color: '#10b981' },
                 { label: 'Đã khép lại', val: bizCount('REJECTED') + bizCount('WITHDRAWN'), color: 'rgba(233,247,242,0.45)' },
               ]
             : [
-                { label: 'Tổng đơn đã nộp', val: questApplications.length, color: '#fff' },
+                { label: 'Đơn tới CLB & Quest', val: questApplications.length, color: '#fff' },
                 { label: 'Đang chờ phản hồi', val: clubCount('SUBMITTED'), color: 'rgba(233,247,242,0.62)' },
                 { label: 'Có tiến triển', val: clubCount('ACCEPTED') + clubCount('COMPLETED'), color: '#10b981' },
                 { label: 'Đã khép lại', val: clubCount('REJECTED') + clubCount('WITHDRAWN'), color: 'rgba(233,247,242,0.45)' },
@@ -2731,7 +2767,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   {applicationsLoading ? (
                     <div className="apptrack-state"><RefreshCw size={20} style={{ color: 'var(--primary)', animation: 'spin 1.4s linear infinite' }} /><p>Đang tải hồ sơ ứng tuyển...</p></div>
                   ) : filteredBizApps.length === 0 ? (
-                    <div className="apptrack-empty"><BriefcaseBusiness size={28} /><p>{myAppsSearch || myAppsStatusFilter ? 'Không tìm thấy hồ sơ phù hợp.' : 'Bạn chưa ứng tuyển vị trí nào từ doanh nghiệp.'}</p></div>
+                    loadErrors['ung-tuyen']
+                      ? renderLoadError('ung-tuyen')
+                      : <div className="apptrack-empty"><BriefcaseBusiness size={28} /><p>{myAppsSearch || myAppsStatusFilter ? 'Không tìm thấy hồ sơ phù hợp.' : 'Bạn chưa ứng tuyển vị trí nào từ doanh nghiệp.'}</p></div>
                   ) : (
                     <div className="np-stagger apptrack-list">
                       {filteredBizApps.map((app, idx) => {
@@ -2810,7 +2848,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   </div>
 
                   {filteredClubApps.length === 0 ? (
-                    <div className="apptrack-empty"><Zap size={28} /><p>{myAppsClubSearch || myAppsClubStatusFilter ? 'Không tìm thấy Quest phù hợp.' : 'Bạn chưa tham gia Quest nào từ CLB.'}</p></div>
+                    loadErrors['don-quest']
+                      ? renderLoadError('don-quest')
+                      : <div className="apptrack-empty"><Zap size={28} /><p>{myAppsClubSearch || myAppsClubStatusFilter ? 'Không tìm thấy Quest phù hợp.' : 'Bạn chưa tham gia Quest nào từ CLB.'}</p></div>
                   ) : (
                     <div className="np-stagger apptrack-list">
                       {filteredClubApps.map((qa, idx) => {
@@ -3049,7 +3089,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     </div>
                   </div>
                   <span className={`candidate-premium-status ${wallet?.isPremium ? 'success' : ''}`}>
-                    {wallet?.isPremium ? 'Đã kích hoạt' : '40,000 NP / tháng'}
+                    {/* Giá này admin SỬA ĐƯỢC (khoá premium_price_np trong Cấu
+                        hình hệ thống). Ghi cứng "40,000" nghĩa là đổi giá xong
+                        thì cửa hàng vẫn rao giá cũ trong khi ví trừ giá mới.
+                        wallet.premiumPriceNp đã có sẵn ngay trong biến này. */}
+                    {wallet?.isPremium
+                      ? 'Đã kích hoạt'
+                      : `${(wallet?.premiumPriceNp ?? 40000).toLocaleString('vi-VN')} NP / tháng`}
                   </span>
                 </div>
                 <p className="candidate-premium-pass-copy">

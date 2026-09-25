@@ -406,7 +406,13 @@ export function JobDetailPage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.92rem', color: EMERALD, fontWeight: 700 }}>
                 <span style={{ color: EMERALD, display: 'flex' }}><Users size={18} /></span>
-                <span>{job.applicants > 0 ? `${job.applicants} ứng viên đã nộp` : 'Hãy là ứng viên đầu tiên'}</span>
+                {/* Backend trả `applicantsCount`; `job.applicants` chưa bao giờ
+                    tồn tại, nên dòng này luôn rơi vào nhánh "đầu tiên" — kể cả
+                    khi tin đã có người nộp. Giữ cả hai tên để chịu được dữ liệu
+                    cũ còn nằm trong bộ nhớ đệm của trình duyệt. */}
+                <span>{(job.applicantsCount ?? job.applicants ?? 0) > 0
+                  ? `${job.applicantsCount ?? job.applicants} ứng viên đã nộp`
+                  : 'Hãy là ứng viên đầu tiên'}</span>
               </div>
             </div>
 
