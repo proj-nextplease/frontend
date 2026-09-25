@@ -4,7 +4,7 @@ import {
   House, PlusSquare, Heart, MessageCircle, Send, Share2,
   FileText, BarChart2,
   X, Check, ChevronRight, ArrowLeft, ShieldCheck,
-  Sparkles, CheckCircle2, User, Link2, MoreHorizontal,
+  Sparkles, CheckCircle2, User, UserRound, Link2, MoreHorizontal,
   Bookmark, Award, ThumbsUp, HelpCircle
 } from 'lucide-react';
 import { HeroMesh } from '../components/HeroMesh.jsx';
@@ -246,26 +246,33 @@ function normalizeTopic(raw) {
 }
 
 function normalizeComment(raw) {
+  const isAnon = Boolean(raw.isAnonymous || raw.is_anonymous);
+  const authorName = isAnon ? 'Ẩn danh' : raw.author;
   return {
     id: raw.id,
-    author: raw.author,
-    avatarUrl: raw.authorAvatarUrl || '',
-    avatarBg: avatarBgFor(raw.author),
-    role: raw.role,
+    author: authorName,
+    avatarUrl: isAnon ? '' : (raw.authorAvatarUrl || ''),
+    avatarBg: isAnon ? 'rgba(16,185,129,0.2)' : avatarBgFor(authorName),
+    role: isAnon ? 'Thành viên ẩn danh' : (raw.role || 'Thành viên NextPlease'),
+    isAnonymous: isAnon,
     content: raw.content,
     timeAgo: timeAgoFrom(raw.createdAt),
   };
 }
 
 function normalizePost(raw) {
+  const isAnon = Boolean(raw.isAnonymous || raw.is_anonymous);
+  const authorName = isAnon ? 'Ẩn danh' : raw.authorName;
   return {
     id: raw.id,
+    isAnonymous: isAnon,
     author: {
-      name: raw.authorName,
-      avatarUrl: raw.authorAvatarUrl || '',
-      initials: initialsFor(raw.authorName),
-      avatarBg: avatarBgFor(raw.authorName),
-      role: raw.authorRole,
+      name: authorName,
+      avatarUrl: isAnon ? '' : (raw.authorAvatarUrl || ''),
+      initials: isAnon ? 'AD' : initialsFor(authorName),
+      avatarBg: isAnon ? 'rgba(16,185,129,0.2)' : avatarBgFor(authorName),
+      role: isAnon ? 'Thành viên ẩn danh' : (raw.authorRole || 'Thành viên NextPlease'),
+      isAnonymous: isAnon,
     },
     topicId: raw.topicSlug,
     topicName: raw.topicName,
@@ -314,6 +321,7 @@ export function DiscussionPage() {
   // Comment input state per post
   const [openComments, setOpenComments] = useState({});
   const [commentInputs, setCommentInputs] = useState({});
+  const [commentAnonymous, setCommentAnonymous] = useState({});
 
   // Share popover state
   const [activeSharePostId, setActiveSharePostId] = useState(null);
@@ -324,6 +332,7 @@ export function DiscussionPage() {
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostTopic, setNewPostTopic] = useState('open-to-work');
   const [newPostPollEnabled, setNewPostPollEnabled] = useState(false);
+  const [newPostAnonymous, setNewPostAnonymous] = useState(false);
   const [pollOptions, setPollOptions] = useState(['', '']);
   const [creatingPost, setCreatingPost] = useState(false);
 
@@ -464,9 +473,10 @@ export function DiscussionPage() {
     requireAuth(async () => {
       const text = commentInputs[postId]?.trim();
       if (!text) return;
+      const isAnon = Boolean(commentAnonymous[postId]);
       setCommentInputs((prev) => ({ ...prev, [postId]: '' }));
       try {
-        const created = await apiAddComment(postId, text);
+        const created = await apiAddComment(postId, text, isAnon);
         setPosts((prev) => prev.map((p) => (p.id === postId
           ? {
               ...p,
@@ -520,6 +530,7 @@ export function DiscussionPage() {
           topic: newPostTopic,
           content: newPostContent.trim(),
           pollOptions: options,
+          isAnonymous: newPostAnonymous,
         });
         const rows = await getPosts({
           topic: selectedTopicId || undefined,
@@ -528,6 +539,7 @@ export function DiscussionPage() {
         setFeed({ key: feedKey, rows: rows.map(normalizePost), error: null });
         setNewPostContent('');
         setNewPostPollEnabled(false);
+        setNewPostAnonymous(false);
         setPollOptions(['', '']);
         setIsCreateModalOpen(false);
       } catch (err) {
@@ -1062,6 +1074,15 @@ export function DiscussionPage() {
                           <span style={{ fontWeight: 700, fontSize: '0.98rem', color: '#ffffff' }}>
                             {post.author.name}
                           </span>
+                          {post.isAnonymous && (
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 7px',
+                              borderRadius: 9999, background: 'rgba(16,185,129,0.15)', color: EMERALD,
+                              fontSize: '0.72rem', fontWeight: 600, border: '1px solid rgba(16,185,129,0.3)'
+                            }}>
+                              <UserRound size={11} /> Ẩn danh
+                            </span>
+                          )}
                           <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.9rem' }}>›</span>
                           <button
                             onClick={() => handleSelectTopic(post.topicId)}
@@ -1371,6 +1392,15 @@ export function DiscussionPage() {
                                 <div style={{ background: '#0b0f0e', borderRadius: 12, padding: '10px 14px', flex: 1, border: '1px solid rgba(255,255,255,0.06)' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
                                     <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#ffffff' }}>{comment.author}</span>
+                                    {comment.isAnonymous && (
+                                      <span style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: 2, padding: '1px 6px',
+                                        borderRadius: 9999, background: 'rgba(16,185,129,0.12)', color: EMERALD,
+                                        fontSize: '0.68rem', fontWeight: 600, border: '1px solid rgba(16,185,129,0.25)'
+                                      }}>
+                                        Ẩn danh
+                                      </span>
+                                    )}
                                     <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)' }}>· {comment.timeAgo}</span>
                                   </div>
                                   <div style={{ fontSize: '0.88rem', color: 'rgba(233,247,242,0.72)', lineHeight: 1.5 }}>{comment.content}</div>
@@ -1383,10 +1413,10 @@ export function DiscussionPage() {
                         )}
 
                         {/* Comment Input Box */}
-                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                           <input
                             type="text"
-                            placeholder="Viết bình luận của bạn..."
+                            placeholder={commentAnonymous[post.id] ? "Viết bình luận ẩn danh..." : "Viết bình luận của bạn..."}
                             value={commentInputs[post.id] || ''}
                             onChange={(e) => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
                             onKeyDown={(e) => {
@@ -1394,22 +1424,47 @@ export function DiscussionPage() {
                             }}
                             style={{
                               flex: 1,
+                              minWidth: '180px',
                               background: '#0b0f0e',
-                              border: '1px solid rgba(255,255,255,0.22)',
+                              border: `1px solid ${commentAnonymous[post.id] ? 'rgba(16,185,129,0.5)' : 'rgba(255,255,255,0.22)'}`,
                               borderRadius: 9999,
                               padding: '10px 16px',
                               fontSize: '0.88rem',
                               outline: 'none',
+                              color: ON_DARK,
                             }}
                           />
                           <button
+                            type="button"
+                            onClick={() => setCommentAnonymous((prev) => ({ ...prev, [post.id]: !prev[post.id] }))}
+                            title={commentAnonymous[post.id] ? "Đang bật chế độ bình luận ẩn danh" : "Bấm để bình luận ẩn danh"}
+                            style={{
+                              background: commentAnonymous[post.id] ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.06)',
+                              color: commentAnonymous[post.id] ? EMERALD : 'rgba(255,255,255,0.65)',
+                              border: `1px solid ${commentAnonymous[post.id] ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.14)'}`,
+                              borderRadius: 9999,
+                              padding: '9px 13px',
+                              fontSize: '0.8rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                              whiteSpace: 'nowrap',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <User size={13} />
+                            <span>{commentAnonymous[post.id] ? 'Ẩn danh' : 'Hiện tên'}</span>
+                          </button>
+                          <button
                             onClick={() => handleAddComment(post.id)}
                             style={{
-                              background: TEAL,
-                              color: '#fff',
+                              background: EMERALD,
+                              color: INK,
                               border: 'none',
                               borderRadius: 9999,
-                              padding: '10px 18px',
+                              padding: '10px 20px',
                               fontWeight: 700,
                               fontSize: '0.85rem',
                               cursor: 'pointer',
@@ -1613,6 +1668,33 @@ export function DiscussionPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Anonymous Post Toggle */}
+                <div style={{
+                  marginTop: 16,
+                  padding: '12px 14px',
+                  borderRadius: 12,
+                  background: newPostAnonymous ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${newPostAnonymous ? 'rgba(16,185,129,0.4)' : LINE}`,
+                  transition: 'all 0.15s ease'
+                }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={newPostAnonymous}
+                      onChange={(e) => setNewPostAnonymous(e.target.checked)}
+                      style={{ width: 16, height: 16, accentColor: EMERALD, cursor: 'pointer' }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 600, color: newPostAnonymous ? EMERALD : ON_DARK }}>
+                        Đăng bài ẩn danh
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: MUTED, marginTop: 2 }}>
+                        Tên và ảnh đại diện của bạn sẽ được ẩn với thành viên khác. Quản trị viên vẫn lưu để xử lý vi phạm.
+                      </div>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               <div className="np-modal-foot">

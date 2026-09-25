@@ -1,93 +1,86 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowRight, ShieldCheck, Sparkles, BriefcaseBusiness, ChevronDown,
-  CircleCheck, CircleX, Link2, Flame, Star, Zap, UserRound, FileText,
+  ArrowRight, ShieldCheck, BriefcaseBusiness, ChevronDown,
+  CircleCheck, CircleX, Link2, Star, Zap, UserRound,
+  FileText, Check, Award, BadgeCheck
 } from 'lucide-react';
 import { HeroMesh } from '../components/HeroMesh.jsx';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
+import { EnvelopeArt } from '../components/EnvelopeArt.jsx';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
 import { getStoredToken } from '../lib/authStorage.js';
 
-/* ── Emerald palette (khớp với các trang landing còn lại) ── */
-/* ── Hệ màu nền tối, dùng chung toàn site (xem DESIGN.md) ── */
-const EMERALD = '#10b981';
-const TEAL = '#0d9488';
+/* ── Hệ màu chuẩn của NextPlease (theo DESIGN.md) ── */
 const INK = '#0b0f0e';
-const SURFACE = '#121817';
+const INK_SOFT = '#121817';
+const EMERALD = '#10b981';
+const EMERALD_HOVER = '#34d399';
+const TEAL = '#0d9488';
 const ON_DARK = '#ffffff';
-const MUTED = 'rgba(233,247,242,0.62)';
-const LINE = 'rgba(255,255,255,0.1)';
-const LINE_STRONG = 'rgba(255,255,255,0.2)';
-const MINT = 'rgba(16,185,129,0.16)';
+const MUTED = 'rgba(233, 247, 242, 0.64)';
+const LINE = 'rgba(255, 255, 255, 0.1)';
+const LINE_STRONG = 'rgba(255, 255, 255, 0.2)';
+const MINT = 'rgba(16, 185, 129, 0.12)';
 
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 
-/* Ba bước đúng theo cách hồ sơ thật sự lớn lên trên nền tảng. */
-const STEPS = [
+/* 3 Bước phát triển tự nhiên của hồ sơ — Định dạng bản in theo DESIGN.md */
+const EDITORIAL_STEPS = [
   {
     no: '01',
-    icon: UserRound,
-    title: 'Dựng hồ sơ',
-    body: 'Chọn linh vật, điền kỹ năng và học vấn. Mất vài phút, và bạn đã có một đường dẫn mang tên mình.',
+    label: 'Khởi tạo định danh',
+    title: 'Dựng hồ sơ & chọn linh vật đại diện',
+    body: 'Chọn linh vật đồng hành, điền chuyên môn và trường học. Trong vòng 3 phút, bạn sở hữu ngay một đường dẫn riêng mang tên mình (nextplease.vn/p/ten-ban) để gắn vào Bio mạng xã hội hoặc chia sẻ với nhà tuyển dụng.',
   },
   {
     no: '02',
-    icon: BriefcaseBusiness,
-    title: 'Nhận việc và Quest',
-    body: 'Ứng tuyển một chạm vào công việc của doanh nghiệp hoặc hoạt động của CLB, ngay trên nền tảng.',
+    label: 'Nhận việc thực tế',
+    title: 'Chinh phục Quest & Dự án đối tác',
+    body: 'Không cần kinh nghiệm đi làm từ trước. Bạn nhận các nhiệm vụ, sự kiện từ CLB sinh viên hoặc dự án thực tập ngắn hạn từ doanh nghiệp đối tác trực tiếp trên nền tảng với một cú bấm.',
   },
   {
     no: '03',
-    icon: ShieldCheck,
-    title: 'Tổ chức xác nhận',
-    body: 'Hoàn thành thì nơi bạn làm xác nhận. Hồ sơ có thêm một minh chứng, điểm uy tín và cấp độ đi lên.',
+    label: 'Tổ chức bảo chứng',
+    title: 'Tổ chức duyệt minh chứng & lên cấp',
+    body: 'Sau khi hoàn thành, ban tổ chức hoặc người giao việc duyệt xác thực minh chứng (Verified Proof of Work). Điểm uy tín (RS), EXP và cấp bậc trong hồ sơ của bạn tăng lên theo năng lực có thật.',
   },
 ];
 
-/* So sánh trực diện — phần thuyết phục chính của trang. */
+/* Bảng so sánh trực diện */
 const COMPARISON = [
-  ['Ai xác nhận những gì bạn viết', 'Không ai', 'Chính tổ chức bạn làm cùng'],
-  ['Khi bạn có kinh nghiệm mới', 'Sửa file, gửi lại từ đầu', 'Link tự cập nhật'],
-  ['Nhà tuyển dụng kiểm chứng', 'Phải gọi hỏi từng nơi', 'Bấm vào là thấy'],
-  ['Thứ bạn tích luỹ được', 'Không có gì', 'Điểm uy tín, EXP, cấp độ'],
-  ['Trông giống ai', 'Giống mọi CV khác', 'Linh vật và trang của riêng bạn'],
+  ['Nguồn gốc minh chứng', 'Tự soạn trong file Word/PDF, người đọc tự tin hoặc không', 'Do chính CLB hoặc doanh nghiệp bạn làm cùng đóng dấu xác nhận'],
+  ['Khi có thành tích mới', 'Phải mở file sửa lại, xuất PDF mới, gửi lại từng nơi từ đầu', 'Hồ sơ sống tự động cập nhật ngay trên đường link cá nhân'],
+  ['Kiểm chứng năng lực', 'Nhà tuyển dụng phải gọi điện xác minh từng dòng tự khai', 'Mở 1 link, bấm vào là xem được văn bản minh chứng & mã số xác thực'],
+  ['Hệ thống tích lũy', 'Một mớ gạch đầu dòng vô hồn, không đo lường được thâm niên', 'Hệ thống điểm uy tín (RS), EXP và Cấp độ RPG rõ ràng'],
+  ['Dấu ấn nhận diện', 'Trang văn bản đen trắng hoặc mẫu Canva đại trà giống mọi người', 'Linh vật tương tác theo ánh mắt, ảnh bìa tùy biến và đường dẫn riêng'],
 ];
 
 const FAQS = [
   {
-    q: 'Portfolio ở nextplease khác gì CV thường?',
-    a: 'CV là tệp tĩnh do bạn tự khai, người đọc chỉ có thể tin hoặc không. Portfolio ở đây là hồ sơ sống: '
-     + 'mỗi kinh nghiệm đều có thể được tổ chức xác nhận, kèm điểm uy tín (RS) và cấp độ tích luỹ theo '
-     + 'những việc bạn thật sự đã làm. Cần tệp để nộp qua email thì bạn vẫn xuất PDF được.',
+    q: 'NextPlease Portfolio khác gì so với một bản CV thông thường?',
+    a: 'CV là văn bản tĩnh do bạn tự soạn, người đọc chỉ có thể tin hoặc nghi ngờ. NextPlease Portfolio là hồ sơ sống kỹ thuật số: mỗi kinh nghiệm và dự án bạn hoàn thành đều có thể được ban tổ chức hoặc doanh nghiệp xác nhận (Verified Proof of Work), kèm điểm uy tín (RS) và cấp bậc (EXP). Khi cần gửi tệp đính kèm qua email tuyển dụng, bạn vẫn có thể xuất bản PDF tiêu chuẩn bất kỳ lúc nào.',
   },
   {
-    q: 'Tôi chưa có kinh nghiệm gì thì dựng portfolio để làm gì?',
-    a: 'Đó chính là lúc nên bắt đầu. Bạn dựng hồ sơ trước, rồi nhận Quest và công việc nhỏ từ CLB hay '
-     + 'doanh nghiệp ngay trên nền tảng — mỗi việc hoàn thành sẽ thành một minh chứng đã xác thực trong '
-     + 'hồ sơ. Sau vài tháng bạn có thứ để đưa ra, thay vì một trang trắng.',
+    q: 'Tôi chưa có kinh nghiệm đi làm thì dựng Portfolio để làm gì?',
+    a: 'Đó chính là lý do bạn nên bắt đầu sớm. Bạn dựng hồ sơ trước với kỹ năng và hoạt động trường học, sau đó nhận các Quest nhỏ từ CLB hay doanh nghiệp ngay trên nền tảng. Mỗi việc hoàn thành sẽ trở thành một minh chứng đã xác thực. Sau vài tháng, bạn đã có một hồ sơ phong phú thay vì một trang giấy trắng.',
   },
   {
-    q: 'Portfolio có miễn phí không?',
-    a: 'Có. Dựng hồ sơ, tích minh chứng, chia sẻ link và ứng tuyển đều miễn phí. Gói trả phí chỉ mở thêm '
-     + 'giao diện nâng cao cho trang công khai, không khoá dữ liệu hay khả năng ứng tuyển của bạn.',
+    q: 'Việc tạo và duy trì Portfolio có tốn phí không?',
+    a: 'Hoàn toàn miễn phí trọn đời. Dựng hồ sơ, chọn linh vật, nhận đường dẫn riêng, tích lũy minh chứng và ứng tuyển vào các cơ hội đều không mất phí.',
   },
   {
-    q: 'Verified Proof of Work là gì?',
-    a: 'Là dấu xác nhận do chính tổ chức bạn làm việc cùng cấp, sau khi bạn hoàn thành công việc hoặc Quest. '
-     + 'Nó được lưu vào hồ sơ và ai xem cũng kiểm chứng được — đây là điểm khiến hồ sơ của bạn đáng tin '
-     + 'hơn một bản tự khai.',
+    q: 'Verified Proof of Work là gì và ai là người xác thực?',
+    a: 'Là dấu chứng nhận điện tử do chính đơn vị tổ chức bạn làm việc cùng (CLB trường, ban tổ chức sự kiện, doanh nghiệp đối tác) cấp sau khi bạn hoàn thành công việc. Minh chứng này được lưu vĩnh viễn vào hồ sơ và ai xem cũng có thể kiểm chứng đối chiếu.',
   },
   {
-    q: 'Ai xem được portfolio của tôi?',
-    a: 'Chỉ những người bạn gửi link. Bạn cũng có thể chuyển hồ sơ sang chế độ riêng tư bất cứ lúc nào; '
-     + 'khi đó link chia sẻ sẽ không mở được với người ngoài.',
+    q: 'Tôi có thể đổi đường dẫn cá nhân (custom URL) của mình không?',
+    a: 'Có. Khi tạo hồ sơ, hệ thống sẽ gợi ý đường link từ tên bạn (ví dụ: nextplease.vn/p/tai-phat). Bạn có thể đổi sang bất kỳ tên nào khác trong trang quản lý hồ sơ, miễn là chưa có người khác đăng ký trước.',
   },
   {
-    q: 'Tôi có đổi được đường dẫn của mình không?',
-    a: 'Được. Hệ thống tự sinh một đường dẫn từ tên bạn ngay khi tạo hồ sơ, và bạn đổi lại bất cứ lúc nào '
-     + 'trong Khu vực của tôi — miễn là chưa có người khác dùng.',
+    q: 'Ai có thể xem được hồ sơ Portfolio của tôi?',
+    a: 'Mặc định chỉ những người có đường link trực tiếp hoặc các nhà tuyển dụng khi bạn ứng tuyển vào tin của họ mới xem được. Bạn cũng có thể bật chế độ Riêng tư bất cứ lúc nào trong bảng điều khiển cá nhân.',
   },
 ];
 
@@ -100,18 +93,26 @@ function FaqItem({ item, open, onToggle }) {
         aria-expanded={open}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: 16, padding: '24px 4px', background: 'none', border: 'none', cursor: 'pointer',
-          textAlign: 'left', fontFamily: 'inherit', fontSize: '1.0625rem', fontWeight: 500, letterSpacing: '-0.015em', color: ON_DARK,
+          gap: 16, padding: '22px 0', background: 'none', border: 'none', cursor: 'pointer',
+          textAlign: 'left', fontFamily: 'inherit', fontSize: '1.05rem', fontWeight: 500,
+          letterSpacing: '-0.015em', color: ON_DARK,
         }}
       >
-        {item.q}
+        <span>{item.q}</span>
         <ChevronDown
-          size={20}
-          style={{ flex: 'none', color: EMERALD, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .22s ease' }}
+          size={18}
+          style={{
+            flex: 'none', color: EMERALD,
+            transform: open ? 'rotate(180deg)' : 'none',
+            transition: 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
         />
       </button>
       {open && (
-        <p style={{ margin: '0 4px 22px', color: MUTED, fontSize: '1rem', lineHeight: 1.6, letterSpacing: '-0.015em', maxWidth: '76ch' }}>
+        <p style={{
+          margin: '0 0 20px', color: MUTED, fontSize: '0.98rem', lineHeight: 1.65,
+          letterSpacing: '-0.015em', maxWidth: '78ch',
+        }}>
           {item.a}
         </p>
       )}
@@ -119,85 +120,11 @@ function FaqItem({ item, open, onToggle }) {
   );
 }
 
-/**
- * Bản thu nhỏ của chính thứ người dùng sẽ nhận được.
- *
- * Bản cũ vẽ một "tờ giấy có mấy vạch xám" — thứ có thể là sản phẩm của bất kỳ
- * ai. Ở đây dựng đúng hình hài một portfolio thật: avatar, cấp độ, điểm uy tín,
- * một kinh nghiệm đã xác thực và đường dẫn riêng. Cho xem còn hơn mô tả.
- */
-function PortfolioPreview() {
-  const stat = (icon, value, label, color) => (
-    <div style={{ display: 'grid', gap: 2, justifyItems: 'center' }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '1.05rem', fontWeight: 900, color }}>
-        {icon}{value}
-      </span>
-      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: MUTED, letterSpacing: '0.04em' }}>{label}</span>
-    </div>
-  );
-
-  return (
-    <div style={{ position: 'relative' }} aria-hidden="true">
-      <div style={{
-        position: 'relative', width: 'min(430px, 100%)', margin: '0 auto',
-        borderRadius: 20, background: SURFACE, border: `1px solid ${LINE_STRONG}`, overflow: 'hidden',
-        boxShadow: '0 30px 70px rgba(0,0,0,0.55)',
-      }}>
-        {/* Ảnh bìa — đúng tính năng vừa làm xong */}
-        <div style={{ height: 78, background: 'linear-gradient(120deg, #34d399, #0d9488 70%)' }} />
-
-        <div style={{ padding: '0 20px 20px', marginTop: -30 }}>
-          <div style={{
-            width: 62, height: 62, borderRadius: '50%', border: `3px solid ${SURFACE}`,
-            background: 'linear-gradient(135deg, #10b981, #0d9488)', display: 'grid', placeItems: 'center',
-            color: '#fff', fontWeight: 900, fontSize: '1.3rem',
-          }}>P</div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '1.05rem', fontWeight: 600, color: ON_DARK }}>Nguyễn Tài Phát</span>
-            <span style={{ padding: '3px 10px', borderRadius: 999, background: MINT, color: EMERALD, fontSize: '0.7rem', fontWeight: 600 }}>LV. 4</span>
-          </div>
-          <div style={{ fontSize: '0.82rem', color: MUTED, marginTop: 2 }}>Sinh viên Marketing · ĐH FPT</div>
-
-          <div style={{
-            display: 'flex', justifyContent: 'space-around', gap: 8, margin: '16px 0',
-            padding: '12px 0', borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}`,
-          }}>
-            {stat(<ShieldCheck size={14} />, '86', 'TRUST SCORE', EMERALD)}
-            {stat(<Zap size={14} />, '1.2K', 'EXP', '#f59e0b')}
-            {stat(<Flame size={14} />, '7', 'STREAK', '#fb7185')}
-          </div>
-
-          {/* Một dòng kinh nghiệm đã được xác thực */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: `1px solid ${LINE}` }}>
-            <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, flex: 'none', borderRadius: 10, background: MINT, color: EMERALD }}>
-              <BriefcaseBusiness size={16} />
-            </span>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: '0.84rem', fontWeight: 500, color: ON_DARK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                Trưởng ban Truyền thông
-              </div>
-              <div style={{ fontSize: '0.74rem', color: MUTED }}>CLB F-Code · 2025</div>
-            </div>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 999, background: MINT, color: EMERALD, fontSize: '0.66rem', fontWeight: 600, flex: 'none' }}>
-              <ShieldCheck size={11} /> Đã xác thực
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 12, fontSize: '0.76rem', fontWeight: 500, color: EMERALD }}>
-            <Link2 size={13} /> nextplease.vn/p/tai-phat
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function PortfolioLandingPage() {
   const { openLoginModal } = useAuthModal();
   const [openFaq, setOpenFaq] = useState(0);
+  const [testHandle, setTestHandle] = useState('nguyen-minh-anh');
 
-  // Chưa đăng nhập thì mở form đăng nhập thay vì đẩy vào trang trống.
   function guard(e) {
     if (!getStoredToken()) {
       e.preventDefault();
@@ -206,145 +133,220 @@ export function PortfolioLandingPage() {
   }
 
   return (
-    // .app-main bị giới hạn 1180px; các trang landing khác thoát ra bằng cách
-    // kéo rộng 100vw rồi bù lề âm, để dải màu chạy hết bề ngang màn hình.
     <div style={{
       background: INK, color: ON_DARK, position: 'relative',
       width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip',
       fontFamily: "'Be Vietnam Pro', 'Inter', sans-serif",
     }}>
-      {/* Trang giới thiệu nên thanh điều hướng vẫn ghim như trang chủ — ở đây
-          không có thanh công cụ nào khác tranh chỗ bám. */}
+      {/* SiteHeader ghim overlay theo chuẩn DESIGN.md */}
       <SiteHeader overlay />
 
       <style>{`
-        /* Nút theo hệ: bo 8px, đệm 16/20, chữ 18px/500, đổi màu trong 150ms —
-           không viên thuốc, không shadow màu, không nhấc lên khi hover. */
-        .pf-cta { display:inline-flex; align-items:center; gap:6px; padding:15px 20px; border-radius:8px;
-                  font-family:inherit; font-size:1rem; font-weight:500; line-height:1; text-decoration:none;
-                  border:1px solid transparent; cursor:pointer;
-                  transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
-        .pf-cta.primary, .pf-cta.solid { background:${EMERALD}; color:${INK}; }
-        .pf-cta.primary:hover, .pf-cta.solid:hover { background:#34d399; }
-        .pf-cta.ghost { background:transparent; color:${ON_DARK}; border-color:${LINE_STRONG}; }
-        .pf-cta.ghost:hover { background:rgba(255,255,255,0.08); }
+        /* ── Typography & Layout Tokens theo DESIGN.md ── */
+        .pf-h1 {
+          font-family: 'Archivo', 'Be Vietnam Pro', sans-serif;
+          font-variation-settings: 'wdth' 84;
+          font-weight: 800;
+          text-transform: uppercase;
+          line-height: 0.94;
+          letter-spacing: -0.025em;
+          font-size: clamp(2.4rem, 5.4vw, 4.4rem);
+          color: ${ON_DARK};
+          margin: 18px 0 22px;
+        }
+        .pf-section-title {
+          font-family: 'Be Vietnam Pro', sans-serif;
+          margin: 0;
+          font-size: clamp(1.6rem, 3vw, 2.05rem);
+          font-weight: 400;
+          line-height: 1.15;
+          letter-spacing: -0.025em;
+          color: ${ON_DARK};
+        }
+        .pf-lead {
+          margin: 14px 0 0;
+          color: ${MUTED};
+          font-size: 1.08rem;
+          line-height: 1.5;
+          letter-spacing: -0.015em;
+        }
 
-        /* index.css gán 'Baloo 2' cho h1–h4 nên mọi tiêu đề ở đây phải khai lại. */
-        .pf-h1 { font-family:'Archivo','Be Vietnam Pro',sans-serif; font-variation-settings:'wdth' 84;
-                 font-weight:800; text-transform:uppercase; line-height:0.92; letter-spacing:-0.022em;
-                 font-size:clamp(2.3rem, 5vw, 4rem); color:${ON_DARK}; margin:22px 0 20px; }
-        .pf-h2 { font-family:inherit; margin:0; font-size:clamp(1.6rem, 3vw, 2rem); font-weight:400;
-                 line-height:1.1; letter-spacing:-0.025em; color:${ON_DARK}; }
-        .pf-lead { margin:18px 0 0; color:${MUTED}; font-size:1.125rem; line-height:1.4; letter-spacing:-0.015em; }
+        /* ── Nút theo quy chuẩn hệ thống (bo 8px, chữ 500, đổi màu 150ms) ── */
+        .pf-btn {
+          display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+          padding: 15px 22px; border-radius: 8px;
+          font-family: inherit; font-size: 1rem; font-weight: 500; line-height: 1;
+          text-decoration: none; border: 1px solid transparent; cursor: pointer;
+          transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+        }
+        .pf-btn.primary {
+          background: ${EMERALD}; color: ${INK};
+        }
+        .pf-btn.primary:hover {
+          background: ${EMERALD_HOVER};
+        }
+        .pf-btn.ghost {
+          background: transparent; color: ${ON_DARK}; border-color: ${LINE_STRONG};
+        }
+        .pf-btn.ghost:hover {
+          background: rgba(255, 255, 255, 0.08); border-color: ${EMERALD};
+        }
 
-        .pf-bg { position:absolute; inset:0 0 auto; height:1000px; overflow:hidden; pointer-events:none; z-index:0; }
-        .pf-hero { position:relative; z-index:1; display:grid; grid-template-columns: 1.06fr 0.94fr;
-                   gap:clamp(32px, 5vw, 72px); align-items:center;
-                   padding: clamp(128px, 12vw, 176px) 0 clamp(64px, 9vw, 120px); }
+        /* ── Hero Layout ── */
+        .pf-hero-wrap {
+          position: relative; z-index: 1;
+          display: grid; grid-template-columns: 1fr 1.08fr;
+          gap: clamp(24px, 4vw, 56px); align-items: center;
+          padding: clamp(124px, 11vw, 168px) 0 clamp(64px, 8vw, 112px);
+        }
 
-        .pf-eyebrow { display:inline-flex; align-items:center; gap:8px; font-size:1rem; font-weight:500;
-                      letter-spacing:-0.015em; color:${ON_DARK}; }
-        .pf-eyebrow i { width:8px; height:8px; border-radius:9999px; background:${EMERALD}; flex:none; }
+        /* Tối ưu kích thước EnvelopeArt bên trong Hero */
+        .pf-hero-art-box .np-upzi-envelope-wrap {
+          width: 100% !important;
+          max-width: 620px !important;
+          margin: 0 auto !important;
+        }
 
-        /* ── Ba bước ──
-           KHÔNG dùng lưới ba thẻ bo tròn, mỗi thẻ một icon trong ô vuông bo —
-           đó là bố cục mặc định thấy ở mọi landing page, và đặt cạnh những thẻ
-           bo tròn khác trên cùng trang thì cả trang thành một rổ hình chữ nhật
-           giống hệt nhau. Ở đây là một danh sách kiểu bản in: số thứ tự cỡ lớn
-           bằng font display làm cột mốc, các dòng ngăn nhau bằng kẻ mảnh, không
-           khung bao. Chữ tự gánh, không cần icon. */
-        .pf-steps { border-top: 1px solid ${LINE}; }
-        .pf-step {
-          display: grid; grid-template-columns: 112px minmax(0, 300px) minmax(0, 1fr);
+        /* ── Eyebrow Tag ── */
+        .pf-eyebrow {
+          display: inline-flex; align-items: center; gap: 8px;
+          font-size: 0.94rem; font-weight: 500; letter-spacing: -0.01em; color: ${ON_DARK};
+        }
+        .pf-eyebrow i {
+          width: 8px; height: 8px; border-radius: 9999px; background: ${EMERALD}; flex: none;
+        }
+
+        /* ── Danh sách Ba Bước kiểu bản in ── */
+        .pf-steps-list { border-top: 1px solid ${LINE}; }
+        .pf-step-row {
+          display: grid; grid-template-columns: 100px minmax(0, 310px) minmax(0, 1fr);
           gap: clamp(16px, 3vw, 40px); align-items: start;
           padding: clamp(28px, 3.4vw, 44px) 4px;
           border-bottom: 1px solid ${LINE};
-          transition: background-color .25s ease;
+          transition: background-color .2s ease;
         }
-        .pf-step:hover { background-color: rgba(255,255,255,0.025); }
-        .pf-step-no {
-          font-family: 'Archivo', inherit; font-variation-settings: 'wdth' 84;
-          font-size: clamp(2.6rem, 4.6vw, 3.75rem); font-weight: 800; line-height: 0.9;
-          letter-spacing: -0.04em; color: rgba(255,255,255,0.16);
-          transition: color .25s ease;
+        .pf-step-row:hover {
+          background-color: rgba(255, 255, 255, 0.02);
         }
-        .pf-step:hover .pf-step-no { color: ${EMERALD}; }
-        .pf-step h3 {
-          font-family: inherit; margin: 0; font-size: clamp(1.25rem, 2vw, 1.5rem); font-weight: 400;
-          line-height: 1.15; letter-spacing: -0.025em; color: ${ON_DARK};
+        .pf-step-num {
+          font-family: 'Archivo', sans-serif; font-variation-settings: 'wdth' 84;
+          font-size: clamp(2.6rem, 4.4vw, 3.6rem); font-weight: 800; line-height: 0.9;
+          letter-spacing: -0.04em; color: rgba(255, 255, 255, 0.16);
+          transition: color .2s ease;
         }
-        .pf-step p { margin: 0; color: ${MUTED}; font-size: 1rem; line-height: 1.55; letter-spacing: -0.015em; max-width: 46ch; }
+        .pf-step-row:hover .pf-step-num { color: ${EMERALD}; }
+        .pf-step-row h3 {
+          font-family: inherit; margin: 0 0 6px;
+          font-size: clamp(1.2rem, 1.8vw, 1.45rem); font-weight: 500;
+          line-height: 1.2; letter-spacing: -0.02em; color: ${ON_DARK};
+        }
+        .pf-step-tag {
+          display: inline-block; font-size: 0.74rem; font-weight: 600;
+          text-transform: uppercase; letter-spacing: 0.04em; color: ${EMERALD}; margin-bottom: 4px;
+        }
+        .pf-step-row p {
+          margin: 0; color: ${MUTED}; font-size: 0.98rem; line-height: 1.6;
+          letter-spacing: -0.015em; max-width: 48ch;
+        }
 
-        /* ── Bảng so sánh ── */
-        .pf-cmp { display:grid; grid-template-columns: 1.15fr 1fr 1fr; align-items:stretch;
-                  border:1px solid ${LINE}; border-radius:20px; overflow:hidden; background:transparent; }
-        .pf-cmp > * { padding:clamp(16px, 1.8vw, 22px) clamp(18px, 2vw, 26px); border-bottom:1px solid ${LINE};
-                      font-size:0.9375rem; line-height:1.5; letter-spacing:-0.015em; }
-        /* Cột nextplease được tô nhẹ để mắt bám vào — đây là cột cần thắng. */
-        .pf-cmp > *:nth-child(3n) { background:rgba(16,185,129,0.06); }
-        .pf-cmp-head { font-weight:500; font-size:0.875rem !important; letter-spacing:0.01em; }
-        .pf-cmp > *:nth-last-child(-n+3) { border-bottom:0; }
-
-        .pf-faq { display:grid; grid-template-columns: 0.8fr 1.2fr; gap:clamp(24px, 4vw, 56px); align-items:start; }
+        /* ── Bảng So Sánh ── */
+        .pf-cmp-table {
+          display: grid; grid-template-columns: 1.15fr 1fr 1fr; align-items: stretch;
+          border: 1px solid ${LINE}; border-radius: 16px; overflow: hidden; background: transparent;
+        }
+        .pf-cmp-table > * {
+          padding: clamp(16px, 1.8vw, 22px) clamp(18px, 2vw, 26px);
+          border-bottom: 1px solid ${LINE}; font-size: 0.94rem; line-height: 1.5;
+          letter-spacing: -0.015em;
+        }
+        .pf-cmp-table > *:nth-child(3n) {
+          background: rgba(16, 185, 129, 0.06);
+        }
+        .pf-cmp-head {
+          font-weight: 500; font-size: 0.88rem !important; letter-spacing: 0.01em;
+        }
+        .pf-cmp-table > *:nth-last-child(-n+3) { border-bottom: 0; }
 
         @media (max-width: 960px) {
-          .pf-hero, .pf-faq { grid-template-columns: 1fr; }
-          /* Dưới 960px số thứ tự lên một hàng riêng cùng tiêu đề, phần mô tả
-             xuống dòng dưới — ba cột ở bề ngang này thì cột nào cũng hẹp. */
-          .pf-step { grid-template-columns: 64px 1fr; gap: 14px 18px; }
-          .pf-step p { grid-column: 2; }
-          /* Bảng ba cột không đọc nổi trên màn hẹp. Giữ hai cột so sánh, còn
-             nhãn tiêu chí thành một dòng chạy suốt bề ngang phía trên — đọc
-             một lần cho cả hai bên thay vì lặp lại ở từng ô. */
-          .pf-cmp { grid-template-columns: 1fr 1fr; }
-          .pf-cmp .pf-cmp-label { grid-column: 1 / -1; background:rgba(255,255,255,0.05);
-                                  font-size:0.8rem !important; font-weight:500 !important;
-                                  padding-top:12px; padding-bottom:12px; }
-          .pf-cmp .pf-cmp-head.pf-cmp-label { display:none; }
+          .pf-hero-wrap { grid-template-columns: 1fr; }
+          .pf-step-row { grid-template-columns: 56px 1fr; gap: 12px 16px; }
+          .pf-step-row p { grid-column: 2; }
+          .pf-cmp-table { grid-template-columns: 1fr 1fr; }
+          .pf-cmp-table .pf-cmp-label {
+            grid-column: 1 / -1; background: rgba(255, 255, 255, 0.04);
+            font-size: 0.82rem !important; font-weight: 500 !important;
+            padding-top: 10px; padding-bottom: 10px;
+          }
+          .pf-cmp-table .pf-cmp-head.pf-cmp-label { display: none; }
         }
       `}</style>
 
-      {/* ── 1. HERO — cho xem sản phẩm, không mô tả suông ── */}
+      {/* ═════════════════════════════════════════════════════════════
+          1. HERO — XÁC THỰC BẰNG MINH CHỨNG, MINH HỌA NGHỆ THUẬT ĐỘC BẢN
+          ═════════════════════════════════════════════════════════════ */}
       <section style={{ position: 'relative' }}>
-        <div className="pf-bg" aria-hidden="true">
+        <div style={{ position: 'absolute', inset: '0 0 auto', height: 1000, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }} aria-hidden="true">
           <HeroMesh veil="radial-gradient(100% 92% at 40% 24%, rgba(11,15,14,0) 0%, #0b0f0e 100%)" />
         </div>
-        <div style={{ ...INNER, position: 'relative', zIndex: 1 }}>
-          <div className="pf-hero">
-            <div>
-              <span className="pf-eyebrow"><i /> Miễn phí toàn bộ</span>
 
-              {/* Font display in hoa chỉ dùng cho H1 của hero, và chỉ ở trang
-                  giới thiệu (trang chủ, trang này). Trang công cụ như /jobs hay
-                  /thao-luan không có tiêu đề kiểu này. */}
+        <div style={{ ...INNER, position: 'relative', zIndex: 1 }}>
+          <div className="pf-hero-wrap">
+            {/* Cột trái: Tuyên ngôn sản phẩm & Hành động */}
+            <div>
+              <span className="pf-eyebrow"><i /> Miễn phí toàn bộ cho sinh viên</span>
+
               <h1 className="pf-h1">
                 Đây là hồ sơ của bạn sau ba tháng
               </h1>
 
-              <p style={{ margin: 0, maxWidth: '50ch', fontSize: '1.125rem', lineHeight: 1.5, letterSpacing: '-0.015em', color: MUTED }}>
-                Không phải một bản CV tự khai. Là một trang sống, có minh chứng do tổ chức xác nhận,
-                điểm uy tín tích luỹ thật, và một đường dẫn mang tên bạn.
+              <p style={{ margin: 0, maxWidth: '50ch', fontSize: '1.125rem', lineHeight: 1.55, letterSpacing: '-0.015em', color: MUTED }}>
+                Không phải một bản CV tự khai. Là một trang sống, có minh chứng do chính tổ chức xác nhận,
+                điểm uy tín tích lũy thật, và một đường dẫn định danh mang tên bạn.
               </p>
 
-              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 38 }}>
-                <Link to="/portfolio" onClick={guard} className="pf-cta primary">
+              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 36, alignItems: 'center' }}>
+                <Link to="/portfolio" onClick={guard} className="pf-btn primary">
                   Dựng hồ sơ của tôi <ArrowRight size={17} />
                 </Link>
-                <Link to="/jobs" className="pf-cta ghost">
+                <Link to="/jobs" className="pf-btn ghost">
                   <BriefcaseBusiness size={16} /> Xem cơ hội đang mở
                 </Link>
               </div>
+
+              {/* 3 Mốc số liệu thực tế */}
+              <div style={{
+                display: 'flex', gap: 28, marginTop: 44, paddingTop: 28,
+                borderTop: `1px solid ${LINE}`, flexWrap: 'wrap'
+              }}>
+                <div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: ON_DARK, fontFamily: 'Archivo, sans-serif' }}>100%</div>
+                  <div style={{ fontSize: '0.82rem', color: MUTED, marginTop: 2 }}>Minh chứng đối chứng được</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: ON_DARK, fontFamily: 'Archivo, sans-serif' }}>1 Link</div>
+                  <div style={{ fontSize: '0.82rem', color: MUTED, marginTop: 2 }}>Dùng nộp mọi vị trí</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: EMERALD, fontFamily: 'Archivo, sans-serif' }}>0 Đồng</div>
+                  <div style={{ fontSize: '0.82rem', color: MUTED, marginTop: 2 }}>Trọn đời cho sinh viên</div>
+                </div>
+              </div>
             </div>
 
-            <PortfolioPreview />
+            {/* Cột phải: EnvelopeArt Minh Họa Thủ Công Độc Bản */}
+            <div className="pf-hero-art-box" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <EnvelopeArt />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── 2. BA BƯỚC — cách hồ sơ tự lớn lên ── */}
+      {/* ═════════════════════════════════════════════════════════════
+          2. BA BƯỚC — ĐỊNH DẠNG BẢN IN THEO CHUẨN DESIGN.MD
+          ═════════════════════════════════════════════════════════════ */}
       <section style={{ ...INNER, padding: 'clamp(72px, 11vw, 140px) 0' }}>
         <div style={{ maxWidth: '58ch', margin: '0 0 clamp(32px, 4vw, 52px)' }}>
-          <h2 className="pf-h2">
+          <h2 className="pf-section-title">
             Bạn không phải tự nghĩ ra thành tích
           </h2>
           <p className="pf-lead">
@@ -352,135 +354,198 @@ export function PortfolioLandingPage() {
           </p>
         </div>
 
-        <div className="pf-steps">
-          {STEPS.map((step) => (
-            <div key={step.no} className="pf-step">
-              <span className="pf-step-no" aria-hidden="true">{step.no}</span>
-              <h3>{step.title}</h3>
+        <div className="pf-steps-list">
+          {EDITORIAL_STEPS.map((step) => (
+            <div key={step.no} className="pf-step-row">
+              <span className="pf-step-num" aria-hidden="true">{step.no}</span>
+              <div>
+                <span className="pf-step-tag">{step.label}</span>
+                <h3>{step.title}</h3>
+              </div>
               <p>{step.body}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── 3. SO SÁNH — phần thuyết phục chính ── */}
-      <section>
+      {/* ═════════════════════════════════════════════════════════════
+          3. SO SÁNH TRỰC DIỆN — PHẦN THUYẾT PHỤC CHÍNH
+          ═════════════════════════════════════════════════════════════ */}
+      <section style={{ borderTop: `1px solid ${LINE}` }}>
         <div style={{ ...INNER, padding: 'clamp(72px, 11vw, 140px) 0' }}>
           <div style={{ maxWidth: '54ch', margin: '0 0 clamp(28px, 4vw, 44px)' }}>
-            <h2 className="pf-h2">
+            <h2 className="pf-section-title">
               Cùng một con người, hai cách kể
             </h2>
+            <p className="pf-lead">
+              CV tự khai khiến nhà tuyển dụng phải đoán định; Portfolio có minh chứng giúp bạn được tin cậy ngay.
+            </p>
           </div>
 
-          <div className="pf-cmp">
-            <div className="pf-cmp-head pf-cmp-label" style={{ color: MUTED }} />
+          <div className="pf-cmp-table">
+            <div className="pf-cmp-head pf-cmp-label" style={{ color: MUTED }}>Tiêu chí</div>
             <div className="pf-cmp-head" style={{ color: MUTED }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><FileText size={16} /> CV tự khai</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><FileText size={16} /> CV tự khai thông thường</span>
             </div>
             <div className="pf-cmp-head" style={{ color: TEAL }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><ShieldCheck size={16} /> Portfolio nextplease</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><ShieldCheck size={16} /> NextPlease Portfolio</span>
             </div>
 
             {COMPARISON.map(([label, cv, pf]) => (
-              <Fragmentish key={label} label={label} cv={cv} pf={pf} />
+              <FragmentCmp key={label} label={label} cv={cv} pf={pf} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── 4. DẢI NHẤN — ba thứ hồ sơ tích luỹ ──
-             Bản trước có linh vật ếch ở giữa; đã gỡ cho khớp với trang chủ —
-             hệ này không dùng nhân vật trang trí. */}
+      {/* ═════════════════════════════════════════════════════════════
+          4. THỬ NGHIỆM ĐƯỜNG DẪN ĐỊNH DANH (CUSTOM URL WIDGET)
+          ═════════════════════════════════════════════════════════════ */}
       <section style={{ borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }}>
-        <div style={{ ...INNER, padding: 'clamp(68px, 10vw, 124px) 0', display: 'grid', gap: 40, justifyItems: 'center', textAlign: 'center' }}>
-          <h2 className="pf-h2" style={{ maxWidth: '24ch' }}>
-            Mỗi việc bạn làm đều cộng vào hồ sơ
-          </h2>
+        <div style={{ ...INNER, padding: 'clamp(68px, 10vw, 120px) 0' }}>
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 'clamp(32px, 5vw, 64px)',
+            alignItems: 'center'
+          }}>
+            <div>
+              <span className="pf-step-tag">Định danh cá nhân</span>
+              <h2 className="pf-section-title" style={{ margin: '6px 0 14px' }}>
+                Giữ tên đường dẫn của bạn trước
+              </h2>
+              <p className="pf-lead" style={{ margin: 0, maxWidth: '48ch' }}>
+                Mỗi ứng viên có một đường dẫn duy nhất để gửi cho nhà tuyển dụng hoặc gắn vào Bio.
+                Đổi lại bất cứ lúc nào trong Khu vực của tôi — hoàn toàn miễn phí.
+              </p>
 
-          <div style={{ display: 'flex', gap: 'clamp(20px, 4vw, 52px)', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {[
-              [<Star key="i" size={17} />, 'Trust Score', 'Uy tín do tổ chức xác nhận'],
-              [<Zap key="i" size={17} />, 'EXP & Cấp độ', 'Tăng theo từng việc hoàn thành'],
-              [<ShieldCheck key="i" size={17} />, 'Verified Proof', 'Minh chứng ai cũng kiểm được'],
-            ].map(([icon, name, desc]) => (
-              <div key={name} style={{ display: 'grid', gap: 6, justifyItems: 'center', maxWidth: 210 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 500, fontSize: '1rem', color: EMERALD }}>{icon}{name}</span>
-                <span style={{ fontSize: '0.9375rem', color: MUTED, lineHeight: 1.5, letterSpacing: '-0.015em' }}>{desc}</span>
+              {/* Khung gõ thử URL */}
+              <div style={{ marginTop: 28, maxWidth: 440 }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', padding: '6px 6px 6px 14px',
+                  borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: `1px solid ${LINE_STRONG}`
+                }}>
+                  <span style={{ fontSize: '0.9rem', color: MUTED, userSelect: 'none' }}>
+                    nextplease.vn/p/
+                  </span>
+                  <input
+                    type="text"
+                    value={testHandle}
+                    onChange={(e) => setTestHandle(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))}
+                    placeholder="ten-ban"
+                    style={{
+                      flex: 1, minWidth: 0, background: 'none', border: 'none',
+                      color: EMERALD, fontSize: '0.94rem', fontWeight: 600, outline: 'none', padding: '6px 8px'
+                    }}
+                  />
+                  <Link
+                    to="/portfolio"
+                    onClick={guard}
+                    className="pf-btn primary"
+                    style={{ padding: '10px 16px', fontSize: '0.88rem', flex: 'none' }}
+                  >
+                    Dựng ngay
+                  </Link>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: MUTED, marginTop: 8 }}>
+                  Đường dẫn xem trước: <strong style={{ color: EMERALD }}>nextplease.vn/p/{testHandle || 'ten-ban'}</strong>
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
 
-          <Link to="/portfolio" onClick={guard} className="pf-cta primary">
-            Bắt đầu miễn phí <ArrowRight size={17} />
-          </Link>
+            {/* Ba giá trị cốt lõi tích lũy */}
+            <div style={{
+              display: 'grid', gap: 16, padding: '24px 28px',
+              borderRadius: 16, background: 'rgba(255, 255, 255, 0.02)', border: `1px solid ${LINE}`
+            }}>
+              {[
+                [<Star key="1" size={17} />, 'Trust Score (RS)', 'Điểm uy tín tối đa 100, tăng theo việc thật và giảm nếu vi phạm cam kết.'],
+                [<Zap key="2" size={17} />, 'EXP & Cấp độ', 'Vĩnh viễn không giảm, đại diện cho thâm niên và số lượng dự án đã chạy.'],
+                [<ShieldCheck key="3" size={17} />, 'Verified Proof of Work', 'Tổ chức cấp dấu xác nhận sau khi bạn hoàn thành nhiệm vụ.'],
+              ].map(([icon, title, desc]) => (
+                <div key={title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{ color: EMERALD, marginTop: 2, flex: 'none' }}>{icon}</span>
+                  <div>
+                    <div style={{ fontSize: '0.96rem', fontWeight: 600, color: ON_DARK }}>{title}</div>
+                    <div style={{ fontSize: '0.88rem', color: MUTED, lineHeight: 1.5, marginTop: 2 }}>{desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ── 5. CTA LẶP LẠI — trang tham chiếu nhắc lại lời mời ngay trước FAQ,
-             vì tới đây người đọc đã hiểu sản phẩm và không nên phải cuộn ngược
-             lên đầu để bấm. ── */}
+      {/* ═════════════════════════════════════════════════════════════
+          5. CTA LẶP LẠI — TRƯỚC PHẦN FAQ
+          ═════════════════════════════════════════════════════════════ */}
       <section>
         <div style={{ ...INNER, padding: 'clamp(64px, 9vw, 112px) 0', textAlign: 'center' }}>
-          <h2 className="pf-h2" style={{ maxWidth: '22ch', marginInline: 'auto' }}>
+          <h2 className="pf-section-title" style={{ maxWidth: '24ch', marginInline: 'auto' }}>
             Ba tháng nữa bạn muốn hồ sơ mình trông thế nào?
           </h2>
-          <p className="pf-lead" style={{ margin: '20px auto 0', maxWidth: '54ch' }}>
-            Dựng hồ sơ mất vài phút và hoàn toàn miễn phí. Phần còn lại để những việc
-            bạn làm tự nói hộ.
+          <p className="pf-lead" style={{ margin: '18px auto 0', maxWidth: '52ch' }}>
+            Dựng hồ sơ mất chưa đầy 3 phút và hoàn toàn miễn phí. Phần còn lại để những việc
+            bạn thật sự làm tự nói hộ.
           </p>
-          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', marginTop: 34 }}>
-            <Link to="/portfolio" onClick={guard} className="pf-cta solid">
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', marginTop: 32 }}>
+            <Link to="/portfolio" onClick={guard} className="pf-btn primary">
               Dựng hồ sơ của tôi <ArrowRight size={17} />
             </Link>
-            <Link to="/jobs" className="pf-cta ghost">
+            <Link to="/jobs" className="pf-btn ghost">
               <BriefcaseBusiness size={16} /> Xem cơ hội đang mở
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ── 6. FAQ ── */}
-      <section style={{ ...INNER, padding: 'clamp(68px, 10vw, 124px) 0' }}>
-        <div className="pf-faq">
-          <div>
-            <h2 className="pf-h2">
-              Câu hỏi thường gặp
-            </h2>
-            <p className="pf-lead" style={{ marginTop: 14 }}>
-              Chưa rõ chỗ nào? Đây là những thắc mắc hay gặp nhất về Portfolio.
-            </p>
-          </div>
-          <div>
-            {FAQS.map((item, i) => (
-              <FaqItem
-                key={item.q}
-                item={item}
-                open={openFaq === i}
-                onToggle={() => setOpenFaq(openFaq === i ? -1 : i)}
-              />
-            ))}
+      {/* ═════════════════════════════════════════════════════════════
+          6. CÂU HỎI THƯỜNG GẶP (FAQ)
+          ═════════════════════════════════════════════════════════════ */}
+      <section style={{ borderTop: `1px solid ${LINE}`, padding: 'clamp(68px, 10vw, 124px) 0' }}>
+        <div style={INNER}>
+          <div style={{ display: 'grid', gridTemplateColumns: '0.8fr 1.2fr', gap: 'clamp(24px, 4vw, 56px)', alignItems: 'start' }}>
+            <div>
+              <h2 className="pf-section-title">
+                Câu hỏi thường gặp
+              </h2>
+              <p className="pf-lead">
+                Chưa rõ chỗ nào? Đây là những thắc mắc hay gặp nhất về Portfolio.
+              </p>
+            </div>
+            <div>
+              {FAQS.map((item, i) => (
+                <FaqItem
+                  key={item.q}
+                  item={item}
+                  open={openFaq === i}
+                  onToggle={() => setOpenFaq(openFaq === i ? -1 : i)}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
+      {/* SiteFooter chuẩn của toàn hệ thống */}
       <SiteFooter />
     </div>
   );
 }
 
-/** Một hàng của bảng so sánh — ba ô rời để lưới CSS tự xếp cột. */
-function Fragmentish({ label, cv, pf }) {
+/** Một hàng so sánh của bảng */
+function FragmentCmp({ label, cv, pf }) {
   return (
     <>
       <div className="pf-cmp-label" style={{ fontWeight: 500, color: ON_DARK }}>{label}</div>
       <div data-label={label} style={{ color: MUTED }}>
         <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 8 }}>
-          <CircleX size={16} style={{ color: 'rgba(255,255,255,0.35)', flex: 'none', marginTop: 2 }} /> {cv}
+          <CircleX size={16} style={{ color: 'rgba(255,255,255,0.35)', flex: 'none', marginTop: 2 }} />
+          <span>{cv}</span>
         </span>
       </div>
       <div data-label={label} style={{ color: ON_DARK }}>
         <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 8 }}>
-          <CircleCheck size={16} style={{ color: EMERALD, flex: 'none', marginTop: 2 }} /> {pf}
+          <CircleCheck size={16} style={{ color: EMERALD, flex: 'none', marginTop: 2 }} />
+          <span>{pf}</span>
         </span>
       </div>
     </>
