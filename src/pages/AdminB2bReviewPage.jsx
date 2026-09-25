@@ -1550,6 +1550,13 @@ function isDeletedUser(u) {
   return (u?.userStatus || '').toUpperCase() === 'DELETED' || Boolean(u?.deletedAt);
 }
 
+/* Bộ đếm lần nạp, để ở phạm vi module chứ không phải useRef.
+   fetchTabData được gọi từ cả effect lẫn event handler, nên quy tắc
+   react-hooks/refs không chứng minh được ref chỉ bị đọc ngoài render và sẽ
+   báo lỗi; còn giữ object trong useState thì vi phạm react-hooks/immutability.
+   Trang này chỉ mount một bản tại một thời điểm nên bộ đếm dùng chung là đủ. */
+let fetchSeqCounter = 0;
+
 export function AdminB2bReviewPage() {
   const navigate = useNavigate();
   const { tabSlug = '', subTabSlug = '' } = useParams();
@@ -1859,12 +1866,10 @@ export function AdminB2bReviewPage() {
      hồ sơ nào". Kết quả phụ thuộc thứ tự mạng, nên lúc đúng lúc sai.
 
      Bỏ qua phản hồi của mọi lần nạp không phải lần mới nhất. */
-  const fetchSeqRef = useRef(0);
-
   /* Fetch Data based on Active Tab */
   async function fetchTabData(tabKey) {
-    const seq = ++fetchSeqRef.current;
-    const isStale = () => seq !== fetchSeqRef.current;
+    const seq = ++fetchSeqCounter;
+    const isStale = () => seq !== fetchSeqCounter;
     setLoading(true);
     setError(null);
     try {
