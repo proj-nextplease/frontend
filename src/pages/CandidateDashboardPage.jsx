@@ -3089,7 +3089,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     </div>
                   </div>
                   <span className={`candidate-premium-status ${wallet?.isPremium ? 'success' : ''}`}>
-                    {wallet?.isPremium ? 'Đã kích hoạt' : '40,000 NP / tháng'}
+                    {/* Giá này admin SỬA ĐƯỢC (khoá premium_price_np trong Cấu
+                        hình hệ thống). Ghi cứng "40,000" nghĩa là đổi giá xong
+                        thì cửa hàng vẫn rao giá cũ trong khi ví trừ giá mới.
+                        wallet.premiumPriceNp đã có sẵn ngay trong biến này. */}
+                    {wallet?.isPremium
+                      ? 'Đã kích hoạt'
+                      : `${(wallet?.premiumPriceNp ?? 40000).toLocaleString('vi-VN')} NP / tháng`}
                   </span>
                 </div>
                 <p className="candidate-premium-pass-copy">

@@ -1760,7 +1760,17 @@ export function AdminB2bReviewPage() {
           getAllVerificationSubmissions(),
         ]);
         if (!isMounted) return;
-        setPendingB2b(b2bData || []);
+        /* KHÔNG gọi setPendingB2b ở đây.
+           Effect này luôn lấy danh sách CHỜ DUYỆT để đếm badge, nhưng
+           pendingB2b cũng chính là ô state mà tab "Đã duyệt" dùng để hiển
+           thị. Mở thẳng .../b2b-partners/approved thì tab nạp được 8 đối
+           tác, rồi effect này về sau và xoá trắng — màn hình báo "không có
+           hồ sơ nào" trong khi API trả về 8. Badge đọc b2bPendingCount
+           riêng nên không cần danh sách.
+
+           setJobs/setVerifQueue thì giữ: badge của hai tab đó đếm từ chính
+           hai mảng này, và chúng nạp cùng dữ liệu mà tab sẽ nạp, nên không
+           có xung đột ngữ nghĩa như trường hợp pending/approved. */
         setB2bPendingCount(b2bData ? b2bData.length : 0);
         setJobs(jobsData || []);
         setVerifQueue(verifData || []);
@@ -1840,8 +1850,21 @@ export function AdminB2bReviewPage() {
     }
   }, [error]);
 
+  /* Số thứ tự lần nạp gần nhất.
+     Khi mở thẳng URL .../b2b-partners/approved, b2bSubTab khởi đầu là
+     'pending' nên effect bắn fetch(pending), rồi effect đồng bộ URL đổi nó
+     thành 'approved' và bắn fetch(approved). HAI lời gọi cùng ghi vào một ô
+     state pendingB2b — cái nào về SAU thì thắng. /pending trả 0 bản ghi, nên
+     khi nó về sau, 8 đối tác đã duyệt bị xoá trắng và màn hình báo "không có
+     hồ sơ nào". Kết quả phụ thuộc thứ tự mạng, nên lúc đúng lúc sai.
+
+     Bỏ qua phản hồi của mọi lần nạp không phải lần mới nhất. */
+  const fetchSeqRef = useRef(0);
+
   /* Fetch Data based on Active Tab */
   async function fetchTabData(tabKey) {
+    const seq = ++fetchSeqRef.current;
+    const isStale = () => seq !== fetchSeqRef.current;
     setLoading(true);
     setError(null);
     try {
@@ -1852,29 +1875,36 @@ export function AdminB2bReviewPage() {
         getAdminHealth().then(setHealth).catch(() => setHealth(null));
       } else if (tabKey === 'USERS') {
         const data = await getAdminUsers();
+        if (isStale()) return;
         setUsers(data || []);
       } else if (tabKey === 'B2B_REVIEWS') {
-        const data = b2bSubTab === 'approved'
+        const wanted = b2bSubTab;
+        const data = wanted === 'approved'
           ? await getApprovedB2bRegistrations()
           : await getPendingB2bRegistrations();
+        if (isStale()) return;
         setPendingB2b(data || []);
-        if (b2bSubTab === 'pending') {
+        if (wanted === 'pending') {
           setB2bPendingCount(data ? data.length : 0);
         }
       } else if (tabKey === 'JOBS') {
         const data = await getAdminJobs();
+        if (isStale()) return;
         setJobs(data || []);
       } else if (tabKey === 'AUDIT_LOGS') {
         const data = await getAdminAuditLogs();
+        if (isStale()) return;
         setLogs(data || []);
       } else if (tabKey === 'VERIF_QUEUE') {
         setVerifLoading(true);
         const data = await getAllVerificationSubmissions();
+        if (isStale()) return;
         setVerifQueue(data || []);
         setVerifLoading(false);
       } else if (tabKey === 'FRAUD_FLAGS') {
         setFraudFlagsLoading(true);
         const data = await getActiveFraudFlags();
+        if (isStale()) return;
         setFraudFlags(data || []);
         setFraudFlagsLoading(false);
       }
