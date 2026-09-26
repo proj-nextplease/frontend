@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ArrowUp, ArrowUpRight, Search } from 'lucide-react';
+import { ArrowRight, ArrowUp, ArrowUpRight, Search, Sparkles } from 'lucide-react';
 import { HeroMesh } from '../components/HeroMesh.jsx';
 import { PartnerLogos } from '../components/PartnerLogos.jsx';
 import { loadJobs } from '../api/jobsCache.js';
@@ -8,39 +8,37 @@ import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Trang chủ nextplease — nền tối, một màu nhấn emerald.
+   Trang chủ nextplease — Hiệu ứng cuộn chuột đổi nền động (Dynamic Scroll Theme)
+   Chuẩn theo mẫu thiết kế của Handshake (https://joinhandshake.com/employers/):
 
-   Nhịp trang (dựng theo số đo lấy trực tiếp từ joinhandshake.com): hero là
-   tiêu đề display + một dòng số liệu + ô tìm việc khổng lồ + chip gợi ý, đặt
-   trên một tấm nền mesh gồm nhiều quầng sáng bị blur mạnh. Ngay dưới là LƯỚI
-   6 thẻ việc làm thật (3 cột × 2 hàng, không phải hàng cuộn ngang) — người
-   xem thấy nội dung có thật trước khi nghe bất kỳ lời hứa nào. Sau đó mới tới
-   logo nhà tuyển dụng, ba cột giá trị, số liệu, cảm nhận và CTA.
-
-   Quy ước màu: chỉ EMERALD là màu tương tác. Không gradient trang trí, không
-   shadow màu — độ sâu đến từ nền đậm/nhạt xen kẽ và viền hairline.
+   - Ở đầu trang (Hero): Toàn bộ nền trang là NỀN TỐI (#0b0f0e) với quầng sáng mesh
+     neon emerald, thanh tìm kiếm kích thước lớn và lưới 6 thẻ việc làm.
+   - KHI LƯỚT CHUỘT XUỐNG: Toàn bộ nền trang tự động CHUYỂN TIẾP MƯỢT SANG NỀN TRẮNG
+     (#ffffff) qua CSS transition (duration: 700ms), chữ, viền, thẻ và logo đối tác
+     chuyển màu sắc tương phản cao, hiện đại.
+   - Khi cuộn ngược lên đỉnh trang: Tự động chuyển ngược lại nền tối.
    ────────────────────────────────────────────────────────────────────────── */
 
-const INK = '#0b0f0e';          // nền tối chủ đạo
-const INK_SOFT = '#121817';     // band tối nhạt hơn một bậc
-const EMERALD = '#10b981';      // màu nhấn duy nhất
-const EMERALD_BRIGHT = '#34d399'; // bản sáng hơn, dùng cho chữ rê chuột
+const INK = '#0b0f0e';          // nền tối khi ở đỉnh
+const EMERALD = '#10b981';      // màu nhấn chính
+const EMERALD_BRIGHT = '#34d399'; // màu nhấn sáng khi rê chuột
+const EMERALD_DARK = '#059669';   // màu nhấn đậm trên nền sáng
 const ON_DARK = '#ffffff';
 const MUTED_DARK = 'rgba(233,247,242,0.62)';
 const LINE_DARK = 'rgba(255,255,255,0.12)';
 const SNOW = '#ffffff';
-const INK_LIGHT = '#0f2e2b';    // chữ trên nền sáng
+
+// Màu trên nền sáng (Light Theme Canvas khi cuộn)
+const INK_LIGHT = '#0f2e2b';        // tiêu đề chính trên nền sáng
+const TEXT_MUTED_LIGHT = '#475569'; // chữ phụ trên nền sáng
+const LINE_LIGHT = '#e2efe9';       // viền thẻ trên nền sáng
 
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
-const BAND = (extra = {}) => ({ ...INNER, padding: 'clamp(64px, 9vw, 112px) 20px', ...extra });
 
 /* Gợi ý tìm kiếm dưới ô search — bấm là nhảy thẳng sang /jobs với từ khoá. */
 const SEARCH_CHIPS = ['Thực tập sinh', 'Part-time', 'Remote', 'Fresher', 'Quest từ CLB'];
 
-/* Câu gợi ý chạy trong ô tìm việc. Đây KHÔNG phải placeholder: trang mẫu phủ
-   một lớp chữ riêng lên ô input, mỗi ký tự là một <span> có opacity riêng sáng
-   dần lên — nên nó mượt hơn kiểu cắt chuỗi và không cần con trỏ nhấp nháy.
-   Viết như câu người ta thật sự gõ, đừng viết như tên chuyên mục. */
+/* Câu gợi ý chạy trong ô tìm việc */
 const SEARCH_HINTS = [
   'Thực tập Marketing tại TP.HCM cho sinh viên năm 3',
   'Việc part-time remote không cần kinh nghiệm',
@@ -51,8 +49,7 @@ const HINT_CHAR_MS = 55;    // mỗi ký tự sáng lên cách nhau bao lâu
 const HINT_HOLD_MS = 2200;  // gõ xong thì giữ nguyên câu bao lâu
 const HINT_FADE_MS = 450;   // cả câu mờ đi trước khi đổi câu kế
 
-/* Thẻ việc làm mẫu — chỉ hiện khi API chưa trả về, để lưới không rỗng.
-   Đúng 6 cái, khớp với lưới 3 cột × 2 hàng của trang mẫu. */
+/* Thẻ việc làm mẫu — chỉ hiện khi API chưa trả về, để lưới không rỗng. */
 const FALLBACK_JOBS = [
   { id: null, title: 'Thực tập Marketing', pay: 'Tới 5 triệu/tháng', payKnown: true, type: 'Thực tập', where: 'TP.HCM' },
   { id: null, title: 'Cộng tác viên Content', pay: 'Tới 300k/bài', payKnown: true, type: 'Part-time', where: 'Remote' },
@@ -62,12 +59,7 @@ const FALLBACK_JOBS = [
   { id: null, title: 'Trợ lý Kinh doanh', pay: 'Tới 7 triệu/tháng', payKnown: true, type: 'Full-time', where: 'Đà Nẵng' },
 ];
 
-/* Ba bước của quy trình thật, viết bằng đúng từ vựng sản phẩm.
-   Bản trước là ba "giá trị" chung chung kèm ảnh giả lập giao diện có số liệu
-   bịa (khớp 92%, doanh nghiệp xác nhận…) — trông thì lung linh nhưng nói
-   những thứ hệ thống chưa làm được, và người đọc nhận ra ngay. Ở đây mỗi bước
-   chỉ mô tả một việc có thật, và ô hình là một khối chữ chứ không giả vờ làm
-   ảnh chụp màn hình. */
+/* Ba bước quy trình */
 const STEPS = [
   {
     step: '01',
@@ -75,8 +67,6 @@ const STEPS = [
     title: 'Dựng hồ sơ một lần',
     body: 'Khai những gì bạn đang có: kỹ năng, dự án môn học, hoạt động ở CLB. Không cần kinh nghiệm đi làm, không cần ai giới thiệu.',
     tags: ['Kỹ năng', 'Dự án', 'Hoạt động'],
-    // Lối đăng ký đang được ẩn, nên nút này dẫn sang trang giới thiệu portfolio
-    // thay vì /candidate/register. Khi mở lại đăng ký thì đổi ở đúng một chỗ này.
     cta: 'Xem cách dựng hồ sơ',
     href: '/tao-portfolio',
   },
@@ -118,11 +108,7 @@ const TESTIMONIALS = [
   },
 ];
 
-/* Ô hình của mỗi bước.
-   Không có kho ảnh nào dùng được (ảnh trong repo là screenshot sản phẩm khác),
-   và dựng ảnh giao diện giả thì vừa xấu vừa nói sai về sản phẩm. Nên ô này là
-   một khối chữ: nhãn bước, một từ khoá cỡ lớn bằng font display, và mấy chip
-   từ vựng có thật. Không con số nào ở đây cả — không có gì để bịa. */
+/* Ô hình minh họa của mỗi bước */
 function StepPanel({ step, keyword, tags }) {
   return (
     <div className="np-step-panel">
@@ -131,17 +117,11 @@ function StepPanel({ step, keyword, tags }) {
       <span className="np-step-tags">
         {tags.map((tag) => <span key={tag}>{tag}</span>)}
       </span>
-      {/* Số bước khổng lồ chìm dưới nền, cắt bớt ở mép — chất liệu thị giác. */}
       <span className="np-step-ghost" aria-hidden="true">{step}</span>
     </div>
   );
 }
 
-/* Tiêu đề của MỌI section dưới hero.
-   Trang mẫu chỉ dùng font display in hoa cho đúng một chỗ: H1 của hero. Từ
-   section thứ hai trở xuống, tiêu đề quay về font body ở 32px, weight 400 và
-   viết thường — chính sự kiềm chế đó khiến cái H1 khổng lồ kia có sức nặng.
-   Dùng Display cho mọi tiêu đề thì cả trang hét lên và không còn điểm nhấn. */
 function SectionTitle({ children, align = 'left', style }) {
   return (
     <h2 className="np-section-title" style={{ textAlign: align, ...style }}>
@@ -150,12 +130,7 @@ function SectionTitle({ children, align = 'left', style }) {
   );
 }
 
-/* Headline display: Archivo ở độ rộng nén + in hoa + letter-spacing âm.
-   CHỈ dùng cho H1 của hero — xem ghi chú ở SectionTitle. */
 function Display({ children, size = 'clamp(2.4rem, 6.2vw, 4.6rem)', color = ON_DARK, align = 'left', style }) {
-  /* Màu đi qua BIẾN CSS chứ không đặt thẳng vào `color` của inline style.
-     Inline style thắng mọi rule trong stylesheet, nên đặt thẳng thì quy tắc
-     :hover không bao giờ có cơ hội chạy. */
   return (
     <h2
       className="np-display"
@@ -199,11 +174,6 @@ function prefersReducedMotion() {
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-/* Rút gọn job thô của BE về đúng ba thông tin thẻ rail cần. */
-/* BE trả loại hình dưới dạng enum thô (INTERNSHIP, MICRO_INTERNSHIP,
-   EVENT_STAFF…). Đổ thẳng lên giao diện thì thẻ hiện "MICRO_INTERNSHIP" —
-   vừa xấu vừa không ai đọc. Bảng này dịch sang nhãn người đọc được; enum lạ
-   thì rơi về cách chuyển chung ở dưới thay vì hiện nguyên xi. */
 const JOB_TYPE_LABELS = {
   INTERNSHIP: 'Thực tập',
   MICRO_INTERNSHIP: 'Thực tập ngắn hạn',
@@ -223,7 +193,6 @@ function jobTypeLabel(rawType, isClub) {
   if (!rawType) return isClub ? 'Quest' : 'Cơ hội';
   const key = String(rawType).trim().toUpperCase().replace(/[\s-]+/g, '_');
   if (JOB_TYPE_LABELS[key]) return JOB_TYPE_LABELS[key];
-  // Enum chưa biết: bỏ gạch dưới, viết hoa chữ đầu — vẫn hơn là hét chữ in hoa.
   const words = key.toLowerCase().replace(/_/g, ' ');
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
@@ -232,8 +201,6 @@ function toRailJob(raw) {
   const pay = raw.salaryText
     || (Number(raw.salaryMax) ? `Tới ${Math.round(Number(raw.salaryMax) / 1e6)} triệu/tháng` : null)
     || (Number(raw.salaryMin) ? `Từ ${Math.round(Number(raw.salaryMin) / 1e6)} triệu/tháng` : null);
-  /* Loại hình tách hẳn thành chip riêng thay vì nhét vào ngoặc sau địa điểm —
-     đây là thứ duy nhất khác nhau rõ giữa các thẻ, nên nó xứng đáng có chỗ. */
   const isClub = raw.companyType === 'CLUB' || raw.organizationType === 'CLUB';
   const type = jobTypeLabel(raw.jobType || raw.employmentType || raw.workForm || raw.workType, isClub);
   return {
@@ -250,18 +217,35 @@ export function HomePage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [jobs, setJobs] = useState(null);
+  
+  /* Trạng thái đổi nền khi cuộn chuột: Mặc định false (nền tối), khi lướt xuống chuyển thành true (nền trắng) */
+  const [isLight, setIsLight] = useState(false);
+  const scrollTriggerRef = useRef(null);
 
-  /* Trạng thái câu gợi ý: đang ở câu nào, đã sáng bao nhiêu ký tự, và có đang
-     mờ dần để nhường chỗ cho câu kế không. Khi tắt hiệu ứng chuyển động thì
-     hiện sẵn trọn câu đầu tiên chứ không để ô trống. */
+  /* Lắng nghe vị trí cuộn chuột để kích hoạt hiệu ứng đổi nền */
+  useEffect(() => {
+    const handleScroll = () => {
+      // Khi cuộn qua ngưỡng ~420px (hoặc khi vị trí trigger tới gần nửa màn hình), kích hoạt đổi sang nền trắng
+      if (window.scrollY > 420) {
+        setIsLight(true);
+      } else {
+        setIsLight(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Check ban đầu
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  /* Trạng thái câu gợi ý gõ */
   const [hint, setHint] = useState(() => ({
     phrase: 0,
     shown: prefersReducedMotion() ? [...SEARCH_HINTS[0]].length : 0,
     fading: false,
   }));
 
-  /* Nạp danh sách việc làm cho hàng rail; cache dùng chung với trang /jobs nên
-     lần bấm "Xem tất cả" sau đó hiện ngay lập tức. */
+  /* Nạp danh sách việc làm */
   useEffect(() => {
     let alive = true;
     loadJobs()
@@ -276,8 +260,7 @@ export function HomePage() {
 
   const rail = useMemo(() => jobs ?? FALLBACK_JOBS, [jobs]);
 
-  /* Gõ → giữ → mờ cả câu → đổi câu, lặp vô hạn. Người dùng vừa gõ chữ đầu tiên
-     là dừng hẳn (trang mẫu gỡ luôn lớp chữ này khỏi DOM khi ô có nội dung). */
+  /* Animated search hints */
   useEffect(() => {
     if (query || prefersReducedMotion()) return undefined;
 
@@ -315,94 +298,86 @@ export function HomePage() {
   }
 
   return (
-    <div className="np-home">
+    <div className={`np-home ${isLight ? 'is-light' : ''}`}>
       <style>{`
+        /* ── ROOT CONTAINER: Mặc định nền tối, khi cuộn (is-light) chuyển sang nền trắng mượt mà ── */
         .np-home {
-          background: ${INK};
+          background-color: ${INK};
           color: ${ON_DARK};
           width: 100vw;
           margin-left: calc(50% - 50vw);
           margin-top: -34px;
           overflow-x: clip;
           font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
+          transition: background-color 700ms cubic-bezier(0.16, 1, 0.3, 1), color 700ms cubic-bezier(0.16, 1, 0.3, 1);
         }
+
+        /* Khi cuộn chuột xuống: Nền chuyển trắng tinh khiết */
+        .np-home.is-light {
+          background-color: #ffffff;
+          color: ${INK_LIGHT};
+        }
+
         .np-home :focus-visible { outline: 2px solid ${EMERALD}; outline-offset: 3px; border-radius: 8px; }
 
-        /* ── Headline display ──
-           Archivo là variable font có wdth, nên nén được như font condensed mà
-           vẫn đủ dấu tiếng Việt. Ẫ/Ộ vẫn hiện trọn dấu nhờ line-height 0.92 —
-           Handshake để 0.8 nhưng bảng chữ của họ không có dấu. */
+        /* ── Headline display ── */
         .np-display {
           color: var(--np-display-color, ${ON_DARK});
           font-family: 'Archivo', 'Be Vietnam Pro', sans-serif;
           font-variation-settings: 'wdth' 84;
           font-weight: 800;
           text-transform: uppercase;
-          /* 0.92 là mức SÀN để dấu Ẫ/Ộ/Ế không bị cắt ngọn, không phải mức
-             đẹp. Tiêu đề hai dòng tiếng Việt thì dòng trên có dấu nặng thò
-             xuống (Ệ) còn dòng dưới có dấu mũ đội lên (Ủ), hai dấu gần chạm
-             nhau. 1.02 tách chúng ra mà vẫn giữ được khối chữ chắc. */
           line-height: 1.02;
           letter-spacing: -0.022em;
           margin: 0;
         }
 
-        /* Tiêu đề section: 32px, weight 400, viết thường — KHÔNG phải display
-           in hoa. Đây là quy tắc quan trọng nhất của trang mẫu. */
+        /* ── Tiêu đề Section biến đổi màu theo theme ── */
         .np-section-title {
-          /* index.css gán 'Baloo 2' cho mọi h1-h3 nên phải khai báo lại. */
           font-family: inherit;
-          font-size: clamp(1.6rem, 3vw, 2rem); font-weight: 400; line-height: 1.1;
-          letter-spacing: -0.025em; color: ${ON_DARK}; margin: 0;
+          font-size: clamp(1.75rem, 3.2vw, 2.3rem);
+          font-weight: 800;
+          line-height: 1.15;
+          letter-spacing: -0.025em;
+          color: ${ON_DARK};
+          margin: 0;
+          transition: color 600ms cubic-bezier(0.16, 1, 0.3, 1);
         }
-        /* ── Rê chuột lên tiêu đề thì chữ đổi sang màu nhấn ──
-           Chỉ áp cho TIÊU ĐỀ, không áp cho đoạn văn. Đổi màu khi rê chuột là
-           quy ước của thứ bấm được; gắn cho cả đoạn văn thì người đọc sẽ thử
-           bấm vào chữ và không có gì xảy ra. Tiêu đề thì hiếm ai thử bấm, nên
-           đây là chỗ an toàn nhất để chơi.
-           Dùng transition riêng cho color để không đụng vào các transition
-           khác đã có trên cùng phần tử. */
+        .np-home.is-light .np-section-title {
+          color: ${INK_LIGHT};
+        }
+        .np-home.is-light .np-section-title:hover {
+          color: ${EMERALD_DARK};
+        }
+
         .np-display,
-        .np-section-title,
-        .np-feature-copy h4,
         .np-quote .np-quote-name {
           transition: color 220ms ease;
         }
         .np-display:hover,
-        .np-section-title:hover,
-        .np-feature-copy h4:hover,
         .np-quote .np-quote-name:hover {
-          /* Bản SÁNG của emerald, không phải #10b981. Chữ cỡ lớn trên nền mesh
-             mà dùng emerald gốc thì tối hơn nền trắng đang thay thế, đọc ra
-             như chữ bị mờ đi chứ không phải được làm nổi lên. */
           color: ${EMERALD_BRIGHT};
         }
-        /* Tiêu đề thẻ việc làm đi theo cả THẺ chứ không theo riêng dòng chữ:
-           cả thẻ là một liên kết, nên rê vào bất kỳ đâu trong thẻ cũng phải
-           cho cùng một phản hồi. */
+
         .np-jobcard-title { transition: color 220ms ease; }
         .np-jobcard:hover .np-jobcard-title { color: ${EMERALD_BRIGHT}; }
+
         @media (prefers-reduced-motion: reduce) {
           .np-display, .np-section-title, .np-feature-copy h4,
-          .np-quote .np-quote-name, .np-jobcard-title { transition: none; }
+          .np-quote .np-quote-name, .np-jobcard-title, .np-home { transition: none !important; }
         }
 
-        .np-lead { font-size: 1.125rem; line-height: 1.4; letter-spacing: -0.015em; color: ${MUTED_DARK}; margin: 24px 0 0; max-width: 40rem; }
-
-        /* ── Hero ── Nền mesh nằm trong <HeroMesh />, dùng chung với /jobs. */
+        /* ── Hero section ── */
         .np-hero { position: relative; overflow: hidden; padding-top: clamp(124px, 12vw, 176px); }
         .np-hero-inner { position: relative; z-index: 3; text-align: center; }
 
-        /* Dòng số liệu dưới tiêu đề — 20px, mảnh, không phải đoạn văn dài. */
         .np-hero-sub {
           font-family: inherit;
           margin: clamp(28px, 3.4vw, 40px) auto 0; max-width: 44rem;
           font-size: 1.25rem; font-weight: 400; line-height: 1.35; color: ${ON_DARK};
         }
 
-        /* ── Ô tìm việc ──
-           Số đo trang mẫu: cao 88px, rộng tối đa 920px, bo 24px; đệm trái 64px
-           chừa cho kính lúp 32px, đệm phải 80px chừa cho nút 56px. */
+        /* ── Ô tìm việc ── */
         .np-search {
           position: relative; margin: clamp(28px, 3.4vw, 40px) auto 0;
           height: 88px; max-width: 920px; text-align: left;
@@ -413,17 +388,11 @@ export function HomePage() {
           padding: 0 80px 0 64px;
           font-family: inherit; font-size: 1.25rem; letter-spacing: -0.3px; color: #252630;
         }
-        /* Lớp phủ nằm trùng khít ô input; đệm 16px khớp với đệm trái 64px của
-           input (16 đệm + 32 icon + 16 khoảng cách) nên chữ gợi ý rơi đúng chỗ
-           con trỏ sẽ xuất hiện. */
         .np-search-overlay {
           position: absolute; inset: 0; display: flex; align-items: center; gap: 16px;
           padding: 16px; pointer-events: none; color: #252630;
         }
         .np-search-icon { flex: none; }
-        /* Mỗi ký tự sáng lên riêng; cả câu có thêm một lớp mờ chung để chuyển
-           sang câu kế. Hai transition khác thời lượng nên lúc đổi câu không bị
-           giật: chữ tắt đồng loạt, rồi câu mới sáng từng ký tự. */
         .np-search-hint {
           min-width: 0; overflow: hidden; white-space: pre;
           font-size: 1.25rem; line-height: 1.4; letter-spacing: -0.3px; color: rgba(0,0,0,0.6);
@@ -439,8 +408,6 @@ export function HomePage() {
         }
         .np-search button:hover { background: rgba(37,38,48,0.18); }
 
-        /* Dưới 1280px ô tìm việc cao lên thành khối, nút xuống góc dưới-phải —
-           giống hệt biến thể mobile của trang mẫu (h-38, đệm 24px). */
         @media (max-width: 1279px) {
           .np-search { height: 152px; }
           .np-search input { padding: 0 24px 64px; border-radius: 24px; }
@@ -450,8 +417,7 @@ export function HomePage() {
           .np-search button { top: auto; bottom: 24px; right: 24px; transform: none; }
         }
 
-        /* ── Chip gợi ý ──
-           Bo 8px (không phải viên thuốc), viền trắng 20%, đệm 16px, chữ 16px. */
+        /* ── Chip gợi ý ── */
         .np-chips { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 24px; }
         .np-chip {
           border: 1px solid rgba(255,255,255,0.2); background: transparent; color: ${ON_DARK};
@@ -460,42 +426,24 @@ export function HomePage() {
         }
         .np-chip:hover { background-color: rgba(255,255,255,0.1); }
 
-        /* ── Lưới thẻ việc làm ──
-           Trang mẫu KHÔNG cuộn ngang: 3 cột × 2 hàng, cách nhau 16px, mỗi thẻ
-           cao 182px, viền trắng 10%, đệm 40px, không nền, hover sáng lên. */
+        /* ── Lưới thẻ việc làm trong Hero ── */
         .np-jobgrid {
           display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 80px;
-          /* Mọi hàng cao bằng hàng cao nhất. Nhờ vậy cả sáu thẻ vẫn khít nhau
-             tuyệt đối mà KHÔNG cần khoá chiều cao cứng trên từng thẻ. */
           grid-auto-rows: 1fr;
         }
         .np-jobcard {
           position: relative; overflow: hidden; box-sizing: border-box;
           display: flex; flex-direction: column; align-items: flex-start;
-          /* min-height, KHÔNG phải height.
-             Với height cứng, nội dung cao hơn 216px sẽ bị flex bóp lại: tiêu
-             đề hai dòng cần 54px bị ép xuống 44px rồi overflow:hidden xén
-             ngang thân chữ. Đó chính là lỗi vỡ tiêu đề ở hàng dưới.
-             Việc cho các thẻ bằng nhau đã chuyển lên grid (grid-auto-rows:1fr),
-             nên ở đây chỉ cần đặt sàn chiều cao. */
-          /* height: 100% để thẻ lấp đầy div bọc của hiệu ứng Reveal.
-             Con trực tiếp của grid KHÔNG phải thẻ mà là div bọc đó; nó giãn
-             đúng chiều cao hàng, còn thẻ bên trong thì co theo nội dung, nên
-             thẻ 1 dòng thấp hơn thẻ 2 dòng 10px. (Cùng cái bẫy đã gặp ở
-             .np-feature — Reveal chen một tầng vào giữa.) */
           min-height: 216px; height: 100%; padding: 28px 30px; border-radius: 20px;
           border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.016);
           color: ${ON_DARK}; text-align: left; text-decoration: none;
           transition: border-color 260ms ease, background-color 260ms ease, transform 320ms cubic-bezier(0.22,1,0.36,1);
         }
-        /* Vệt sáng 1px chạy dọc mép trên — thứ làm một thẻ phẳng trên nền tối
-           trông như có bề mặt thật. Sáng hẳn lên khi hover. */
         .np-jobcard::before {
           content: ''; position: absolute; inset: 0 0 auto; height: 1px;
           background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
           opacity: 0.5; transition: opacity 260ms ease;
         }
-        /* Quầng sáng emerald toả từ góc dưới-phải, chỉ hiện khi hover. */
         .np-jobcard::after {
           content: ''; position: absolute; right: -40%; bottom: -60%; width: 90%; height: 150%;
           background: radial-gradient(closest-side, rgba(16,185,129,0.22), rgba(16,185,129,0) 70%);
@@ -507,7 +455,6 @@ export function HomePage() {
         }
         .np-jobcard:hover::before { opacity: 1; }
         .np-jobcard:hover::after { opacity: 1; }
-
         .np-jobcard > * { position: relative; z-index: 1; }
 
         .np-jobcard-index {
@@ -529,27 +476,11 @@ export function HomePage() {
 
         .np-jobcard-title {
           margin: 0; font-size: 1.25rem; line-height: 1.35; letter-spacing: -0.3px; font-weight: 400;
-          /* KHÔNG khoá chiều cao ở đây.
-             Bản trước đặt height: 2.6em để chân thẻ của cả sáu cái nằm trên
-             một đường. Nhưng thẻ đã là flex column cao cố định và
-             .np-jobcard-foot có margin-top: auto, nên chân thẻ vốn đã bị ghim
-             xuống đáy rồi — chiều cao tiêu đề không ảnh hưởng gì tới việc đó.
-             Cái height đó chỉ còn đúng một tác dụng: CẮT chữ. Nó tính ra
-             43.8px trong khi hai dòng cần 52px, nên tiêu đề hai dòng bị xén
-             ngang thân chữ — lộ nhất ở tiếng Việt, nơi dấu ộ/ề/ậ ăn cả phần
-             trên lẫn phần dưới dòng. line-clamp 2 đã lo việc cắt ở đúng hai
-             dòng, và nó cắt bằng dấu ba chấm chứ không xén giữa nét chữ.
-             line-height 1.35 (thay vì 1.3) để dấu thanh có chỗ thở. */
-          /* flex-shrink: 0 — tiêu đề là nội dung, không phải chỗ để bù trừ
-             khi thiếu không gian. Thiếu thì thẻ cao lên, không phải chữ bẹp đi. */
           flex-shrink: 0;
           display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
-        /* Đẩy chân thẻ xuống đáy — đây là chỗ bố cục cũ bị vỡ. */
         .np-jobcard-foot { margin-top: auto; padding-top: 20px; display: flex; flex-direction: column; gap: 3px; }
         .np-jobcard-pay { font-size: 0.95rem; letter-spacing: -0.015em; color: rgba(255,255,255,0.45); }
-        /* Có mức thù lao thật thì cho lên màu nhấn; không có thì để mờ. Nhờ vậy
-           hàng thẻ có nhịp sáng-tối thay vì sáu dòng xám y hệt nhau. */
         .np-jobcard-pay.is-known { color: ${EMERALD}; font-weight: 500; }
         .np-jobcard-where { font-size: 0.85rem; letter-spacing: -0.015em; color: rgba(255,255,255,0.45); }
 
@@ -562,7 +493,6 @@ export function HomePage() {
           transition: opacity 280ms ease, transform 320ms cubic-bezier(0.22,1,0.36,1);
         }
         .np-jobcard:hover .np-jobcard-arrow { opacity: 1; transform: none; }
-        /* Thẻ tĩnh (chưa có API nên chưa có link) thì không hứa hẹn gì cả. */
         div.np-jobcard { cursor: default; }
         div.np-jobcard .np-jobcard-arrow { display: none; }
 
@@ -571,50 +501,56 @@ export function HomePage() {
 
         /* ── Nút ── */
         .np-btn {
-          display: inline-flex; align-items: center; gap: 4px; border-radius: 8px;
-          padding: 16px 20px; font-size: 1.125rem; font-weight: 500; line-height: 1;
+          display: inline-flex; align-items: center; gap: 6px; border-radius: 12px;
+          padding: 16px 24px; font-size: 1.05rem; font-weight: 600; line-height: 1;
           text-decoration: none; border: 1px solid transparent; cursor: pointer; font-family: inherit;
-          transition: background-color 150ms ease-in-out, border-color 150ms ease-in-out;
+          transition: background-color 150ms ease-in-out, border-color 150ms ease-in-out, transform 150ms ease;
         }
-        .np-btn-primary { background: ${EMERALD}; color: ${INK}; }
-        .np-btn-primary:hover { background: #34d399; }
+        .np-btn-primary { background: ${EMERALD}; color: ${INK}; font-weight: 700; }
+        .np-btn-primary:hover { background: #34d399; transform: translateY(-2px); }
         .np-btn-ghost { background: transparent; color: ${ON_DARK}; border-color: ${LINE_DARK}; }
         .np-btn-ghost:hover { border-color: ${EMERALD}; }
-        .np-btn-onlight { background: ${INK}; color: ${ON_DARK}; }
 
-        .np-textlink {
-          display: inline-flex; align-items: center; gap: 6px; margin-top: 18px;
-          color: ${EMERALD}; font-weight: 700; font-size: 0.93rem; text-decoration: none;
-        }
-        .np-textlink:hover { text-decoration: underline; text-underline-offset: 4px; }
-
-        /* ── Ba hàng ảnh/chữ so le ──
-           Hàng chẵn ảnh bên trái, hàng lẻ đảo chiều; cách nhau 200px như trang
-           mẫu — khoảng trống lớn chính là thứ tạo nhịp, thay cho việc đổi nền. */
-        .np-features { display: flex; flex-direction: column; gap: clamp(80px, 10vw, 200px); margin-top: 80px; }
+        /* ─────────────────────────────────────────────────────────────
+           3 BƯỚC HOẠT ĐỘNG: CHUYỂN MÀU THEO THEME CUỘN
+        ───────────────────────────────────────────────────────────── */
+        .np-features { display: flex; flex-direction: column; gap: clamp(80px, 10vw, 160px); margin-top: 80px; }
         .np-feature { display: flex; align-items: center; justify-content: space-between; gap: clamp(32px, 5vw, 80px); }
         .np-feature-flip { flex-direction: row-reverse; }
+
         .np-feature-media {
           flex: none; width: 688px; max-width: 100%; height: 388px; border-radius: 32px; overflow: hidden;
-          /* Nền on-brand đứng sẵn sau ảnh: khi chưa có ảnh thật thì ô vẫn là
-             một mảng emerald có chiều sâu chứ không phải khung rỗng. */
           background:
             radial-gradient(120% 120% at 18% 12%, rgba(103,232,249,0.34) 0%, rgba(16,185,129,0.1) 46%, rgba(0,0,0,0) 72%),
             linear-gradient(152deg, #14211f 0%, #0d1614 100%);
           border: 1px solid ${LINE_DARK};
+          transition: background 700ms ease, border-color 600ms ease, box-shadow 600ms ease;
         }
-        /* Reveal bọc ngoài ô hình cũng phải không co — nếu để nó co thì
-           max-width:100% của ô hình bám theo và ô tụt từ 688 xuống ~509px. */
+        .np-home.is-light .np-feature-media {
+          background:
+            radial-gradient(120% 120% at 18% 12%, rgba(16,185,129,0.16) 0%, rgba(240,253,249,0.85) 46%, #ffffff 100%),
+            #ffffff;
+          border: 1.5px solid ${LINE_LIGHT};
+          box-shadow: 0 20px 40px -15px rgba(15, 46, 43, 0.06);
+        }
         .np-feature > div:first-child { flex: 0 0 auto; max-width: 688px; }
 
-        .np-feature-copy { flex: 0 1 336px; max-width: 336px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
-        /* index.css có rule toàn cục cho h1-h4 nên phải khoá lại cả font lẫn cỡ. */
+        .np-feature-copy { flex: 0 1 360px; max-width: 360px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
         .np-feature-copy h4 {
-          font-family: inherit; font-size: clamp(1.4rem, 2.4vw, 1.75rem); font-weight: 400;
-          line-height: 1.1; letter-spacing: -0.025em; margin: 0; color: ${ON_DARK};
+          font-family: inherit; font-size: clamp(1.5rem, 2.6vw, 1.95rem); font-weight: 800;
+          line-height: 1.15; letter-spacing: -0.025em; margin: 0; color: ${ON_DARK};
+          transition: color 600ms cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .np-feature-copy p { font-size: 1rem; line-height: 1.5; letter-spacing: -0.015em; color: ${MUTED_DARK}; margin: 0; }
-        .np-feature-copy .np-btn { margin-top: 8px; }
+        .np-home.is-light .np-feature-copy h4 { color: ${INK_LIGHT}; }
+        .np-home.is-light .np-feature-copy h4:hover { color: ${EMERALD_DARK}; }
+
+        .np-feature-copy p {
+          font-size: 1.05rem; line-height: 1.6; letter-spacing: -0.015em; color: ${MUTED_DARK}; margin: 0;
+          transition: color 600ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .np-home.is-light .np-feature-copy p { color: ${TEXT_MUTED_LIGHT}; }
+        .np-feature-copy .np-btn { margin-top: 10px; }
+
         @media (max-width: 1199px) {
           .np-feature, .np-feature-flip { flex-direction: column; align-items: stretch; }
           .np-feature > div:first-child { max-width: 100%; }
@@ -622,63 +558,89 @@ export function HomePage() {
           .np-feature-copy { flex: 1 1 auto; max-width: 100%; }
         }
 
-        /* ── Ô hình của mỗi bước ──
-           Một khối chữ, không phải ảnh. Từ khoá dùng font display in hoa — đây
-           là chỗ DUY NHẤT ngoài H1 được dùng nó, và hợp lệ vì ở đây nó đóng vai
-           hình vẽ chứ không phải tiêu đề. */
+        /* ── Panel bước học ── */
         .np-step-panel {
           position: relative; overflow: hidden; height: 100%; box-sizing: border-box;
           padding: 44px 48px; display: flex; flex-direction: column; align-items: flex-start;
         }
         .np-step-label {
-          font-size: 0.8rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+          font-size: 0.85rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
           color: ${EMERALD};
+          transition: color 600ms ease;
         }
+        .np-home.is-light .np-step-label { color: ${EMERALD_DARK}; }
+
         .np-step-keyword {
           margin-top: auto;
           font-family: 'Archivo', inherit; font-variation-settings: 'wdth' 84;
-          font-size: clamp(2.6rem, 5.4vw, 4rem); font-weight: 800; line-height: 0.95;
+          font-size: clamp(2.6rem, 5.4vw, 4.2rem); font-weight: 900; line-height: 0.95;
           letter-spacing: -0.03em; text-transform: uppercase; color: ${ON_DARK};
+          transition: color 600ms ease;
         }
+        .np-home.is-light .np-step-keyword { color: ${INK_LIGHT}; }
+
         .np-step-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
         .np-step-tags span {
-          padding: 6px 13px; border-radius: 9999px;
+          padding: 7px 14px; border-radius: 9999px;
           border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.04);
-          font-size: 0.82rem; font-weight: 500; color: rgba(255,255,255,0.78); white-space: nowrap;
+          font-size: 0.86rem; font-weight: 600; color: rgba(255,255,255,0.78); white-space: nowrap;
+          transition: background 600ms ease, border-color 600ms ease, color 600ms ease;
         }
-        /* Số bước chìm dưới nền, tràn ra khỏi mép phải và bị cắt. */
+        .np-home.is-light .np-step-tags span {
+          border: 1px solid #cbd5e1; background: #ffffff; color: ${INK_LIGHT};
+          box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
         .np-step-ghost {
           position: absolute; right: 30px; top: -44px; z-index: 0;
           font-family: 'Archivo', inherit; font-variation-settings: 'wdth' 84;
-          font-size: 15rem; font-weight: 800; line-height: 1; letter-spacing: -0.05em;
+          font-size: 15rem; font-weight: 900; line-height: 1; letter-spacing: -0.05em;
           color: rgba(255,255,255,0.045); pointer-events: none; user-select: none;
+          transition: color 600ms ease;
         }
+        .np-home.is-light .np-step-ghost { color: rgba(15, 46, 43, 0.05); }
+
         .np-step-panel > *:not(.np-step-ghost) { position: relative; z-index: 1; }
         @media (max-width: 1199px) { .np-step-panel { padding: 34px 32px; } .np-step-ghost { font-size: 11rem; } }
         @media (max-width: 520px) { .np-step-panel { padding: 28px 26px; } .np-step-ghost { font-size: 8rem; right: -14px; } }
 
-        /* ── Lưới ── */
+        /* ── Testimonial quotes biến đổi theo theme ── */
         .np-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
         @media (max-width: 900px) { .np-grid-3 { grid-template-columns: 1fr; } }
 
-
-        .np-quote { height: 100%; margin: 0; box-sizing: border-box; display: flex; flex-direction: column;
-                    background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 40px; }
-        .np-quote p { font-family: inherit; margin: 0 0 24px; font-size: 1rem; line-height: 1.4; letter-spacing: -0.015em; font-weight: 400; }
-        .np-quote figcaption { margin-top: auto; }
-        .np-quote .np-quote-name { font-weight: 700; font-size: 0.93rem; }
-        .np-quote .np-quote-role { font-size: 0.85rem; color: ${MUTED_DARK}; margin-top: 2px; }
-
-        @media (prefers-reduced-motion: reduce) {
-          .np-home *, .np-home *::before { transition: none !important; animation: none !important; }
+        .np-quote {
+          height: 100%; margin: 0; box-sizing: border-box; display: flex; flex-direction: column;
+          background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 36px;
+          color: ${ON_DARK};
+          transition: background 600ms ease, border-color 600ms ease, box-shadow 600ms ease, color 600ms ease;
         }
+        .np-home.is-light .np-quote {
+          background: #ffffff;
+          border: 1.5px solid ${LINE_LIGHT};
+          color: #1e293b;
+          box-shadow: 0 10px 30px rgba(15, 46, 43, 0.04);
+        }
+        .np-home.is-light .np-quote:hover {
+          transform: translateY(-4px);
+          border-color: ${EMERALD};
+          box-shadow: 0 20px 40px rgba(16, 185, 129, 0.1);
+        }
+        .np-quote p { font-family: inherit; margin: 0 0 24px; font-size: 1.05rem; line-height: 1.55; letter-spacing: -0.015em; font-weight: 500; }
+        .np-quote figcaption { margin-top: auto; }
+        .np-quote .np-quote-name { font-weight: 800; font-size: 1rem; color: ${ON_DARK}; transition: color 600ms ease; }
+        .np-home.is-light .np-quote .np-quote-name { color: ${INK_LIGHT}; }
+
+        .np-quote .np-quote-role { font-size: 0.88rem; color: ${MUTED_DARK}; margin-top: 4px; transition: color 600ms ease; }
+        .np-home.is-light .np-quote .np-quote-role { color: ${TEXT_MUTED_LIGHT}; }
       `}</style>
 
-      {/* 0. HEADER — chế độ đè: trong suốt + chữ trắng khi ở đỉnh hero,
-          co lại thành viên thuốc trắng ngay khi bắt đầu cuộn. */}
+      {/* 0. HEADER — chế độ overlay: trong suốt + chữ trắng khi ở đỉnh hero,
+          co lại thành viên thuốc kính mờ sáng ngay khi cuộn xuống. */}
       <SiteHeader overlay />
 
-      {/* 1. HERO — tiêu đề + số liệu + ô tìm việc, trên nền mesh blur */}
+      {/* ─────────────────────────────────────────────────────────────
+          1. HERO (NỀN TỐI Ở ĐỈNH TRANG)
+      ───────────────────────────────────────────────────────────── */}
       <section className="np-hero">
         <HeroMesh />
 
@@ -698,9 +660,6 @@ export function HomePage() {
               aria-label="Tìm việc làm, quest hoặc kỹ năng"
               maxLength={65}
             />
-            {/* Lớp phủ: kính lúp + câu gợi ý, nằm cùng một hàng flex nên chữ
-                luôn thẳng hàng với icon mà không phải canh tay. pointer-events
-                tắt để bấm vào đâu cũng rơi vào ô input bên dưới. */}
             <span className="np-search-overlay" aria-hidden="true">
               <Search className="np-search-icon" size={32} strokeWidth={1.6} />
               {!query && (
@@ -710,7 +669,6 @@ export function HomePage() {
                 >
                   {[...SEARCH_HINTS[hint.phrase]].map((char, index) => (
                     <span
-                      // Ký tự trùng nhau rất nhiều nên key phải kèm vị trí.
                       key={`${hint.phrase}-${index}`}
                       style={{ opacity: index < hint.shown ? 1 : 0 }}
                     >
@@ -738,16 +696,13 @@ export function HomePage() {
             ))}
           </div>
 
-          {/* Lưới việc làm thật — bằng chứng nội dung, ngay trong hero.
-              Mỗi thẻ hiện lên lệch nhau một nhịp, đúng kiểu trang mẫu. */}
+          {/* Lưới việc làm thật trong Hero */}
           <div className="np-jobgrid">
             {rail.map((job, index) => {
               const Tag = job.id ? 'a' : 'div';
               return (
                 <Reveal key={job.id ?? `${job.title}-${index}`} delay={index * 70} y={20} style={{ height: '100%' }}>
                   <Tag className="np-jobcard" {...(job.id ? { href: `/jobs/${job.id}` } : {})}>
-                    {/* Số thứ tự mờ ở góc — chỉ là chất liệu thị giác, để trống
-                        khỏi màn hình đọc bằng aria-hidden. */}
                     <span className="np-jobcard-index" aria-hidden="true">
                       {String(index + 1).padStart(2, '0')}
                     </span>
@@ -766,7 +721,7 @@ export function HomePage() {
             })}
           </div>
 
-          <div style={{ marginTop: '40px', paddingBottom: 'clamp(56px, 8vw, 96px)' }}>
+          <div style={{ marginTop: '48px', paddingBottom: 'clamp(64px, 9vw, 108px)' }}>
             <a className="np-btn np-btn-primary" href="/jobs">
               Xem tất cả cơ hội <ArrowRight size={18} />
             </a>
@@ -774,19 +729,24 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 2. LOGO NHÀ TUYỂN DỤNG — nhãn nhỏ có chấm + băng logo chạy.
-          Trang mẫu không có band sáng nào: cả trang là một nền tối liền mạch,
-          nhịp đến từ khoảng trống dọc chứ không từ việc đổi màu nền. */}
-      <section style={{ ...INNER, marginTop: 'clamp(96px, 12vw, 160px)' }}>
+      {/* Điểm kích hoạt cuộn đổi nền */}
+      <div ref={scrollTriggerRef} style={{ height: 1, margin: '-1px 0 0' }} />
+
+      {/* ─────────────────────────────────────────────────────────────
+          2. CÁC PHÂN ĐOẠN TIẾP THEO (TỰ ĐỘNG CHUYỂN NỀN TRẮNG KHI LƯỚT)
+      ───────────────────────────────────────────────────────────── */}
+      
+      {/* 2.1. LOGO ĐỐI TÁC DOANH NGHIỆP */}
+      <section style={{ ...INNER, marginTop: 'clamp(80px, 10vw, 130px)' }}>
         <Reveal>
-          <PartnerLogos onDark colorLogos showHeading={false} />
+          <PartnerLogos onDark={!isLight} colorLogos showHeading={false} />
         </Reveal>
       </section>
 
-      {/* 3. CÁCH HOẠT ĐỘNG — ba bước, ảnh/chữ so le */}
-      <section style={{ ...INNER, marginTop: 'clamp(96px, 12vw, 160px)' }}>
+      {/* 2.2. BA BƯỚC HOẠT ĐỘNG */}
+      <section style={{ ...INNER, marginTop: 'clamp(90px, 11vw, 150px)' }}>
         <Reveal>
-          <SectionTitle align="center" style={{ maxWidth: '620px', margin: '0 auto' }}>
+          <SectionTitle align="center" style={{ maxWidth: '680px', margin: '0 auto' }}>
             Ba bước, từ chưa có gì trong tay đến có bằng chứng thật
           </SectionTitle>
         </Reveal>
@@ -816,18 +776,18 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 5. CẢM NHẬN */}
-      <section id="thao-luan" style={{ ...INNER, marginTop: 'clamp(96px, 12vw, 160px)', scrollMarginTop: '104px' }}>
+      {/* 2.3. CẢM NHẬN & ĐÁNH GIÁ */}
+      <section id="thao-luan" style={{ ...INNER, marginTop: 'clamp(90px, 11vw, 150px)', scrollMarginTop: '104px' }}>
         <Reveal>
-          <SectionTitle align="center" style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <SectionTitle align="center" style={{ maxWidth: '640px', margin: '0 auto' }}>
             nextplease trong mắt sinh viên và nhà tuyển dụng
           </SectionTitle>
         </Reveal>
-        <div className="np-grid-3" style={{ marginTop: '80px' }}>
+        <div className="np-grid-3" style={{ marginTop: '72px' }}>
           {TESTIMONIALS.map((item, index) => (
             <Reveal key={item.quote} delay={index * 110} style={{ height: '100%' }}>
               <figure className="np-quote">
-                <p>{item.quote}</p>
+                <p>“{item.quote}”</p>
                 <figcaption>
                   <div className="np-quote-name">{item.name}</div>
                   <div className="np-quote-role">{item.role}</div>
@@ -838,26 +798,70 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 6. CTA CUỐI — vẫn nền tối như cả trang, điểm nhấn nằm ở nút */}
-      <section style={{ ...INNER, marginTop: 'clamp(96px, 12vw, 160px)', paddingBottom: 'clamp(96px, 12vw, 160px)', textAlign: 'center' }}>
+      {/* 2.4. CTA BANNER (HỘP BO TRÒN NỔI BẬT KIỂU HANDSHAKE) */}
+      <section style={{ ...INNER, marginTop: 'clamp(90px, 11vw, 150px)', paddingBottom: 'clamp(90px, 11vw, 140px)' }}>
         <Reveal>
-          <SectionTitle align="center" style={{ maxWidth: '600px', margin: '0 auto' }}>
-            Đọc tới đây rồi, không lẽ không thử?
-          </SectionTitle>
-          <p className="np-lead" style={{ margin: '24px auto 0', textAlign: 'center' }}>
-            Xem những cơ hội đang mở, hoặc đăng tin nếu bạn đang cần người.
-          </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginTop: '40px' }}>
-            <a className="np-btn np-btn-primary" href="/jobs">
-              Xem cơ hội đang mở <ArrowRight size={18} />
-            </a>
-            <a className="np-btn np-btn-ghost" href="/business/register">
-              Tôi cần tuyển người
-            </a>
+          <div style={{
+            background: 'radial-gradient(ellipse 70% 60% at 50% -20%, rgba(16, 185, 129, 0.35), transparent 70%), #0b0f0e',
+            borderRadius: 32,
+            padding: 'clamp(48px, 6vw, 76px) 36px',
+            textAlign: 'center',
+            color: '#ffffff',
+            boxShadow: isLight ? '0 25px 60px rgba(11, 15, 14, 0.18)' : '0 25px 60px rgba(0, 0, 0, 0.4)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              background: 'rgba(16, 185, 129, 0.15)',
+              border: '2px solid #10b981',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px',
+            }}>
+              <Sparkles size={26} color="#10b981" />
+            </div>
+
+            <h2 style={{
+              fontSize: 'clamp(1.9rem, 3.8vw, 2.9rem)',
+              fontWeight: 900,
+              color: '#ffffff',
+              letterSpacing: '-0.03em',
+              margin: '0 auto 16px',
+              maxWidth: '680px',
+            }}>
+              Đọc tới đây rồi, không lẽ không thử?
+            </h2>
+
+            <p style={{
+              fontSize: '1.12rem',
+              color: 'rgba(255, 255, 255, 0.75)',
+              margin: '0 auto 36px',
+              maxWidth: '520px',
+              lineHeight: 1.55,
+            }}>
+              Xem những cơ hội đang mở, hoặc bắt đầu xây dựng hồ sơ Proof of Work đầu tiên của bạn ngay hôm nay.
+            </p>
+
+            <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <a className="np-btn np-btn-primary" href="/jobs">
+                Xem cơ hội đang mở <ArrowRight size={18} />
+              </a>
+              <a className="np-btn np-btn-ghost" href="/business/register">
+                Tôi cần tuyển người
+              </a>
+            </div>
           </div>
         </Reveal>
       </section>
 
+      {/* ─────────────────────────────────────────────────────────────
+          3. FOOTER
+      ───────────────────────────────────────────────────────────── */}
       <SiteFooter />
     </div>
   );

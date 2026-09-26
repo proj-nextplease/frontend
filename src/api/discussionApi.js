@@ -50,9 +50,9 @@ export async function getComments(postId) {
   return unwrap(await httpClient.get(`/discussions/posts/${postId}/comments`), 'Không thể tải bình luận.');
 }
 
-export async function addComment(postId, content) {
+export async function addComment(postId, content, isAnonymous = false) {
   return unwrap(
-    await httpClient.post(`/discussions/posts/${postId}/comments`, { content }),
+    await httpClient.post(`/discussions/posts/${postId}/comments`, { content, isAnonymous }),
     'Gửi bình luận thất bại.',
   );
 }
