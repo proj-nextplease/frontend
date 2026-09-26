@@ -12,8 +12,9 @@ export function EnvelopeArt() {
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Comfortaa:wght@600;700&family=Fredoka:wght@500;600;700;800&family=Itim&display=swap');
 
         .np-upzi-envelope-wrap {
-          width: min(1140px, 98vw);
-          margin: 48px auto 0;
+          width: 100%;
+          max-width: 780px;
+          margin: 0 auto;
           user-select: none;
           position: relative;
           line-height: 0;
@@ -32,7 +33,7 @@ export function EnvelopeArt() {
         }
 
         .np-upzi-envelope-wrap:hover .np-letter-sheet {
-          transform: translateY(-16px);
+          transform: translateY(-18px);
         }
 
         .np-upzi-envelope-wrap:hover .np-doodle-coil {
@@ -166,7 +167,7 @@ export function EnvelopeArt() {
 
       <svg
         className="np-upzi-svg"
-        viewBox="15 25 750 358"
+        viewBox="35 30 680 380"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -209,7 +210,7 @@ export function EnvelopeArt() {
               strokeLinecap="round"
               strokeLinejoin="round"
               fill="none"
-              filter="drop-shadow(0 0 8px rgba(204, 255, 0, 0.45))"
+              filter="drop-shadow(0 0 10px rgba(204, 255, 0, 0.55))"
             />
           </g>
 
@@ -229,7 +230,7 @@ export function EnvelopeArt() {
               strokeLinecap="round"
               strokeLinejoin="round"
               fill="none"
-              filter="drop-shadow(0 0 8px rgba(204, 255, 0, 0.45))"
+              filter="drop-shadow(0 0 10px rgba(204, 255, 0, 0.55))"
             />
             <path
               d="M 545 175 L 565 195 L 585 170"
@@ -238,7 +239,7 @@ export function EnvelopeArt() {
               strokeLinecap="round"
               strokeLinejoin="round"
               fill="none"
-              filter="drop-shadow(0 0 8px rgba(204, 255, 0, 0.45))"
+              filter="drop-shadow(0 0 10px rgba(204, 255, 0, 0.55))"
             />
           </g>
 
@@ -247,27 +248,27 @@ export function EnvelopeArt() {
              ══════════════════════════════════════════════════════════════ */}
           <g className="np-env-in">
             {/* Ground Shadow */}
-            <ellipse cx="388" cy="395" rx="190" ry="14" fill="#021c19" opacity="0.3" filter="blur(6px)" />
+            <ellipse cx="388" cy="395" rx="200" ry="14" fill="#021c19" opacity="0.35" filter="blur(6px)" />
 
             {/* Envelope Back */}
             <g filter="url(#upziEnvShadow)">
-              <rect x="200" y="145" width="376" height="235" rx="26" fill="#0f766e" />
+              <rect x="195" y="142" width="386" height="242" rx="28" fill="#0f766e" />
             </g>
 
             {/* Dark Inner Lining */}
             <path
-              d="M 206 156 L 388 88 L 570 156 L 570 370 C 570 376 565 380 550 380 L 226 380 C 211 380 206 376 206 370 Z"
+              d="M 201 154 L 388 84 L 575 154 L 575 372 C 575 378 570 382 554 382 L 222 382 C 206 382 201 378 201 372 Z"
               fill="#064e3b"
             />
 
             {/* Open Flap */}
             <g className="np-flap-open">
               <path
-                d="M 200 154 C 275 80, 345 50, 388 50 C 431 50, 501 80, 576 154 Z"
+                d="M 195 152 C 272 76, 344 46, 388 46 C 432 46, 504 76, 581 152 Z"
                 fill="#14b8a6"
               />
               <path
-                d="M 388 50 C 431 50, 501 80, 576 154 L 388 154 Z"
+                d="M 388 46 C 432 46, 504 76, 581 152 L 388 152 Z"
                 fill="#000000"
                 fillOpacity="0.08"
               />
@@ -276,30 +277,30 @@ export function EnvelopeArt() {
             {/* ── THE LETTER SHEET (Stylized Notebook Ruled Paper) ── */}
             <g className="np-letter-sheet">
               <g filter="url(#upziLetterShadow)">
-                <rect x="222" y="62" width="332" height="230" rx="20" fill="#ffffff" />
+                <rect x="218" y="58" width="340" height="236" rx="22" fill="#ffffff" />
               </g>
 
               {/* Faint Ruled Lines */}
               <g stroke="#e2e8f0" strokeWidth="1.4">
-                <line x1="234" y1="96" x2="542" y2="96" />
-                <line x1="234" y1="130" x2="542" y2="130" />
-                <line x1="234" y1="164" x2="542" y2="164" />
-                <line x1="234" y1="198" x2="542" y2="198" />
-                <line x1="234" y1="232" x2="542" y2="232" />
-                <line x1="234" y1="266" x2="542" y2="266" />
+                <line x1="230" y1="94" x2="546" y2="94" />
+                <line x1="230" y1="128" x2="546" y2="128" />
+                <line x1="230" y1="162" x2="546" y2="162" />
+                <line x1="230" y1="196" x2="546" y2="196" />
+                <line x1="230" y1="230" x2="546" y2="230" />
+                <line x1="230" y1="264" x2="546" y2="264" />
               </g>
 
               {/* Stylized Letter Content (Comfortaa / Fredoka / Itim) */}
-              <text className="np-font-letter" x="244" y="116" fontSize="12.2" fontWeight="600" fill="#1e293b" letterSpacing="-0.2">
+              <text className="np-font-letter" x="240" y="114" fontSize="13" fontWeight="600" fill="#1e293b" letterSpacing="-0.2">
                 <tspan fontWeight="700" fill="#0d9488">nextplease</tspan> hiểu cảm giác lạc hướng giữa
               </text>
-              <text className="np-font-letter" x="244" y="150" fontSize="12.2" fontWeight="600" fill="#1e293b" letterSpacing="-0.2">
+              <text className="np-font-letter" x="240" y="148" fontSize="13" fontWeight="600" fill="#1e293b" letterSpacing="-0.2">
                 vô vàn lựa chọn. Và <tspan fontWeight="700" fill="#0d9488">nextplease</tspan> ở đây để giúp
               </text>
-              <text className="np-font-letter" x="244" y="184" fontSize="12.2" fontWeight="600" fill="#1e293b" letterSpacing="-0.2">
+              <text className="np-font-letter" x="240" y="182" fontSize="13" fontWeight="600" fill="#1e293b" letterSpacing="-0.2">
                 bạn: <tspan fontWeight="700" fill="#0f172a">Tìm hướng đi, tích proof thật,</tspan> và
               </text>
-              <text className="np-font-letter" x="244" y="218" fontSize="12.2" fontWeight="700" fill="#0d9488" letterSpacing="-0.2">
+              <text className="np-font-letter" x="240" y="216" fontSize="13" fontWeight="700" fill="#0d9488" letterSpacing="-0.2">
                 mở khoá cơ hội nghề nghiệp.
               </text>
             </g>
@@ -307,18 +308,18 @@ export function EnvelopeArt() {
             {/* ── ENVELOPE FRONT POCKET ── */}
             <g filter="url(#upziEnvShadow)">
               <path
-                d="M 200 216 
+                d="M 195 214 
                    L 388 262 
-                   L 576 216 
-                   L 576 354 
-                   A 26 26 0 0 1 550 380 
-                   L 226 380 
-                   A 26 26 0 0 1 200 354 
+                   L 581 214 
+                   L 581 356 
+                   A 28 28 0 0 1 553 384 
+                   L 223 384 
+                   A 28 28 0 0 1 195 356 
                    Z"
                 fill="#10b981"
               />
               <path
-                d="M 200 216 L 388 262 L 576 216"
+                d="M 195 214 L 388 262 L 581 214"
                 stroke="#6ee7b7"
                 strokeWidth="2.5"
                 strokeLinecap="round"
@@ -327,12 +328,12 @@ export function EnvelopeArt() {
             </g>
 
             {/* Small Mint Swirl Pin */}
-            <g transform="translate(216, 240)">
-              <circle cx="14" cy="14" r="13" fill="#34d399" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))" />
+            <g transform="translate(210, 238)">
+              <circle cx="15" cy="15" r="14" fill="#34d399" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))" />
               <path
-                d="M 8 16 C 7 10, 13 7, 18 10 C 22 13, 20 19, 14 18 C 11 17, 11 13, 14 12"
+                d="M 9 17 C 8 10, 14 7, 19 10 C 23 13, 21 20, 15 19 C 12 18, 12 14, 15 13"
                 stroke="#ffffff"
-                strokeWidth="2.4"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 fill="none"
               />
@@ -340,42 +341,42 @@ export function EnvelopeArt() {
 
             {/* ── ADDRESS SECTION: FROM & TO ── */}
             {/* FROM: nextplease (Stylized Bubble Sticker) */}
-            <g transform="translate(242, 282)">
-              <text className="np-font-display" x="0" y="0" fontSize="13.5" fontWeight="700" fill="#ffffff" letterSpacing="0.8">
+            <g transform="translate(238, 280)">
+              <text className="np-font-display" x="0" y="0" fontSize="14" fontWeight="700" fill="#ffffff" letterSpacing="0.8">
                 FROM:
               </text>
-              <g transform="translate(58, -19)">
-                <rect x="0" y="0" width="108" height="28" rx="14" fill="#ffffff" filter="drop-shadow(0 2px 5px rgba(0,0,0,0.14))" />
-                <text className="np-font-display" x="11" y="20" fontSize="15" fontWeight="800" fill="#059669" letterSpacing="-0.2">
+              <g transform="translate(62, -20)">
+                <rect x="0" y="0" width="114" height="30" rx="15" fill="#ffffff" filter="drop-shadow(0 2px 5px rgba(0,0,0,0.14))" />
+                <text className="np-font-display" x="12" y="21" fontSize="15.5" fontWeight="800" fill="#059669" letterSpacing="-0.2">
                   nextplease<tspan fill="#f59e0b">:</tspan>
                 </text>
               </g>
             </g>
 
             {/* TO: Sinh viên & các bạn trẻ */}
-            <g transform="translate(242, 322)">
-              <text className="np-font-display" x="0" y="0" fontSize="13.5" fontWeight="700" fill="#ffffff" letterSpacing="0.8">
+            <g transform="translate(238, 322)">
+              <text className="np-font-display" x="0" y="0" fontSize="14" fontWeight="700" fill="#ffffff" letterSpacing="0.8">
                 TO:
               </text>
               
               {/* Line 1 */}
-              <text className="np-font-display" x="58" y="-1" fontSize="13" fontWeight="600" fill="#ffffff">
+              <text className="np-font-display" x="62" y="-1" fontSize="13.5" fontWeight="600" fill="#ffffff">
                 Các bạn sinh viên &amp; các bạn trẻ
               </text>
-              <line x1="58" y1="8" x2="300" y2="8" stroke="#ffffff" strokeOpacity="0.38" strokeWidth="1.2" />
+              <line x1="62" y1="9" x2="315" y2="9" stroke="#ffffff" strokeOpacity="0.38" strokeWidth="1.2" />
 
               {/* Line 2 */}
-              <text className="np-font-display" x="58" y="27" fontSize="13" fontWeight="600" fill="#ffffff">
+              <text className="np-font-display" x="62" y="28" fontSize="13.5" fontWeight="600" fill="#ffffff">
                 đang tìm kiếm cơ hội
               </text>
-              <line x1="58" y1="36" x2="300" y2="36" stroke="#ffffff" strokeOpacity="0.38" strokeWidth="1.2" />
+              <line x1="62" y1="38" x2="315" y2="38" stroke="#ffffff" strokeOpacity="0.38" strokeWidth="1.2" />
             </g>
 
             {/* ══════════════════════════════════════════════════════════════
                 4. STICKERS: ⚡ Lightning & 🧡 Heart
                ══════════════════════════════════════════════════════════════ */}
             {/* ⚡ Lightning Bolt Sticker */}
-            <g className="np-sticker-pop np-st-d2 np-sticker-bolt" transform="translate(534, 296) rotate(-8)">
+            <g className="np-sticker-pop np-st-d2 np-sticker-bolt" transform="translate(540, 294) rotate(-8)">
               <g filter="url(#upziStickerShadow)">
                 <path
                   d="M 15 2 L 4 17 L 12 17 L 7 32 L 24 14 L 15 14 Z"
@@ -398,7 +399,7 @@ export function EnvelopeArt() {
             </g>
 
             {/* 🧡 Orange Heart Sticker */}
-            <g className="np-sticker-pop np-st-d3 np-sticker-heart" transform="translate(542, 342) rotate(10)">
+            <g className="np-sticker-pop np-st-d3 np-sticker-heart" transform="translate(548, 342) rotate(10)">
               <g filter="url(#upziStickerShadow)">
                 <path
                   d="M 14 6 

@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, ShieldCheck, BriefcaseBusiness, ChevronDown,
-  CircleCheck, CircleX, Link2, Star, Zap, UserRound,
-  FileText, Check, Award, BadgeCheck
+  CircleCheck, CircleX, Star, Zap, FileText
 } from 'lucide-react';
 import { HeroMesh } from '../components/HeroMesh.jsx';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
@@ -14,15 +13,19 @@ import { getStoredToken } from '../lib/authStorage.js';
 
 /* ── Hệ màu chuẩn của NextPlease (theo DESIGN.md) ── */
 const INK = '#0b0f0e';
-const INK_SOFT = '#121817';
 const EMERALD = '#10b981';
 const EMERALD_HOVER = '#34d399';
+const EMERALD_DARK = '#059669';
 const TEAL = '#0d9488';
 const ON_DARK = '#ffffff';
 const MUTED = 'rgba(233, 247, 242, 0.64)';
 const LINE = 'rgba(255, 255, 255, 0.1)';
 const LINE_STRONG = 'rgba(255, 255, 255, 0.2)';
-const MINT = 'rgba(16, 185, 129, 0.12)';
+
+// Màu trên nền sáng (khi cuộn chuột xuống)
+const INK_LIGHT = '#0f2e2b';
+const TEXT_MUTED_LIGHT = '#475569';
+const LINE_LIGHT = '#e2efe9';
 
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 
@@ -84,33 +87,35 @@ const FAQS = [
   },
 ];
 
-function FaqItem({ item, open, onToggle }) {
+function FaqItem({ item, open, onToggle, isLight }) {
   return (
-    <div style={{ borderBottom: `1px solid ${LINE}` }}>
+    <div className="pf-faq-item" style={{ borderBottom: `1px solid ${isLight ? LINE_LIGHT : LINE}` }}>
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
+        className="pf-faq-btn"
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           gap: 16, padding: '22px 0', background: 'none', border: 'none', cursor: 'pointer',
-          textAlign: 'left', fontFamily: 'inherit', fontSize: '1.05rem', fontWeight: 500,
-          letterSpacing: '-0.015em', color: ON_DARK,
+          textAlign: 'left', fontFamily: 'inherit', fontSize: '1.05rem', fontWeight: 600,
+          letterSpacing: '-0.015em', color: isLight ? INK_LIGHT : ON_DARK,
+          transition: 'color 0.25s ease',
         }}
       >
         <span>{item.q}</span>
         <ChevronDown
           size={18}
           style={{
-            flex: 'none', color: EMERALD,
+            flex: 'none', color: isLight ? EMERALD_DARK : EMERALD,
             transform: open ? 'rotate(180deg)' : 'none',
             transition: 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         />
       </button>
       {open && (
-        <p style={{
-          margin: '0 0 20px', color: MUTED, fontSize: '0.98rem', lineHeight: 1.65,
+        <p className="pf-faq-answer" style={{
+          margin: '0 0 20px', color: isLight ? TEXT_MUTED_LIGHT : MUTED, fontSize: '0.98rem', lineHeight: 1.65,
           letterSpacing: '-0.015em', maxWidth: '78ch',
         }}>
           {item.a}
@@ -124,6 +129,23 @@ export function PortfolioLandingPage() {
   const { openLoginModal } = useAuthModal();
   const [openFaq, setOpenFaq] = useState(0);
   const [testHandle, setTestHandle] = useState('nguyen-minh-anh');
+  
+  /* Hiệu ứng chuyển nền sang trắng khi cuộn chuột */
+  const [isLight, setIsLight] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Khi cuộn qua ~380px, đổi nền sang trắng
+      if (window.scrollY > 380) {
+        setIsLight(true);
+      } else {
+        setIsLight(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   function guard(e) {
     if (!getStoredToken()) {
@@ -133,16 +155,30 @@ export function PortfolioLandingPage() {
   }
 
   return (
-    <div style={{
-      background: INK, color: ON_DARK, position: 'relative',
-      width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', overflowX: 'clip',
-      fontFamily: "'Be Vietnam Pro', 'Inter', sans-serif",
-    }}>
+    <div className={`pf-landing ${isLight ? 'is-light' : ''}`}>
       {/* SiteHeader ghim overlay theo chuẩn DESIGN.md */}
       <SiteHeader overlay />
 
       <style>{`
-        /* ── Typography & Layout Tokens theo DESIGN.md ── */
+        /* ── ROOT CONTAINER: Nền tối ở đỉnh, chuyển trắng mượt mà khi cuộn ── */
+        .pf-landing {
+          background-color: ${INK};
+          color: ${ON_DARK};
+          position: relative;
+          width: 100vw;
+          margin-left: calc(50% - 50vw);
+          margin-top: -34px;
+          overflow-x: clip;
+          font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
+          transition: background-color 700ms cubic-bezier(0.16, 1, 0.3, 1), color 700ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .pf-landing.is-light {
+          background-color: #ffffff;
+          color: ${INK_LIGHT};
+        }
+
+        /* ── Typography & Layout Tokens ── */
         .pf-h1 {
           font-family: 'Archivo', 'Be Vietnam Pro', sans-serif;
           font-variation-settings: 'wdth' 84;
@@ -154,36 +190,46 @@ export function PortfolioLandingPage() {
           color: ${ON_DARK};
           margin: 18px 0 22px;
         }
+
         .pf-section-title {
           font-family: 'Be Vietnam Pro', sans-serif;
           margin: 0;
-          font-size: clamp(1.6rem, 3vw, 2.05rem);
-          font-weight: 400;
+          font-size: clamp(1.6rem, 3vw, 2.15rem);
+          font-weight: 800;
           line-height: 1.15;
           letter-spacing: -0.025em;
           color: ${ON_DARK};
+          transition: color 600ms cubic-bezier(0.16, 1, 0.3, 1);
         }
+        .pf-landing.is-light .pf-section-title {
+          color: ${INK_LIGHT};
+        }
+
         .pf-lead {
           margin: 14px 0 0;
           color: ${MUTED};
           font-size: 1.08rem;
-          line-height: 1.5;
+          line-height: 1.55;
           letter-spacing: -0.015em;
+          transition: color 600ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .pf-landing.is-light .pf-lead {
+          color: ${TEXT_MUTED_LIGHT};
         }
 
-        /* ── Nút theo quy chuẩn hệ thống (bo 8px, chữ 500, đổi màu 150ms) ── */
+        /* ── Nút theo quy chuẩn hệ thống ── */
         .pf-btn {
           display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-          padding: 15px 22px; border-radius: 8px;
-          font-family: inherit; font-size: 1rem; font-weight: 500; line-height: 1;
+          padding: 15px 24px; border-radius: 12px;
+          font-family: inherit; font-size: 1rem; font-weight: 600; line-height: 1;
           text-decoration: none; border: 1px solid transparent; cursor: pointer;
-          transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+          transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
         }
         .pf-btn.primary {
-          background: ${EMERALD}; color: ${INK};
+          background: ${EMERALD}; color: ${INK}; font-weight: 700;
         }
         .pf-btn.primary:hover {
-          background: ${EMERALD_HOVER};
+          background: ${EMERALD_HOVER}; transform: translateY(-2px);
         }
         .pf-btn.ghost {
           background: transparent; color: ${ON_DARK}; border-color: ${LINE_STRONG};
@@ -191,79 +237,142 @@ export function PortfolioLandingPage() {
         .pf-btn.ghost:hover {
           background: rgba(255, 255, 255, 0.08); border-color: ${EMERALD};
         }
+        .pf-landing.is-light .pf-btn.ghost {
+          color: ${INK_LIGHT}; border-color: #cbd5e1;
+        }
+        .pf-landing.is-light .pf-btn.ghost:hover {
+          background: #f1f5f9; border-color: ${EMERALD_DARK};
+        }
 
-        /* ── Hero Layout ── */
+        /* ── Hero Layout (Phóng to kích thước của EnvelopeArt) ── */
         .pf-hero-wrap {
           position: relative; z-index: 1;
-          display: grid; grid-template-columns: 1fr 1.08fr;
+          display: grid; grid-template-columns: 1fr 1.25fr;
           gap: clamp(24px, 4vw, 56px); align-items: center;
           padding: clamp(124px, 11vw, 168px) 0 clamp(64px, 8vw, 112px);
         }
 
-        /* Tối ưu kích thước EnvelopeArt bên trong Hero */
+        .pf-hero-art-box {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
         .pf-hero-art-box .np-upzi-envelope-wrap {
           width: 100% !important;
-          max-width: 620px !important;
+          max-width: 780px !important;
           margin: 0 auto !important;
         }
 
         /* ── Eyebrow Tag ── */
         .pf-eyebrow {
           display: inline-flex; align-items: center; gap: 8px;
-          font-size: 0.94rem; font-weight: 500; letter-spacing: -0.01em; color: ${ON_DARK};
+          font-size: 0.94rem; font-weight: 600; letter-spacing: -0.01em; color: ${ON_DARK};
         }
         .pf-eyebrow i {
           width: 8px; height: 8px; border-radius: 9999px; background: ${EMERALD}; flex: none;
         }
 
         /* ── Danh sách Ba Bước kiểu bản in ── */
-        .pf-steps-list { border-top: 1px solid ${LINE}; }
+        .pf-steps-list {
+          border-top: 1px solid ${LINE};
+          transition: border-color 600ms ease;
+        }
+        .pf-landing.is-light .pf-steps-list {
+          border-top-color: ${LINE_LIGHT};
+        }
+
         .pf-step-row {
           display: grid; grid-template-columns: 100px minmax(0, 310px) minmax(0, 1fr);
           gap: clamp(16px, 3vw, 40px); align-items: start;
           padding: clamp(28px, 3.4vw, 44px) 4px;
           border-bottom: 1px solid ${LINE};
-          transition: background-color .2s ease;
+          transition: background-color .2s ease, border-color 600ms ease;
+        }
+        .pf-landing.is-light .pf-step-row {
+          border-bottom-color: ${LINE_LIGHT};
         }
         .pf-step-row:hover {
           background-color: rgba(255, 255, 255, 0.02);
         }
+        .pf-landing.is-light .pf-step-row:hover {
+          background-color: #f8fafc;
+        }
+
         .pf-step-num {
           font-family: 'Archivo', sans-serif; font-variation-settings: 'wdth' 84;
           font-size: clamp(2.6rem, 4.4vw, 3.6rem); font-weight: 800; line-height: 0.9;
           letter-spacing: -0.04em; color: rgba(255, 255, 255, 0.16);
           transition: color .2s ease;
         }
+        .pf-landing.is-light .pf-step-num {
+          color: rgba(15, 46, 43, 0.12);
+        }
         .pf-step-row:hover .pf-step-num { color: ${EMERALD}; }
+        .pf-landing.is-light .pf-step-row:hover .pf-step-num { color: ${EMERALD_DARK}; }
+
         .pf-step-row h3 {
           font-family: inherit; margin: 0 0 6px;
-          font-size: clamp(1.2rem, 1.8vw, 1.45rem); font-weight: 500;
+          font-size: clamp(1.2rem, 1.8vw, 1.45rem); font-weight: 700;
           line-height: 1.2; letter-spacing: -0.02em; color: ${ON_DARK};
+          transition: color 600ms ease;
         }
+        .pf-landing.is-light .pf-step-row h3 {
+          color: ${INK_LIGHT};
+        }
+
         .pf-step-tag {
-          display: inline-block; font-size: 0.74rem; font-weight: 600;
+          display: inline-block; font-size: 0.74rem; font-weight: 700;
           text-transform: uppercase; letter-spacing: 0.04em; color: ${EMERALD}; margin-bottom: 4px;
         }
+        .pf-landing.is-light .pf-step-tag {
+          color: ${EMERALD_DARK};
+        }
+
         .pf-step-row p {
           margin: 0; color: ${MUTED}; font-size: 0.98rem; line-height: 1.6;
           letter-spacing: -0.015em; max-width: 48ch;
+          transition: color 600ms ease;
+        }
+        .pf-landing.is-light .pf-step-row p {
+          color: ${TEXT_MUTED_LIGHT};
         }
 
         /* ── Bảng So Sánh ── */
         .pf-cmp-table {
           display: grid; grid-template-columns: 1.15fr 1fr 1fr; align-items: stretch;
-          border: 1px solid ${LINE}; border-radius: 16px; overflow: hidden; background: transparent;
+          border: 1px solid ${LINE}; border-radius: 20px; overflow: hidden; background: transparent;
+          transition: border-color 600ms ease, background 600ms ease, box-shadow 600ms ease;
+        }
+        .pf-landing.is-light .pf-cmp-table {
+          border-color: ${LINE_LIGHT};
+          background: #ffffff;
+          box-shadow: 0 10px 30px rgba(15, 46, 43, 0.04);
         }
         .pf-cmp-table > * {
           padding: clamp(16px, 1.8vw, 22px) clamp(18px, 2vw, 26px);
           border-bottom: 1px solid ${LINE}; font-size: 0.94rem; line-height: 1.5;
           letter-spacing: -0.015em;
+          transition: border-color 600ms ease, color 600ms ease, background 600ms ease;
+        }
+        .pf-landing.is-light .pf-cmp-table > * {
+          border-bottom-color: ${LINE_LIGHT};
+          color: #1e293b;
         }
         .pf-cmp-table > *:nth-child(3n) {
           background: rgba(16, 185, 129, 0.06);
         }
+        .pf-landing.is-light .pf-cmp-table > *:nth-child(3n) {
+          background: rgba(16, 185, 129, 0.08);
+        }
         .pf-cmp-head {
-          font-weight: 500; font-size: 0.88rem !important; letter-spacing: 0.01em;
+          font-weight: 600; font-size: 0.88rem !important; letter-spacing: 0.01em;
+        }
+        .pf-landing.is-light .pf-cmp-head {
+          color: ${TEXT_MUTED_LIGHT} !important;
+        }
+        .pf-landing.is-light .pf-cmp-label {
+          color: ${INK_LIGHT} !important;
         }
         .pf-cmp-table > *:nth-last-child(-n+3) { border-bottom: 0; }
 
@@ -274,15 +383,18 @@ export function PortfolioLandingPage() {
           .pf-cmp-table { grid-template-columns: 1fr 1fr; }
           .pf-cmp-table .pf-cmp-label {
             grid-column: 1 / -1; background: rgba(255, 255, 255, 0.04);
-            font-size: 0.82rem !important; font-weight: 500 !important;
+            font-size: 0.82rem !important; font-weight: 600 !important;
             padding-top: 10px; padding-bottom: 10px;
+          }
+          .pf-landing.is-light .pf-cmp-table .pf-cmp-label {
+            background: #f1f5f9;
           }
           .pf-cmp-table .pf-cmp-head.pf-cmp-label { display: none; }
         }
       `}</style>
 
       {/* ═════════════════════════════════════════════════════════════
-          1. HERO — XÁC THỰC BẰNG MINH CHỨNG, MINH HỌA NGHỆ THUẬT ĐỘC BẢN
+          1. HERO — XÁC THỰC BẰNG MINH CHỨNG, MINH HỌA ENVELOPEART NỔI BẬT
           ═════════════════════════════════════════════════════════════ */}
       <section style={{ position: 'relative' }}>
         <div style={{ position: 'absolute', inset: '0 0 auto', height: 1000, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }} aria-hidden="true">
@@ -333,8 +445,8 @@ export function PortfolioLandingPage() {
               </div>
             </div>
 
-            {/* Cột phải: EnvelopeArt Minh Họa Thủ Công Độc Bản */}
-            <div className="pf-hero-art-box" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {/* Cột phải: EnvelopeArt Minh Họa Bự & Độc Bản */}
+            <div className="pf-hero-art-box">
               <EnvelopeArt />
             </div>
           </div>
@@ -371,7 +483,7 @@ export function PortfolioLandingPage() {
       {/* ═════════════════════════════════════════════════════════════
           3. SO SÁNH TRỰC DIỆN — PHẦN THUYẾT PHỤC CHÍNH
           ═════════════════════════════════════════════════════════════ */}
-      <section style={{ borderTop: `1px solid ${LINE}` }}>
+      <section style={{ borderTop: `1px solid ${isLight ? LINE_LIGHT : LINE}`, transition: 'border-color 600ms ease' }}>
         <div style={{ ...INNER, padding: 'clamp(72px, 11vw, 140px) 0' }}>
           <div style={{ maxWidth: '54ch', margin: '0 0 clamp(28px, 4vw, 44px)' }}>
             <h2 className="pf-section-title">
@@ -383,16 +495,16 @@ export function PortfolioLandingPage() {
           </div>
 
           <div className="pf-cmp-table">
-            <div className="pf-cmp-head pf-cmp-label" style={{ color: MUTED }}>Tiêu chí</div>
-            <div className="pf-cmp-head" style={{ color: MUTED }}>
+            <div className="pf-cmp-head pf-cmp-label" style={{ color: isLight ? TEXT_MUTED_LIGHT : MUTED }}>Tiêu chí</div>
+            <div className="pf-cmp-head" style={{ color: isLight ? TEXT_MUTED_LIGHT : MUTED }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><FileText size={16} /> CV tự khai thông thường</span>
             </div>
-            <div className="pf-cmp-head" style={{ color: TEAL }}>
+            <div className="pf-cmp-head" style={{ color: isLight ? EMERALD_DARK : TEAL, fontWeight: 700 }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><ShieldCheck size={16} /> NextPlease Portfolio</span>
             </div>
 
             {COMPARISON.map(([label, cv, pf]) => (
-              <FragmentCmp key={label} label={label} cv={cv} pf={pf} />
+              <FragmentCmp key={label} label={label} cv={cv} pf={pf} isLight={isLight} />
             ))}
           </div>
         </div>
@@ -401,7 +513,11 @@ export function PortfolioLandingPage() {
       {/* ═════════════════════════════════════════════════════════════
           4. THỬ NGHIỆM ĐƯỜNG DẪN ĐỊNH DANH (CUSTOM URL WIDGET)
           ═════════════════════════════════════════════════════════════ */}
-      <section style={{ borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }}>
+      <section style={{
+        borderTop: `1px solid ${isLight ? LINE_LIGHT : LINE}`,
+        borderBottom: `1px solid ${isLight ? LINE_LIGHT : LINE}`,
+        transition: 'border-color 600ms ease'
+      }}>
         <div style={{ ...INNER, padding: 'clamp(68px, 10vw, 120px) 0' }}>
           <div style={{
             display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 'clamp(32px, 5vw, 64px)',
@@ -421,9 +537,13 @@ export function PortfolioLandingPage() {
               <div style={{ marginTop: 28, maxWidth: 440 }}>
                 <div style={{
                   display: 'flex', alignItems: 'center', padding: '6px 6px 6px 14px',
-                  borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: `1px solid ${LINE_STRONG}`
+                  borderRadius: 12,
+                  background: isLight ? '#ffffff' : 'rgba(255,255,255,0.04)',
+                  border: `1.5px solid ${isLight ? '#cbd5e1' : LINE_STRONG}`,
+                  boxShadow: isLight ? '0 4px 14px rgba(0,0,0,0.04)' : 'none',
+                  transition: 'all 600ms ease',
                 }}>
-                  <span style={{ fontSize: '0.9rem', color: MUTED, userSelect: 'none' }}>
+                  <span style={{ fontSize: '0.9rem', color: isLight ? TEXT_MUTED_LIGHT : MUTED, userSelect: 'none', fontWeight: 500 }}>
                     nextplease.vn/p/
                   </span>
                   <input
@@ -433,39 +553,43 @@ export function PortfolioLandingPage() {
                     placeholder="ten-ban"
                     style={{
                       flex: 1, minWidth: 0, background: 'none', border: 'none',
-                      color: EMERALD, fontSize: '0.94rem', fontWeight: 600, outline: 'none', padding: '6px 8px'
+                      color: isLight ? EMERALD_DARK : EMERALD, fontSize: '0.94rem', fontWeight: 700, outline: 'none', padding: '6px 8px'
                     }}
                   />
                   <Link
                     to="/portfolio"
                     onClick={guard}
                     className="pf-btn primary"
-                    style={{ padding: '10px 16px', fontSize: '0.88rem', flex: 'none' }}
+                    style={{ padding: '10px 18px', fontSize: '0.88rem', flex: 'none', borderRadius: 8 }}
                   >
                     Dựng ngay
                   </Link>
                 </div>
-                <div style={{ fontSize: '0.78rem', color: MUTED, marginTop: 8 }}>
-                  Đường dẫn xem trước: <strong style={{ color: EMERALD }}>nextplease.vn/p/{testHandle || 'ten-ban'}</strong>
+                <div style={{ fontSize: '0.78rem', color: isLight ? TEXT_MUTED_LIGHT : MUTED, marginTop: 8 }}>
+                  Đường dẫn xem trước: <strong style={{ color: isLight ? EMERALD_DARK : EMERALD }}>nextplease.vn/p/{testHandle || 'ten-ban'}</strong>
                 </div>
               </div>
             </div>
 
             {/* Ba giá trị cốt lõi tích lũy */}
             <div style={{
-              display: 'grid', gap: 16, padding: '24px 28px',
-              borderRadius: 16, background: 'rgba(255, 255, 255, 0.02)', border: `1px solid ${LINE}`
+              display: 'grid', gap: 16, padding: '28px 30px',
+              borderRadius: 20,
+              background: isLight ? '#ffffff' : 'rgba(255, 255, 255, 0.02)',
+              border: `1.5px solid ${isLight ? LINE_LIGHT : LINE}`,
+              boxShadow: isLight ? '0 10px 30px rgba(15, 46, 43, 0.04)' : 'none',
+              transition: 'all 600ms ease',
             }}>
               {[
-                [<Star key="1" size={17} />, 'Trust Score (RS)', 'Điểm uy tín tối đa 100, tăng theo việc thật và giảm nếu vi phạm cam kết.'],
-                [<Zap key="2" size={17} />, 'EXP & Cấp độ', 'Vĩnh viễn không giảm, đại diện cho thâm niên và số lượng dự án đã chạy.'],
-                [<ShieldCheck key="3" size={17} />, 'Verified Proof of Work', 'Tổ chức cấp dấu xác nhận sau khi bạn hoàn thành nhiệm vụ.'],
+                [<Star key="1" size={18} />, 'Trust Score (RS)', 'Điểm uy tín tối đa 100, tăng theo việc thật và giảm nếu vi phạm cam kết.'],
+                [<Zap key="2" size={18} />, 'EXP & Cấp độ', 'Vĩnh viễn không giảm, đại diện cho thâm niên và số lượng dự án đã chạy.'],
+                [<ShieldCheck key="3" size={18} />, 'Verified Proof of Work', 'Tổ chức cấp dấu xác nhận sau khi bạn hoàn thành nhiệm vụ.'],
               ].map(([icon, title, desc]) => (
-                <div key={title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <span style={{ color: EMERALD, marginTop: 2, flex: 'none' }}>{icon}</span>
+                <div key={title} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                  <span style={{ color: isLight ? EMERALD_DARK : EMERALD, marginTop: 2, flex: 'none' }}>{icon}</span>
                   <div>
-                    <div style={{ fontSize: '0.96rem', fontWeight: 600, color: ON_DARK }}>{title}</div>
-                    <div style={{ fontSize: '0.88rem', color: MUTED, lineHeight: 1.5, marginTop: 2 }}>{desc}</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: isLight ? INK_LIGHT : ON_DARK }}>{title}</div>
+                    <div style={{ fontSize: '0.9rem', color: isLight ? TEXT_MUTED_LIGHT : MUTED, lineHeight: 1.5, marginTop: 2 }}>{desc}</div>
                   </div>
                 </div>
               ))}
@@ -500,7 +624,11 @@ export function PortfolioLandingPage() {
       {/* ═════════════════════════════════════════════════════════════
           6. CÂU HỎI THƯỜNG GẶP (FAQ)
           ═════════════════════════════════════════════════════════════ */}
-      <section style={{ borderTop: `1px solid ${LINE}`, padding: 'clamp(68px, 10vw, 124px) 0' }}>
+      <section style={{
+        borderTop: `1px solid ${isLight ? LINE_LIGHT : LINE}`,
+        padding: 'clamp(68px, 10vw, 124px) 0',
+        transition: 'border-color 600ms ease'
+      }}>
         <div style={INNER}>
           <div style={{ display: 'grid', gridTemplateColumns: '0.8fr 1.2fr', gap: 'clamp(24px, 4vw, 56px)', alignItems: 'start' }}>
             <div>
@@ -518,6 +646,7 @@ export function PortfolioLandingPage() {
                   item={item}
                   open={openFaq === i}
                   onToggle={() => setOpenFaq(openFaq === i ? -1 : i)}
+                  isLight={isLight}
                 />
               ))}
             </div>
@@ -532,19 +661,19 @@ export function PortfolioLandingPage() {
 }
 
 /** Một hàng so sánh của bảng */
-function FragmentCmp({ label, cv, pf }) {
+function FragmentCmp({ label, cv, pf, isLight }) {
   return (
     <>
-      <div className="pf-cmp-label" style={{ fontWeight: 500, color: ON_DARK }}>{label}</div>
-      <div data-label={label} style={{ color: MUTED }}>
+      <div className="pf-cmp-label" style={{ fontWeight: 600, color: isLight ? INK_LIGHT : ON_DARK }}>{label}</div>
+      <div data-label={label} style={{ color: isLight ? TEXT_MUTED_LIGHT : MUTED }}>
         <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 8 }}>
-          <CircleX size={16} style={{ color: 'rgba(255,255,255,0.35)', flex: 'none', marginTop: 2 }} />
+          <CircleX size={16} style={{ color: isLight ? '#94a3b8' : 'rgba(255,255,255,0.35)', flex: 'none', marginTop: 2 }} />
           <span>{cv}</span>
         </span>
       </div>
-      <div data-label={label} style={{ color: ON_DARK }}>
+      <div data-label={label} style={{ color: isLight ? INK_LIGHT : ON_DARK, fontWeight: 500 }}>
         <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 8 }}>
-          <CircleCheck size={16} style={{ color: EMERALD, flex: 'none', marginTop: 2 }} />
+          <CircleCheck size={16} style={{ color: isLight ? EMERALD_DARK : EMERALD, flex: 'none', marginTop: 2 }} />
           <span>{pf}</span>
         </span>
       </div>
