@@ -45,6 +45,7 @@ function ProtectedDashboardRoute() {
   const [session, setSession] = useState(null);
   const [portfolio, setPortfolio] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isBusinessOnly, setIsBusinessOnly] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -72,10 +73,17 @@ function ProtectedDashboardRoute() {
         }
       } catch (err) {
         console.error("Lỗi khi kiểm tra session:", err);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+      }
+
+      try {
+        const roles = await getCurrentRoles();
+        if (isMounted) setIsBusinessOnly(isBusiness(roles) && !isAdmin(roles));
+      } catch (err) {
+        console.error("Lỗi khi đọc vai trò:", err);
+      }
+
+      if (isMounted) {
+        setLoading(false);
       }
     }
 
@@ -122,6 +130,18 @@ function ProtectedDashboardRoute() {
   // User has session. Gate on onboarding: a brand-new account (e.g. first social
   // login) has no portfolio yet, or one with onboardingCompleted=false — both must
   // finish the portfolio first. Only a completed portfolio may reach the dashboard.
+  /* Tài khoản doanh nghiệp / CLB không bao giờ có Portfolio ứng viên, nên
+     điều kiện dưới luôn đúng với họ và đẩy thẳng sang trình dựng Portfolio.
+     Đây chính là chuỗi gây ra lỗi "đăng nhập doanh nghiệp xong lại thấy trang
+     sửa Portfolio của ứng viên":
+       ProtectedBusinessRoute thấy vai trò chưa phải business → đẩy sang
+       /candidates/dashboard → chỗ này thấy không có portfolio → đẩy sang
+       /portfolio → trình dựng không kiểm vai trò nên render luôn.
+     Chặn ở đây, và đã thêm kiểm vai trò ở ProtectedPortfolioRoute. */
+  if (isBusinessOnly) {
+    return <Navigate to="/businesses/dashboard" replace />;
+  }
+
   if (!portfolio || !portfolio.onboardingCompleted) {
     return <Navigate to="/portfolio" replace />;
   }
@@ -132,6 +152,10 @@ function ProtectedDashboardRoute() {
 function ProtectedPortfolioRoute({ isEditing = false }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  /* null = chưa biết. Trình dựng Portfolio trước đây KHÔNG kiểm vai trò: chỉ
+     cần có phiên đăng nhập là vào được, nên tài khoản doanh nghiệp / CLB cũng
+     rơi thẳng vào đây. Xem chuỗi dẫn tới lỗi ở ProtectedDashboardRoute. */
+  const [isBusinessOnly, setIsBusinessOnly] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -150,11 +174,19 @@ function ProtectedPortfolioRoute({ isEditing = false }) {
         }
       } catch (err) {
         console.error("Lỗi khi kiểm tra session:", err);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
       }
+
+      try {
+        const roles = await getCurrentRoles();
+        if (isMounted) setIsBusinessOnly(isBusiness(roles) && !isAdmin(roles));
+      } catch (err) {
+        console.error("Lỗi khi đọc vai trò:", err);
+        // Đọc vai trò hỏng thì KHÔNG chặn: thà cho vào nhầm còn hơn khoá cả
+        // ứng viên hợp lệ ra ngoài vì một lần gọi mạng lỗi.
+        if (isMounted) setIsBusinessOnly(false);
+      }
+
+      if (isMounted) setLoading(false);
     }
 
     checkSession();
@@ -185,6 +217,12 @@ function ProtectedPortfolioRoute({ isEditing = false }) {
   // in-memory-only session from a tab that predates a page reload.
   if (!session && !getStoredToken()) {
     return <Navigate to="/candidate/login" replace />;
+  }
+
+  /* Tài khoản doanh nghiệp / CLB không có Portfolio ứng viên để dựng. Trả họ
+     về đúng khu vực của mình thay vì hiện trình dựng của vai trò khác. */
+  if (isBusinessOnly) {
+    return <Navigate to="/businesses/dashboard" replace />;
   }
 
   return (
