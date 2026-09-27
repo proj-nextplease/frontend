@@ -4,11 +4,12 @@ import {
   ChevronDown, MapPin, Wallet, Clock, Users, Briefcase,
   Heart, List, LayoutGrid, RotateCcw, Building2, Check, Search,
   X, Share2, ArrowRight, Link2, GraduationCap, Zap, ShieldCheck,
-  Star, Award, Sparkles, FolderOpen, ChevronLeft, ChevronRight,
+  Star, Award, Sparkles, FolderOpen, ChevronLeft, ChevronRight, Globe,
 } from 'lucide-react';
 import { NeonBloom } from '../components/NeonBloom.jsx';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
+import { getExternalJobs } from '../api/externalJobApi.js';
 import { loadOpportunities, getCachedOpportunities } from '../api/jobsCache.js';
 import { EmptyStateMascot } from '../components/EmptyStateMascot.jsx';
 import { extractProvince } from '../lib/vnProvince.js';
@@ -142,6 +143,69 @@ function questToJobShape(raw) {
 /** Điểm vào duy nhất: tin tuyển dụng đi thẳng, quest đi qua bước chuyển dạng. */
 function toCard(raw) {
   return normalizeJob(raw.__kind === 'QUEST' ? questToJobShape(raw) : raw);
+}
+
+/**
+ * Tin nguồn ngoài đưa về cùng hình dạng thẻ với tin thật, để nằm chung một
+ * danh sách. Giống cách Quest đã làm: trộn chung nhưng mang theo `kind` để
+ * hành vi khi bấm vào vẫn khác nhau.
+ *
+ * Trộn chung là đúng — người tìm việc nghĩ theo công việc, không nghĩ theo
+ * nguồn dữ liệu. LinkedIn và Indeed cũng để chung một danh sách, chỉ phân biệt
+ * bằng nhãn trên thẻ. Điều bắt buộc là mỗi thẻ phải nói rõ bấm vào đi đâu.
+ */
+function externalToCard(raw) {
+  const location = raw.location || 'Không xác định';
+  return {
+    id: `ext:${raw.id}`,
+    kind: 'EXTERNAL',
+    applyUrl: raw.applyUrl,
+    title: raw.title || 'Chưa đặt tên',
+    company: raw.companyName || 'Nhà tuyển dụng',
+    companyLogo: null,
+    companyType: 'EXTERNAL',
+    isClub: false,
+    orgType: 'EXTERNAL',
+    orgTypeLabel: 'Nguồn ngoài',
+    campus: null,
+    expReward: null, rsReward: null, npReward: null,
+    // Tin ngoài không tạo được bản ghi ứng tuyển nên không cộng Proof. Phải
+    // ghi false để bộ lọc "có Proof" không trả nhầm.
+    givesProof: false,
+    description: raw.excerpt || '',
+    salary: formatExternalSalary(raw),
+    salaryKnown: Boolean(raw.salaryText),
+    location,
+    province: extractProvince(raw.location),
+    locationLabel: location,
+    workForm: 'Không xác định',
+    type: 'Từ thị trường',
+    skills: [],
+    posted: relativeTime(raw.postedAt),
+    postedBucket: postedBucket(raw.postedAt),
+    applicants: null,
+    applicantBucket: null,
+  };
+}
+
+/**
+ * Careerjet trả lương dạng chuỗi tiếng Anh: "₫10000000 - 15000000 per month".
+ * Đặt giữa trang tiếng Việt thì lạc lõng, và số không có dấu phân cách nên
+ * khó đọc. Dựng lại từ salaryMin/Max khi có đủ.
+ */
+function formatExternalSalary(raw) {
+  const type = { Y: 'năm', M: 'tháng', W: 'tuần', D: 'ngày', H: 'giờ' }[raw.salaryType] || null;
+  const toShort = (n) => {
+    const v = Number(n);
+    if (!Number.isFinite(v) || v <= 0) return null;
+    if (v >= 1_000_000) return `${Math.round(v / 100000) / 10} triệu`;
+    return v.toLocaleString('vi-VN');
+  };
+  const lo = toShort(raw.salaryMin);
+  const hi = toShort(raw.salaryMax);
+  if (lo && hi && lo !== hi) return `${lo} - ${hi}${type ? ` / ${type}` : ''}`;
+  if (lo) return `${lo}${type ? ` / ${type}` : ''}`;
+  return raw.salaryText || 'Thoả thuận';
 }
 
 /**
@@ -625,10 +689,19 @@ export function JobsPage() {
   // Load real job postings
   useEffect(() => {
     let alive = true;
-    loadOpportunities({ limit: 60 })
-      .then((data) => {
+    /* Gọi song song, KHÔNG để tin ngoài chặn tin thật: Careerjet là bên thứ
+       ba, chậm hay hỏng thì danh sách chính vẫn phải hiện đúng hạn. */
+    Promise.all([
+      loadOpportunities({ limit: 60 }),
+      getExternalJobs({ limit: 40 }).catch(() => []),
+    ])
+      .then(([own, external]) => {
         if (!alive) return;
-        setJobs(Array.isArray(data) ? data.map(toCard) : []);
+        const mine = Array.isArray(own) ? own.map(toCard) : [];
+        const ext = Array.isArray(external) ? external.map(externalToCard) : [];
+        // Tin thật lên trước: đó mới là sản phẩm của nextplease, tin ngoài chỉ
+        // là phần mở rộng.
+        setJobs([...mine, ...ext]);
       })
       .catch(() => {
         if (alive) {
@@ -669,12 +742,17 @@ export function JobsPage() {
     return map;
   }, [jobs]);
 
-  const bizCount = useMemo(() => jobs.filter((j) => !j.isClub).length, [jobs]);
+  /* Tin ngoài không thuộc doanh nghiệp lẫn CLB. Không loại nó ra thì nó bị
+     đếm nhầm vào "Doanh nghiệp tuyển dụng" — vốn chỉ dành cho đối tác thật
+     đã qua duyệt của nextplease. */
+  const bizCount = useMemo(() => jobs.filter((j) => !j.isClub && j.kind !== 'EXTERNAL').length, [jobs]);
   const clubCount = useMemo(() => jobs.filter((j) => j.isClub).length, [jobs]);
+  const extCount = useMemo(() => jobs.filter((j) => j.kind === 'EXTERNAL').length, [jobs]);
 
   const filtered = useMemo(() => jobs.filter((job) => {
-    if (activeOrgTab === 'BUSINESS' && job.isClub) return false;
+    if (activeOrgTab === 'BUSINESS' && (job.isClub || job.kind === 'EXTERNAL')) return false;
     if (activeOrgTab === 'CLUB' && !job.isClub) return false;
+    if (activeOrgTab === 'EXTERNAL' && job.kind !== 'EXTERNAL') return false;
 
     const haystack = `${job.title} ${job.company} ${job.location} ${job.type} ${job.skills.join(' ')}`.toLowerCase();
     if (query && !haystack.includes(query.toLowerCase())) return false;
@@ -743,7 +821,16 @@ export function JobsPage() {
     }, { replace: true });
   }
 
-  function openJob(id) { setClosing(false); setSelectedId(id); setPreviewParam(id); }
+  function openJob(id) {
+    /* Tin ngoài không có trang chi tiết trong hệ thống — mở thẳng trang gốc.
+       Nếu vẫn mở panel thì panel sẽ trống vì không gọi được /jobs/{id}. */
+    const job = jobs.find((j) => j.id === id);
+    if (job?.kind === 'EXTERNAL') {
+      window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    setClosing(false); setSelectedId(id); setPreviewParam(id);
+  }
   function closeDetail() {
     setClosing(true);
     window.setTimeout(() => { setSelectedId(null); setClosing(false); setPreviewParam(null); }, 230);
@@ -909,6 +996,7 @@ export function JobsPage() {
         .jb-card:hover::before { opacity: 1; }
         .jb-card:hover::after { opacity: 1; }
         .jb-card:active { transform: scale(0.99); }
+        .jb-org-pill.ext { border-color: rgba(185,255,0,0.4); color: ${EMERALD}; background: rgba(185,255,0,0.08); }
         .jb-card.selected { border-color: ${EMERALD}; background-color: rgba(16,185,129,0.08); transform: none; }
         .jb-card.is-club::before { background: linear-gradient(90deg, transparent, rgba(16,185,129,0.6), transparent); opacity: 0.8; }
 
@@ -1091,11 +1179,22 @@ export function JobsPage() {
           >
             <GraduationCap size={16} /> CLB & Đoàn hội <span className="jb-org-count">{clubCount}</span>
           </button>
+          {extCount > 0 && (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeOrgTab === 'EXTERNAL'}
+              className={`jb-org-tab${activeOrgTab === 'EXTERNAL' ? ' active' : ''}`}
+              onClick={() => setActiveOrgTab('EXTERNAL')}
+            >
+              <Globe size={16} /> Từ thị trường <span className="jb-org-count">{extCount}</span>
+            </button>
+          )}
         </div>
 
         <div className="jb-listhead" ref={listTopRef}>
           <h1>
-            Đang hiển thị <b>{filtered.length}</b> {activeOrgTab === 'CLUB' ? 'hoạt động / Quest CLB' : activeOrgTab === 'BUSINESS' ? 'việc làm từ doanh nghiệp' : 'cơ hội việc làm & CLB'}
+            Đang hiển thị <b>{filtered.length}</b> {activeOrgTab === 'CLUB' ? 'hoạt động / Quest CLB' : activeOrgTab === 'BUSINESS' ? 'việc làm từ doanh nghiệp' : activeOrgTab === 'EXTERNAL' ? 'tin tổng hợp từ thị trường' : 'cơ hội việc làm & CLB'}
           </h1>
           {!selectedJob && (
             <div className="jb-viewtoggle" role="group" aria-label="Kiểu hiển thị">
@@ -1118,19 +1217,26 @@ export function JobsPage() {
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openJob(job.id); } }}
                 >
-                  <button
+                  {job.kind !== 'EXTERNAL' && <button
                     type="button"
                     className={`jb-save${saved.has(String(job.id)) ? ' on' : ''}`}
                     aria-label={saved.has(String(job.id)) ? 'Bỏ lưu' : 'Lưu cơ hội'}
                     onClick={(e) => { e.stopPropagation(); handleToggleSave(job.id); }}
                   >
                     <Heart size={20} fill={saved.has(String(job.id)) ? '#ef5da8' : 'none'} />
-                  </button>
+                  </button>}
                   <div className="jb-card-top">
                     <JobLogo job={job} index={i} />
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                        {job.isClub ? (
+                        {job.kind === 'EXTERNAL' ? (
+                          /* Nhãn này là thứ DUY NHẤT cho người dùng biết bấm
+                             vào sẽ rời khỏi nextplease. Trộn chung danh sách mà
+                             thiếu nó thì họ sẽ bất ngờ khi bị mở tab mới. */
+                          <span className="jb-org-pill ext">
+                            <Globe size={12} /> Nộp tại trang ngoài
+                          </span>
+                        ) : job.isClub ? (
                           <span className="jb-org-pill club">
                             <GraduationCap size={12} /> CLB Sinh Viên {job.campus ? `· ${job.campus}` : ''}
                           </span>
