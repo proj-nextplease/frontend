@@ -7,6 +7,7 @@ import { setRemember, setStoredToken, rememberLastEmail, getLastEmail } from '..
 import { consumeReturnTo, peekReturnTo } from '../lib/returnTo.js';
 import { openOnboardingTabEarly, sendTabToBuilder, discardOnboardingTab } from '../lib/onboardingTab.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
+import { INK, SURFACE, EMERALD, EMERALD_BRIGHT, ON_DARK, LINE, NEON_RGB } from '../styles/neonPalette.js';
 
 export function LoginModal({ isOpen, role = 'candidate', onClose }) {
   const navigate = useNavigate();
@@ -199,9 +200,11 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
           width: 100%;
           max-width: 880px;
           min-height: 520px;
-          background: #ffffff;
+          background: ${SURFACE};
+          border: 1px solid ${LINE};
           border-radius: 40px;
-          box-shadow: 0 25px 60px -15px rgba(2, 44, 40, 0.4);
+          box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+          color: ${ON_DARK};
           display: flex;
           padding: 16px;
           gap: 24px;
@@ -221,9 +224,9 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
           width: 40px;
           height: 40px;
           border-radius: 50%;
-          background: #f0fdf4;
-          border: 1px solid #dcfce7;
-          color: #0f766e;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid ${LINE};
+          color: ${ON_DARK};
           display: flex;
           align-items: center;
           justify-content: center;
@@ -232,8 +235,8 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
           z-index: 10;
         }
         .np-auth-close-btn:hover {
-          background: #ccfbf1;
-          color: #042f2e;
+          background: rgba(${NEON_RGB}, 0.18);
+          color: ${EMERALD};
           transform: rotate(90deg);
         }
 
@@ -241,13 +244,13 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
         .np-auth-left-cover {
           display: none;
           width: 48%;
-          background: #042f2e;
+          background: ${INK};
           border-radius: 30px;
           position: relative;
           overflow: hidden;
           padding: 0;
           box-sizing: border-box;
-          border: 1px solid rgba(94, 234, 212, 0.22);
+          border: 1px solid rgba(${NEON_RGB}, 0.18);
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
         @media (min-width: 820px) {
@@ -282,34 +285,34 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
           left: 16px;
           top: 50%;
           transform: translateY(-50%);
-          color: #5b7772;
+          color: rgba(255,255,255,0.45);
           pointer-events: none;
           display: flex;
         }
         .np-auth-input {
           width: 100%;
           height: 52px;
-          background: #f8fafc;
-          border: 1.5px solid #e2efe9;
+          background: rgba(255,255,255,0.04);
+          border: 1.5px solid ${LINE};
           border-radius: 16px;
           padding: 0 16px 0 48px;
           font-size: 0.98rem;
-          color: #0f2e2b;
+          color: ${ON_DARK};
           outline: none;
           transition: all 0.2s ease;
           box-sizing: border-box;
           font-family: inherit;
         }
         .np-auth-input:focus {
-          background: #ffffff;
-          border-color: #0d9488;
-          box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.14);
+          background: rgba(255,255,255,0.06);
+          border-color: rgba(${NEON_RGB}, 0.6);
+          box-shadow: 0 0 0 4px rgba(${NEON_RGB}, 0.14);
         }
 
         .np-auth-social-btn {
           height: 48px;
-          background: #ffffff;
-          border: 1.5px solid #e2efe9;
+          background: rgba(255,255,255,0.04);
+          border: 1.5px solid ${LINE};
           border-radius: 14px;
           display: flex;
           align-items: center;
@@ -317,23 +320,23 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
           gap: 8px;
           font-size: 0.92rem;
           font-weight: 700;
-          color: #0f2e2b;
+          color: ${ON_DARK};
           cursor: pointer;
           transition: all 0.2s ease;
           font-family: inherit;
         }
         .np-auth-social-btn:hover {
-          background: #f0fdf4;
-          border-color: #a7f3d0;
+          background: rgba(255,255,255,0.08);
+          border-color: rgba(${NEON_RGB}, 0.4);
           transform: translateY(-1px);
-          box-shadow: 0 4px 10px rgba(13, 148, 136, 0.08);
+          box-shadow: none;
         }
 
         .np-auth-submit-btn {
           width: 100%;
           height: 52px;
-          background: linear-gradient(135deg, #10b981 0%, #0d9488 50%, #0f766e 100%);
-          color: #ffffff;
+          background: ${EMERALD};
+          color: ${INK};
           border: none;
           border-radius: 16px;
           font-size: 1.05rem;
@@ -379,16 +382,16 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
         {/* ── Right Column: Form Panel ── */}
         <div className="np-auth-right-content">
           <div style={{ marginBottom: '20px' }}>
-            <h2 style={{ margin: '0 0 6px', fontSize: '1.65rem', fontWeight: 800, color: '#0f2e2b', letterSpacing: '-0.02em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <h2 style={{ margin: '0 0 6px', fontSize: '1.65rem', fontWeight: 800, color: ON_DARK, letterSpacing: '-0.02em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               Nhập email để tiếp tục
             </h2>
-            <p style={{ margin: 0, fontSize: '0.92rem', color: '#5b7772', lineHeight: 1.5 }}>
+            <p style={{ margin: 0, fontSize: '0.92rem', color: 'rgba(255,255,255,0.62)', lineHeight: 1.5 }}>
               Đăng nhập hoặc xác thực tài khoản nextplease để tiếp tục.
             </p>
           </div>
 
           {errorMsg && (
-            <div style={{ padding: '10px 14px', borderRadius: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: '0.88rem', fontWeight: 600, marginBottom: '14px', lineHeight: 1.4 }}>
+            <div style={{ padding: '10px 14px', borderRadius: '12px', background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.35)', color: '#fca5a5', fontSize: '0.88rem', fontWeight: 600, marginBottom: '14px', lineHeight: 1.4 }}>
               {errorMsg}
             </div>
           )}
@@ -427,7 +430,7 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#5b7772', cursor: 'pointer', display: 'flex', padding: 0 }}
+                style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex', padding: 0 }}
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -436,19 +439,19 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
 
             {/* Forgot password & Remember checkbox */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '4px 0 16px', fontSize: '0.85rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#5b7772', cursor: 'pointer', userSelect: 'none' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.62)', cursor: 'pointer', userSelect: 'none' }}>
                 <input
                   type="checkbox"
                   checked={keepSignedIn}
                   onChange={(e) => setKeepSignedIn(e.target.checked)}
-                  style={{ accentColor: '#0d9488', cursor: 'pointer' }}
+                  style={{ accentColor: EMERALD, cursor: 'pointer' }}
                 />
                 Ghi nhớ đăng nhập
               </label>
               <Link
                 to="/candidate/forgot-password"
                 onClick={onClose}
-                style={{ color: '#0d9488', fontWeight: 700, textDecoration: 'none' }}
+                style={{ color: EMERALD, fontWeight: 700, textDecoration: 'none' }}
               >
                 Quên mật khẩu?
               </Link>
@@ -471,9 +474,9 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
 
             {/* Divider */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '18px 0 14px' }}>
-              <div style={{ flex: 1, height: '1px', background: '#e2efe9' }} />
-              <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#5b7772' }}>Hoặc tiếp tục với</span>
-              <div style={{ flex: 1, height: '1px', background: '#e2efe9' }} />
+              <div style={{ flex: 1, height: '1px', background: LINE }} />
+              <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'rgba(255,255,255,0.55)' }}>Hoặc tiếp tục với</span>
+              <div style={{ flex: 1, height: '1px', background: LINE }} />
             </div>
 
             {/* Social Login 3-Column Grid (Google, Facebook, GitHub) */}
@@ -517,7 +520,7 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
                 disabled={loading}
                 title="Tiếp tục với GitHub"
               >
-                <svg width="20" height="20" viewBox="0 0 16 16" fill="#0f2e2b">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill={ON_DARK}>
                   <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82a7.48 7.48 0 0 0-4 0c-1.53-1.04-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.35 3.12.9.01.64.01 1.11.01 1.25 0 .21-.15.47-.55.38A8.014 8.014 0 0 1 0 8c0-4.42 3.58-8 8-8z" />
                 </svg>
                 <span>GitHub</span>

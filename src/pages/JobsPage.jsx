@@ -6,7 +6,7 @@ import {
   X, Share2, ArrowRight, Link2, GraduationCap, Zap, ShieldCheck,
   Star, Award, Sparkles, FolderOpen, ChevronLeft, ChevronRight,
 } from 'lucide-react';
-import { HeroMesh } from '../components/HeroMesh.jsx';
+import { NeonBloom } from '../components/NeonBloom.jsx';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { loadOpportunities, getCachedOpportunities } from '../api/jobsCache.js';
@@ -18,14 +18,7 @@ import { useSavedJobs } from '../lib/savedJobs.js';
 
 /* ── Hệ màu nền tối, dùng chung với trang chủ (xem DESIGN.md) ──
    Cả trang là một nền tối liền mạch; emerald là màu tương tác duy nhất. */
-const INK = '#0b0f0e';          // nền trang
-const SURFACE = '#121817';      // bề mặt nổi: panel chi tiết, menu, ô trống
-const EMERALD = '#10b981';
-const TEAL = '#0d9488';
-const ON_DARK = '#ffffff';
-const MUTED = 'rgba(233,247,242,0.62)';
-const LINE = 'rgba(255,255,255,0.1)';
-const LINE_STRONG = 'rgba(255,255,255,0.2)';
+import { INK, SURFACE, EMERALD, TEAL, ON_DARK, MUTED, LINE, LINE_STRONG } from '../styles/neonPalette.js';
 
 /* Nền ô logo khi doanh nghiệp chưa tải ảnh lên — sắc độ mờ trên nền tối thay
    cho dải pastel cũ (pastel sáng trên nền tối thành sáu đốm chói). */
@@ -787,7 +780,7 @@ export function JobsPage() {
   }
 
   return (
-    <div style={{ background: INK, color: ON_DARK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', position: 'relative', overflowX: 'clip', fontFamily: "'Be Vietnam Pro', 'Inter', sans-serif" }}>
+    <div className="np-neon" style={{ background: INK, color: ON_DARK, width: '100vw', marginLeft: 'calc(50% - 50vw)', marginTop: '-34px', minHeight: '100vh', position: 'relative', overflowX: 'clip', fontFamily: "'Be Vietnam Pro', 'Inter', sans-serif" }}>
       <style>{`
         .jb-inner { position: relative; z-index: 1; width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
 
@@ -804,22 +797,24 @@ export function JobsPage() {
         .jb-search {
           position: relative; display: flex; align-items: center;
           height: 56px; width: 100%;
-          background: #fff; border-radius: 14px;
+          background: ${SURFACE}; border: 1px solid ${LINE}; border-radius: 999px;
+          transition: border-color 200ms ease;
         }
-        .jb-search-icon { position: absolute; left: 18px; color: #252630; pointer-events: none; }
+        .jb-search:focus-within { border-color: rgba(185,255,0,0.55); }
+        .jb-search-icon { position: absolute; left: 18px; color: rgba(255,255,255,0.45); pointer-events: none; }
         .jb-search input {
           box-sizing: border-box; width: 100%; height: 100%;
           border: 0; outline: 0; border-radius: 14px; background: transparent;
           padding: 0 52px 0 52px;
-          font: inherit; font-size: 1rem; letter-spacing: -0.015em; color: #252630;
+          font: inherit; font-size: 1rem; letter-spacing: -0.015em; color: ${ON_DARK};
         }
-        .jb-search input::placeholder { color: #8d9a97; }
+        .jb-search input::placeholder { color: rgba(255,255,255,0.38); }
         .jb-search-clear {
           position: absolute; right: 14px; display: inline-flex; align-items: center; justify-content: center;
           width: 34px; height: 34px; border: 0; border-radius: 9999px; cursor: pointer;
-          background: rgba(37,38,48,0.08); color: #252630; transition: background-color 150ms ease;
+          background: rgba(255,255,255,0.08); color: ${ON_DARK}; transition: background-color 150ms ease;
         }
-        .jb-search-clear:hover { background: rgba(37,38,48,0.18); }
+        .jb-search-clear:hover { background: rgba(255,255,255,0.16); }
 
         /* Đây mới là thứ cần bám khi cuộn: lọc xong mà phải cuộn ngược lên đầu
            trang để đổi bộ lọc thì vô dụng. Thanh điều hướng thì trôi đi
@@ -1018,9 +1013,10 @@ export function JobsPage() {
           bị bóp dẹt và vignette tắt ngay, nên màu không kịp loang. Cho nó cao
           900px và đè xuống qua thanh lọc thì mới ra được vệt loang như trang
           chủ. */}
-      <div className="jb-bg" aria-hidden="true">
-        <HeroMesh veil="radial-gradient(100% 92% at 50% 22%, rgba(11,15,14,0) 0%, #0b0f0e 100%)" />
-      </div>
+      {/* Tấm mesh xanh ngọc cũ kéo nền về màu xanh, mà lime trên xanh thì đục.
+          Thay bằng lớp vệt loang dùng chung với trang chủ: nền phẳng gần đen,
+          quầng lime trôi lệch pha. */}
+      <NeonBloom />
 
       <section className="jb-hero">
         <div className="jb-hero-inner">

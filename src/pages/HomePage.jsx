@@ -6,6 +6,7 @@ import { PartnerLogos } from '../components/PartnerLogos.jsx';
 import { loadJobs } from '../api/jobsCache.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
+import { NeonBloom } from '../components/NeonBloom.jsx';
 
 /* ──────────────────────────────────────────────────────────────────────────
    Trang chủ nextplease — Hiệu ứng cuộn chuột đổi nền động (Dynamic Scroll Theme)
@@ -19,10 +20,16 @@ import { SiteFooter } from '../components/layout/SiteFooter.jsx';
    - Khi cuộn ngược lên đỉnh trang: Tự động chuyển ngược lại nền tối.
    ────────────────────────────────────────────────────────────────────────── */
 
-const INK = '#0b0f0e';          // nền tối khi ở đỉnh
-const EMERALD = '#10b981';      // màu nhấn chính
-const EMERALD_BRIGHT = '#34d399'; // màu nhấn sáng khi rê chuột
-const EMERALD_DARK = '#059669';   // màu nhấn đậm trên nền sáng
+/* Bảng màu lấy từ module dùng chung — xem src/styles/neonPalette.js. Trước
+   đây mỗi trang tự khai một bộ hằng số giống hệt nhau, đổi tông là phải sửa
+   bốn chỗ và đã từng sót (footer giữ #0b0f0e cũ trong khi trang đã sang
+   #070a0f, tạo một đường cắt ngang giữa màn hình). */
+import {
+  INK, SURFACE, SURFACE_HI, HAIRLINE,
+  EMERALD, EMERALD_BRIGHT, EMERALD_DARK, NEON_RGB,
+  TEAL_ACCENT, GLOW_SM, GLOW_MD, GLOW_LG,
+} from '../styles/neonPalette.js';
+
 const ON_DARK = '#ffffff';
 const MUTED_DARK = 'rgba(233,247,242,0.62)';
 const LINE_DARK = 'rgba(255,255,255,0.12)';
@@ -32,6 +39,8 @@ const SNOW = '#ffffff';
 const INK_LIGHT = '#0f2e2b';        // tiêu đề chính trên nền sáng
 const TEXT_MUTED_LIGHT = '#475569'; // chữ phụ trên nền sáng
 const LINE_LIGHT = '#e2efe9';       // viền thẻ trên nền sáng
+
+const SCROLL_TO_LIGHT = false;
 
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 
@@ -218,7 +227,9 @@ export function HomePage() {
   const [query, setQuery] = useState('');
   const [jobs, setJobs] = useState(null);
   
-  /* Trạng thái đổi nền khi cuộn chuột: Mặc định false (nền tối), khi lướt xuống chuyển thành true (nền trắng) */
+  /* Ảnh mẫu tối từ đầu tới cuối. Giữ đoạn chuyển sang nền trắng thì nửa dưới
+     trang rơi lại tông cũ và lime mất chỗ tương phản. Tắt bằng cờ dưới đây —
+     đổi lại thành true là khôi phục nguyên hành vi cũ, không mất code nào. */
   const [isLight, setIsLight] = useState(false);
   const scrollTriggerRef = useRef(null);
 
@@ -226,7 +237,7 @@ export function HomePage() {
   useEffect(() => {
     const handleScroll = () => {
       // Khi cuộn qua ngưỡng ~420px (hoặc khi vị trí trigger tới gần nửa màn hình), kích hoạt đổi sang nền trắng
-      if (window.scrollY > 420) {
+      if (SCROLL_TO_LIGHT && window.scrollY > 420) {
         setIsLight(true);
       } else {
         setIsLight(false);
@@ -298,7 +309,8 @@ export function HomePage() {
   }
 
   return (
-    <div className={`np-home ${isLight ? 'is-light' : ''}`}>
+    <div className={`np-home np-neon ${isLight ? 'is-light' : ''}`}>
+      <NeonBloom />
       <style>{`
         /* ── ROOT CONTAINER: Mặc định nền tối, khi cuộn (is-light) chuyển sang nền trắng mượt mà ── */
         .np-home {
@@ -446,11 +458,11 @@ export function HomePage() {
         }
         .np-jobcard::after {
           content: ''; position: absolute; right: -40%; bottom: -60%; width: 90%; height: 150%;
-          background: radial-gradient(closest-side, rgba(16,185,129,0.22), rgba(16,185,129,0) 70%);
+          background: radial-gradient(closest-side, rgba(${NEON_RGB},0.22), rgba(${NEON_RGB},0) 70%);
           opacity: 0; transition: opacity 320ms ease; pointer-events: none;
         }
         .np-jobcard:hover {
-          border-color: rgba(16,185,129,0.55); background-color: rgba(255,255,255,0.05);
+          border-color: rgba(${NEON_RGB},0.55); background-color: rgba(255,255,255,0.05);
           transform: translateY(-4px);
         }
         .np-jobcard:hover::before { opacity: 1; }
@@ -463,7 +475,7 @@ export function HomePage() {
           font-size: 2.6rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em;
           color: rgba(255,255,255,0.07); transition: color 320ms ease;
         }
-        .np-jobcard:hover .np-jobcard-index { color: rgba(16,185,129,0.22); }
+        .np-jobcard:hover .np-jobcard-index { color: rgba(${NEON_RGB},0.22); }
 
         .np-jobcard-type {
           display: inline-block; margin-bottom: 18px; padding: 5px 11px;
@@ -472,7 +484,7 @@ export function HomePage() {
           color: rgba(255,255,255,0.82); white-space: nowrap;
           transition: border-color 260ms ease, color 260ms ease;
         }
-        .np-jobcard:hover .np-jobcard-type { border-color: rgba(16,185,129,0.5); color: ${EMERALD}; }
+        .np-jobcard:hover .np-jobcard-type { border-color: rgba(${NEON_RGB},0.5); color: ${EMERALD}; }
 
         .np-jobcard-title {
           margin: 0; font-size: 1.25rem; line-height: 1.35; letter-spacing: -0.3px; font-weight: 400;
@@ -521,14 +533,14 @@ export function HomePage() {
         .np-feature-media {
           flex: none; width: 688px; max-width: 100%; height: 388px; border-radius: 32px; overflow: hidden;
           background:
-            radial-gradient(120% 120% at 18% 12%, rgba(103,232,249,0.34) 0%, rgba(16,185,129,0.1) 46%, rgba(0,0,0,0) 72%),
+            radial-gradient(120% 120% at 18% 12%, rgba(103,232,249,0.34) 0%, rgba(${NEON_RGB},0.1) 46%, rgba(0,0,0,0) 72%),
             linear-gradient(152deg, #14211f 0%, #0d1614 100%);
           border: 1px solid ${LINE_DARK};
           transition: background 700ms ease, border-color 600ms ease, box-shadow 600ms ease;
         }
         .np-home.is-light .np-feature-media {
           background:
-            radial-gradient(120% 120% at 18% 12%, rgba(16,185,129,0.16) 0%, rgba(240,253,249,0.85) 46%, #ffffff 100%),
+            radial-gradient(120% 120% at 18% 12%, rgba(${NEON_RGB},0.16) 0%, rgba(240,253,249,0.85) 46%, #ffffff 100%),
             #ffffff;
           border: 1.5px solid ${LINE_LIGHT};
           box-shadow: 0 20px 40px -15px rgba(15, 46, 43, 0.06);
@@ -623,7 +635,7 @@ export function HomePage() {
         .np-home.is-light .np-quote:hover {
           transform: translateY(-4px);
           border-color: ${EMERALD};
-          box-shadow: 0 20px 40px rgba(16, 185, 129, 0.1);
+          box-shadow: 0 20px 40px rgba(${NEON_RGB}, 0.1);
         }
         .np-quote p { font-family: inherit; margin: 0 0 24px; font-size: 1.05rem; line-height: 1.55; letter-spacing: -0.015em; font-weight: 500; }
         .np-quote figcaption { margin-top: auto; }
@@ -632,6 +644,193 @@ export function HomePage() {
 
         .np-quote .np-quote-role { font-size: 0.88rem; color: ${MUTED_DARK}; margin-top: 4px; transition: color 600ms ease; }
         .np-home.is-light .np-quote .np-quote-role { color: ${TEXT_MUTED_LIGHT}; }
+
+        /* ── LỚP NEON ───────────────────────────────────────────────────────
+           Đặt cuối khối style để đè lên các quy tắc phía trên. Mọi selector ở
+           đây đều nằm dưới .np-home (nền tối); phần .is-light bên dưới tắt hết
+           glow vì trên nền trắng quầng sáng chỉ thành vệt bẩn. */
+
+        /* Chữ trắng để phẳng như ảnh mẫu. Chỉ phần chữ mang màu lime mới
+           có chút quầng — và cũng rất mỏng. */
+        .np-display span { text-shadow: ${GLOW_MD}; }
+
+        /* Nút chính: khối neon có quầng, rê chuột thì sáng bùng lên */
+        .np-btn-primary {
+          box-shadow: ${GLOW_MD};
+          transition: box-shadow 240ms ease, background-color 240ms ease, transform 240ms ease;
+        }
+        .np-btn-primary:hover {
+          background: ${EMERALD_BRIGHT};
+          box-shadow: ${GLOW_LG};
+          transform: translateY(-1px);
+        }
+        .np-btn-ghost:hover { box-shadow: ${GLOW_SM}; }
+
+        /* Thẻ việc làm: viền sáng khi rê chuột */
+        .np-jobcard:hover { box-shadow: ${GLOW_MD}; }
+        .np-jobcard:hover .np-jobcard-title { text-shadow: ${GLOW_SM}; }
+        .np-jobcard-pay.is-known { text-shadow: ${GLOW_SM}; }
+
+        /* Nhãn bước, số liệu */
+        .np-step-label { text-shadow: ${GLOW_SM}; }
+
+        /* Ô tìm kiếm: nhấn vào là phát sáng */
+        .np-search:focus-within { box-shadow: ${GLOW_MD}; border-radius: 24px; }
+        .np-home :focus-visible { box-shadow: ${GLOW_SM}; }
+
+        /* Nền tối trở nên hơi ngả xanh thay vì đen trung tính */
+        .np-home { background-image: radial-gradient(120% 80% at 50% 0%, rgba(${NEON_RGB}, 0.07), transparent 60%); }
+
+        /* Nền trắng: tắt sạch glow, trả màu nhấn về bản đậm đọc được */
+        .np-home.is-light .np-display span,
+        .np-home.is-light .np-jobcard-title,
+        .np-home.is-light .np-jobcard-pay.is-known,
+        .np-home.is-light .np-step-label { text-shadow: none; }
+        .np-home.is-light .np-btn-primary,
+        .np-home.is-light .np-btn-primary:hover,
+        .np-home.is-light .np-jobcard:hover,
+        .np-home.is-light .np-search:focus-within { box-shadow: none; }
+        .np-home.is-light { background-image: none; }
+        .np-home.is-light .np-btn-primary { background: ${EMERALD_DARK}; color: #ffffff; }
+        .np-home.is-light .np-jobcard-pay.is-known { color: ${EMERALD_DARK}; }
+
+        /* .np-darkbox: khối CTA luôn có nền tối riêng, không đi theo nền trang.
+           Vì vậy nó phải giữ neon cả khi trang đã chuyển sang nền trắng —
+           nếu không, nút sẽ thành xanh đậm nằm trên nền đen, trông như bị tắt. */
+        .np-home.is-light .np-darkbox .np-btn-primary {
+          background: ${EMERALD};
+          color: ${INK};
+          box-shadow: ${GLOW_MD};
+        }
+        .np-home.is-light .np-darkbox .np-btn-primary:hover {
+          background: ${EMERALD_BRIGHT};
+          box-shadow: ${GLOW_LG};
+        }
+
+        /* ══ DỰNG LẠI KHỐI THEO ẢNH MẪU ═════════════════════════════════════
+           Ảnh mẫu: nền phẳng gần đen, thẻ nền ĐẶC hơi sáng hơn nền một bậc,
+           viền hairline, bo tròn lớn, nút hình viên thuốc màu lime đặc chữ
+           đen, và ĐÚNG MỘT thẻ được tô lime để tạo nhịp. */
+
+        /* Nền phẳng hoàn toàn */
+        .np-home { background-image: none; background-color: ${INK}; }
+
+        /* Ô tìm việc: từ khối trắng lớn sang khối tối viền mảnh */
+        .np-search input {
+          background: ${SURFACE};
+          color: ${ON_DARK};
+          border: 1px solid ${HAIRLINE};
+          border-radius: 20px;
+        }
+        .np-search input:focus { border-color: rgba(${NEON_RGB}, 0.55); }
+        .np-search-overlay { color: ${ON_DARK}; }
+        .np-search-hint { color: rgba(255,255,255,0.34); }
+        .np-search-icon { color: rgba(255,255,255,0.45); }
+        .np-search button {
+          background: ${EMERALD}; color: ${INK};
+          width: 52px; height: 52px; border-radius: 999px;
+        }
+        .np-search button:hover { background: ${EMERALD_BRIGHT}; }
+        .np-search:focus-within { box-shadow: none; }
+
+        /* Chip: viên thuốc tối, rê chuột thì tô đặc lime */
+        .np-chip {
+          border-radius: 999px; padding: 12px 22px;
+          border-color: ${HAIRLINE}; background: ${SURFACE};
+          font-size: 0.95rem;
+          transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+        }
+        .np-chip:hover { background: ${EMERALD}; color: ${INK}; border-color: ${EMERALD}; }
+
+        /* Thẻ việc làm: nền đặc, bo lớn, bỏ vệt sáng viền trên */
+        .np-jobcard {
+          background: ${SURFACE};
+          border-color: ${HAIRLINE};
+          border-radius: 24px;
+        }
+        .np-jobcard::before { display: none; }
+        .np-jobcard:hover {
+          background-color: ${SURFACE_HI};
+          border-color: rgba(${NEON_RGB}, 0.45);
+          box-shadow: none;
+        }
+        .np-jobcard-type { border-radius: 999px; }
+
+        /* Nút: hình viên thuốc như ảnh mẫu */
+        .np-btn-primary, .np-btn-ghost { border-radius: 999px; }
+        .np-btn-primary { box-shadow: none; }
+        .np-btn-primary:hover { box-shadow: ${GLOW_MD}; }
+        .np-btn-ghost { border-color: ${HAIRLINE}; }
+        .np-btn-ghost:hover { border-color: ${EMERALD}; box-shadow: none; }
+
+        /* Khối minh hoạ "Ba bước": bỏ quầng cyan, về bề mặt đặc như thẻ khác.
+           Cyan là tàn dư của bảng màu emerald cũ, đặt cạnh lime thì đục. */
+        .np-feature-media {
+          background: ${SURFACE};
+          border-color: ${HAIRLINE};
+          border-radius: 28px;
+        }
+
+        /* Trích dẫn cũng đưa về cùng một bề mặt */
+        .np-quote { background: ${SURFACE}; border-color: ${HAIRLINE}; border-radius: 24px; }
+        .np-quote:hover { border-color: rgba(${NEON_RGB}, 0.45); }
+
+        /* Thẻ nhỏ trong khối bước */
+        .np-step-tags span { border-radius: 999px; border-color: ${HAIRLINE}; }
+
+        /* Nội dung phải nằm trên lớp vệt.
+
+           PHẢI loại trừ .nph-shell. Thanh header là position: fixed, mà luật
+           này có độ ưu tiên cao hơn (.np-home > *:not(...) = 2 class, còn
+           .nph-shell = 1 class) nên nó ghi đè thành position: relative —
+           header hết bám mép trên và trôi mất khi cuộn xuống. Nó chỉ cần
+           z-index chứ không cần đổi position. */
+        /* Liệt kê thẳng các khối nội dung, KHÔNG dùng kiểu loại trừ
+           Kiểu loại trừ đó đã gây lỗi thật ở khu vực ứng viên: nó đè
+           position: fixed của các overlay modal render ở cuối cây, làm modal
+           rơi xuống đáy trang thay vì phủ giữa màn hình. Danh sách loại trừ
+           luôn thiếu thứ chưa nghĩ ra; danh sách cho phép thì không. */
+        .np-home > section,
+        .np-home > footer,
+        .np-home > div:not(.np-bloom):not(.nph-shell) { position: relative; z-index: 1; }
+        .np-home > .nph-shell { z-index: 60; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .np-bloom span { animation: none !important; }
+        }
+
+        /* ══ KHOẢNG TRỐNG ══════════════════════════════════════════════════
+           Nhịp nghỉ cũ được canh cho nền TRẮNG. Trên nền đen, khoảng trống
+           lớn không còn đọc là "thoáng" mà thành lỗ hổng. Thu lại. */
+        .np-features { gap: clamp(56px, 6vw, 104px); margin-top: 56px; }
+
+        /* ══ KHỐI "BA BƯỚC" SANG TÔNG NEON ══════════════════════════════════
+           Trước đó khối này chỉ là mặt phẳng xám: số mờ xám, chữ trắng, thẻ
+           viền trắng — không có gì thuộc bảng neon ngoài mỗi nhãn "BƯỚC 01".
+           Đưa toàn bộ chi tiết bên trong về lime, và thêm một quầng lime chéo
+           góc để lấp mảng rỗng giữa khối. */
+        .np-feature-media {
+          position: relative;
+          border-color: rgba(${NEON_RGB}, 0.16);
+          background:
+            radial-gradient(90% 80% at 88% 8%, rgba(${NEON_RGB}, 0.13), transparent 62%),
+            radial-gradient(70% 70% at 4% 96%, rgba(${NEON_RGB}, 0.07), transparent 66%),
+            ${SURFACE};
+        }
+        /* Số chìm: từ xám sang lime mờ */
+        .np-step-ghost { color: rgba(${NEON_RGB}, 0.09); }
+        /* Từ khoá lớn: lime có quầng, đây là điểm nhìn chính của khối */
+        .np-step-keyword { color: ${EMERALD}; text-shadow: ${GLOW_MD}; }
+        /* Thẻ nhỏ: viền và chữ lime thay vì trắng */
+        .np-step-tags span {
+          border-color: rgba(${NEON_RGB}, 0.32);
+          background: rgba(${NEON_RGB}, 0.06);
+          color: rgba(${NEON_RGB}, 0.85);
+        }
+        /* Nhãn bước: thêm chấm lime đặc phía trước cho đồng bộ với eyebrow */
+        .np-step-label { text-shadow: ${GLOW_SM}; }
+
+
       `}</style>
 
       {/* 0. HEADER — chế độ overlay: trong suốt + chữ trắng khi ở đỉnh hero,
@@ -642,11 +841,12 @@ export function HomePage() {
           1. HERO (NỀN TỐI Ở ĐỈNH TRANG)
       ───────────────────────────────────────────────────────────── */}
       <section className="np-hero">
-        <HeroMesh />
+        {/* Ảnh mẫu dùng nền PHẲNG, không quầng. Mesh xanh ngọc kéo nền về
+            xanh, mà lime trên xanh thì đục. Bỏ hẳn. */}
 
         <div style={{ ...INNER }} className="np-hero-inner">
           <Display size="clamp(2.6rem, 6.4vw, 5.4rem)" align="center" style={{ maxWidth: '16ch', margin: '0 auto' }}>
-            Tìm việc tiếp theo<br />của bạn
+            Tìm <span style={{ color: EMERALD }}>việc tiếp theo</span><br />của bạn
           </Display>
 
           <h2 className="np-hero-sub">
@@ -801,8 +1001,8 @@ export function HomePage() {
       {/* 2.4. CTA BANNER (HỘP BO TRÒN NỔI BẬT KIỂU HANDSHAKE) */}
       <section style={{ ...INNER, marginTop: 'clamp(90px, 11vw, 150px)', paddingBottom: 'clamp(90px, 11vw, 140px)' }}>
         <Reveal>
-          <div style={{
-            background: 'radial-gradient(ellipse 70% 60% at 50% -20%, rgba(16, 185, 129, 0.35), transparent 70%), #0b0f0e',
+          <div className="np-darkbox" style={{
+            background: `radial-gradient(ellipse 70% 60% at 50% -20%, rgba(${NEON_RGB}, 0.5), transparent 70%), ${INK}`,
             borderRadius: 32,
             padding: 'clamp(48px, 6vw, 76px) 36px',
             textAlign: 'center',
@@ -816,14 +1016,15 @@ export function HomePage() {
               width: 56,
               height: 56,
               borderRadius: '50%',
-              background: 'rgba(16, 185, 129, 0.15)',
-              border: '2px solid #10b981',
+              background: `rgba(${NEON_RGB}, 0.18)`,
+              border: `2px solid ${EMERALD}`,
+              boxShadow: GLOW_MD,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 20px',
             }}>
-              <Sparkles size={26} color="#10b981" />
+              <Sparkles size={26} color={EMERALD} />
             </div>
 
             <h2 style={{

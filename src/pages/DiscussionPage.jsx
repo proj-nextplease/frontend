@@ -7,7 +7,7 @@ import {
   Sparkles, CheckCircle2, User, UserRound, Link2, MoreHorizontal,
   Bookmark, Award, ThumbsUp, HelpCircle
 } from 'lucide-react';
-import { HeroMesh } from '../components/HeroMesh.jsx';
+import { NeonBloom } from '../components/NeonBloom.jsx';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
@@ -21,14 +21,7 @@ import {
 } from '../api/discussionApi.js';
 
 /* ── Hệ màu nền tối, dùng chung với trang chủ và /jobs (xem DESIGN.md) ── */
-const EMERALD = '#10b981';
-const TEAL = '#0d9488';
-const INK = '#0b0f0e';            // nền trang
-const SURFACE = '#121817';        // bề mặt nổi: thẻ bài, modal, menu
-const ON_DARK = '#ffffff';
-const MUTED = 'rgba(233,247,242,0.62)';
-const LINE = 'rgba(255,255,255,0.1)';
-const LINE_STRONG = 'rgba(255,255,255,0.2)';
+import { INK, SURFACE, EMERALD, TEAL, ON_DARK, MUTED, LINE, LINE_STRONG } from '../styles/neonPalette.js';
 const BG_PAGE = INK;
 /* Đặc hơn thẻ ở trang chủ/jobs: feed nằm đè lên tấm mesh, để nền 0.016 như
    bên kia thì thẻ chìm hẳn vào màu loang và mất cảm giác là một thẻ. */
@@ -566,7 +559,7 @@ export function DiscussionPage() {
   const displayedPosts = posts;
 
   return (
-    <div style={{
+    <div className="np-neon" style={{
       width: '100vw',
       marginLeft: 'calc(50% - 50vw)',
       background: BG_PAGE,
@@ -647,9 +640,8 @@ export function DiscussionPage() {
 
       {/* Nền mesh chung với trang chủ / trang việc làm. Đặt ở tầng nền của cả
           trang (không nhét vào một khối cao ~300px) thì màu mới kịp loang. */}
-      <div className="np-disc-bg" aria-hidden="true">
-        <HeroMesh veil="radial-gradient(100% 92% at 50% 18%, rgba(11,15,14,0) 0%, #0b0f0e 100%)" />
-      </div>
+      {/* Thay tấm mesh xanh ngọc bằng lớp vệt loang dùng chung với trang chủ. */}
+      <NeonBloom />
 
       {/* Thanh điều hướng trôi theo trang: cột trái và ô soạn bài đã bám rồi,
           thêm một thanh dính nữa là ba lớp chồng nhau ở mép trên. */}

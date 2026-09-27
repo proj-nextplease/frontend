@@ -15862,7 +15862,7 @@ button.np-pp-cell:hover { background: rgba(255, 255, 255, 0.05); }
   transition: color 150ms ease, border-color 150ms ease;
 }
 .np-area-tab:hover { color: #fff; }
-.np-area-tab.active { color: #10b981; border-bottom-color: #10b981; }
+.np-area-tab.active { color: var(--np-accent, #10b981); border-bottom-color: var(--np-accent, #10b981); }
 
 .np-area-side { display: flex; align-items: center; gap: 14px; flex: none; }
 .np-area-link {
@@ -15877,7 +15877,7 @@ button.np-pp-cell:hover { background: rgba(255, 255, 255, 0.05); }
   white-space: nowrap;
   transition: color 150ms ease;
 }
-.np-area-link:hover { color: #10b981; }
+.np-area-link:hover { color: var(--np-accent, #10b981); }
 
 @media (max-width: 720px) {
   .np-area-inner { width: calc(100% - 24px); }
@@ -16239,14 +16239,14 @@ body:has(.np-skel) {
   font-size: 1rem; font-weight: 500; letter-spacing: -0.015em;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.np-saved-job:hover { color: #10b981; }
+.np-saved-job:hover { color: var(--np-accent, #10b981); }
 .np-saved-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 4px; font-size: 0.83rem; color: var(--c-muted); }
 /* Dấu chấm ngăn cách gắn vào CUỐI mục trước, không phải đầu mục sau. Đặt ở
    đầu (::before) thì khi xuống dòng ở khổ hẹp, dấu chấm trôi xuống thành ký tự
    mồ côi mở đầu dòng mới. Gắn ở cuối thì nó luôn ở lại với dòng trên. */
 .np-saved-meta span:not(:last-child)::after { content: ' ·'; }
 
-.np-saved-pay { font-size: 0.92rem; font-weight: 500; color: #10b981; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.np-saved-pay { font-size: 0.92rem; font-weight: 500; color: var(--np-accent, #10b981); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 .np-saved-deadline { font-size: 0.83rem; color: var(--c-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .np-saved-deadline.soon { color: #f59e0b; }
@@ -16255,7 +16255,7 @@ body:has(.np-skel) {
 .np-saved-apply {
   display: inline-flex; align-items: center; white-space: nowrap;
   padding: 9px 15px; border-radius: 8px;
-  background: #10b981; color: #0b0f0e;
+  background: var(--np-accent, #10b981); color: #0b0f0e;
   font-size: 0.86rem; font-weight: 500; text-decoration: none;
   transition: background 150ms ease;
 }
@@ -16285,11 +16285,11 @@ body:has(.np-skel) {
 .np-saved-empty p, .np-saved-state p { margin: 0; max-width: 46ch; font-size: 0.9rem; line-height: 1.55; }
 .np-saved-cta {
   display: inline-flex; align-items: center; gap: 7px; margin-top: 10px;
-  padding: 11px 18px; border-radius: 8px; background: #10b981; color: #0b0f0e;
+  padding: 11px 18px; border-radius: 8px; background: var(--np-accent, #10b981); color: #0b0f0e;
   font-size: 0.9rem; font-weight: 500; text-decoration: none; transition: background 150ms ease;
 }
 .np-saved-cta:hover { background: #34d399; }
-.np-spin { color: #10b981; animation: spin 1.4s linear infinite; }
+.np-spin { color: var(--np-accent, #10b981); animation: spin 1.4s linear infinite; }
 
 @media (max-width: 900px) {
   /* Dưới 900px năm cột bóp nhau đến mức tên việc chỉ còn vài ký tự. Xếp lại
@@ -16354,7 +16354,7 @@ body:has(.np-skel) {
    được bấm. Nền nhạt + chữ trắng là đủ để biết đang ở đâu. */
 .candidate-portal-layout .apptrack-tab.active { background: rgba(255, 255, 255, 0.08); color: #fff; }
 .candidate-portal-layout .apptrack-tab-count { font-weight: 500; background: rgba(255, 255, 255, 0.08); color: var(--c-muted); }
-.candidate-portal-layout .apptrack-tab.active .apptrack-tab-count { background: rgba(16, 185, 129, 0.18); color: #10b981; }
+.candidate-portal-layout .apptrack-tab.active .apptrack-tab-count { background: rgba(var(--np-accent-rgb, 16, 185, 129), 0.18); color: var(--np-accent, #10b981); }
 
 .candidate-portal-layout .apptrack-search input,
 .candidate-portal-layout .apptrack-select {
@@ -16363,7 +16363,7 @@ body:has(.np-skel) {
   border-radius: 10px;
   color: #fff;
 }
-.candidate-portal-layout .apptrack-search input:focus { border-color: #10b981; box-shadow: none; }
+.candidate-portal-layout .apptrack-search input:focus { border-color: var(--np-accent, #10b981); box-shadow: none; }
 
 .candidate-portal-layout .apptrack-btn {
   background: transparent;
@@ -16386,7 +16386,7 @@ body:has(.np-skel) {
 .candidate-portal-layout .apptrack-btn.boost:hover:not(:disabled) {
   border-color: rgba(16, 185, 129, 0.5);
   background: rgba(16, 185, 129, 0.08);
-  color: #10b981;
+  color: var(--np-accent, #10b981);
 }
 .candidate-portal-layout .apptrack-btn.boosted {
   background: rgba(245, 158, 11, 0.14);
@@ -16505,7 +16505,7 @@ body:has(.np-skel) {
   color: #fff;
 }
 .candidate-portal-layout .glass-modal-content .primary-button {
-  background: #10b981;
+  background: var(--np-accent, #10b981);
   /* Chữ TỐI trên nút emerald. Emerald đủ sáng để chữ trắng chỉ còn ~2:1 — đây
      là quy tắc chung của nút chính trên cả site, không riêng hộp thoại. */
   color: #0b0f0e;
@@ -16585,13 +16585,13 @@ body:has(.np-skel) {
   width: 46px; height: 46px; border-radius: 13px;
   background: rgba(16, 185, 129, 0.14);
   border: 1px solid rgba(16, 185, 129, 0.28);
-  color: #10b981;
+  color: var(--np-accent, #10b981);
 }
 .candidate-portal-layout .candidate-premium-status {
   /* Giá là thứ người ta tìm đầu tiên trên một bảng giá, nên để nó là số rõ
      ràng trên nền trong suốt, không phải một viên thuốc màu. */
   background: transparent; border: 0; padding: 0;
-  font-size: 1rem; font-weight: 500; color: #10b981;
+  font-size: 1rem; font-weight: 500; color: var(--np-accent, #10b981);
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .candidate-portal-layout .candidate-premium-status.success { color: #34d399; }
@@ -16608,7 +16608,7 @@ body:has(.np-skel) {
   padding: 11px 14px;
   font-size: 0.88rem; font-weight: 400; color: #fff;
 }
-.candidate-portal-layout .candidate-premium-benefit-list svg { color: #10b981; }
+.candidate-portal-layout .candidate-premium-benefit-list svg { color: var(--np-accent, #10b981); }
 .candidate-portal-layout .candidate-premium-full-button { width: auto; min-width: 220px; }
 .candidate-portal-layout .candidate-premium-owned {
   display: inline-flex; align-items: center; gap: 7px;
@@ -16660,7 +16660,7 @@ body:has(.np-skel) {
 .candidate-portal-layout .candidate-premium-service-top span,
 .candidate-portal-layout .candidate-premium-service-title > span {
   background: transparent; border: 0; padding: 0;
-  font-size: 0.9rem; font-weight: 500; color: #10b981;
+  font-size: 0.9rem; font-weight: 500; color: var(--np-accent, #10b981);
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .candidate-portal-layout .candidate-premium-service-copy p {
@@ -16682,7 +16682,7 @@ body:has(.np-skel) {
   background: rgba(255, 255, 255, 0.04);
   color: #fff; font-family: inherit; font-size: 0.88rem;
 }
-.candidate-portal-layout .premium-store-select:focus { border-color: #10b981; outline: none; box-shadow: none; }
+.candidate-portal-layout .premium-store-select:focus { border-color: var(--np-accent, #10b981); outline: none; box-shadow: none; }
 .candidate-portal-layout .premium-inline-state {
   padding: 10px 12px; border-radius: 8px;
   border: 1px solid var(--c-line);
@@ -16710,7 +16710,7 @@ body:has(.np-skel) {
   padding: 9px 10px;
 }
 .candidate-portal-layout .premium-theme-option.active {
-  border-color: #10b981; background: rgba(16, 185, 129, 0.1); color: #fff;
+  border-color: var(--np-accent, #10b981); background: rgba(var(--np-accent-rgb, 16, 185, 129), 0.1); color: #fff;
 }
 
 .candidate-portal-layout .candidate-premium-alert {
@@ -16827,7 +16827,7 @@ body:has(.np-skel) {
 
 .candidate-portal-layout .np-proof-link {
   display: inline-flex; align-items: center; gap: 5px; margin-top: 9px;
-  font-size: 0.82rem; color: #10b981; text-decoration: none;
+  font-size: 0.82rem; color: var(--np-accent, #10b981); text-decoration: none;
 }
 .candidate-portal-layout .np-proof-link:hover { text-decoration: underline; }
 .candidate-portal-layout .np-proof-reject {
@@ -16867,7 +16867,7 @@ body:has(.np-skel) {
 .candidate-portal-layout .credential-submit-mark {
   background: rgba(16, 185, 129, 0.14);
   border: 1px solid rgba(16, 185, 129, 0.28);
-  color: #10b981;
+  color: var(--np-accent, #10b981);
 }
 .candidate-portal-layout .credential-submit-topline h3 {
   font-family: inherit; font-size: 1.1rem; font-weight: 500; letter-spacing: -0.02em; color: #fff;
@@ -16885,7 +16885,7 @@ body:has(.np-skel) {
 }
 .candidate-portal-layout .credential-submit-form .form-input::placeholder { color: rgba(233, 247, 242, 0.38); }
 .candidate-portal-layout .credential-submit-form .form-input:focus {
-  border-color: #10b981; box-shadow: none; outline: none;
+  border-color: var(--np-accent, #10b981); box-shadow: none; outline: none;
 }
 
 @media (max-width: 720px) {
@@ -16915,10 +16915,10 @@ body:has(.np-skel) {
 .candidate-portal-layout .credential-month-trigger:hover,
 .candidate-portal-layout .credential-month-trigger[aria-expanded='true'] {
   background: rgba(255, 255, 255, 0.06);
-  border-color: #10b981;
+  border-color: var(--np-accent, #10b981);
   box-shadow: none;
 }
-.candidate-portal-layout .credential-month-trigger-dot { background: #10b981; }
+.candidate-portal-layout .credential-month-trigger-dot { background: var(--np-accent, #10b981); }
 .candidate-portal-layout .credential-month-helper { color: var(--c-muted); }
 
 .candidate-portal-layout .credential-month-popover {
@@ -16943,8 +16943,8 @@ body:has(.np-skel) {
   color: #fff;
 }
 .candidate-portal-layout .credential-month-option.selected {
-  background: #10b981;
-  border-color: #10b981;
+  background: var(--np-accent, #10b981);
+  border-color: var(--np-accent, #10b981);
   color: #0b0f0e;
   box-shadow: none;
 }
@@ -17532,7 +17532,7 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
 .np-legal-eyebrow {
   display: inline-block; margin-bottom: 14px;
   font-size: 0.78rem; font-weight: 400; letter-spacing: 0.1em;
-  text-transform: uppercase; color: #10b981;
+  text-transform: uppercase; color: var(--np-accent, #10b981);
 }
 .np-legal-title {
   margin: 0;
@@ -17589,10 +17589,10 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
 }
 .np-legal-toc a:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
 .np-legal-toc a.active {
-  color: #34d399; border-left-color: #10b981; background: rgba(16, 185, 129, 0.08);
+  color: #34d399; border-left-color: var(--np-accent, #10b981); background: rgba(var(--np-accent-rgb, 16, 185, 129), 0.08);
 }
 .np-legal-toc-num { color: rgba(233, 247, 242, 0.35); font-variant-numeric: tabular-nums; }
-.np-legal-toc a.active .np-legal-toc-num { color: #10b981; }
+.np-legal-toc a.active .np-legal-toc-num { color: var(--np-accent, #10b981); }
 
 /* ── Văn bản ── */
 .np-legal-doc {
@@ -17622,7 +17622,7 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
   font-size: 1.22rem; font-weight: 500; letter-spacing: -0.02em; color: #fff;
 }
 .np-legal-num {
-  font-size: 0.82rem; font-weight: 400; color: #10b981;
+  font-size: 0.82rem; font-weight: 400; color: var(--np-accent, #10b981);
   font-variant-numeric: tabular-nums;
 }
 .np-legal-section p {
@@ -17651,7 +17651,7 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
    kê điều khoản. */
 .np-legal-section li::before {
   content: ''; position: absolute; left: 2px; top: 0.72em;
-  width: 5px; height: 5px; border-radius: 50%; background: #10b981;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--np-accent, #10b981);
 }
 
 @media (max-width: 900px) {
@@ -17715,7 +17715,7 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
 .np-consent-flag.done {
   border-color: rgba(16, 185, 129, 0.45);
   background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
+  color: var(--np-accent, #10b981);
 }
 
 .np-consent-scroll {
@@ -17729,7 +17729,7 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
 }
-.np-consent-scroll:focus-visible { outline: 2px solid #10b981; outline-offset: 2px; }
+.np-consent-scroll:focus-visible { outline: 2px solid var(--np-accent, #10b981); outline-offset: 2px; }
 .np-consent-scroll .np-consent-intro {
   margin: 0 0 16px; font-size: 0.88rem; line-height: 1.6;
   color: rgba(233, 247, 242, 0.62);
@@ -17740,7 +17740,7 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
   margin: 0 0 8px; font-family: inherit;
   font-size: 0.92rem; font-weight: 500; letter-spacing: -0.015em;
 }
-.np-consent-scroll h4 span { font-size: 0.74rem; color: #10b981; font-variant-numeric: tabular-nums; }
+.np-consent-scroll h4 span { font-size: 0.74rem; color: var(--np-accent, #10b981); font-variant-numeric: tabular-nums; }
 .np-consent-scroll p { margin: 0 0 8px; font-size: 0.86rem; line-height: 1.7; color: rgba(233, 247, 242, 0.88); }
 .np-consent-scroll ul { margin: 8px 0; padding: 0 0 0 4px; list-style: none; display: grid; gap: 7px; }
 .np-consent-scroll li {
@@ -17749,7 +17749,7 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
 }
 .np-consent-scroll li::before {
   content: ''; position: absolute; left: 1px; top: 0.66em;
-  width: 4px; height: 4px; border-radius: 50%; background: #10b981;
+  width: 4px; height: 4px; border-radius: 50%; background: var(--np-accent, #10b981);
 }
 .np-consent-end {
   margin: 18px 0 0 !important; text-align: center;
@@ -17760,7 +17760,7 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
   display: inline-flex; align-items: center; gap: 5px; width: fit-content;
   font-size: 0.78rem; color: rgba(233, 247, 242, 0.62); text-decoration: none;
 }
-.np-consent-open:hover { color: #10b981; }
+.np-consent-open:hover { color: var(--np-accent, #10b981); }
 
 .np-consent-foot {
   padding: 16px 26px 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -17771,10 +17771,10 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
   display: flex; align-items: flex-start; gap: 10px;
   font-size: 0.88rem; line-height: 1.5; cursor: pointer; max-width: 56ch;
 }
-.np-consent-check input { margin-top: 3px; width: 17px; height: 17px; accent-color: #10b981; flex: none; }
+.np-consent-check input { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--np-accent, #10b981); flex: none; }
 .np-consent-check.is-locked { cursor: not-allowed; color: rgba(233, 247, 242, 0.5); }
 .np-consent-check em { font-style: normal; color: rgba(233, 247, 242, 0.5); }
-.np-consent-check strong { font-weight: 500; color: #10b981; }
+.np-consent-check strong { font-weight: 500; color: var(--np-accent, #10b981); }
 
 .np-consent-actions { display: flex; gap: 10px; flex: none; }
 .np-consent-btn {
@@ -17785,7 +17785,7 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
   transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 .np-consent-btn:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
-.np-consent-btn.primary { background: #10b981; border-color: transparent; color: #0b0f0e; }
+.np-consent-btn.primary { background: var(--np-accent, #10b981); border-color: transparent; color: #0b0f0e; }
 .np-consent-btn.primary:hover:not(:disabled) { background: #34d399; }
 .np-consent-btn.primary:disabled {
   background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.1);
@@ -17816,4 +17816,82 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
   align-self: center;
   font-size: 0.83rem;
   color: #f87171;
+}
+
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Bảng màu neon cho khu vực đã đăng nhập.
+
+   Các luật ở khu vực ứng viên dùng var(--np-accent, #10b981): trang nào KHÔNG
+   mang class .np-neon sẽ rơi về giá trị dự phòng #10b981 và giữ nguyên diện
+   mạo cũ. Nhờ vậy đổi tông ở đây không đụng tới trang quản trị hay doanh
+   nghiệp, vốn dùng chung file này.
+
+   Màu TRẠNG THÁI cố tình không đổi: "đã duyệt" giữ emerald, "chờ duyệt" giữ
+   hổ phách, "từ chối" giữ đỏ, EXP giữ hổ phách. Nếu tô lime hết thì màu mất
+   nghĩa — người dùng không còn phân biệt được trạng thái bằng màu nữa.
+   ────────────────────────────────────────────────────────────────────────── */
+.np-neon {
+  --np-accent: #b9ff00;
+  --np-accent-rgb: 185, 255, 0;
+
+  /* --c-red là biến màu nhấn của khu vực ứng viên (tên cũ từ thời bảng màu
+     coral, giữ nguyên tên vì có ~350 chỗ đang dùng). Nó được khai trên
+     .candidate-portal-layout; khối này nằm SAU trong file nên cùng độ ưu tiên
+     thì luật sau thắng. */
+  --c-red: #b9ff00;
+  --c-red-soft: rgba(185, 255, 0, 0.14);
+}
+
+/* Nền khu vực ứng viên: .candidate-portal-layout tự tô #0b0f0e (giá trị CŨ).
+   Để nguyên thì nó che lớp vệt loang và lệch một bậc so với phần còn lại —
+   đúng lỗi đã gặp ở footer. */
+.candidate-portal-layout.np-neon {
+  background: #070a0f;
+}
+/* Nâng nội dung lên trên lớp vệt loang.
+
+   KHÔNG dùng `> *:not(...)`. Bản trước làm vậy và nó đè `position: fixed` của
+   MỌI con trực tiếp không nằm trong danh sách loại trừ — kể cả các overlay
+   modal render ở cuối cây. Hệ quả: bấm "Nạp NP" hay "Duyệt nhanh 24h" thì
+   modal rơi xuống đáy trang (đo được top: 2819px) thay vì phủ giữa màn hình,
+   nên trông như không có gì xảy ra.
+
+   Danh sách loại trừ luôn thiếu thứ chưa nghĩ ra. Liệt kê thẳng hai khối nội
+   dung cần nâng thì thêm overlay mới cũng không bị ảnh hưởng. */
+.candidate-portal-layout.np-neon > .np-area-bar,
+.candidate-portal-layout.np-neon > .candidate-portal-main {
+  position: relative;
+  z-index: 1;
+}
+.candidate-portal-layout.np-neon > .nph-shell { z-index: 60; }
+
+/* Toast thông báo.
+
+   LỖI CÓ SẴN, không phải do đổi tông: khối .candidate-toast đặt
+   `background: #fff` nhưng `color: var(--c-ink, #ffffff)`, mà --c-ink được
+   khai trên .candidate-portal-layout đúng bằng #ffffff. Tức CHỮ TRẮNG TRÊN
+   NỀN TRẮNG — nội dung thông báo chưa bao giờ đọc được, chỉ thấy mỗi icon và
+   vạch màu bên trái. Kéo nó về nền tối cho khớp phần còn lại và để chữ đọc
+   được. */
+.np-neon .candidate-toast {
+  background: #161d24;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+}
+.np-neon .candidate-toast span { color: #ffffff; }
+.np-neon .candidate-toast button { color: rgba(255, 255, 255, 0.55); }
+.np-neon .candidate-toast button:hover { color: #ffffff; }
+
+/* Nút chính trong khu vực ứng viên vẫn lấy màu từ .primary-button toàn cục
+   (emerald). Kéo về lime cho khớp các nút khác cùng trang. */
+.np-neon .primary-button {
+  background: var(--np-accent);
+  border-color: var(--np-accent);
+  color: #070a0f;
+}
+.np-neon .primary-button:hover:not(:disabled) {
+  background: #d2ff4d;
+  border-color: #d2ff4d;
 }
