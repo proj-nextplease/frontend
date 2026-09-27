@@ -4,7 +4,7 @@ import {
   ArrowRight, ShieldCheck, BriefcaseBusiness, ChevronDown,
   CircleCheck, CircleX, Star, Zap, FileText
 } from 'lucide-react';
-import { HeroMesh } from '../components/HeroMesh.jsx';
+import { NeonBloom } from '../components/NeonBloom.jsx';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { EnvelopeArt } from '../components/EnvelopeArt.jsx';
@@ -12,20 +12,18 @@ import { useAuthModal } from '../context/AuthModalContext.jsx';
 import { getStoredToken } from '../lib/authStorage.js';
 
 /* ── Hệ màu chuẩn của NextPlease (theo DESIGN.md) ── */
-const INK = '#0b0f0e';
-const EMERALD = '#10b981';
-const EMERALD_HOVER = '#34d399';
-const EMERALD_DARK = '#059669';
-const TEAL = '#0d9488';
-const ON_DARK = '#ffffff';
-const MUTED = 'rgba(233, 247, 242, 0.64)';
-const LINE = 'rgba(255, 255, 255, 0.1)';
-const LINE_STRONG = 'rgba(255, 255, 255, 0.2)';
+import { INK, EMERALD, EMERALD_HOVER, EMERALD_DARK, TEAL, ON_DARK, MUTED, LINE, LINE_STRONG } from '../styles/neonPalette.js';
 
 // Màu trên nền sáng (khi cuộn chuột xuống)
 const INK_LIGHT = '#0f2e2b';
 const TEXT_MUTED_LIGHT = '#475569';
 const LINE_LIGHT = '#e2efe9';
+
+/* Giống trang chủ: bản neon giữ nền tối suốt trang, không chuyển sang trắng
+   khi cuộn. Vệt loang chạy liền từ hero tới footer; có đoạn đổi trắng thì
+   nửa dưới rơi lại tông cũ và footer trong suốt sẽ lộ ra nền xám.
+   Đổi thành true là khôi phục nguyên hành vi cũ. */
+const SCROLL_TO_LIGHT = false;
 
 const INNER = { width: 'min(1180px, calc(100% - 40px))', margin: '0 auto' };
 
@@ -136,7 +134,7 @@ export function PortfolioLandingPage() {
   useEffect(() => {
     const handleScroll = () => {
       // Khi cuộn qua ~380px, đổi nền sang trắng
-      if (window.scrollY > 380) {
+      if (SCROLL_TO_LIGHT && window.scrollY > 380) {
         setIsLight(true);
       } else {
         setIsLight(false);
@@ -155,7 +153,12 @@ export function PortfolioLandingPage() {
   }
 
   return (
-    <div className={`pf-landing ${isLight ? 'is-light' : ''}`}>
+    <div className={`pf-landing np-neon ${isLight ? 'is-light' : ''}`}>
+      {/* Vệt loang đặt ở GỐC trang, không nhét trong section hero: nhét vào
+          một khối cao 1000px thì nửa dưới trang trở lại nền phẳng trơ, khác
+          hẳn trang chủ nơi vệt chạy suốt từ đầu tới footer. */}
+      <NeonBloom />
+
       {/* SiteHeader ghim overlay theo chuẩn DESIGN.md */}
       <SiteHeader overlay />
 
@@ -397,9 +400,7 @@ export function PortfolioLandingPage() {
           1. HERO — XÁC THỰC BẰNG MINH CHỨNG, MINH HỌA ENVELOPEART NỔI BẬT
           ═════════════════════════════════════════════════════════════ */}
       <section style={{ position: 'relative' }}>
-        <div style={{ position: 'absolute', inset: '0 0 auto', height: 1000, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }} aria-hidden="true">
-          <HeroMesh veil="radial-gradient(100% 92% at 40% 24%, rgba(11,15,14,0) 0%, #0b0f0e 100%)" />
-        </div>
+
 
         <div style={{ ...INNER, position: 'relative', zIndex: 1 }}>
           <div className="pf-hero-wrap">

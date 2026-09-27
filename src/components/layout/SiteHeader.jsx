@@ -46,6 +46,8 @@ const MUTED = '#5b7772';
 
 /* Bề ngang thanh sau khi co lại — Handshake dùng đúng 64rem. */
 const CONDENSED_WIDTH = 1024;
+/* Trần theo tỉ lệ, để thanh vẫn co rõ trên cửa sổ hẹp. */
+const CONDENSED_RATIO = 0.88;
 /* Khoảng cách thanh chừa hai bên khi chưa cuộn. */
 const SHELL_GUTTER = 48;
 
@@ -165,7 +167,17 @@ export function SiteHeader({ overlay = false, pinned = true }) {
   const onDark = overlay && !scrolled;   // chữ trắng, nền trong suốt
   const condensed = scrolled;            // đã co lại + logo thành ô vuông
 
-  const pillWidth = condensed ? Math.min(CONDENSED_WIDTH, shellWidth) : shellWidth;
+  /* Bề ngang khi đã co.
+     Bản cũ là Math.min(CONDENSED_WIDTH, shellWidth). Vấn đề: CONDENSED_WIDTH
+     là 1024px cố định, nên với cửa sổ rộng <= ~1072px thì min() luôn trả về
+     chính shellWidth — thanh KHÔNG co chút nào, hiệu ứng biến mất hoàn toàn.
+     Nó chỉ nhìn thấy được trên màn hình rộng, đúng chỗ dễ bỏ sót khi test.
+
+     Thêm cận theo tỉ lệ để luôn có độ co thật. Ở 1440px vẫn ra đúng 1024 như
+     cũ (trùng với trang mẫu Handshake), còn ở 1024px thì co xuống ~858. */
+  const pillWidth = condensed
+    ? Math.min(CONDENSED_WIDTH, shellWidth * CONDENSED_RATIO)
+    : shellWidth;
 
   return (
     <>

@@ -55,7 +55,8 @@ import { useSavedJobs } from '../lib/savedJobs.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
 import { applyToJob, getMyApplications, withdrawApplication } from '../api/applicationApi.js';
 import { NotificationBell } from '../components/NotificationBell.jsx';
-import { HeroMesh } from '../components/HeroMesh.jsx';
+import { NeonBloom } from '../components/NeonBloom.jsx';
+import { INK, EMERALD, EMERALD_BRIGHT } from '../styles/neonPalette.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { getWallet, topUp, buyPremium } from '../api/walletApi.js';
 import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication, getSavedQuestIds, getSavedQuests, saveQuest, unsaveQuest } from '../api/questApi.js';
@@ -270,14 +271,14 @@ function CandidateProfilePreview({ portfolio, candidateRs, currentLevel, current
 
       {/* Avatar + name + headline + school */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.05rem', color: '#fff', flexShrink: 0 }}>
+        <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: EMERALD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.05rem', color: '#fff', flexShrink: 0 }}>
           {portfolio?.name ? portfolio.name.slice(0, 2).toUpperCase() : 'UV'}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <strong style={{ fontSize: '0.94rem', display: 'block', color: 'var(--ink)' }}>{portfolio?.name || 'Ứng viên'}</strong>
           {portfolio?.headline && <span style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'block' }}>{portfolio.headline}</span>}
           {portfolio?.school && (
-            <span style={{ fontSize: '0.76rem', color: '#10b981', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+            <span style={{ fontSize: '0.76rem', color: EMERALD, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
               <BadgeCheck size={13} /> {portfolio.school}
             </span>
           )}
@@ -286,7 +287,7 @@ function CandidateProfilePreview({ portfolio, candidateRs, currentLevel, current
 
       {/* Stats */}
       <div style={{ display: 'flex', gap: '8px' }}>
-        {[{ label: 'RS', val: rs, color: '#10b981' }, { label: 'Level', val: currentLevel, color: '#f59e0b' }, { label: 'EXP', val: currentExp, color: '#67e8f9' }].map(s => (
+        {[{ label: 'RS', val: rs, color: EMERALD }, { label: 'Level', val: currentLevel, color: '#f59e0b' }, { label: 'EXP', val: currentExp, color: '#67e8f9' }].map(s => (
           <div key={s.label} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', background: `${s.color}08`, borderRadius: '10px', border: `1px solid ${s.color}20` }}>
             <strong style={{ fontSize: '0.9rem', color: s.color, display: 'block' }}>{s.val}</strong>
             <span style={{ fontSize: '0.68rem', color: 'var(--muted)', fontWeight: '700' }}>{s.label}</span>
@@ -490,15 +491,8 @@ const RETIRED_TABS = {
   RECOMMENDATIONS: '/candidates/dashboard/overview',
 };
 
-const EMERALD_ACCENT = '#10b981';
+const EMERALD_ACCENT = EMERALD;
 
-/* Mốc tan của tấm mesh, tính bằng PX chứ không phải % chiều cao khung.
-   Khung mesh cao 2960px là để mượn nguyên hình học quầng của hero trang chủ
-   (xem .np-area-bg), nhưng nội dung trang này ngắn hơn thế nhiều. Nếu để mốc
-   tan mặc định (52% → 100% của khung, tức 1539px → 2960px) thì mesh vẫn còn
-   ~2/3 độ đậm ở chỗ nội dung kết thúc — cắt ngang một đường. Tan hẳn ở 940px
-   thì mọi tab, dù ngắn hay dài, đều kết thúc trên nền ink phẳng. */
-const AREA_MESH_MASK = 'linear-gradient(to bottom, #000 0px, #000 300px, transparent 940px)';
 
 // Which tabSlug values (from the /candidates/dashboard/:tabSlug route) render
 // as a card grid (job/quest/company browsing) vs a flat list (applications,
@@ -537,9 +531,9 @@ export function CandidateContentSkeleton({ variant = 'overview' }) {
   const card = { border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px' };
 
   return (
-    <div className="np-skel">
+    <div className="np-skel np-neon">
       <style>{`
-        .np-skel { position: relative; min-height: 100vh; background: #0b0f0e; overflow: hidden; }
+        .np-skel { position: relative; min-height: 100vh; background: ${INK}; overflow: hidden; }
         .np-skel-inner {
           position: relative; z-index: 1;
           width: 100%; max-width: 1180px; margin: 0 auto;
@@ -558,9 +552,7 @@ export function CandidateContentSkeleton({ variant = 'overview' }) {
         @media (prefers-reduced-motion: reduce) { .np-skel-bar { animation: none; } }
       `}</style>
 
-      <div className="np-area-bg" aria-hidden="true">
-        <div className="np-area-bg-inner"><HeroMesh fadeMask={AREA_MESH_MASK} /></div>
-      </div>
+      <NeonBloom />
 
       <div className="np-skel-inner" role="status" aria-label="Đang tải khu vực của bạn">
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -678,7 +670,7 @@ function PublicLinkEditor({ slug, onSaved }) {
             }}
           />
           <button type="submit" disabled={status.type === 'saving'}
-            style={{ padding: '6px 14px', borderRadius: '999px', border: 'none', background: '#10b981', color: '#fff', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
+            style={{ padding: '6px 14px', borderRadius: '999px', border: 'none', background: EMERALD, color: INK, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
             {status.type === 'saving' ? 'Đang lưu…' : 'Lưu'}
           </button>
           <button type="button" onClick={() => { setDraft(slug || ''); setEditing(false); setStatus({ type: 'idle', message: '' }); }}
@@ -1959,7 +1951,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   }
 
   return (
-    <div className="candidate-portal-layout">
+    <div className="candidate-portal-layout np-neon">
       {/* ─── Vỏ chung với toàn site ───
           Trước đây khu vực này KHÔNG có SiteHeader; nó tự dựng một thanh pill
           nổi ở đáy màn hình (.np-dock) chứa 9 mục, tức là một metaphor điều
@@ -1975,9 +1967,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           vào một khối thấp — quầng định vị bằng % nên khung thấp thì màu không
           kịp loang, và tâm sáng bị kéo lên ngang header. Chiều cao + hình học
           vignette bám theo hero trang chủ, xem .np-area-bg trong index.css. */}
-      <div className="np-area-bg" aria-hidden="true">
-        <div className="np-area-bg-inner"><HeroMesh fadeMask={AREA_MESH_MASK} /></div>
-      </div>
+      <NeonBloom />
 
       {/* Trong suốt trên nền mesh như trang chủ, nhưng KHÔNG ghim: khu vực này
           là công cụ để đọc và thao tác, người dùng cuộn xuống là muốn xem nội
@@ -2075,7 +2065,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               .np-quest-claim { border:none; cursor:pointer; font-weight:800; font-size:0.8rem; padding:7px 14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
               .np-quest-claim:hover { transform: translateY(-2px); box-shadow:0 10px 22px rgba(16, 185, 129,0.25); }
               .np-quest-claim:active { transform: scale(0.96); }
-              .np-quest-claim.ready { background:#10b981; color:#fff; animation: npQuestPop 0.4s ease both; }
+              .np-quest-claim.ready { background:${EMERALD}; color:${INK}; animation: npQuestPop 0.4s ease both; }
               .np-quest-claim.claimed { background:#e7f6ec; color:#16a34a; cursor:default; }
               .np-quest-claim.locked { background:var(--c-line); color:var(--c-muted); cursor:default; }
               @media (prefers-reduced-motion: reduce) { .np-streak-flame, .np-quest-card, .np-quest-claim.ready { animation:none !important; } }
