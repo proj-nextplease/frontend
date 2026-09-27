@@ -17859,11 +17859,16 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
 
    Danh sách loại trừ luôn thiếu thứ chưa nghĩ ra. Liệt kê thẳng hai khối nội
    dung cần nâng thì thêm overlay mới cũng không bị ảnh hưởng. */
-.candidate-portal-layout.np-neon > .np-area-bar,
 .candidate-portal-layout.np-neon > .candidate-portal-main {
   position: relative;
   z-index: 1;
 }
+/* KHÔNG đụng vào .np-area-bar. Nó đã tự khai position: relative và
+   z-index: 40 (xem khối .np-area-bar ở trên). Bản trước gộp nó vào luật này
+   và hạ z-index xuống 1 — ngang với .candidate-portal-main, mà main đứng sau
+   trong DOM nên vẽ đè lên. Hệ quả: bảng thông báo xổ ra từ thanh này bị nội
+   dung trang phủ lên. Bar vốn đã nằm trên lớp vệt loang (z-index 0) rồi, nên
+   không cần nâng gì thêm. */
 .candidate-portal-layout.np-neon > .nph-shell { z-index: 60; }
 
 /* Toast thông báo.
