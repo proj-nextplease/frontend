@@ -132,8 +132,8 @@ export function SiteFooter() {
         className="np-footer-wordmark-wrap"
         style={{
           width: 'min(1440px, calc(100% - 32px))',
-          margin: 'clamp(48px, 6vw, 88px) auto 0 auto',
-          paddingBottom: 'clamp(36px, 5vw, 68px)',
+          margin: 'clamp(36px, 4.5vw, 64px) auto 0 auto',
+          paddingBottom: 'clamp(8px, 1.5vw, 18px)',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',

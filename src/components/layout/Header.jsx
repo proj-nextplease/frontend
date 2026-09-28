@@ -117,7 +117,7 @@ export function Header() {
     <header className="site-header">
       <div className="site-header-inner">
         <Link className="brand" to="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
-          <BrandWordmark size="42px" />
+          <BrandWordmark size="48px" />
         </Link>
         <nav className="nav-links" aria-label="Primary navigation">
           {session && portfolio ? (

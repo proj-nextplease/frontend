@@ -212,7 +212,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
           .nph-pill {
             pointer-events: auto; box-sizing: border-box;
             display: flex; align-items: center; justify-content: space-between; gap: 12px;
-            height: 56px; padding: 0 8px; border-radius: 16px;
+            height: 60px; padding: 0 10px; border-radius: 18px;
             border: 1px solid transparent;
             transition: width 420ms cubic-bezier(0.22,1,0.36,1),
                         background-color 420ms ease,
@@ -234,9 +234,9 @@ export function SiteHeader({ overlay = false, pinned = true }) {
              ô vuông nở ra. Cùng đường cong với viên thuốc nên hai chuyển động
              khớp nhau. */
           .nph-brand { pointer-events: auto; display: inline-flex; align-items: center; flex: none; margin-left: 8px; text-decoration: none; }
-          .nph-brand-swap { position: relative; display: block; height: 46px; transition: width 420ms cubic-bezier(0.22,1,0.36,1); }
+          .nph-brand-swap { position: relative; display: block; height: 50px; transition: width 420ms cubic-bezier(0.22,1,0.36,1); }
           .nph-brand-layer {
-            position: absolute; left: 0; top: 0; height: 46px;
+            position: absolute; left: 0; top: 0; height: 50px;
             display: flex; align-items: center; transform-origin: left center; white-space: nowrap;
             transition: opacity 260ms ease, transform 420ms cubic-bezier(0.22,1,0.36,1);
           }
@@ -245,9 +245,9 @@ export function SiteHeader({ overlay = false, pinned = true }) {
           .nph-shell[data-mode="ondark"] .nph-brand-word i { color: ${EMERALD}; }
           .nph-brand-word b { font-style: normal; font-weight: 800; color: #f59e0b; }
           .nph-brand-mark {
-            width: 40px; height: 40px; border-radius: 12px; background: ${EMERALD};
+            width: 44px; height: 44px; border-radius: 14px; background: ${EMERALD};
             align-items: center; justify-content: center;
-            font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif; font-size: 1.35rem; font-weight: 700;
+            font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif; font-size: 1.45rem; font-weight: 700;
             color: ${INK}; line-height: 1;
           }
 
@@ -354,7 +354,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
             {/* Logo: chữ ⇄ ô vuông. Hai lớp luôn ở trong DOM để crossfade được;
                 ô bọc co width nên phần còn lại của thanh trượt theo mượt. */}
             <Link to="/" className="nph-brand" aria-label="nextplease — về trang chủ">
-              <span className="nph-brand-swap" style={{ width: condensed ? '40px' : '205px' }}>
+              <span className="nph-brand-swap" style={{ width: condensed ? '44px' : '230px' }}>
                 <span
                   className="nph-brand-layer nph-brand-word"
                   aria-hidden={condensed}
@@ -365,7 +365,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                     alignItems: 'center',
                   }}
                 >
-                  <BrandWordmark size="42px" />
+                  <BrandWordmark size="48px" />
                 </span>
                 <span
                   className="nph-brand-layer nph-brand-mark"

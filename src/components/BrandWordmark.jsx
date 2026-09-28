@@ -8,7 +8,7 @@ import logoland2 from '../assets/logoland2.png';
  * - Nền trong suốt với hiệu ứng neon glow cao cấp.
  */
 export function BrandWordmark({
-  size = '42px',
+  size = '48px',
   height,
   width,
   glow = true,
