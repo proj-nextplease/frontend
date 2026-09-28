@@ -234,9 +234,9 @@ export function SiteHeader({ overlay = false, pinned = true }) {
              ô vuông nở ra. Cùng đường cong với viên thuốc nên hai chuyển động
              khớp nhau. */
           .nph-brand { pointer-events: auto; display: inline-flex; align-items: center; flex: none; margin-left: 8px; text-decoration: none; }
-          .nph-brand-swap { position: relative; display: block; height: 40px; transition: width 420ms cubic-bezier(0.22,1,0.36,1); }
+          .nph-brand-swap { position: relative; display: block; height: 46px; transition: width 420ms cubic-bezier(0.22,1,0.36,1); }
           .nph-brand-layer {
-            position: absolute; left: 0; top: 0; height: 40px;
+            position: absolute; left: 0; top: 0; height: 46px;
             display: flex; align-items: center; transform-origin: left center; white-space: nowrap;
             transition: opacity 260ms ease, transform 420ms cubic-bezier(0.22,1,0.36,1);
           }
@@ -354,7 +354,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
             {/* Logo: chữ ⇄ ô vuông. Hai lớp luôn ở trong DOM để crossfade được;
                 ô bọc co width nên phần còn lại của thanh trượt theo mượt. */}
             <Link to="/" className="nph-brand" aria-label="nextplease — về trang chủ">
-              <span className="nph-brand-swap" style={{ width: condensed ? '40px' : '190px' }}>
+              <span className="nph-brand-swap" style={{ width: condensed ? '40px' : '205px' }}>
                 <span
                   className="nph-brand-layer nph-brand-word"
                   aria-hidden={condensed}
@@ -365,7 +365,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                     alignItems: 'center',
                   }}
                 >
-                  <BrandWordmark size="38px" />
+                  <BrandWordmark size="42px" />
                 </span>
                 <span
                   className="nph-brand-layer nph-brand-mark"

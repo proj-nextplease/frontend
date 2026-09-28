@@ -126,30 +126,33 @@ export function SiteFooter() {
           </div>
           <span>© 2026 next please. Bảo lưu mọi quyền.</span>
         </div>
+      </div>
 
-        <div
-          className="np-footer-wordmark-wrap"
+      <div
+        className="np-footer-wordmark-wrap"
+        style={{
+          width: 'min(1440px, calc(100% - 32px))',
+          margin: 'clamp(48px, 6vw, 88px) auto 0 auto',
+          paddingBottom: 'clamp(36px, 5vw, 68px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          textAlign: 'center',
+          overflow: 'visible',
+          boxSizing: 'border-box',
+        }}
+      >
+        <BrandWordmark
+          size="auto"
+          glow
           style={{
             width: '100%',
-            marginTop: 'clamp(40px, 5vw, 64px)',
-            paddingBottom: 'clamp(16px, 3vw, 40px)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            textAlign: 'center',
-            overflow: 'visible',
+            maxWidth: '1380px',
+            height: 'auto',
+            maxHeight: '480px',
+            filter: 'drop-shadow(0 0 28px rgba(185, 255, 0, 0.45)) drop-shadow(0 0 56px rgba(45, 212, 191, 0.28))',
           }}
-        >
-          <BrandWordmark
-            size="auto"
-            glow
-            style={{
-              width: 'min(1180px, 98%)',
-              height: 'auto',
-              maxHeight: '300px',
-            }}
-          />
-        </div>
+        />
       </div>
     </footer>
   );
