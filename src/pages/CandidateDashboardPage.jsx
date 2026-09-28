@@ -68,7 +68,6 @@ import {
   subscribeJobMatchAlert,
   getPersonalizedRecommendations,
   getPremiumConfig,
-  unlockTheme,
   selectTheme
 } from '../api/premiumApi.js';
 import { getGamification, pingGamification, claimQuest, recordGamificationEvent } from '../api/gamificationApi.js';
@@ -2069,6 +2068,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               .np-quest-prog { height:7px; border-radius:999px; background:var(--c-line); overflow:hidden; margin-top:6px; }
               .np-quest-prog > span { display:block; height:100%; border-radius:999px; transition: width 0.6s cubic-bezier(0.22,1,0.36,1); }
               .np-quest-claim { border:none; cursor:pointer; font-weight:800; font-size:0.8rem; padding:7px 14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
+              .candidate-premium-soon {
+                background: rgba(255,255,255,0.08) !important;
+                color: rgba(255,255,255,0.6) !important;
+              }
               .np-pp-premium {
                 display: inline-flex; align-items: center; gap: 5px;
                 vertical-align: middle; margin-left: 14px;
@@ -3163,14 +3166,21 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <div>
                     <div className="candidate-premium-service-title">
                       <h3>Job Match Alert & Đề xuất AI</h3>
-                      <span>{wallet?.hasJobMatchAlert ? 'Đang hoạt động' : `${(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP / tháng`}</span>
+                      <span className="candidate-premium-soon">Sắp ra mắt</span>
                     </div>
-                    <p>Xem sớm trước {premiumConfig.earlyAccessHours || 12}h các tin hot và mở tab gợi ý việc làm, Quest CLB khớp kỹ năng.</p>
+                    {/* Mô tả cũ hứa ba thứ mà không thứ nào tồn tại: "xem sớm
+                        12h" không có dòng code nào dùng earlyAccessHours ngoài
+                        chỗ khai config; "tab gợi ý" đã bị xoá; và không có
+                        tích hợp AI nào trong backend. Phần khớp kỹ năng thì có
+                        thật nhưng chưa bắn được thông báo nào vì chưa tin nào
+                        được gắn kỹ năng. Nói đúng hiện trạng thay vì bán một
+                        thứ chưa có. */}
+                    <p>Nhận thông báo khi có tin tuyển dụng hoặc Quest CLB khớp kỹ năng trong hồ sơ, kèm gợi ý được xếp hạng và giải thích vì sao phù hợp. Tính năng đang hoàn thiện.</p>
                   </div>
                 </div>
                 <div className="candidate-premium-row-action">
-                  <button type="button" className={`button ${wallet?.hasJobMatchAlert ? 'secondary-button' : 'primary-button'}`} onClick={handleSubscribeMatchAlert} disabled={subscribingMatchAlert}>
-                    {subscribingMatchAlert ? <><span className="premium-loading-dot" aria-hidden="true" /> Đang xử lý...</> : wallet?.hasJobMatchAlert ? 'Gia hạn 30 ngày' : 'Đăng ký ngay'}
+                  <button type="button" className="button secondary-button" disabled>
+                    Sắp ra mắt
                   </button>
                 </div>
               </article>
@@ -3181,9 +3191,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <div>
                     <div className="candidate-premium-service-title">
                       <h3>Visual Upgrade</h3>
-                      <span>{portfolio?.themeUnlocked ? 'Đã mở khóa' : `${(premiumConfig.themePriceNp || 50000).toLocaleString()} NP`}</span>
+                      <span className="candidate-premium-soon">Sắp ra mắt</span>
                     </div>
-                    <p>Mở khóa trọn đời bộ theme màu cho link portfolio công khai mà không ảnh hưởng Reputation Score.</p>
+                    <p>Tuỳ biến trang portfolio công khai: theme màu, ảnh bìa, phông chữ và đường dẫn riêng. Tính năng đang hoàn thiện.</p>
                   </div>
                 </div>
                 <div className="candidate-premium-row-action wide">
@@ -3222,33 +3232,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       })}
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => askConfirm({
-                        title: 'Mở khóa Visual Upgrade',
-                        message: `Hệ thống sẽ trừ ${(premiumConfig.themePriceNp || 50000).toLocaleString()} NP để mở khóa trọn đời bộ theme cho link portfolio công khai.`,
-                        confirmText: 'Mua trọn đời',
-                        accent: '#10b981',
-                        onConfirm: async () => {
-                          try {
-                            const res = await unlockTheme();
-                            if (res.npBalance !== undefined) {
-                              setWallet(prev => prev ? { ...prev, npBalance: res.npBalance } : prev);
-                            } else {
-                              const newWallet = await getWallet();
-                              setWallet(newWallet);
-                            }
-                            const updated = await getMyPortfolio();
-                            setPortfolio(updated);
-                            showToast('success', 'Mở khóa Theme thành công!');
-                          } catch (err) {
-                            showToast('error', err.message || 'Mở khóa thất bại.');
-                          }
-                        },
-                      })}
-                      className="button primary-button"
-                    >
-                      Mua trọn đời
+                    /* Người ĐÃ mua vẫn giữ nguyên bộ chọn theme ở nhánh trên —
+                       không gỡ thứ họ đã trả tiền. Chỉ chặn mua mới. */
+                    <button type="button" className="button secondary-button" disabled>
+                      Sắp ra mắt
                     </button>
                   )}
                 </div>
