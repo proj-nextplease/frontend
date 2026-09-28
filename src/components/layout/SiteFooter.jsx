@@ -132,13 +132,15 @@ export function SiteFooter() {
         className="np-footer-wordmark-wrap"
         style={{
           width: 'min(1440px, calc(100% - 32px))',
-          margin: 'clamp(36px, 4.5vw, 64px) auto 0 auto',
-          paddingBottom: 'clamp(8px, 1.5vw, 18px)',
+          margin: 'clamp(28px, 4vw, 52px) auto 0 auto',
+          paddingBottom: 0,
+          marginBottom: 0,
           display: 'flex',
           justifyContent: 'center',
-          alignItems: 'center',
+          alignItems: 'flex-end',
           textAlign: 'center',
           overflow: 'visible',
+          lineHeight: 0,
           boxSizing: 'border-box',
         }}
       >
@@ -146,10 +148,12 @@ export function SiteFooter() {
           size="auto"
           glow
           style={{
+            display: 'block',
             width: '100%',
             maxWidth: '1380px',
             height: 'auto',
             maxHeight: '480px',
+            marginBottom: 0,
             filter: 'drop-shadow(0 0 28px rgba(185, 255, 0, 0.45)) drop-shadow(0 0 56px rgba(45, 212, 191, 0.28))',
           }}
         />
