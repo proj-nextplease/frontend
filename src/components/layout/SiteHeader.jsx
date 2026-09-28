@@ -10,6 +10,7 @@ import { UserAvatar } from '../UserAvatar.jsx';
 import { clearMyProfileCache, useMyProfile } from '../../lib/useMyProfile.js';
 import { resetSavedJobs } from '../../lib/savedJobs.js';
 import { supabase } from '../../services/supabaseClient.js';
+import logolandLogo from '../../assets/logoland_transparent.png';
 
 /**
  * Thanh điều hướng dùng chung (nextplease) — thanh nổi kiểu Handshake.
@@ -353,13 +354,28 @@ export function SiteHeader({ overlay = false, pinned = true }) {
             {/* Logo: chữ ⇄ ô vuông. Hai lớp luôn ở trong DOM để crossfade được;
                 ô bọc co width nên phần còn lại của thanh trượt theo mượt. */}
             <Link to="/" className="nph-brand" aria-label="nextplease — về trang chủ">
-              <span className="nph-brand-swap" style={{ width: condensed ? '40px' : '172px' }}>
+              <span className="nph-brand-swap" style={{ width: condensed ? '40px' : '160px' }}>
                 <span
                   className="nph-brand-layer nph-brand-word"
                   aria-hidden={condensed}
-                  style={{ opacity: condensed ? 0 : 1, transform: condensed ? 'scale(0)' : 'none' }}
+                  style={{
+                    opacity: condensed ? 0 : 1,
+                    transform: condensed ? 'scale(0)' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
                 >
-                  <i>nextplease</i><b>:</b>
+                  <img
+                    src={logolandLogo}
+                    alt="nextplease:"
+                    style={{
+                      height: '28px',
+                      width: 'auto',
+                      display: 'block',
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0 0 10px rgba(185, 255, 0, 0.25))',
+                    }}
+                  />
                 </span>
                 <span
                   className="nph-brand-layer nph-brand-mark"

@@ -4,6 +4,7 @@ import { Sparkles, Compass, WalletCards, FileText, LogOut } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient.js';
 import { getMyPortfolio } from '../../api/portfolioApi.js';
 import { logout } from '../../api/httpClient.js';
+import logolandLogo from '../../assets/logoland_transparent.png';
 
 export function Header() {
   const navigate = useNavigate();
@@ -115,11 +116,18 @@ export function Header() {
   return (
     <header className="site-header">
       <div className="site-header-inner">
-        <Link className="brand" to="/">
-          <span className="brand-mark">
-            <Sparkles size={18} />
-          </span>
-          <span>nextplease</span>
+        <Link className="brand" to="/" style={{ display: 'inline-flex', alignItems: 'center' }}>
+          <img
+            src={logolandLogo}
+            alt="nextplease:"
+            style={{
+              height: '28px',
+              width: 'auto',
+              display: 'block',
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 0 10px rgba(185, 255, 0, 0.25))',
+            }}
+          />
         </Link>
         <nav className="nav-links" aria-label="Primary navigation">
           {session && portfolio ? (

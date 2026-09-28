@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuthModal } from '../../context/AuthModalContext.jsx';
 import { getStoredToken } from '../../lib/authStorage.js';
+import logolandLogo from '../../assets/logoland_transparent.png';
 
 /**
  * Footer dùng chung (nextplease) — dựng theo cấu trúc footer của trang mẫu:
@@ -128,20 +129,30 @@ export function SiteFooter() {
           <span>© 2026 next please. Bảo lưu mọi quyền.</span>
         </div>
 
-        {/* viewBox phải chừa chỗ cho đuôi chữ 'p': ở cỡ 176px đuôi thò xuống
-            ~48px dưới đường chân chữ, nên khung cao 176 với chân chữ ở y=140
-            sẽ cắt cụt đuôi. 212 / y=148 thì vừa cả phần trên lẫn phần dưới. */}
-        <svg
-          className="np-footer-wordmark"
-          viewBox="0 0 1000 212"
-          preserveAspectRatio="xMidYMid meet"
-          role="img"
-          aria-label="nextplease"
+        <div
+          className="np-footer-wordmark-wrap"
+          style={{
+            width: '100%',
+            marginTop: 'clamp(40px, 5vw, 64px)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
         >
-          <text x="0" y="148" fontSize="176" textLength="1000" lengthAdjust="spacing">
-            nextplease<tspan className="np-footer-wordmark-dot">:</tspan>
-          </text>
-        </svg>
+          <img
+            src={logolandLogo}
+            alt="nextplease:"
+            style={{
+              width: '100%',
+              maxWidth: '920px',
+              height: 'auto',
+              maxHeight: '170px',
+              objectFit: 'contain',
+              display: 'block',
+              filter: 'drop-shadow(0 0 28px rgba(185, 255, 0, 0.28))',
+            }}
+          />
+        </div>
       </div>
     </footer>
   );
