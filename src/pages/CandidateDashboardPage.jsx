@@ -2063,10 +2063,21 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               .np-quest-prog { height:7px; border-radius:999px; background:var(--c-line); overflow:hidden; margin-top:6px; }
               .np-quest-prog > span { display:block; height:100%; border-radius:999px; transition: width 0.6s cubic-bezier(0.22,1,0.36,1); }
               .np-quest-claim { border:none; cursor:pointer; font-weight:800; font-size:0.8rem; padding:7px 14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
-              .np-quest-claim:hover { transform: translateY(-2px); box-shadow:0 10px 22px rgba(16, 185, 129,0.25); }
+              .np-quest-claim:hover { transform: translateY(-2px); box-shadow:0 10px 22px rgba(185, 255, 0, 0.18); }
               .np-quest-claim:active { transform: scale(0.96); }
               .np-quest-claim.ready { background:${EMERALD}; color:${INK}; animation: npQuestPop 0.4s ease both; }
-              .np-quest-claim.claimed { background:#e7f6ec; color:#16a34a; cursor:default; }
+              /* Nền bạc hà sáng #e7f6ec là kiểu dành cho giao diện SÁNG, sót
+                 lại từ trước khi khu vực này đổi sang nền tối. Đặt trên nền
+                 #070a0f nó thành một mảng sáng chói giữa thẻ.
+                 Trạng thái "đã nhận" cố ý KHÔNG dùng lime đặc như nút "Nhận":
+                 việc đã xong thì không cần kéo mắt về nữa — để nó lùi lại cho
+                 nhiệm vụ chưa làm nổi lên. */
+              .np-quest-claim.claimed {
+                background: rgba(185, 255, 0, 0.12);
+                color: ${EMERALD};
+                cursor: default;
+              }
+              .np-quest-claim.claimed:hover { transform: none; box-shadow: none; }
               .np-quest-claim.locked { background:var(--c-line); color:var(--c-muted); cursor:default; }
               @media (prefers-reduced-motion: reduce) { .np-streak-flame, .np-quest-card, .np-quest-claim.ready { animation:none !important; } }
             `}</style>
