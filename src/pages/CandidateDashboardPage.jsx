@@ -1703,6 +1703,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [toast, setToast] = useState(null);
   const showToast = (type, message) => setToast({ type, message });
+
+  /* Ngày hết hạn hiển thị khi rê chuột lên huy hiệu. Người dùng mua theo
+     tháng nên "còn hiệu lực tới bao giờ" là thông tin họ sẽ đi tìm. */
+  const premiumUntilLabel = wallet?.premiumUntil
+    ? `Premium còn hiệu lực tới ${new Date(wallet.premiumUntil).toLocaleDateString('vi-VN')}`
+    : 'Premium đang hoạt động';
   const askConfirm = (opts) => setConfirmDialog(opts);
   useEffect(() => {
     if (!toast) return undefined;
@@ -2063,6 +2069,17 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               .np-quest-prog { height:7px; border-radius:999px; background:var(--c-line); overflow:hidden; margin-top:6px; }
               .np-quest-prog > span { display:block; height:100%; border-radius:999px; transition: width 0.6s cubic-bezier(0.22,1,0.36,1); }
               .np-quest-claim { border:none; cursor:pointer; font-weight:800; font-size:0.8rem; padding:7px 14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
+              .np-pp-premium {
+                display: inline-flex; align-items: center; gap: 5px;
+                vertical-align: middle; margin-left: 14px;
+                padding: 5px 12px; border-radius: 999px;
+                font-family: 'Be Vietnam Pro', sans-serif;
+                font-size: 0.78rem; font-weight: 800; letter-spacing: 0.02em;
+                text-transform: none;
+                background: linear-gradient(135deg, #f7c948, #e0a109);
+                color: #2b1d00;
+                box-shadow: 0 2px 12px rgba(224, 161, 9, 0.35);
+              }
               .np-quest-claim:hover { transform: translateY(-2px); box-shadow:0 10px 22px rgba(185, 255, 0, 0.18); }
               .np-quest-claim:active { transform: scale(0.96); }
               .np-quest-claim.ready { background:${EMERALD}; color:${INK}; animation: npQuestPop 0.4s ease both; }
@@ -2100,7 +2117,18 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
               <div className="np-pp-id">
                 <span className="np-pp-eyebrow">Hộ chiếu năng lực</span>
-                <h2 className="np-pp-name">{portfolio?.name || 'Ứng viên'}</h2>
+                <h2 className="np-pp-name">
+                  {portfolio?.name || 'Ứng viên'}
+                  {/* Người mua cần THẤY thứ mình đã trả tiền, ngay ở chỗ dễ
+                      thấy nhất. Trước đây trạng thái Premium chỉ tồn tại trong
+                      DB và ở trang quản trị — ứng viên mua xong không có gì
+                      đổi trên màn hình của họ. */}
+                  {wallet?.isPremium && (
+                    <span className="np-pp-premium" title={premiumUntilLabel}>
+                      <Crown size={16} /> Premium
+                    </span>
+                  )}
+                </h2>
                 <p className="np-pp-sub">
                   {has3D
                     ? 'Hồ sơ đã kích hoạt, đang hiển thị với nhà tuyển dụng'
