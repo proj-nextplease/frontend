@@ -8,7 +8,7 @@ import logoland2 from '../assets/logoland2.png';
  * - Nền trong suốt với hiệu ứng neon glow cao cấp.
  */
 export function BrandWordmark({
-  size = '32px',
+  size = '36px',
   height,
   glow = true,
   className = '',
@@ -33,7 +33,7 @@ export function BrandWordmark({
         verticalAlign: 'middle',
         userSelect: 'none',
         filter: glow
-          ? 'drop-shadow(0 0 10px rgba(185, 255, 0, 0.35)) drop-shadow(0 0 20px rgba(45, 212, 191, 0.2))'
+          ? 'drop-shadow(0 0 12px rgba(185, 255, 0, 0.40)) drop-shadow(0 0 24px rgba(45, 212, 191, 0.25))'
           : 'none',
         ...style,
       }}

@@ -145,9 +145,9 @@ export function SiteFooter() {
             size="auto"
             glow
             style={{
-              width: 'min(920px, 92%)',
+              width: 'min(1180px, 98%)',
               height: 'auto',
-              maxHeight: '180px',
+              maxHeight: '300px',
             }}
           />
         </div>
