@@ -1,10 +1,10 @@
 import React from 'react';
-import logoland1 from '../assets/logoland1.png';
+import logoland2 from '../assets/logoland2.png';
 
 /**
- * BrandWordmark — Typography Logo chính thức của NextPlease từ file logoland1.png.
+ * BrandWordmark — Typography Logo chính thức của NextPlease từ file logoland2.png.
  * 
- * - Hình ảnh chuẩn sắc nét logo `nextplease:`.
+ * - Hình ảnh độ phân giải cao 2400x888 sắc nét logo `nextplease:`.
  * - Nền trong suốt với hiệu ứng neon glow cao cấp.
  */
 export function BrandWordmark({
@@ -20,7 +20,7 @@ export function BrandWordmark({
 
   return (
     <img
-      src={logoland1}
+      src={logoland2}
       alt="nextplease:"
       className={`np-brand-wordmark ${className}`.trim()}
       style={{
