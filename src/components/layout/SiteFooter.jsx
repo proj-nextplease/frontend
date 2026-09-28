@@ -42,7 +42,7 @@ export function SiteFooter() {
   return (
     <footer className="np-footer">
       <style>{`
-        .np-footer { background: ${INK}; color: ${ON_DARK}; }
+        .np-footer { background: ${INK}; color: ${ON_DARK}; overflow: hidden; padding-bottom: 0; margin-bottom: 0; }
         .np-footer-inner { padding: clamp(64px, 8vw, 96px) 20px clamp(28px, 3vw, 40px); }
 
         .np-footer-top { display: flex; gap: clamp(40px, 6vw, 80px); align-items: flex-start; }
@@ -131,15 +131,15 @@ export function SiteFooter() {
       <div
         className="np-footer-wordmark-wrap"
         style={{
-          width: 'min(1440px, calc(100% - 32px))',
-          margin: 'clamp(28px, 4vw, 52px) auto 0 auto',
-          paddingBottom: 0,
+          width: '100%',
+          margin: 'clamp(24px, 3.5vw, 48px) 0 0 0',
+          padding: 0,
           marginBottom: 0,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'flex-end',
           textAlign: 'center',
-          overflow: 'visible',
+          overflow: 'hidden',
           lineHeight: 0,
           boxSizing: 'border-box',
         }}
@@ -149,11 +149,11 @@ export function SiteFooter() {
           glow
           style={{
             display: 'block',
-            width: '100%',
-            maxWidth: '1380px',
+            width: 'min(1440px, 100%)',
             height: 'auto',
             maxHeight: '480px',
-            marginBottom: 0,
+            marginBottom: '-1px',
+            verticalAlign: 'bottom',
             filter: 'drop-shadow(0 0 28px rgba(185, 255, 0, 0.45)) drop-shadow(0 0 56px rgba(45, 212, 191, 0.28))',
           }}
         />
