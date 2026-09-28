@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuthModal } from '../../context/AuthModalContext.jsx';
 import { getStoredToken } from '../../lib/authStorage.js';
-import logolandLogo from '../../assets/logoland_transparent.png';
+import { BrandWordmark } from '../BrandWordmark.jsx';
 
 /**
  * Footer dùng chung (nextplease) — dựng theo cấu trúc footer của trang mẫu:
@@ -137,19 +137,15 @@ export function SiteFooter() {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
+            textAlign: 'center',
+            overflow: 'hidden',
           }}
         >
-          <img
-            src={logolandLogo}
-            alt="nextplease:"
+          <BrandWordmark
+            size="clamp(3.5rem, 12vw, 10.5rem)"
             style={{
-              width: '100%',
-              maxWidth: '920px',
-              height: 'auto',
-              maxHeight: '170px',
-              objectFit: 'contain',
-              display: 'block',
-              filter: 'drop-shadow(0 0 28px rgba(185, 255, 0, 0.28))',
+              justifyContent: 'center',
+              letterSpacing: '-0.035em',
             }}
           />
         </div>

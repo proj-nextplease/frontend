@@ -10,7 +10,7 @@ import { UserAvatar } from '../UserAvatar.jsx';
 import { clearMyProfileCache, useMyProfile } from '../../lib/useMyProfile.js';
 import { resetSavedJobs } from '../../lib/savedJobs.js';
 import { supabase } from '../../services/supabaseClient.js';
-import logolandLogo from '../../assets/logoland_transparent.png';
+import { BrandWordmark } from '../BrandWordmark.jsx';
 
 /**
  * Thanh điều hướng dùng chung (nextplease) — thanh nổi kiểu Handshake.
@@ -354,7 +354,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
             {/* Logo: chữ ⇄ ô vuông. Hai lớp luôn ở trong DOM để crossfade được;
                 ô bọc co width nên phần còn lại của thanh trượt theo mượt. */}
             <Link to="/" className="nph-brand" aria-label="nextplease — về trang chủ">
-              <span className="nph-brand-swap" style={{ width: condensed ? '40px' : '160px' }}>
+              <span className="nph-brand-swap" style={{ width: condensed ? '40px' : '172px' }}>
                 <span
                   className="nph-brand-layer nph-brand-word"
                   aria-hidden={condensed}
@@ -365,24 +365,14 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                     alignItems: 'center',
                   }}
                 >
-                  <img
-                    src={logolandLogo}
-                    alt="nextplease:"
-                    style={{
-                      height: '28px',
-                      width: 'auto',
-                      display: 'block',
-                      objectFit: 'contain',
-                      filter: 'drop-shadow(0 0 10px rgba(185, 255, 0, 0.25))',
-                    }}
-                  />
+                  <BrandWordmark size="1.62rem" />
                 </span>
                 <span
                   className="nph-brand-layer nph-brand-mark"
                   aria-hidden={!condensed}
                   style={{ display: 'flex', opacity: condensed ? 1 : 0, transform: condensed ? 'none' : 'scale(0)' }}
                 >
-                  n<b style={{ color: INK }}>:</b>
+                  n<b style={{ color: '#2dd4bf' }}>:</b>
                 </span>
               </span>
             </Link>
