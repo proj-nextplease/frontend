@@ -66,20 +66,18 @@ export function SiteFooter() {
 
         .np-footer-bottom {
           margin-top: clamp(56px, 7vw, 88px); padding-top: 24px;
-          border-top: 1px solid rgba(255,255,255,0.1);
+          border-top: none;
+          background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.08) 80%, transparent);
+          background-size: 100% 1px;
+          background-repeat: no-repeat;
+          background-position: top;
           display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
           font-size: 0.875rem; letter-spacing: -0.015em; color: rgba(255,255,255,0.6);
         }
         .np-footer-legal { display: flex; gap: 24px; flex-wrap: wrap; }
 
-        /* Logo chữ khổng lồ khép lại trang. lengthAdjust="spacing" giãn khoảng
-           cách chữ chứ không kéo méo nét, nên ở cỡ này vẫn sạch. */
+        /* Logo chữ khổng lồ khép lại trang */
         .np-footer-wordmark { display: block; width: 100%; margin-top: clamp(40px, 5vw, 64px); }
-        .np-footer-wordmark text {
-          font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif;
-          font-weight: 700; fill: ${EMERALD};
-        }
-        .np-footer-wordmark .np-footer-wordmark-dot { fill: #f59e0b; }
 
         @media (max-width: 1023px) {
           .np-footer-top { flex-direction: column; }
@@ -134,11 +132,12 @@ export function SiteFooter() {
           style={{
             width: '100%',
             marginTop: 'clamp(40px, 5vw, 64px)',
+            paddingBottom: 'clamp(16px, 3vw, 40px)',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             textAlign: 'center',
-            overflow: 'hidden',
+            overflow: 'visible',
           }}
         >
           <BrandWordmark
