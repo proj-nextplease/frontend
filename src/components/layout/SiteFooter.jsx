@@ -142,10 +142,12 @@ export function SiteFooter() {
           }}
         >
           <BrandWordmark
-            size="clamp(3.5rem, 12vw, 10.5rem)"
+            size="auto"
+            glow
             style={{
-              justifyContent: 'center',
-              letterSpacing: '-0.035em',
+              width: 'min(920px, 92%)',
+              height: 'auto',
+              maxHeight: '180px',
             }}
           />
         </div>
