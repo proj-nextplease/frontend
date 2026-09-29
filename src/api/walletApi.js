@@ -34,8 +34,11 @@ export async function buyPremium() {
  */
 
 /**
- * Tạo yêu cầu nạp và lấy link thanh toán PayOS. CHƯA cộng NP.
- * Trả { orderCode, checkoutUrl, amountVnd }.
+ * Tạo yêu cầu nạp và lấy thông tin thanh toán PayOS. CHƯA cộng NP.
+ *
+ * Trả { orderCode, amountVnd, checkoutUrl, qrCode, accountNumber, accountName,
+ * bin, description }. `qrCode` là chuỗi VietQR thô — webapp tự vẽ thành mã QR
+ * để người dùng không phải rời khỏi site.
  */
 export async function createPayOsTopUp(amountVnd) {
   const response = await httpClient.post('/payments/payos/create', { amountVnd });
@@ -56,6 +59,20 @@ export async function getPayOsTopUpStatus(orderCode) {
   const response = await httpClient.get('/payments/payos/status', { params: { orderCode } });
   if (!response.data?.success) {
     throw new Error(response.data?.message || 'Không kiểm tra được trạng thái nạp.');
+  }
+  return response.data.data;
+}
+
+/**
+ * Huỷ một đơn nạp đang chờ.
+ *
+ * Backend chỉ huỷ khi đơn còn PENDING. Nếu người dùng đã chuyển khoản xong rồi
+ * mới bấm huỷ thì đơn đã PAID và lệnh này không đụng tới — tiền vẫn vào ví.
+ */
+export async function cancelPayOsTopUp(orderCode) {
+  const response = await httpClient.post('/payments/payos/cancel', { orderCode });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không huỷ được yêu cầu nạp.');
   }
   return response.data.data;
 }
