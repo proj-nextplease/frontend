@@ -59,7 +59,7 @@ import { NeonBloom } from '../components/NeonBloom.jsx';
 import { INK, EMERALD, EMERALD_BRIGHT } from '../styles/neonPalette.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { getWallet, buyPremium, createPayOsTopUp, getPayOsTopUpStatus, cancelPayOsTopUp } from '../api/walletApi.js';
-import { PayOsCheckout } from '../components/PayOsCheckout.jsx';
+import { PayOsCheckout, PayOsSuccess } from '../components/PayOsCheckout.jsx';
 import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication, getSavedQuestIds, getSavedQuests, saveQuest, unsaveQuest } from '../api/questApi.js';
 import {
   boostApplication,
@@ -911,6 +911,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [topUpCheckState, setTopUpCheckState] = useState('idle');
   /* Đơn đang chờ thanh toán. Khác null nghĩa là modal đang hiện màn QR. */
   const [pendingPayment, setPendingPayment] = useState(null);
+  /* Số NP vừa nạp xong, để màn thành công hiện đúng con số. */
+  const [topUpPaidAmount, setTopUpPaidAmount] = useState(0);
   const [buyPremiumLoading, setBuyPremiumLoading] = useState(false);
   const [buyPremiumError, setBuyPremiumError] = useState('');
 
@@ -1583,6 +1585,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     setTopUpError('');
     setTopUpSuccess('');
     setTopUpLoading(false);
+    setTopUpPaidAmount(0);
   }
 
   /* Người dùng bấm huỷ ở màn QR: quay về form chọn số tiền, không đóng modal.
@@ -1598,6 +1601,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   async function handlePaymentPaid(status) {
     setPendingPayment(null);
+    setTopUpPaidAmount(Number(status?.amountVnd || 0));
     const fresh = await getWallet().catch(() => null);
     if (fresh) setWallet(fresh);
     setTopUpCheckState('paid');
@@ -4406,7 +4410,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 />
               ) : (
               <>
-              <div style={{ background: 'var(--surface-soft)', borderRadius: '14px', padding: '14px 16px', marginBottom: '18px' }}>
+              {/* Thẻ số dư ẩn đi ở màn thành công — màn đó đã hiện số dư mới rồi,
+                  để cả hai thì cùng một con số xuất hiện hai lần trong một khung. */}
+              <div style={{ display: topUpSuccess ? 'none' : 'block', background: 'var(--surface-soft)', borderRadius: '14px', padding: '14px 16px', marginBottom: '18px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                   <span style={{ fontSize: '0.84rem', color: 'var(--muted)', fontWeight: '600' }}>Số dư hiện tại</span>
                   <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)' }}>{(wallet?.npBalance ?? 0).toLocaleString()} NP</span>
@@ -4446,12 +4452,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   </div>
                 </div>
               ) : topUpSuccess ? (
-                <div>
-                  <div className="alert-banner success" style={{ marginBottom: '14px' }}>{topUpSuccess}</div>
-                  <button type="button" className="button primary-button" style={{ width: '100%' }} onClick={closeTopUpModal}>
-                    Xong
-                  </button>
-                </div>
+                <PayOsSuccess
+                  amountNp={topUpPaidAmount}
+                  balanceAfter={wallet?.npBalance}
+                  onClose={closeTopUpModal}
+                />
               ) : (
                 <form onSubmit={handleTopUp}>
                   <label className="form-label" style={{ display: 'block', marginBottom: '8px' }}>Số tiền nạp (VND)</label>

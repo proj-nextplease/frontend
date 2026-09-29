@@ -12591,6 +12591,54 @@ img {
   40% { transform: scale(1.08); }
   100% { transform: scale(1); }
 }
+/* ── Màn báo nạp thành công, tự đóng ── */
+.np-topup-done { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 6px 0 2px; }
+
+.np-topup-done-mark {
+  width: 62px; height: 62px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  /* Nền đặc thay vì nền mờ: dấu tích là thứ duy nhất người dùng liếc để biết
+     tiền đã vào, nên nó phải đập vào mắt trước mọi thứ khác trong khung. */
+  background: var(--c-red, #10b981);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.28);
+  margin-bottom: 14px;
+  animation: np-topup-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes np-topup-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.np-topup-done-title { margin: 0; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.015em; color: var(--ink); }
+.np-topup-done-amount {
+  margin: 6px 0 0;
+  font-size: 1.9rem; font-weight: 800; line-height: 1;
+  letter-spacing: -0.025em;
+  color: var(--c-red, #10b981);
+}
+.np-topup-done-balance { margin: 10px 0 0; font-size: 0.86rem; color: var(--muted); }
+.np-topup-done-balance strong { color: var(--ink); font-weight: 700; }
+
+/* Thanh vơi dần cho thấy còn bao lâu nữa tự đóng — để người dùng hiểu popup
+   sắp biến mất là do hẹn giờ, không phải tự dưng nhảy mất. */
+.np-topup-done-bar {
+  width: 100%; height: 3px;
+  border-radius: 999px;
+  background: var(--line);
+  margin: 18px 0 14px;
+  overflow: hidden;
+}
+.np-topup-done-bar span {
+  display: block; height: 100%;
+  border-radius: 999px;
+  background: var(--c-red, #10b981);
+  transition: width 0.25s linear;
+}
+
+.np-topup-done-btn { width: 100%; }
+
 /* ── Màn thanh toán PayOS dựng trong app ── */
 .np-payos { display: flex; flex-direction: column; gap: 18px; }
 
