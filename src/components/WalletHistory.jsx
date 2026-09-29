@@ -36,11 +36,24 @@ function label(tx) {
   return TYPE_LABELS[tx?.transaction_type] || 'Giao dịch';
 }
 
-function formatDate(value) {
+/*
+ * Ngày kèm giờ.
+ *
+ * Giờ quan trọng ở đây vì trong cùng một ngày có thể có nhiều giao dịch — nạp
+ * tiền, mua gói, rồi hoàn tiền — và không có giờ thì không xếp được thứ tự,
+ * cũng không đối chiếu được với biên lai ngân hàng.
+ *
+ * `created_at` backend trả về có kèm múi giờ, nên `new Date` quy về giờ máy
+ * người dùng. Với người dùng ở Việt Nam đó chính là giờ họ đã bấm.
+ */
+function formatDateTime(value) {
   if (!value) return null;
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString('vi-VN');
+  /* Ghi rõ 2-digit cho ngày và tháng: mặc định của vi-VN cho ra "29/9/2026"
+     còn mobile luôn đệm số 0 thành "29/09/2026". Cùng một ví mà hai nơi viết
+     ngày khác nhau là thứ người dùng để ý ngay. */
+  return `${d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
 }
 
 export function WalletHistory({ transactions, loading }) {
@@ -77,7 +90,7 @@ export function WalletHistory({ transactions, loading }) {
                không suy ra từ `transaction_type` — suy ra là có ngày một loại
                giao dịch mới hiện sai dấu. */
             const gain = amount >= 0;
-            const date = formatDate(tx.created_at);
+            const date = formatDateTime(tx.created_at);
             const balance = Number(tx.balance_after_np ?? 0);
 
             return (
