@@ -918,10 +918,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   // Premium Monetization states
   const [premiumConfig, setPremiumConfig] = useState({
-    boostPriceNp: 15000,
+    boostPriceNp: 25000,
     boostDurationHours: 48,
     insightPriceNp: 10000,
-    expressPriceNp: 25000,
+    expressPriceNp: 15000,
     themePriceNp: 50000,
     matchAlertPriceNp: 19000,
     earlyAccessHours: 12
@@ -3396,7 +3396,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       <div>
                         <div className="candidate-premium-service-title">
                           <h3>Profile Boost</h3>
-                          <span>{(premiumConfig.boostPriceNp || 15000).toLocaleString()} NP</span>
+                          <span>{(premiumConfig.boostPriceNp || 25000).toLocaleString()} NP</span>
                         </div>
                         <p>Ghim đơn ứng tuyển trong {premiumConfig.boostDurationHours || 48}h để xuất hiện nổi bật hơn trong danh sách của nhà tuyển dụng.</p>
                       </div>
@@ -3445,7 +3445,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       <div>
                         <div className="candidate-premium-service-title">
                           <h3>Duyệt nhanh 24h Express</h3>
-                          <span>{(premiumConfig.expressPriceNp || 25000).toLocaleString()} NP</span>
+                          <span>{(premiumConfig.expressPriceNp || 15000).toLocaleString()} NP</span>
                         </div>
                         <p>Ưu tiên thẩm định minh chứng đang chờ duyệt để rút ngắn thời gian tích lũy RS và EXP.</p>
                       </div>
