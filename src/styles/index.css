@@ -12591,6 +12591,17 @@ img {
   40% { transform: scale(1.08); }
   100% { transform: scale(1); }
 }
+/* Vòng chờ trong modal nạp NP: đang đợi webhook PayOS xác nhận.
+   Không dùng .cfg-spinner được — cái đó màu trắng, 14px, làm cho nút. */
+.np-topup-spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  border-top-color: var(--c-red, #10b981);
+  animation: cfg-spin 0.8s linear infinite;
+}
+
 .cfg-spinner {
   width: 14px;
   height: 14px;
