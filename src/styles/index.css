@@ -12591,6 +12591,119 @@ img {
   40% { transform: scale(1.08); }
   100% { transform: scale(1); }
 }
+/* ── Màn thanh toán PayOS dựng trong app ── */
+.np-payos { display: flex; flex-direction: column; gap: 18px; }
+
+.np-payos-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.np-payos-amount-label { font-size: 0.84rem; color: var(--muted); font-weight: 600; }
+.np-payos-amount-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--c-red, #10b981);
+  line-height: 1;
+}
+.np-payos-amount-value span { font-size: 1rem; font-weight: 700; margin-left: 2px; }
+.np-payos-timer {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+.np-payos-timer.is-expired { color: #ef4444; border-color: rgba(239, 68, 68, 0.4); }
+
+.np-payos-grid { display: grid; grid-template-columns: 200px 1fr; gap: 20px; align-items: start; }
+
+.np-payos-qr { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+/* Nền trắng cứng, không dùng biến theme: mã QR phải là đen trên trắng để
+   camera app ngân hàng đọc được. Nền tối là hỏng ngay. */
+.np-payos-qr img,
+.np-payos-qr-empty {
+  width: 200px;
+  height: 200px;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 10px;
+  box-sizing: border-box;
+}
+.np-payos-qr-empty {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.82rem; color: #64748b;
+}
+.np-payos-qr-hint { font-size: 0.78rem; color: var(--muted); text-align: center; }
+
+.np-payos-details { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.np-payos-details-intro { margin: 0; font-size: 0.82rem; color: var(--muted); font-weight: 600; }
+
+.np-payos-field { display: flex; flex-direction: column; gap: 2px; }
+.np-payos-field-label { font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.np-payos-field-row { display: flex; align-items: center; gap: 8px; }
+.np-payos-field-value {
+  font-size: 0.94rem; font-weight: 700; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.np-payos-field-value.is-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.01em; }
+.np-payos-copy {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.np-payos-copy:hover { color: var(--c-red, #10b981); border-color: var(--c-red, #10b981); }
+
+.np-payos-warn { margin: 4px 0 0; font-size: 0.78rem; color: var(--muted); line-height: 1.45; }
+
+.np-payos-status {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 0.82rem; font-weight: 600; line-height: 1.45;
+  color: var(--ink);
+  background: var(--surface-soft);
+  border-radius: 12px;
+  padding: 11px 14px;
+}
+.np-payos-pulse {
+  flex-shrink: 0;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--c-red, #10b981);
+  animation: np-payos-pulse 1.4s ease-in-out infinite;
+}
+@keyframes np-payos-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.75); }
+}
+.np-payos-poll-error { margin: -8px 0 0; font-size: 0.78rem; color: #f59e0b; }
+
+.np-payos-actions { display: flex; align-items: center; gap: 12px; }
+.np-payos-fallback {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.8rem; font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.np-payos-fallback:hover { color: var(--c-red, #10b981); }
+
+@media (max-width: 620px) {
+  .np-payos-grid { grid-template-columns: 1fr; justify-items: center; }
+  .np-payos-details { width: 100%; }
+}
+
 /* Vòng chờ trong modal nạp NP: đang đợi webhook PayOS xác nhận.
    Không dùng .cfg-spinner được — cái đó màu trắng, 14px, làm cho nút. */
 .np-topup-spinner {

@@ -58,7 +58,8 @@ import { NotificationBell } from '../components/NotificationBell.jsx';
 import { NeonBloom } from '../components/NeonBloom.jsx';
 import { INK, EMERALD, EMERALD_BRIGHT } from '../styles/neonPalette.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
-import { getWallet, buyPremium, createPayOsTopUp, getPayOsTopUpStatus } from '../api/walletApi.js';
+import { getWallet, buyPremium, createPayOsTopUp, getPayOsTopUpStatus, cancelPayOsTopUp } from '../api/walletApi.js';
+import { PayOsCheckout } from '../components/PayOsCheckout.jsx';
 import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication, getSavedQuestIds, getSavedQuests, saveQuest, unsaveQuest } from '../api/questApi.js';
 import {
   boostApplication,
@@ -906,8 +907,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [topUpError, setTopUpError] = useState('');
   const [topUpSuccess, setTopUpSuccess] = useState('');
   /* idle | checking | paid | cancelled | timeout | unknown | error — trạng thái
-     sau khi quay về từ PayOS. */
+     sau khi quay về từ PayOS (đường lùi, khi người dùng mở trang PayOS ngoài). */
   const [topUpCheckState, setTopUpCheckState] = useState('idle');
+  /* Đơn đang chờ thanh toán. Khác null nghĩa là modal đang hiện màn QR. */
+  const [pendingPayment, setPendingPayment] = useState(null);
   const [buyPremiumLoading, setBuyPremiumLoading] = useState(false);
   const [buyPremiumError, setBuyPremiumError] = useState('');
 
@@ -1542,10 +1545,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   }
 
   /*
-   * Chuyển sang PayOS để trả tiền thật.
+   * Tạo đơn rồi hiện mã QR ngay trong modal.
    *
-   * Không cộng NP ở đây, và cũng không cộng khi người dùng quay lại. Chỉ
-   * webhook từ máy chủ PayOS mới cộng — xem walletApi.getPayOsTopUpStatus.
+   * Trước đây chỗ này chuyển hẳn sang trang checkout của PayOS. Bỏ cách đó vì
+   * giao diện trang họ không sửa được, và nút "Huỷ" trên đó đưa người dùng đi
+   * đâu là do họ quyết — mình chỉ nhận lại được một URL. Ở lại trong app thì
+   * không có cú rời trang nào để hỏng giữa chừng.
+   *
+   * Vẫn không cộng NP ở đây: tiền chỉ vào ví khi webhook PayOS xác nhận.
    */
   async function handleTopUp(e) {
     e.preventDefault();
@@ -1558,20 +1565,43 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     setTopUpLoading(true);
     try {
       const result = await createPayOsTopUp(amount);
-      /* Nhớ orderCode trước khi rời trang. PayOS có gắn orderCode vào
-         returnUrl, nhưng nếu họ đổi tham số hoặc người dùng tự mở lại link
-         thì mình vẫn còn đường lần ra đơn vừa tạo. */
-      try {
-        sessionStorage.setItem('np_payos_pending', JSON.stringify({
-          orderCode: result.orderCode, amountVnd: result.amountVnd,
-        }));
-      } catch { /* chế độ ẩn danh có thể chặn — không sao, đã có tham số URL */ }
-      window.location.href = result.checkoutUrl;
+      setPendingPayment(result);
+      setTopUpCheckState('idle');
     } catch (err) {
-      setTopUpError(err.message || 'Không tạo được link thanh toán. Vui lòng thử lại.');
+      setTopUpError(err.message || 'Không tạo được yêu cầu thanh toán. Vui lòng thử lại.');
+    } finally {
       setTopUpLoading(false);
     }
-    // Không tắt loading ở nhánh thành công: trang đang được chuyển đi.
+  }
+
+  /* Đóng modal nạp và xoá sạch mọi trạng thái tạm.
+     Gọi ở mọi lối thoát — thiếu một lối là modal mở lại vẫn còn kẹt ở màn cũ. */
+  function closeTopUpModal() {
+    setShowTopUpModal(false);
+    setPendingPayment(null);
+    setTopUpCheckState('idle');
+    setTopUpError('');
+    setTopUpSuccess('');
+    setTopUpLoading(false);
+  }
+
+  /* Người dùng bấm huỷ ở màn QR: quay về form chọn số tiền, không đóng modal.
+     Báo backend để đơn không nằm PENDING vô ích, nhưng không chờ kết quả —
+     huỷ được hay không cũng không đổi việc họ muốn quay lại. */
+  function handleCancelPayment() {
+    const orderCode = pendingPayment?.orderCode;
+    setPendingPayment(null);
+    setTopUpCheckState('idle');
+    setTopUpError('');
+    if (orderCode) cancelPayOsTopUp(orderCode).catch(() => { /* bỏ qua */ });
+  }
+
+  async function handlePaymentPaid(status) {
+    setPendingPayment(null);
+    const fresh = await getWallet().catch(() => null);
+    if (fresh) setWallet(fresh);
+    setTopUpCheckState('paid');
+    setTopUpSuccess(`Đã nạp ${Number(status?.amountVnd || 0).toLocaleString('vi-VN')} NP vào ví!`);
   }
 
   async function handleBuyPremium() {
@@ -4359,13 +4389,23 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
       {/* ─── Top-Up NP Modal ─── */}
       {showTopUpModal && (
-        <div className="glass-modal-overlay" onClick={() => { setShowTopUpModal(false); setTopUpError(''); setTopUpSuccess(''); setTopUpCheckState('idle'); }}>
-          <div className="glass-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+        <div className="glass-modal-overlay" onClick={closeTopUpModal}>
+          <div className="glass-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: pendingPayment ? '660px' : '400px' }}>
             <div className="glass-modal-header">
               <WalletCards size={20} color="var(--primary)" />
-              <h2>Nạp NP vào ví</h2>
+              <h2>{pendingPayment ? 'Quét mã để thanh toán' : 'Nạp NP vào ví'}</h2>
             </div>
             <div className="glass-modal-body">
+              {pendingPayment ? (
+                <PayOsCheckout
+                  key={pendingPayment.orderCode}
+                  payment={pendingPayment}
+                  onCancel={handleCancelPayment}
+                  onPaid={handlePaymentPaid}
+                  onExpired={() => { setPendingPayment(null); setTopUpCheckState('timeout'); }}
+                />
+              ) : (
+              <>
               <div style={{ background: 'var(--surface-soft)', borderRadius: '14px', padding: '14px 16px', marginBottom: '18px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                   <span style={{ fontSize: '0.84rem', color: 'var(--muted)', fontWeight: '600' }}>Số dư hiện tại</span>
@@ -4386,19 +4426,32 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     Không cần trả lại lần nữa.
                   </p>
                 </div>
-              ) : topUpCheckState === 'cancelled' ? (
-                <div className="alert-banner error" style={{ marginBottom: '12px' }}>
-                  <AlertTriangle size={14} style={{ flexShrink: 0 }} />
-                  Giao dịch đã bị huỷ — chưa có khoản tiền nào bị trừ.
-                </div>
-              ) : topUpCheckState === 'timeout' || topUpCheckState === 'unknown' ? (
-                <div className="alert-banner" style={{ marginBottom: '12px' }}>
-                  <AlertTriangle size={14} style={{ flexShrink: 0 }} />
-                  Chưa nhận được xác nhận từ PayOS. Nếu bạn đã chuyển khoản thành công,
-                  NP sẽ tự vào ví — thử tải lại trang sau ít phút.
+              ) : topUpCheckState === 'cancelled' || topUpCheckState === 'timeout' || topUpCheckState === 'unknown' ? (
+                /* Hai nhánh này BẮT BUỘC phải có nút quay lại. Trước đây chúng
+                   chỉ hiện một dòng thông báo, nên modal đứng yên ở đó và cách
+                   duy nhất để nạp lại là tải lại trang. */
+                <div>
+                  <div className={`alert-banner${topUpCheckState === 'cancelled' ? ' error' : ''}`} style={{ marginBottom: '14px' }}>
+                    <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                    {topUpCheckState === 'cancelled'
+                      ? 'Đã huỷ thanh toán — chưa có khoản tiền nào bị trừ.'
+                      : 'Đơn đã hết hạn. Nếu bạn vừa chuyển khoản thành công, NP vẫn sẽ tự vào ví.'}
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button type="button" className="button primary-button" style={{ flex: 1 }}
+                      onClick={() => { setTopUpCheckState('idle'); setTopUpError(''); }}>
+                      Nạp lại
+                    </button>
+                    <button type="button" className="button secondary-button" onClick={closeTopUpModal}>Đóng</button>
+                  </div>
                 </div>
               ) : topUpSuccess ? (
-                <div className="alert-banner success">{topUpSuccess}</div>
+                <div>
+                  <div className="alert-banner success" style={{ marginBottom: '14px' }}>{topUpSuccess}</div>
+                  <button type="button" className="button primary-button" style={{ width: '100%' }} onClick={closeTopUpModal}>
+                    Xong
+                  </button>
+                </div>
               ) : (
                 <form onSubmit={handleTopUp}>
                   <label className="form-label" style={{ display: 'block', marginBottom: '8px' }}>Số tiền nạp (VND)</label>
@@ -4436,7 +4489,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     <button type="submit" className="button primary-button" disabled={topUpLoading} style={{ flex: 1 }}>
                       {topUpLoading ? 'Đang chuyển tới PayOS...' : 'Thanh toán qua PayOS'}
                     </button>
-                    <button type="button" className="button secondary-button" onClick={() => { setShowTopUpModal(false); setTopUpError(''); }}>Hủy</button>
+                    <button type="button" className="button secondary-button" onClick={closeTopUpModal}>Hủy</button>
                   </div>
                 </form>
               )}
@@ -4444,6 +4497,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 Thanh toán qua PayOS — hỗ trợ chuyển khoản ngân hàng và ví điện tử.
                 NP vào ví ngay khi PayOS xác nhận đã nhận tiền.
               </p>
+              </>
+              )}
             </div>
           </div>
         </div>
