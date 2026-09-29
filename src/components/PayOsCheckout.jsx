@@ -208,3 +208,51 @@ export function PayOsCheckout({ payment, onCancel, onPaid, onExpired }) {
     </div>
   );
 }
+
+/* Đếm bao nhiêu giây thì tự đóng màn thành công. Đủ lâu để đọc số dư mới,
+   đủ ngắn để không phải ngồi chờ. */
+const SUCCESS_AUTOCLOSE_SECONDS = 6;
+
+/**
+ * Màn báo nạp thành công, tự đóng sau vài giây.
+ *
+ * Vẫn để nút đóng ngay: đồng hồ đếm lùi là tiện ích, không phải thứ bắt người
+ * dùng phải chờ. Và nút đó phải hoạt động cả khi đồng hồ chưa về 0.
+ */
+export function PayOsSuccess({ amountNp, balanceAfter, onClose }) {
+  const [deadline] = useState(() => Date.now() + SUCCESS_AUTOCLOSE_SECONDS * 1000);
+  const [secondsLeft, setSecondsLeft] = useState(SUCCESS_AUTOCLOSE_SECONDS);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; });
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const left = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      setSecondsLeft(left);
+      if (left === 0) {
+        clearInterval(id);
+        onCloseRef.current?.();
+      }
+    }, 250);
+    return () => clearInterval(id);
+  }, [deadline]);
+
+  const pct = Math.max(0, Math.min(100, (secondsLeft / SUCCESS_AUTOCLOSE_SECONDS) * 100));
+
+  return (
+    <div className="np-topup-done">
+      <div className="np-topup-done-mark"><Check size={30} strokeWidth={3} /></div>
+      <h3 className="np-topup-done-title">Nạp thành công</h3>
+      <p className="np-topup-done-amount">+{Number(amountNp || 0).toLocaleString('vi-VN')} NP</p>
+      {balanceAfter != null && (
+        <p className="np-topup-done-balance">
+          Số dư hiện tại <strong>{Number(balanceAfter).toLocaleString('vi-VN')} NP</strong>
+        </p>
+      )}
+      <div className="np-topup-done-bar"><span style={{ width: `${pct}%` }} /></div>
+      <button type="button" className="button primary-button np-topup-done-btn" onClick={onClose}>
+        Đóng{secondsLeft > 0 ? ` (${secondsLeft}s)` : ''}
+      </button>
+    </div>
+  );
+}
