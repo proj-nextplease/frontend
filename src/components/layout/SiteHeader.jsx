@@ -11,6 +11,7 @@ import { clearMyProfileCache, useMyProfile } from '../../lib/useMyProfile.js';
 import { resetSavedJobs } from '../../lib/savedJobs.js';
 import { supabase } from '../../services/supabaseClient.js';
 import { BrandWordmark } from '../BrandWordmark.jsx';
+import logoapp1 from '../../assets/logoapp1.png';
 
 /**
  * Thanh điều hướng dùng chung (nextplease) — thanh nổi kiểu Handshake.
@@ -253,12 +254,8 @@ export function SiteHeader({ overlay = false, pinned = true }) {
           .nph-shell[data-mode="ondark"] .nph-brand-word i { color: ${EMERALD}; }
           .nph-brand-word b { font-style: normal; font-weight: 800; color: #f59e0b; }
           .nph-brand-mark {
-            width: 42px; height: 42px; border-radius: 12px; background: #B9FF00;
+            width: 42px; height: 42px; border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 14px rgba(185, 255, 0, 0.45);
-            font-family: 'Fredoka', 'Baloo 2', 'Plus Jakarta Sans', system-ui, sans-serif;
-            font-size: 1.55rem; font-weight: 800;
-            color: #0b0f0e; line-height: 1; letter-spacing: -0.02em;
           }
 
           /* ── Liên kết điều hướng ──
@@ -387,8 +384,18 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                     pointerEvents: condensed ? 'auto' : 'none',
                   }}
                 >
-                  <span style={{ color: '#0b0f0e', fontWeight: 900 }}>n</span>
-                  <span style={{ color: '#2dd4bf', fontWeight: 900, marginLeft: '1px' }}>:</span>
+                  <img
+                    src={logoapp1}
+                    alt="nextplease"
+                    style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '12px',
+                      objectFit: 'cover',
+                      display: 'block',
+                      boxShadow: '0 0 14px rgba(185, 255, 0, 0.45)',
+                    }}
+                  />
                 </span>
               </span>
             </Link>
