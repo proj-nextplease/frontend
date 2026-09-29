@@ -1,5 +1,12 @@
+import { useState } from 'react';
+import { ChevronDown, History } from 'lucide-react';
+
 /*
  * Lịch sử giao dịch NP.
+ *
+ * Mặc định GẬP LẠI. Đây là thứ người dùng thỉnh thoảng mới cần tra, không
+ * phải thứ họ tới tab Premium để xem — trải dài hai mươi dòng ra giữa trang
+ * thì nó đẩy chính cái cửa hàng Premium xuống dưới màn hình.
  *
  * Dữ liệu lấy từ chính /wallet (trường `recentTransactions`) — backend đã trả
  * 20 dòng gần nhất từ lâu, web chỉ chưa hiện ra. Không gọi thêm API nào.
@@ -37,13 +44,26 @@ function formatDate(value) {
 }
 
 export function WalletHistory({ transactions, loading }) {
+  const [open, setOpen] = useState(false);
   const rows = Array.isArray(transactions) ? transactions : [];
 
   return (
     <section className="np-wallet-history">
-      <h3 className="np-wallet-history-title">Lịch sử giao dịch</h3>
+      <button
+        type="button"
+        className={`np-wallet-history-toggle${open ? ' is-open' : ''}`}
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+      >
+        <History size={15} />
+        <span className="np-wallet-history-title">Lịch sử giao dịch</span>
+        {/* Số lượng hiện ngay trên nút: người dùng biết có gì bên trong trước
+            khi bấm, và biết luôn là mình chưa có giao dịch nào. */}
+        {!loading && <span className="np-wallet-history-count">{rows.length}</span>}
+        <ChevronDown size={16} className="np-wallet-history-chevron" />
+      </button>
 
-      {loading && rows.length === 0 ? (
+      {!open ? null : loading && rows.length === 0 ? (
         <p className="np-wallet-history-empty">Đang tải…</p>
       ) : rows.length === 0 ? (
         <p className="np-wallet-history-empty">

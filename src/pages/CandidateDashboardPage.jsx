@@ -12,6 +12,7 @@ import {
   Clock3,
   Crown,
   LockKeyhole,
+  Plus,
   Search,
   ShieldCheck,
   Sparkles,
@@ -2100,6 +2101,22 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             <Link className="np-area-link" to={portfolio?.onboardingCompleted ? '/portfolio/edit' : '/portfolio'}>
               <Boxes size={16} /> Portfolio
             </Link>
+            {/* Nạp NP ở mọi tab. Đặt cạnh Portfolio vì thanh này là thứ duy
+                nhất hiện trên TẤT CẢ các tab của khu vực; trước đây muốn nạp
+                phải tự tìm sang tab Premium. Hiện luôn số dư: con số đó vừa
+                là lý do bấm, vừa tránh phải mở tab khác chỉ để xem còn bao
+                nhiêu. */}
+            <button
+              type="button"
+              className="np-area-wallet"
+              onClick={() => setShowTopUpModal(true)}
+              title="Nạp NP vào ví"
+            >
+              <WalletCards size={16} />
+              <span>{walletLoading ? '—' : (wallet?.npBalance ?? 0).toLocaleString('vi-VN')}</span>
+              <span className="np-area-wallet-unit">NP</span>
+              <Plus size={13} strokeWidth={2.6} />
+            </button>
             {/* Mặc định NotificationBell tự neo `position: fixed` ở góc trên
                 phải — di sản từ hồi khu vực này chưa có thanh điều hướng. Giờ
                 có SiteHeader rồi nên nó đè lên menu tài khoản; kéo về nằm
