@@ -10,6 +10,8 @@ import { UserAvatar } from '../UserAvatar.jsx';
 import { clearMyProfileCache, useMyProfile } from '../../lib/useMyProfile.js';
 import { resetSavedJobs } from '../../lib/savedJobs.js';
 import { supabase } from '../../services/supabaseClient.js';
+import { BrandWordmark } from '../BrandWordmark.jsx';
+import logoapp1 from '../../assets/logoapp1.png';
 
 /**
  * Thanh điều hướng dùng chung (nextplease) — thanh nổi kiểu Handshake.
@@ -87,11 +89,19 @@ export function SiteHeader({ overlay = false, pinned = true }) {
 
   useEffect(() => {
     if (!pinned) return undefined;
-    // Ngưỡng 8px: trang mẫu đổi trạng thái ngay khi rời khỏi đỉnh, không chờ.
-    function onScroll() { setScrolled(window.scrollY > 8); }
+    function onScroll() {
+      const scrollPos = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      setScrolled(scrollPos > 8);
+    }
     onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    document.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll, { capture: true });
+      document.removeEventListener('scroll', onScroll, { capture: true });
+      window.removeEventListener('resize', onScroll);
+    };
   }, [pinned]);
 
   // Theo dõi phiên Supabase để menu tắt ngay khi phiên hết hạn ở tab khác.
@@ -211,7 +221,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
           .nph-pill {
             pointer-events: auto; box-sizing: border-box;
             display: flex; align-items: center; justify-content: space-between; gap: 12px;
-            height: 56px; padding: 0 8px; border-radius: 16px;
+            height: 60px; padding: 0 10px; border-radius: 18px;
             border: 1px solid transparent;
             transition: width 420ms cubic-bezier(0.22,1,0.36,1),
                         background-color 420ms ease,
@@ -233,21 +243,19 @@ export function SiteHeader({ overlay = false, pinned = true }) {
              ô vuông nở ra. Cùng đường cong với viên thuốc nên hai chuyển động
              khớp nhau. */
           .nph-brand { pointer-events: auto; display: inline-flex; align-items: center; flex: none; margin-left: 8px; text-decoration: none; }
-          .nph-brand-swap { position: relative; display: block; height: 40px; transition: width 420ms cubic-bezier(0.22,1,0.36,1); }
+          .nph-brand-swap { position: relative; display: flex; align-items: center; height: 50px; transition: width 420ms cubic-bezier(0.22,1,0.36,1); }
           .nph-brand-layer {
-            position: absolute; left: 0; top: 0; height: 40px;
-            display: flex; align-items: center; transform-origin: left center; white-space: nowrap;
-            transition: opacity 260ms ease, transform 420ms cubic-bezier(0.22,1,0.36,1);
+            position: absolute; left: 0; top: 50%; transform-origin: left center; white-space: nowrap;
+            display: flex; align-items: center;
+            transition: opacity 280ms ease, transform 420ms cubic-bezier(0.22,1,0.36,1);
           }
           .nph-brand-word { font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif; font-size: 1.62rem; letter-spacing: -0.01em; }
           .nph-brand-word i { font-style: normal; font-weight: 700; color: #059669; }
           .nph-shell[data-mode="ondark"] .nph-brand-word i { color: ${EMERALD}; }
           .nph-brand-word b { font-style: normal; font-weight: 800; color: #f59e0b; }
           .nph-brand-mark {
-            width: 40px; height: 40px; border-radius: 12px; background: ${EMERALD};
-            align-items: center; justify-content: center;
-            font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif; font-size: 1.35rem; font-weight: 700;
-            color: ${INK}; line-height: 1;
+            width: 42px; height: 42px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
           }
 
           /* ── Liên kết điều hướng ──
@@ -353,20 +361,41 @@ export function SiteHeader({ overlay = false, pinned = true }) {
             {/* Logo: chữ ⇄ ô vuông. Hai lớp luôn ở trong DOM để crossfade được;
                 ô bọc co width nên phần còn lại của thanh trượt theo mượt. */}
             <Link to="/" className="nph-brand" aria-label="nextplease — về trang chủ">
-              <span className="nph-brand-swap" style={{ width: condensed ? '40px' : '172px' }}>
+              <span className="nph-brand-swap" style={{ width: condensed ? '44px' : '250px' }}>
                 <span
                   className="nph-brand-layer nph-brand-word"
                   aria-hidden={condensed}
-                  style={{ opacity: condensed ? 0 : 1, transform: condensed ? 'scale(0)' : 'none' }}
+                  style={{
+                    opacity: condensed ? 0 : 1,
+                    transform: condensed ? 'scale(0.5) translateY(-50%)' : 'translateY(-50%)',
+                    pointerEvents: condensed ? 'none' : 'auto',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
                 >
-                  <i>nextplease</i><b>:</b>
+                  <BrandWordmark size="42px" />
                 </span>
                 <span
                   className="nph-brand-layer nph-brand-mark"
                   aria-hidden={!condensed}
-                  style={{ display: 'flex', opacity: condensed ? 1 : 0, transform: condensed ? 'none' : 'scale(0)' }}
+                  style={{
+                    opacity: condensed ? 1 : 0,
+                    transform: condensed ? 'translateY(-50%)' : 'scale(0.3) translateY(-50%)',
+                    pointerEvents: condensed ? 'auto' : 'none',
+                  }}
                 >
-                  n<b style={{ color: INK }}>:</b>
+                  <img
+                    src={logoapp1}
+                    alt="nextplease"
+                    style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '12px',
+                      objectFit: 'cover',
+                      display: 'block',
+                      boxShadow: '0 0 14px rgba(185, 255, 0, 0.45)',
+                    }}
+                  />
                 </span>
               </span>
             </Link>

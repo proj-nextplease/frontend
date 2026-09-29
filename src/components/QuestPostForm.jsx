@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageSquarePlus, Plus, Minus, Trash2, GripVertical, ImagePlus, Sparkles, AlertTriangle, Move } from 'lucide-react';
+import { MessageSquarePlus, Plus, Minus, Trash2, GripVertical, ImagePlus, Sparkles, AlertTriangle, Move, Crown } from 'lucide-react';
 import { createQuest, updateQuest, getQuestExpConfig } from '../api/questApi.js';
 import { getMyCompany } from '../api/b2bApi.js';
 import { PremiumDateTimePicker } from './PremiumDateTimePicker.jsx';
@@ -53,6 +53,7 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
     description: initialData?.description ?? '',
     questCategory: initialData?.category ?? 'SMALL_EVENT',
     minReqRs: initialData?.minReqRs ?? 0,
+    requiresPremium: initialData?.requiresPremium ?? false,
     location: initialData?.location ?? '',
     capacity: initialData?.capacity ? String(initialData.capacity) : '',
     deadlineAt: initialData?.endsAt ?? '',
@@ -196,6 +197,7 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
       description: form.description.trim(),
       category: form.questCategory,
       minReqRs: parseInt(form.minReqRs) || 0,
+      requiresPremium: form.requiresPremium,
       location: form.location.trim(),
       capacity: form.capacity ? parseInt(form.capacity) : null,
       endsAt: deadline,
@@ -360,6 +362,26 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
               </label>
               <input type="range" name="minReqRs" min="0" max="100" value={form.minReqRs} onChange={handleChange}
                 style={{ accentColor: '#2563eb', cursor: 'pointer' }} />
+            </div>
+
+            {/* Cùng ô như bên form tin tuyển dụng, để CLB và doanh nghiệp có
+                trải nghiệm giống nhau. Khung viền vàng riêng vì ô này CHẶN
+                phần lớn ứng viên khỏi nộp đơn — không để lẫn vào các ô mô tả
+                tính chất công việc. */}
+            <div style={{ gridColumn: 'span 2', background: 'rgba(224,161,9,0.06)', border: '1px solid rgba(224,161,9,0.3)', borderRadius: '14px', padding: '16px 18px' }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', userSelect: 'none' }}>
+                <input type="checkbox" name="requiresPremium" checked={form.requiresPremium} onChange={handleChange}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', marginTop: '2px', flexShrink: 0 }} />
+                <span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Crown size={15} style={{ color: '#e0a109' }} /> Chỉ nhận ứng viên Premium
+                  </span>
+                  <span style={{ display: 'block', marginTop: '4px', fontSize: '0.78rem', lineHeight: 1.5, color: 'var(--muted)' }}>
+                    Quest vẫn hiển thị công khai, nhưng chỉ ứng viên đang có Premium Pass mới nộp được đơn.
+                    Số đơn nhận về sẽ ít hơn đáng kể — chỉ bật khi bạn thật sự cần lọc bớt.
+                  </span>
+                </span>
+              </label>
             </div>
           </div>
         </div>

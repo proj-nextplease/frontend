@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import {
   Award, BriefcaseBusiness, ShieldCheck, ArrowLeft, GraduationCap,
   MapPin, BadgeCheck, ExternalLink, Code2, Link2, Globe, Mail, Eye, FileUp, Download,
+  Crown,
 } from 'lucide-react';
 import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
 import { getPublicProfile, getPublicProfileBySlug } from '../api/portfolioApi.js';
@@ -125,6 +126,7 @@ export function VerifiedPassport({ profile, isDraft = false }) {
                 <span className="vp-badge verified"><BadgeCheck size={14} /> Đã xác thực</span>
               )}
               {profile.openToWork && <span className="vp-badge open"><BriefcaseBusiness size={13} /> Đang tìm việc</span>}
+              {profile.isPremium && <span className="vp-badge premium"><Crown size={13} /> Premium</span>}
             </div>
             <h1 className="vp-name">{profile.name || 'Ứng viên'}</h1>
             {profile.headline && <p className="vp-headline">{profile.headline}</p>}

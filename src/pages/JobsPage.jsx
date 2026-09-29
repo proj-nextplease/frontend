@@ -4,7 +4,7 @@ import {
   ChevronDown, MapPin, Wallet, Clock, Users, Briefcase,
   Heart, List, LayoutGrid, RotateCcw, Building2, Check, Search,
   X, Share2, ArrowRight, Link2, GraduationCap, Zap, ShieldCheck,
-  Star, Award, Sparkles, FolderOpen, ChevronLeft, ChevronRight, Globe,
+  Star, Award, Sparkles, FolderOpen, ChevronLeft, ChevronRight, Globe, Crown,
 } from 'lucide-react';
 import { NeonBloom } from '../components/NeonBloom.jsx';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
@@ -172,6 +172,7 @@ function externalToCard(raw) {
     // Tin ngoài không tạo được bản ghi ứng tuyển nên không cộng Proof. Phải
     // ghi false để bộ lọc "có Proof" không trả nhầm.
     givesProof: false,
+    requiresPremium: false,
     description: raw.excerpt || '',
     salary: formatExternalSalary(raw),
     salaryKnown: Boolean(raw.salaryText),
@@ -273,6 +274,9 @@ function normalizeJob(raw) {
     rsReward,
     npReward,
     givesProof,
+    // Chỉ ứng viên có Premium Pass nộp được. Mang vào thẻ để nói TRƯỚC khi
+    // họ bấm vào — biết lúc bấm nút ứng tuyển rồi mới bị chặn là tệ nhất.
+    requiresPremium: raw.requiresPremium === true,
     description: (raw.description || '').trim(),
     salary,
     salaryKnown,
@@ -996,6 +1000,7 @@ export function JobsPage() {
         .jb-card:hover::before { opacity: 1; }
         .jb-card:hover::after { opacity: 1; }
         .jb-card:active { transform: scale(0.99); }
+        .jb-org-pill.prem { border-color: rgba(224,161,9,0.5); color: #f7c948; background: rgba(224,161,9,0.12); }
         .jb-org-pill.ext { border-color: rgba(185,255,0,0.4); color: ${EMERALD}; background: rgba(185,255,0,0.08); }
         .jb-card.selected { border-color: ${EMERALD}; background-color: rgba(16,185,129,0.08); transform: none; }
         .jb-card.is-club::before { background: linear-gradient(90deg, transparent, rgba(16,185,129,0.6), transparent); opacity: 0.8; }
@@ -1229,6 +1234,14 @@ export function JobsPage() {
                     <JobLogo job={job} index={i} />
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                        {job.requiresPremium && (
+                          <span
+                            className="jb-org-pill prem"
+                            title="Chỉ ứng viên có Premium Pass mới nộp được đơn"
+                          >
+                            <Crown size={12} /> Premium
+                          </span>
+                        )}
                         {job.kind === 'EXTERNAL' ? (
                           /* Nhãn này là thứ DUY NHẤT cho người dùng biết bấm
                              vào sẽ rời khỏi nextplease. Trộn chung danh sách mà

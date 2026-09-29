@@ -68,7 +68,6 @@ import {
   subscribeJobMatchAlert,
   getPersonalizedRecommendations,
   getPremiumConfig,
-  unlockTheme,
   selectTheme
 } from '../api/premiumApi.js';
 import { getGamification, pingGamification, claimQuest, recordGamificationEvent } from '../api/gamificationApi.js';
@@ -1703,6 +1702,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [toast, setToast] = useState(null);
   const showToast = (type, message) => setToast({ type, message });
+
+  /* Ngày hết hạn hiển thị khi rê chuột lên huy hiệu. Người dùng mua theo
+     tháng nên "còn hiệu lực tới bao giờ" là thông tin họ sẽ đi tìm. */
+  const premiumUntilLabel = wallet?.premiumUntil
+    ? `Premium còn hiệu lực tới ${new Date(wallet.premiumUntil).toLocaleDateString('vi-VN')}`
+    : 'Premium đang hoạt động';
   const askConfirm = (opts) => setConfirmDialog(opts);
   useEffect(() => {
     if (!toast) return undefined;
@@ -2063,10 +2068,36 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               .np-quest-prog { height:7px; border-radius:999px; background:var(--c-line); overflow:hidden; margin-top:6px; }
               .np-quest-prog > span { display:block; height:100%; border-radius:999px; transition: width 0.6s cubic-bezier(0.22,1,0.36,1); }
               .np-quest-claim { border:none; cursor:pointer; font-weight:800; font-size:0.8rem; padding:7px 14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease; }
-              .np-quest-claim:hover { transform: translateY(-2px); box-shadow:0 10px 22px rgba(16, 185, 129,0.25); }
+              .candidate-premium-soon {
+                background: rgba(255,255,255,0.08) !important;
+                color: rgba(255,255,255,0.6) !important;
+              }
+              .np-pp-premium {
+                display: inline-flex; align-items: center; gap: 5px;
+                vertical-align: middle; margin-left: 14px;
+                padding: 5px 12px; border-radius: 999px;
+                font-family: 'Be Vietnam Pro', sans-serif;
+                font-size: 0.78rem; font-weight: 800; letter-spacing: 0.02em;
+                text-transform: none;
+                background: linear-gradient(135deg, #f7c948, #e0a109);
+                color: #2b1d00;
+                box-shadow: 0 2px 12px rgba(224, 161, 9, 0.35);
+              }
+              .np-quest-claim:hover { transform: translateY(-2px); box-shadow:0 10px 22px rgba(185, 255, 0, 0.18); }
               .np-quest-claim:active { transform: scale(0.96); }
               .np-quest-claim.ready { background:${EMERALD}; color:${INK}; animation: npQuestPop 0.4s ease both; }
-              .np-quest-claim.claimed { background:#e7f6ec; color:#16a34a; cursor:default; }
+              /* Nền bạc hà sáng #e7f6ec là kiểu dành cho giao diện SÁNG, sót
+                 lại từ trước khi khu vực này đổi sang nền tối. Đặt trên nền
+                 #070a0f nó thành một mảng sáng chói giữa thẻ.
+                 Trạng thái "đã nhận" cố ý KHÔNG dùng lime đặc như nút "Nhận":
+                 việc đã xong thì không cần kéo mắt về nữa — để nó lùi lại cho
+                 nhiệm vụ chưa làm nổi lên. */
+              .np-quest-claim.claimed {
+                background: rgba(185, 255, 0, 0.12);
+                color: ${EMERALD};
+                cursor: default;
+              }
+              .np-quest-claim.claimed:hover { transform: none; box-shadow: none; }
               .np-quest-claim.locked { background:var(--c-line); color:var(--c-muted); cursor:default; }
               @media (prefers-reduced-motion: reduce) { .np-streak-flame, .np-quest-card, .np-quest-claim.ready { animation:none !important; } }
             `}</style>
@@ -2089,7 +2120,18 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
               <div className="np-pp-id">
                 <span className="np-pp-eyebrow">Hộ chiếu năng lực</span>
-                <h2 className="np-pp-name">{portfolio?.name || 'Ứng viên'}</h2>
+                <h2 className="np-pp-name">
+                  {portfolio?.name || 'Ứng viên'}
+                  {/* Người mua cần THẤY thứ mình đã trả tiền, ngay ở chỗ dễ
+                      thấy nhất. Trước đây trạng thái Premium chỉ tồn tại trong
+                      DB và ở trang quản trị — ứng viên mua xong không có gì
+                      đổi trên màn hình của họ. */}
+                  {wallet?.isPremium && (
+                    <span className="np-pp-premium" title={premiumUntilLabel}>
+                      <Crown size={16} /> Premium
+                    </span>
+                  )}
+                </h2>
                 <p className="np-pp-sub">
                   {has3D
                     ? 'Hồ sơ đã kích hoạt, đang hiển thị với nhà tuyển dụng'
@@ -3124,14 +3166,21 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <div>
                     <div className="candidate-premium-service-title">
                       <h3>Job Match Alert & Đề xuất AI</h3>
-                      <span>{wallet?.hasJobMatchAlert ? 'Đang hoạt động' : `${(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP / tháng`}</span>
+                      <span className="candidate-premium-soon">Sắp ra mắt</span>
                     </div>
-                    <p>Xem sớm trước {premiumConfig.earlyAccessHours || 12}h các tin hot và mở tab gợi ý việc làm, Quest CLB khớp kỹ năng.</p>
+                    {/* Mô tả cũ hứa ba thứ mà không thứ nào tồn tại: "xem sớm
+                        12h" không có dòng code nào dùng earlyAccessHours ngoài
+                        chỗ khai config; "tab gợi ý" đã bị xoá; và không có
+                        tích hợp AI nào trong backend. Phần khớp kỹ năng thì có
+                        thật nhưng chưa bắn được thông báo nào vì chưa tin nào
+                        được gắn kỹ năng. Nói đúng hiện trạng thay vì bán một
+                        thứ chưa có. */}
+                    <p>Nhận thông báo khi có tin tuyển dụng hoặc Quest CLB khớp kỹ năng trong hồ sơ, kèm gợi ý được xếp hạng và giải thích vì sao phù hợp. Tính năng đang hoàn thiện.</p>
                   </div>
                 </div>
                 <div className="candidate-premium-row-action">
-                  <button type="button" className={`button ${wallet?.hasJobMatchAlert ? 'secondary-button' : 'primary-button'}`} onClick={handleSubscribeMatchAlert} disabled={subscribingMatchAlert}>
-                    {subscribingMatchAlert ? <><span className="premium-loading-dot" aria-hidden="true" /> Đang xử lý...</> : wallet?.hasJobMatchAlert ? 'Gia hạn 30 ngày' : 'Đăng ký ngay'}
+                  <button type="button" className="button secondary-button" disabled>
+                    Sắp ra mắt
                   </button>
                 </div>
               </article>
@@ -3142,9 +3191,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <div>
                     <div className="candidate-premium-service-title">
                       <h3>Visual Upgrade</h3>
-                      <span>{portfolio?.themeUnlocked ? 'Đã mở khóa' : `${(premiumConfig.themePriceNp || 50000).toLocaleString()} NP`}</span>
+                      <span className="candidate-premium-soon">Sắp ra mắt</span>
                     </div>
-                    <p>Mở khóa trọn đời bộ theme màu cho link portfolio công khai mà không ảnh hưởng Reputation Score.</p>
+                    <p>Tuỳ biến trang portfolio công khai: theme màu, ảnh bìa, phông chữ và đường dẫn riêng. Tính năng đang hoàn thiện.</p>
                   </div>
                 </div>
                 <div className="candidate-premium-row-action wide">
@@ -3183,33 +3232,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       })}
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => askConfirm({
-                        title: 'Mở khóa Visual Upgrade',
-                        message: `Hệ thống sẽ trừ ${(premiumConfig.themePriceNp || 50000).toLocaleString()} NP để mở khóa trọn đời bộ theme cho link portfolio công khai.`,
-                        confirmText: 'Mua trọn đời',
-                        accent: '#10b981',
-                        onConfirm: async () => {
-                          try {
-                            const res = await unlockTheme();
-                            if (res.npBalance !== undefined) {
-                              setWallet(prev => prev ? { ...prev, npBalance: res.npBalance } : prev);
-                            } else {
-                              const newWallet = await getWallet();
-                              setWallet(newWallet);
-                            }
-                            const updated = await getMyPortfolio();
-                            setPortfolio(updated);
-                            showToast('success', 'Mở khóa Theme thành công!');
-                          } catch (err) {
-                            showToast('error', err.message || 'Mở khóa thất bại.');
-                          }
-                        },
-                      })}
-                      className="button primary-button"
-                    >
-                      Mua trọn đời
+                    /* Người ĐÃ mua vẫn giữ nguyên bộ chọn theme ở nhánh trên —
+                       không gỡ thứ họ đã trả tiền. Chỉ chặn mua mới. */
+                    <button type="button" className="button secondary-button" disabled>
+                      Sắp ra mắt
                     </button>
                   )}
                 </div>

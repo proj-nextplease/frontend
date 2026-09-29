@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuthModal } from '../../context/AuthModalContext.jsx';
 import { getStoredToken } from '../../lib/authStorage.js';
+import { BrandWordmark } from '../BrandWordmark.jsx';
 
 /**
  * Footer dùng chung (nextplease) — dựng theo cấu trúc footer của trang mẫu:
@@ -41,7 +42,7 @@ export function SiteFooter() {
   return (
     <footer className="np-footer">
       <style>{`
-        .np-footer { background: ${INK}; color: ${ON_DARK}; }
+        .np-footer { background: ${INK}; color: ${ON_DARK}; overflow: hidden; padding-bottom: 0; margin-bottom: 0; }
         .np-footer-inner { padding: clamp(64px, 8vw, 96px) 20px clamp(28px, 3vw, 40px); }
 
         .np-footer-top { display: flex; gap: clamp(40px, 6vw, 80px); align-items: flex-start; }
@@ -65,20 +66,18 @@ export function SiteFooter() {
 
         .np-footer-bottom {
           margin-top: clamp(56px, 7vw, 88px); padding-top: 24px;
-          border-top: 1px solid rgba(255,255,255,0.1);
+          border-top: none;
+          background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.08) 80%, transparent);
+          background-size: 100% 1px;
+          background-repeat: no-repeat;
+          background-position: top;
           display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
           font-size: 0.875rem; letter-spacing: -0.015em; color: rgba(255,255,255,0.6);
         }
         .np-footer-legal { display: flex; gap: 24px; flex-wrap: wrap; }
 
-        /* Logo chữ khổng lồ khép lại trang. lengthAdjust="spacing" giãn khoảng
-           cách chữ chứ không kéo méo nét, nên ở cỡ này vẫn sạch. */
+        /* Logo chữ khổng lồ khép lại trang */
         .np-footer-wordmark { display: block; width: 100%; margin-top: clamp(40px, 5vw, 64px); }
-        .np-footer-wordmark text {
-          font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif;
-          font-weight: 700; fill: ${EMERALD};
-        }
-        .np-footer-wordmark .np-footer-wordmark-dot { fill: #f59e0b; }
 
         @media (max-width: 1023px) {
           .np-footer-top { flex-direction: column; }
@@ -127,21 +126,37 @@ export function SiteFooter() {
           </div>
           <span>© 2026 next please. Bảo lưu mọi quyền.</span>
         </div>
+      </div>
 
-        {/* viewBox phải chừa chỗ cho đuôi chữ 'p': ở cỡ 176px đuôi thò xuống
-            ~48px dưới đường chân chữ, nên khung cao 176 với chân chữ ở y=140
-            sẽ cắt cụt đuôi. 212 / y=148 thì vừa cả phần trên lẫn phần dưới. */}
-        <svg
-          className="np-footer-wordmark"
-          viewBox="0 0 1000 212"
-          preserveAspectRatio="xMidYMid meet"
-          role="img"
-          aria-label="nextplease"
-        >
-          <text x="0" y="148" fontSize="176" textLength="1000" lengthAdjust="spacing">
-            nextplease<tspan className="np-footer-wordmark-dot">:</tspan>
-          </text>
-        </svg>
+      <div
+        className="np-footer-wordmark-wrap"
+        style={{
+          width: '100%',
+          margin: 'clamp(20px, 3vw, 40px) 0 0 0',
+          padding: 0,
+          marginBottom: 0,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'flex-end',
+          textAlign: 'center',
+          overflow: 'visible',
+          lineHeight: 0,
+          boxSizing: 'border-box',
+        }}
+      >
+        <BrandWordmark
+          size="auto"
+          glow
+          style={{
+            display: 'block',
+            width: 'min(1440px, 100%)',
+            height: 'auto',
+            maxHeight: '480px',
+            marginBottom: 0,
+            verticalAlign: 'bottom',
+            filter: 'drop-shadow(0 0 24px rgba(185, 255, 0, 0.40)) drop-shadow(0 0 48px rgba(45, 212, 191, 0.22))',
+          }}
+        />
       </div>
     </footer>
   );

@@ -512,6 +512,17 @@ function CandidatesView() {
                             <Crown size={10} /> Đang Boost
                           </span>
                         )}
+                        {/* Huy hiệu Premium. Đặt SAU nhãn Boost vì Boost mới là
+                            thứ đổi thứ tự trong danh sách này — Premium chỉ là
+                            nhãn nhận diện, không đẩy ai lên trước ai. */}
+                        {(app.isPremium === true) && (
+                          <span
+                            title="Ứng viên đang có Premium Pass"
+                            style={{ fontSize: '0.68rem', fontWeight: '850', color: '#2b1d00', background: 'linear-gradient(135deg, #f7c948, #e0a109)', padding: '2px 7px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}
+                          >
+                            <Crown size={10} /> Premium
+                          </span>
+                        )}
                         <span style={{ fontSize: '0.7rem', fontWeight: '700', color: sColor, background: `${sColor}15`, padding: '1px 7px', borderRadius: '6px', flexShrink: 0 }}>{labelOf(app.status)}</span>
                       </div>
                       <div style={{ display: 'flex', gap: '10px', fontSize: '0.78rem', color: 'var(--muted)', flexWrap: 'wrap' }}>
@@ -2431,6 +2442,22 @@ function ManageJobsView({ onTabChange, company }) {
                         {statusText}
                       </span>
                     </div>
+
+                    {/* Nhãn Premium.
+                        Đặt trên tiêu đề, thành một hàng riêng chứ không chen
+                        vào hàng trạng thái: hàng đó đã có hai nhãn và trên màn
+                        hình hẹp sẽ xuống dòng lộn xộn. Chỉ hiện khi tin thật
+                        sự bật, nên nó không chiếm chỗ của đa số tin thường. */}
+                    {job.requiresPremium && (
+                      <div style={{ marginBottom: '10px' }}>
+                        <span
+                          title="Chỉ ứng viên có Premium Pass mới nộp được đơn"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', fontWeight: '850', letterSpacing: '0.04em', textTransform: 'uppercase', color: '#2b1d00', background: 'linear-gradient(135deg, #f7c948, #e0a109)', padding: '3px 9px', borderRadius: '999px' }}
+                        >
+                          <Crown size={11} /> Chỉ ứng viên Premium
+                        </span>
+                      </div>
+                    )}
 
                     {/* Title */}
                     <h3 style={{

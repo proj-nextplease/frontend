@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { BriefcaseBusiness, MessageSquarePlus, Plus, Minus, Trash2, GripVertical, ImagePlus, AlertTriangle, Move } from 'lucide-react';
+import { BriefcaseBusiness, MessageSquarePlus, Plus, Minus, Trash2, GripVertical, ImagePlus, AlertTriangle, Move, Crown } from 'lucide-react';
 import { createJob, updateJob, getSkills } from '../api/jobApi.js';
 import { getMyCompany } from '../api/b2bApi.js';
 import { PremiumDateTimePicker } from './PremiumDateTimePicker.jsx';
@@ -66,6 +66,7 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
     minReqRs: initialData?.minReqRs ?? 0,
     location: initialData?.location ?? '',
     isRemote: initialData?.isRemote ?? false,
+    requiresPremium: initialData?.requiresPremium ?? false,
     capacity: initialData?.capacity ? String(initialData.capacity) : '',
     deadlineAt: initialData?.deadlineAt ?? '',
     bannerUrl: initialData?.bannerUrl ?? '',
@@ -278,6 +279,7 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
       minReqRs: parseInt(form.minReqRs) || 0,
       location: form.location.trim(),
       isRemote: form.isRemote,
+      requiresPremium: form.requiresPremium,
       capacity: form.capacity ? parseInt(form.capacity) : null,
       deadlineAt: deadline,
       bannerUrl: form.bannerUrl || null,
@@ -508,6 +510,27 @@ export function JobPostForm({ onSuccess, onCancel, initialData = null }) {
                 <input type="checkbox" name="isRemote" checked={form.isRemote} onChange={handleChange}
                   style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
                 <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--ink)' }}>Làm việc từ xa (Remote)</span>
+              </label>
+            </div>
+
+            {/* Chỉ nhận ứng viên Premium.
+                Đặt trong khung riêng có viền vàng chứ không để lẫn cùng hàng
+                với ô Remote: hai ô này khác hẳn về hệ quả. Remote chỉ mô tả
+                tính chất công việc, còn ô này CHẶN phần lớn ứng viên khỏi nộp
+                đơn — người đăng cần dừng lại một nhịp trước khi bật. */}
+            <div style={{ gridColumn: 'span 2', marginTop: '4px', background: 'rgba(224,161,9,0.06)', border: '1px solid rgba(224,161,9,0.3)', borderRadius: '14px', padding: '16px 18px' }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', userSelect: 'none' }}>
+                <input type="checkbox" name="requiresPremium" checked={form.requiresPremium} onChange={handleChange}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', marginTop: '2px', flexShrink: 0 }} />
+                <span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Crown size={15} style={{ color: '#e0a109' }} /> Chỉ nhận ứng viên Premium
+                  </span>
+                  <span style={{ display: 'block', marginTop: '4px', fontSize: '0.78rem', lineHeight: 1.5, color: 'var(--muted)' }}>
+                    Tin vẫn hiển thị công khai, nhưng chỉ ứng viên đang có Premium Pass mới nộp được đơn.
+                    Số đơn nhận về sẽ ít hơn đáng kể — chỉ bật khi bạn thật sự cần lọc bớt.
+                  </span>
+                </span>
               </label>
             </div>
 

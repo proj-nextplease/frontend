@@ -4,6 +4,7 @@ import { Sparkles, Compass, WalletCards, FileText, LogOut } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient.js';
 import { getMyPortfolio } from '../../api/portfolioApi.js';
 import { logout } from '../../api/httpClient.js';
+import { BrandWordmark } from '../BrandWordmark.jsx';
 
 export function Header() {
   const navigate = useNavigate();
@@ -115,11 +116,8 @@ export function Header() {
   return (
     <header className="site-header">
       <div className="site-header-inner">
-        <Link className="brand" to="/">
-          <span className="brand-mark">
-            <Sparkles size={18} />
-          </span>
-          <span>nextplease</span>
+        <Link className="brand" to="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
+          <BrandWordmark size="42px" />
         </Link>
         <nav className="nav-links" aria-label="Primary navigation">
           {session && portfolio ? (

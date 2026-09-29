@@ -15242,6 +15242,15 @@ button.np-pp-cell:hover { background: rgba(255, 255, 255, 0.05); }
 .vp-badge.sm { font-size: 0.72rem; padding: 3px 9px; border-width: 1.5px; }
 .vp-page .vp-badge.verified { background: var(--vp-verified); color: #fff; }
 .vp-page .vp-badge.open { background: var(--vp-coral); color: #fff; }
+/* Huy hiệu Premium: nền vàng kim chứ không dùng biến theme.
+   Lý do: bốn theme của Visual Upgrade đổi hết bảng màu trang, nếu huy hiệu
+   ăn theo biến thì mỗi theme nó một màu và mất tính nhận diện. Huy hiệu là
+   thứ nhà tuyển dụng phải nhận ra ngay dù hồ sơ đang mặc áo nào. */
+.vp-page .vp-badge.premium {
+  background: linear-gradient(135deg, #f7c948, #e0a109);
+  color: #2b1d00;
+  box-shadow: 0 2px 10px rgba(224, 161, 9, 0.35);
+}
 .vp-badge.draft { background: #fff; }
 /* Mỗi sticker nghiêng một hướng khác nhau. Cùng một góc cho tất cả thì lại
    thành một lưới nghiêng — vẫn là lưới. */
