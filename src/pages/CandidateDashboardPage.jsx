@@ -59,6 +59,7 @@ import { INK, EMERALD, EMERALD_BRIGHT } from '../styles/neonPalette.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { getWallet, buyPremium, createPayOsTopUp, getPayOsTopUpStatus, cancelPayOsTopUp } from '../api/walletApi.js';
 import { PayOsCheckout, PayOsSuccess } from '../components/PayOsCheckout.jsx';
+import { WalletHistory } from '../components/WalletHistory.jsx';
 import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication, getSavedQuestIds, getSavedQuests, saveQuest, unsaveQuest } from '../api/questApi.js';
 import {
   boostApplication,
@@ -3065,6 +3066,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <WalletCards size={16} /> Nạp NP
               </button>
             </div>
+
+            {/* Lịch sử giao dịch. Dữ liệu đã nằm sẵn trong /wallet
+                (recentTransactions, 20 dòng gần nhất) — web vẫn gọi API đó từ
+                trước nhưng bỏ qua trường này, nên đây thuần là việc hiển thị. */}
+            <WalletHistory
+              transactions={wallet?.recentTransactions}
+              loading={walletLoading}
+            />
 
             <div className="candidate-premium-layout">
               <section className={`candidate-premium-pass-card ${wallet?.isPremium ? 'active' : ''}`}>
