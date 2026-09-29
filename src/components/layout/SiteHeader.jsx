@@ -245,10 +245,12 @@ export function SiteHeader({ overlay = false, pinned = true }) {
           .nph-shell[data-mode="ondark"] .nph-brand-word i { color: ${EMERALD}; }
           .nph-brand-word b { font-style: normal; font-weight: 800; color: #f59e0b; }
           .nph-brand-mark {
-            width: 44px; height: 44px; border-radius: 14px; background: ${EMERALD};
+            width: 42px; height: 42px; border-radius: 12px; background: #B9FF00;
             align-items: center; justify-content: center;
-            font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif; font-size: 1.45rem; font-weight: 700;
-            color: ${INK}; line-height: 1;
+            box-shadow: 0 0 14px rgba(185, 255, 0, 0.45);
+            font-family: 'Fredoka', 'Baloo 2', 'Plus Jakarta Sans', system-ui, sans-serif;
+            font-size: 1.55rem; font-weight: 800;
+            color: #0b0f0e; line-height: 1; letter-spacing: -0.02em;
           }
 
           /* ── Liên kết điều hướng ──
@@ -372,7 +374,8 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                   aria-hidden={!condensed}
                   style={{ display: 'flex', opacity: condensed ? 1 : 0, transform: condensed ? 'none' : 'scale(0)' }}
                 >
-                  n<b style={{ color: '#2dd4bf' }}>:</b>
+                  <span style={{ color: '#0b0f0e', fontWeight: 800 }}>n</span>
+                  <span style={{ color: '#2dd4bf', fontWeight: 800, marginLeft: '1px' }}>:</span>
                 </span>
               </span>
             </Link>
