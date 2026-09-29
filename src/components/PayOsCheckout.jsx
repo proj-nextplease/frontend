@@ -135,7 +135,7 @@ export function PayOsCheckout({ payment, onCancel, onPaid, onExpired }) {
         if (status.status === 'PAID') {
           clearInterval(id);
           onPaidRef.current?.(status);
-        } else if (status.status === 'CANCELLED' || status.status === 'FAILED') {
+        } else if (['CANCELLED', 'FAILED', 'EXPIRED'].includes(status.status)) {
           clearInterval(id);
           onExpiredRef.current?.();
         }
