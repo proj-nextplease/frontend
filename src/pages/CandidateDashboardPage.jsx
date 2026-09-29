@@ -1443,7 +1443,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             setTopUpSuccess(`Đã nạp ${Number(status.amountVnd || 0).toLocaleString('vi-VN')} NP vào ví!`);
             return;
           }
-          if (status.status === 'CANCELLED' || status.status === 'FAILED') {
+          if (['CANCELLED', 'FAILED', 'EXPIRED'].includes(status.status)) {
             setTopUpCheckState('cancelled');
             return;
           }
