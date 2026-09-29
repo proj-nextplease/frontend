@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Clock3,
   Crown,
-  FileText,
   LockKeyhole,
   Search,
   ShieldCheck,
@@ -832,22 +831,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       setCopyLinkStatus('error');
     } finally {
       setTimeout(() => setCopyLinkStatus('idle'), 2200);
-    }
-  }
-
-  // "Xuất PDF" — the real export button lives on the presentational
-  // /portfolio/view/:userId page (native window.print(), see
-  // CandidatePortfolioViewPage). This just navigates there in the same tab
-  // (no target="_blank" — a new tab wouldn't share sessionStorage, same bug
-  // class fixed earlier for the 3D editor link).
-  const [openingPdfView, setOpeningPdfView] = useState(false);
-  async function handleOpenPortfolioForPdf() {
-    setOpeningPdfView(true);
-    try {
-      const userId = await getMyUserId();
-      window.location.href = `/portfolio/view/${userId}`;
-    } catch {
-      setOpeningPdfView(false);
     }
   }
 
@@ -2292,17 +2275,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     >
                       <Copy size={15} />
                       {copyLinkStatus === 'done' ? 'Đã sao chép' : copyLinkStatus === 'error' ? 'Lỗi, thử lại' : 'Sao chép link'}
-                    </button>
-                  )}
-                  {has3D && (
-                    <button
-                      type="button"
-                      className="np-pp-btn"
-                      onClick={handleOpenPortfolioForPdf}
-                      disabled={openingPdfView}
-                      title="Mở bản xem trước Portfolio để xuất PDF"
-                    >
-                      <FileText size={15} /> Xuất PDF
                     </button>
                   )}
                 </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Award, BriefcaseBusiness, ShieldCheck, ArrowLeft, GraduationCap,
-  MapPin, BadgeCheck, ExternalLink, Code2, Link2, Globe, Mail, Eye, FileUp, Download,
+  MapPin, BadgeCheck, ExternalLink, Code2, Link2, Globe, Mail, Eye, FileUp,
   Crown,
 } from 'lucide-react';
 import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
@@ -79,18 +79,6 @@ export function VerifiedPassport({ profile, isDraft = false }) {
   const coverPos = parseBanner(profile.coverBannerPos);
   const hasContent = profile.bio || skills.length || experiences.length || credentials.length;
 
-  // Exporting to PDF reuses the browser's native print pipeline (no extra
-  // dependency, and it renders the live WebGL avatar canvas correctly, unlike
-  // html2canvas-style screenshot libraries). Swap the tab title just for the
-  // print dialog so "Save as PDF" defaults to a sensible filename instead of
-  // the app's generic title.
-  function handleExportPdf() {
-    const previousTitle = document.title;
-    document.title = `Portfolio - ${profile.name || 'Ung vien'}`;
-    window.print();
-    setTimeout(() => { document.title = previousTitle; }, 500);
-  }
-
   return (
     <section className={`vp-page ${themeClass}`}>
       <PassportThemeStyles />
@@ -100,7 +88,6 @@ export function VerifiedPassport({ profile, isDraft = false }) {
           {isDraft ? <Eye size={14} /> : <ShieldCheck size={14} />}
           {isDraft ? 'Bản xem trước Portfolio' : 'Hồ sơ đã xác thực'} · next please
         </span>
-        <button className="vp-close" onClick={handleExportPdf}><Download size={15} /> Xuất PDF</button>
       </div>
 
       <div className="vp-shell">
