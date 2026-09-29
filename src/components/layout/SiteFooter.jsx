@@ -132,14 +132,14 @@ export function SiteFooter() {
         className="np-footer-wordmark-wrap"
         style={{
           width: '100%',
-          margin: 'clamp(24px, 3.5vw, 48px) 0 0 0',
+          margin: 'clamp(20px, 3vw, 40px) 0 0 0',
           padding: 0,
           marginBottom: 0,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'flex-end',
           textAlign: 'center',
-          overflow: 'hidden',
+          overflow: 'visible',
           lineHeight: 0,
           boxSizing: 'border-box',
         }}
@@ -152,9 +152,9 @@ export function SiteFooter() {
             width: 'min(1440px, 100%)',
             height: 'auto',
             maxHeight: '480px',
-            marginBottom: '-1px',
+            marginBottom: 0,
             verticalAlign: 'bottom',
-            filter: 'drop-shadow(0 0 28px rgba(185, 255, 0, 0.45)) drop-shadow(0 0 56px rgba(45, 212, 191, 0.28))',
+            filter: 'drop-shadow(0 0 24px rgba(185, 255, 0, 0.40)) drop-shadow(0 0 48px rgba(45, 212, 191, 0.22))',
           }}
         />
       </div>
