@@ -58,7 +58,7 @@ import { NotificationBell } from '../components/NotificationBell.jsx';
 import { NeonBloom } from '../components/NeonBloom.jsx';
 import { INK, EMERALD, EMERALD_BRIGHT } from '../styles/neonPalette.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
-import { getWallet, topUp, buyPremium } from '../api/walletApi.js';
+import { getWallet, buyPremium, createPayOsTopUp, getPayOsTopUpStatus } from '../api/walletApi.js';
 import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication, getSavedQuestIds, getSavedQuests, saveQuest, unsaveQuest } from '../api/questApi.js';
 import {
   boostApplication,
@@ -905,6 +905,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [topUpLoading, setTopUpLoading] = useState(false);
   const [topUpError, setTopUpError] = useState('');
   const [topUpSuccess, setTopUpSuccess] = useState('');
+  /* idle | checking | paid | cancelled | timeout | unknown | error — trạng thái
+     sau khi quay về từ PayOS. */
+  const [topUpCheckState, setTopUpCheckState] = useState('idle');
   const [buyPremiumLoading, setBuyPremiumLoading] = useState(false);
   const [buyPremiumError, setBuyPremiumError] = useState('');
 
@@ -1377,6 +1380,86 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     return () => { isMounted = false; };
   }, [refreshKey]);
 
+  /*
+   * ── Quay lại từ PayOS ──
+   *
+   * PayOS gắn ?topup=success|cancel vào returnUrl, kèm orderCode của họ. Nhưng
+   * "success" ở đây chỉ nói người dùng đã đi hết luồng trên trang PayOS, KHÔNG
+   * chứng minh tiền đã vào: URL này nằm trong trình duyệt của họ, gõ tay được.
+   * Nên mình luôn hỏi lại backend.
+   *
+   * Phải hỏi nhiều lần vì webhook của PayOS và cú chuyển trang về đây là hai
+   * đường độc lập — người dùng thường về trước khi webhook kịp tới, nên lần
+   * hỏi đầu gần như luôn thấy PENDING.
+   */
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const topupParam = params.get('topup');
+    if (!topupParam) return;
+
+    let pending = null;
+    try {
+      const raw = sessionStorage.getItem('np_payos_pending');
+      if (raw) pending = JSON.parse(raw);
+    } catch { /* bỏ qua */ }
+
+    const orderCode = Number(params.get('orderCode')) || pending?.orderCode || 0;
+
+    // Dọn tham số khỏi URL ngay, để refresh không chạy lại luồng này.
+    navigate(`/candidates/dashboard/premium_store`, { replace: true });
+    try { sessionStorage.removeItem('np_payos_pending'); } catch { /* bỏ qua */ }
+
+    setShowTopUpModal(true);
+    setTopUpError('');
+    setTopUpSuccess('');
+
+    if (topupParam === 'cancel') {
+      setTopUpCheckState('cancelled');
+      return;
+    }
+    if (!orderCode) {
+      setTopUpCheckState('unknown');
+      return;
+    }
+
+    let cancelled = false;
+    setTopUpCheckState('checking');
+
+    /* Giãn dần: 1s, 2s, 3s… tổng khoảng 45s. Webhook thường về trong vài giây;
+       nếu quá lâu thì hỏi thêm cũng vô ích, để người dùng tự làm mới. */
+    (async function poll() {
+      for (let attempt = 1; attempt <= 9 && !cancelled; attempt += 1) {
+        try {
+          const status = await getPayOsTopUpStatus(orderCode);
+          if (cancelled) return;
+          if (status.status === 'PAID') {
+            const fresh = await getWallet().catch(() => null);
+            if (cancelled) return;
+            if (fresh) setWallet(fresh);
+            setTopUpCheckState('paid');
+            setTopUpSuccess(`Đã nạp ${Number(status.amountVnd || 0).toLocaleString('vi-VN')} NP vào ví!`);
+            return;
+          }
+          if (status.status === 'CANCELLED' || status.status === 'FAILED') {
+            setTopUpCheckState('cancelled');
+            return;
+          }
+        } catch (err) {
+          if (cancelled) return;
+          setTopUpCheckState('error');
+          setTopUpError(err.message || 'Không kiểm tra được trạng thái nạp.');
+          return;
+        }
+        await new Promise(r => setTimeout(r, Math.min(attempt, 5) * 1000));
+      }
+      if (!cancelled) setTopUpCheckState('timeout');
+    })();
+
+    return () => { cancelled = true; };
+    // location.search là thứ duy nhất kích hoạt luồng này.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
+
   // Load premium config and recommendations on mount/update
   useEffect(() => {
     getPremiumConfig()
@@ -1458,26 +1541,37 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     }
   }
 
+  /*
+   * Chuyển sang PayOS để trả tiền thật.
+   *
+   * Không cộng NP ở đây, và cũng không cộng khi người dùng quay lại. Chỉ
+   * webhook từ máy chủ PayOS mới cộng — xem walletApi.getPayOsTopUpStatus.
+   */
   async function handleTopUp(e) {
     e.preventDefault();
     setTopUpError('');
     const amount = parseInt(topUpAmount, 10);
     if (!amount || amount < 10000) {
-      setTopUpError('Số tiền tối thiểu là 10,000 VND.');
+      setTopUpError('Số tiền tối thiểu là 10.000 VND.');
       return;
     }
     setTopUpLoading(true);
     try {
-      const result = await topUp(amount);
-      setWallet(prev => prev ? { ...prev, npBalance: result.balanceAfter } : prev);
-      setTopUpSuccess(`Nạp thành công ${amount.toLocaleString('vi-VN')} NP vào ví!`);
-      setTopUpAmount('50000');
-      setTimeout(() => { setTopUpSuccess(''); setShowTopUpModal(false); }, 2500);
+      const result = await createPayOsTopUp(amount);
+      /* Nhớ orderCode trước khi rời trang. PayOS có gắn orderCode vào
+         returnUrl, nhưng nếu họ đổi tham số hoặc người dùng tự mở lại link
+         thì mình vẫn còn đường lần ra đơn vừa tạo. */
+      try {
+        sessionStorage.setItem('np_payos_pending', JSON.stringify({
+          orderCode: result.orderCode, amountVnd: result.amountVnd,
+        }));
+      } catch { /* chế độ ẩn danh có thể chặn — không sao, đã có tham số URL */ }
+      window.location.href = result.checkoutUrl;
     } catch (err) {
-      setTopUpError(err.message || 'Nạp thất bại. Vui lòng thử lại.');
-    } finally {
+      setTopUpError(err.message || 'Không tạo được link thanh toán. Vui lòng thử lại.');
       setTopUpLoading(false);
     }
+    // Không tắt loading ở nhánh thành công: trang đang được chuyển đi.
   }
 
   async function handleBuyPremium() {
@@ -4265,7 +4359,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
       {/* ─── Top-Up NP Modal ─── */}
       {showTopUpModal && (
-        <div className="glass-modal-overlay" onClick={() => { setShowTopUpModal(false); setTopUpError(''); setTopUpSuccess(''); }}>
+        <div className="glass-modal-overlay" onClick={() => { setShowTopUpModal(false); setTopUpError(''); setTopUpSuccess(''); setTopUpCheckState('idle'); }}>
           <div className="glass-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <div className="glass-modal-header">
               <WalletCards size={20} color="var(--primary)" />
@@ -4283,7 +4377,27 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 </div>
               </div>
 
-              {topUpSuccess ? (
+              {topUpCheckState === 'checking' ? (
+                <div style={{ textAlign: 'center', padding: '18px 4px' }}>
+                  <div className="np-topup-spinner" style={{ margin: '0 auto 12px' }} />
+                  <p style={{ margin: 0, fontWeight: 700, color: 'var(--ink)' }}>Đang xác nhận thanh toán…</p>
+                  <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: 'var(--muted)', lineHeight: 1.5 }}>
+                    Nếu bạn đã chuyển khoản, NP sẽ vào ví trong vài giây.
+                    Không cần trả lại lần nữa.
+                  </p>
+                </div>
+              ) : topUpCheckState === 'cancelled' ? (
+                <div className="alert-banner error" style={{ marginBottom: '12px' }}>
+                  <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                  Giao dịch đã bị huỷ — chưa có khoản tiền nào bị trừ.
+                </div>
+              ) : topUpCheckState === 'timeout' || topUpCheckState === 'unknown' ? (
+                <div className="alert-banner" style={{ marginBottom: '12px' }}>
+                  <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                  Chưa nhận được xác nhận từ PayOS. Nếu bạn đã chuyển khoản thành công,
+                  NP sẽ tự vào ví — thử tải lại trang sau ít phút.
+                </div>
+              ) : topUpSuccess ? (
                 <div className="alert-banner success">{topUpSuccess}</div>
               ) : (
                 <form onSubmit={handleTopUp}>
@@ -4320,14 +4434,15 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   )}
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button type="submit" className="button primary-button" disabled={topUpLoading} style={{ flex: 1 }}>
-                      {topUpLoading ? 'Đang nạp...' : 'Nạp ngay'}
+                      {topUpLoading ? 'Đang chuyển tới PayOS...' : 'Thanh toán qua PayOS'}
                     </button>
                     <button type="button" className="button secondary-button" onClick={() => { setShowTopUpModal(false); setTopUpError(''); }}>Hủy</button>
                   </div>
                 </form>
               )}
               <p style={{ margin: '14px 0 0', fontSize: '0.76rem', color: 'var(--muted)', textAlign: 'center', lineHeight: 1.4 }}>
-                Phiên bản demo — NP được cộng ngay lập tức (MOCK provider)
+                Thanh toán qua PayOS — hỗ trợ chuyển khoản ngân hàng và ví điện tử.
+                NP vào ví ngay khi PayOS xác nhận đã nhận tiền.
               </p>
             </div>
           </div>

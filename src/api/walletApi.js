@@ -25,3 +25,37 @@ export async function buyPremium() {
   }
   return response.data.data;
 }
+
+/*
+ * ── Nạp tiền thật qua PayOS ──
+ *
+ * topUp() ở trên là bản demo cộng NP ngay lập tức. Trên production backend đã
+ * khoá nó (trả 410) — dùng hai hàm dưới đây.
+ */
+
+/**
+ * Tạo yêu cầu nạp và lấy link thanh toán PayOS. CHƯA cộng NP.
+ * Trả { orderCode, checkoutUrl, amountVnd }.
+ */
+export async function createPayOsTopUp(amountVnd) {
+  const response = await httpClient.post('/payments/payos/create', { amountVnd });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không tạo được link thanh toán.');
+  }
+  return response.data.data;
+}
+
+/**
+ * Hỏi trạng thái một yêu cầu nạp. Trả { status, amountVnd, paidAt }.
+ *
+ * Đây là NGUỒN SỰ THẬT duy nhất cho việc "đã trả tiền chưa". Người dùng quay
+ * về returnUrl không chứng minh được gì: đó là URL trong trình duyệt của họ,
+ * gõ tay hay bookmark lại đều được. Chỉ webhook mới đổi status sang PAID.
+ */
+export async function getPayOsTopUpStatus(orderCode) {
+  const response = await httpClient.get('/payments/payos/status', { params: { orderCode } });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không kiểm tra được trạng thái nạp.');
+  }
+  return response.data.data;
+}
