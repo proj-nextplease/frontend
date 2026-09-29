@@ -88,11 +88,19 @@ export function SiteHeader({ overlay = false, pinned = true }) {
 
   useEffect(() => {
     if (!pinned) return undefined;
-    // Ngưỡng 8px: trang mẫu đổi trạng thái ngay khi rời khỏi đỉnh, không chờ.
-    function onScroll() { setScrolled(window.scrollY > 8); }
+    function onScroll() {
+      const scrollPos = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      setScrolled(scrollPos > 8);
+    }
     onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    document.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll, { capture: true });
+      document.removeEventListener('scroll', onScroll, { capture: true });
+      window.removeEventListener('resize', onScroll);
+    };
   }, [pinned]);
 
   // Theo dõi phiên Supabase để menu tắt ngay khi phiên hết hạn ở tab khác.
@@ -234,11 +242,11 @@ export function SiteHeader({ overlay = false, pinned = true }) {
              ô vuông nở ra. Cùng đường cong với viên thuốc nên hai chuyển động
              khớp nhau. */
           .nph-brand { pointer-events: auto; display: inline-flex; align-items: center; flex: none; margin-left: 8px; text-decoration: none; }
-          .nph-brand-swap { position: relative; display: block; height: 50px; transition: width 420ms cubic-bezier(0.22,1,0.36,1); }
+          .nph-brand-swap { position: relative; display: flex; align-items: center; height: 50px; transition: width 420ms cubic-bezier(0.22,1,0.36,1); }
           .nph-brand-layer {
-            position: absolute; left: 0; top: 0; height: 50px;
-            display: flex; align-items: center; transform-origin: left center; white-space: nowrap;
-            transition: opacity 260ms ease, transform 420ms cubic-bezier(0.22,1,0.36,1);
+            position: absolute; left: 0; top: 50%; transform-origin: left center; white-space: nowrap;
+            display: flex; align-items: center;
+            transition: opacity 280ms ease, transform 420ms cubic-bezier(0.22,1,0.36,1);
           }
           .nph-brand-word { font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif; font-size: 1.62rem; letter-spacing: -0.01em; }
           .nph-brand-word i { font-style: normal; font-weight: 700; color: #059669; }
@@ -246,7 +254,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
           .nph-brand-word b { font-style: normal; font-weight: 800; color: #f59e0b; }
           .nph-brand-mark {
             width: 42px; height: 42px; border-radius: 12px; background: #B9FF00;
-            align-items: center; justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             box-shadow: 0 0 14px rgba(185, 255, 0, 0.45);
             font-family: 'Fredoka', 'Baloo 2', 'Plus Jakarta Sans', system-ui, sans-serif;
             font-size: 1.55rem; font-weight: 800;
@@ -362,7 +370,8 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                   aria-hidden={condensed}
                   style={{
                     opacity: condensed ? 0 : 1,
-                    transform: condensed ? 'scale(0)' : 'none',
+                    transform: condensed ? 'scale(0.5) translateY(-50%)' : 'translateY(-50%)',
+                    pointerEvents: condensed ? 'none' : 'auto',
                     display: 'flex',
                     alignItems: 'center',
                   }}
@@ -372,10 +381,14 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                 <span
                   className="nph-brand-layer nph-brand-mark"
                   aria-hidden={!condensed}
-                  style={{ display: 'flex', opacity: condensed ? 1 : 0, transform: condensed ? 'none' : 'scale(0)' }}
+                  style={{
+                    opacity: condensed ? 1 : 0,
+                    transform: condensed ? 'translateY(-50%)' : 'scale(0.3) translateY(-50%)',
+                    pointerEvents: condensed ? 'auto' : 'none',
+                  }}
                 >
-                  <span style={{ color: '#0b0f0e', fontWeight: 800 }}>n</span>
-                  <span style={{ color: '#2dd4bf', fontWeight: 800, marginLeft: '1px' }}>:</span>
+                  <span style={{ color: '#0b0f0e', fontWeight: 900 }}>n</span>
+                  <span style={{ color: '#2dd4bf', fontWeight: 900, marginLeft: '1px' }}>:</span>
                 </span>
               </span>
             </Link>
