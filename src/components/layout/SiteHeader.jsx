@@ -354,7 +354,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
             {/* Logo: chữ ⇄ ô vuông. Hai lớp luôn ở trong DOM để crossfade được;
                 ô bọc co width nên phần còn lại của thanh trượt theo mượt. */}
             <Link to="/" className="nph-brand" aria-label="nextplease — về trang chủ">
-              <span className="nph-brand-swap" style={{ width: condensed ? '44px' : '230px' }}>
+              <span className="nph-brand-swap" style={{ width: condensed ? '44px' : '250px' }}>
                 <span
                   className="nph-brand-layer nph-brand-word"
                   aria-hidden={condensed}
@@ -365,7 +365,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                     alignItems: 'center',
                   }}
                 >
-                  <BrandWordmark size="48px" />
+                  <BrandWordmark size="42px" />
                 </span>
                 <span
                   className="nph-brand-layer nph-brand-mark"
