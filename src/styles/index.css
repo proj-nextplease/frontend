@@ -12591,6 +12591,133 @@ img {
   40% { transform: scale(1.08); }
   100% { transform: scale(1); }
 }
+/* Chip ví trên thanh "Khu vực của tôi" — lối nạp NP từ mọi tab. */
+.np-area-wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: rgba(233, 247, 242, 0.78);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+.np-area-wallet:hover {
+  color: var(--np-accent, #10b981);
+  border-color: var(--np-accent, #10b981);
+}
+.np-area-wallet-unit { font-size: 0.75rem; opacity: 0.7; font-weight: 500; }
+
+@media (max-width: 720px) {
+  /* Trên màn hẹp chỉ giữ số dư và dấu cộng; chữ "NP" là thứ bỏ được đầu tiên
+     khi thanh này bắt đầu chật. */
+  .np-area-wallet-unit { display: none; }
+}
+
+/* ── Lịch sử giao dịch NP ── */
+.np-wallet-history { margin: 18px 0 26px; }
+
+.np-wallet-history-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--c-muted);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+.np-wallet-history-toggle:hover,
+.np-wallet-history-toggle.is-open {
+  color: var(--c-ink);
+  border-color: var(--c-red, #10b981);
+}
+
+.np-wallet-history-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.np-wallet-history-count {
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--c-muted);
+}
+
+/* Mũi tên xoay để nói rõ là gập/mở, không phải điều hướng đi nơi khác. */
+.np-wallet-history-chevron {
+  margin-left: auto;
+  transition: transform 180ms ease;
+}
+.np-wallet-history-toggle.is-open .np-wallet-history-chevron { transform: rotate(180deg); }
+
+.np-wallet-history-list,
+.np-wallet-history-empty { margin-top: 10px; }
+
+.np-wallet-history-empty {
+  padding: 18px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+  font-size: 0.88rem;
+  color: var(--c-muted);
+  line-height: 1.5;
+}
+
+.np-wallet-history-list { list-style: none; margin: 0; padding: 0; }
+
+.np-wallet-history-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.np-wallet-history-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.np-wallet-history-label {
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--c-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.np-wallet-history-meta { font-size: 0.8rem; color: var(--c-muted); }
+
+.np-wallet-history-amount {
+  flex-shrink: 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
+}
+.np-wallet-history-amount.is-gain { color: var(--c-red, #10b981); }
+
 /* ── Màn báo nạp thành công, tự đóng ── */
 .np-topup-done { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 6px 0 2px; }
 

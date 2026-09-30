@@ -12,6 +12,7 @@ import {
   Clock3,
   Crown,
   LockKeyhole,
+  Plus,
   Search,
   ShieldCheck,
   Sparkles,
@@ -59,6 +60,7 @@ import { INK, EMERALD, EMERALD_BRIGHT } from '../styles/neonPalette.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { getWallet, buyPremium, createPayOsTopUp, getPayOsTopUpStatus, cancelPayOsTopUp } from '../api/walletApi.js';
 import { PayOsCheckout, PayOsSuccess } from '../components/PayOsCheckout.jsx';
+import { WalletHistory } from '../components/WalletHistory.jsx';
 import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication, getSavedQuestIds, getSavedQuests, saveQuest, unsaveQuest } from '../api/questApi.js';
 import {
   boostApplication,
@@ -66,7 +68,6 @@ import {
   getInsight,
   requestExpressVerification,
   subscribeJobMatchAlert,
-  getPersonalizedRecommendations,
   getPremiumConfig,
   selectTheme
 } from '../api/premiumApi.js';
@@ -915,8 +916,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [boostLoadingId, setBoostLoadingId] = useState(null);
   const [expressLoadingId, setExpressLoadingId] = useState(null);
   const [subscribingMatchAlert, setSubscribingMatchAlert] = useState(false);
-  const [recommendations, setRecommendations] = useState(null);
-  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [showMatchAlertModal, setShowMatchAlertModal] = useState(false);
   const [selectedBoostAppId, setSelectedBoostAppId] = useState('');
   const [selectedExpressSubId, setSelectedExpressSubId] = useState('');
@@ -1454,17 +1453,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .then(cfg => { setPremiumConfig(cfg); clearLoadError('gia-premium'); })
       .catch(err => noteLoadError('gia-premium', err));
   }, [refreshKey]);
-
-  useEffect(() => {
-    if (!wallet || (!wallet.isPremium && !wallet.hasJobMatchAlert)) return;
-    let isMounted = true;
-    setRecommendationsLoading(true);
-    getPersonalizedRecommendations()
-      .then(data => { if (isMounted) { setRecommendations(data); clearLoadError('goi-y'); } })
-      .catch(err => { if (isMounted) noteLoadError('goi-y', err); })
-      .finally(() => { if (isMounted) setRecommendationsLoading(false); });
-    return () => { isMounted = false; };
-  }, [wallet, refreshKey]);
 
   // Load quests when OPPORTUNITIES tab opens (or on mount)
   useEffect(() => {
@@ -2113,6 +2101,22 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             <Link className="np-area-link" to={portfolio?.onboardingCompleted ? '/portfolio/edit' : '/portfolio'}>
               <Boxes size={16} /> Portfolio
             </Link>
+            {/* Nạp NP ở mọi tab. Đặt cạnh Portfolio vì thanh này là thứ duy
+                nhất hiện trên TẤT CẢ các tab của khu vực; trước đây muốn nạp
+                phải tự tìm sang tab Premium. Hiện luôn số dư: con số đó vừa
+                là lý do bấm, vừa tránh phải mở tab khác chỉ để xem còn bao
+                nhiêu. */}
+            <button
+              type="button"
+              className="np-area-wallet"
+              onClick={() => setShowTopUpModal(true)}
+              title="Nạp NP vào ví"
+            >
+              <WalletCards size={16} />
+              <span>{walletLoading ? '—' : (wallet?.npBalance ?? 0).toLocaleString('vi-VN')}</span>
+              <span className="np-area-wallet-unit">NP</span>
+              <Plus size={13} strokeWidth={2.6} />
+            </button>
             {/* Mặc định NotificationBell tự neo `position: fixed` ở góc trên
                 phải — di sản từ hồi khu vực này chưa có thanh điều hướng. Giờ
                 có SiteHeader rồi nên nó đè lên menu tài khoản; kéo về nằm
@@ -3046,134 +3050,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           );
         })()}
 
-        {/* 2d. GỢI Ý AI — không còn là tab riêng, render như một dải nằm dưới
-            phần Tổng quan (điều kiện đổi từ RECOMMENDATIONS sang OVERVIEW). */}
-        {activeView === 'OVERVIEW' && (
-          <section className="np-view">
-            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <p style={{ fontSize: '0.78rem', fontWeight: '800', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--c-red)', margin: '0 0 8px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}><Sparkles size={13} /> Gợi ý từ AI</p>
-                <h2 style={{ margin: '0 0 4px', fontSize: 'clamp(1.6rem, 2.4vw, 2rem)', fontWeight: '800', letterSpacing: '-0.035em', color: 'var(--c-ink)' }}>Gợi ý dành riêng cho bạn</h2>
-                <p style={{ margin: 0, fontSize: '0.96rem', color: 'var(--c-muted)' }}>Hệ thống đối khớp kỹ năng đã xác thực của bạn với cơ hội phù hợp nhất.</p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                {wallet?.hasJobMatchAlert && (
-                  <span style={{ fontSize: '0.82rem', fontWeight: '700', color: '#16a34a', background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.25)', padding: '7px 13px', borderRadius: '999px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={15} /> Job Match Alert đang bật</span>
-                )}
-                {renderReloadButton()}
-              </div>
-            </div>
-
-            {!wallet?.hasJobMatchAlert ? (
-              <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '20px', padding: 'clamp(28px, 4vw, 48px)', maxWidth: '560px', margin: '8px auto 0', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(217,119,6,0.12)', color: '#d97706', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}><Sparkles size={26} /></span>
-                <h3 style={{ margin: '0 0 10px', fontSize: '1.35rem', fontWeight: '800', letterSpacing: '-0.02em', color: 'var(--c-ink)' }}>Mở khóa gợi ý AI & Job Match Alert</h3>
-                <p style={{ margin: '0 0 22px', fontSize: '0.96rem', color: 'var(--c-muted)', lineHeight: 1.6 }}>Nhận danh sách cơ hội cá nhân hóa khớp với kỹ năng thực chiến, kèm quyền xem sớm 12 giờ cho mọi tin mới.</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignSelf: 'stretch', textAlign: 'left', marginBottom: '24px' }}>
-                  {['Đề xuất khớp kỹ năng đã xác thực', 'Ưu tiên xem & ứng tuyển sớm 12 giờ', 'Tăng tỉ lệ được mời phỏng vấn'].map(t => (
-                    <div key={t} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ flexShrink: 0, width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(22,163,74,0.12)', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={13} /></span>
-                      <span style={{ fontSize: '0.92rem', color: 'var(--c-ink)', fontWeight: '600' }}>{t}</span>
-                    </div>
-                  ))}
-                </div>
-                <button type="button" onClick={handleSubscribeMatchAlert} disabled={subscribingMatchAlert}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '13px 26px', fontSize: '0.94rem', fontWeight: '800', color: '#fff', background: '#d97706', border: 'none', borderRadius: '12px', cursor: subscribingMatchAlert ? 'wait' : 'pointer' }}>
-                  <Sparkles size={16} /> {subscribingMatchAlert ? 'Đang kích hoạt...' : `Kích hoạt · ${(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP / tháng`}
-                </button>
-              </div>
-            ) : recommendationsLoading ? (
-              <div style={{ textAlign: 'center', padding: '70px 20px' }}>
-                <RefreshCw className="spin" size={30} style={{ color: 'var(--c-red)', marginBottom: '12px' }} />
-                <p style={{ margin: 0, color: 'var(--c-muted)', fontWeight: '600' }}>AI đang phân tích và tìm cơ hội phù hợp...</p>
-              </div>
-            ) : !recommendations || ((recommendations.jobs || []).length === 0 && (recommendations.quests || []).length === 0) ? (
-              <div style={{ textAlign: 'center', padding: '70px 20px', border: '1px dashed var(--c-line)', borderRadius: '16px', background: 'var(--c-surface-soft)' }}>
-                <Sparkles size={30} style={{ color: 'var(--c-muted)', marginBottom: '12px' }} />
-                <p style={{ margin: '0 0 6px', color: 'var(--c-ink)', fontWeight: '750' }}>Chưa có gợi ý phù hợp lúc này</p>
-                <p style={{ margin: 0, color: 'var(--c-muted)', fontSize: '0.86rem' }}>Cập nhật và xác thực thêm kinh nghiệm để nhận gợi ý chính xác hơn.</p>
-              </div>
-            ) : (
-              <>
-                {(recommendations.jobs || []).length > 0 && (
-                  <div className="np-jobs-section">
-                    <div className="np-jobs-section-head"><h3>Việc làm phù hợp nhất</h3></div>
-                    <div className="np-joblist">
-                      {recommendations.jobs.map(job => {
-                        const alreadyApplied = appliedJobs.some(a => (a.job_id || a.jobId) === job.id);
-                        const compensationText = job.compensation > 0 ? `${Number(job.compensation).toLocaleString()} VND` : 'Thỏa thuận';
-                        const typeLabel = JOB_TYPES.find(t => t.value === job.jobType)?.label || job.jobType;
-                        return (
-                          <div key={job.id} className="np-job-row">
-                            <div className="np-job-logo">
-                              {job.companyLogo ? <img src={job.companyLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Building size={20} style={{ color: 'var(--c-muted)' }} />}
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(job.id)} className="np-role-title">{job.title}</a>
-                                <span className="np-role-badge" style={{ color: '#d97706', background: 'rgba(245,158,11,0.14)' }}><Sparkles size={9} /> Khớp {job.match_count || 0} kỹ năng</span>
-                                {job.requiresPremium && <span className="np-role-badge" style={{ color: '#7c3aed', background: 'rgba(124,58,237,0.1)' }}>Premium</span>}
-                              </div>
-                              <div className="np-job-meta">
-                                <span>{job.companyName || 'Đối tác'}</span>
-                                <span>{job.isRemote ? 'Remote' : (job.location || 'Linh hoạt')}</span>
-                                <span style={{ color: '#16a34a', fontWeight: '700' }}>{compensationText}</span>
-                                {typeLabel && <span>{typeLabel}</span>}
-                              </div>
-                            </div>
-                            <div className="np-job-actions">
-                              <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(job.id)} className="np-job-detail">Chi tiết</a>
-                              <button type="button" disabled={alreadyApplied} onClick={() => handleApplyJob(job)}
-                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', whiteSpace: 'nowrap', background: alreadyApplied ? 'var(--c-disabled)' : 'var(--c-red)', color: alreadyApplied ? 'var(--c-muted)' : '#fff', cursor: alreadyApplied ? 'not-allowed' : 'pointer' }}>
-                                {alreadyApplied ? 'Đã ứng tuyển' : 'Ứng tuyển'}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {(recommendations.quests || []).length > 0 && (
-                  <div className="np-jobs-section">
-                    <div className="np-jobs-section-head"><h3>Quest CLB phù hợp</h3></div>
-                    <div className="np-joblist">
-                      {recommendations.quests.map(quest => {
-                        const alreadyApplied = questApplications.some(qa => qa.questId === quest.id);
-                        return (
-                          <div key={quest.id} className="np-job-row">
-                            <div className="np-job-logo" style={{ background: 'rgba(37,99,235,0.1)', borderColor: 'rgba(37,99,235,0.25)' }}><Zap size={20} style={{ color: '#2563eb' }} /></div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(quest.id)} className="np-role-title">{quest.title}</a>
-                                <span className="np-role-badge" style={{ color: '#2563eb', background: 'rgba(37,99,235,0.1)' }}><Sparkles size={9} /> Khớp {quest.match_count || 0} kỹ năng</span>
-                              </div>
-                              <div className="np-job-meta">
-                                <span>{quest.companyName || 'CLB'}</span>
-                                <span style={{ color: '#f59e0b', fontWeight: '700' }}>+{quest.expReward} EXP</span>
-                                {quest.npReward > 0 && <span style={{ color: '#10b981', fontWeight: '700' }}>+{quest.npReward} NP</span>}
-                                {quest.minReqRs > 0 && <span>Cần {quest.minReqRs} RS</span>}
-                              </div>
-                            </div>
-                            <div className="np-job-actions">
-                              <a href={`/quests/${quest.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(quest.id)} className="np-job-detail">Chi tiết</a>
-                              <button type="button" disabled={alreadyApplied} onClick={() => { setSelectedQuestForApply(quest); setShowQuestApplyModal(true); }}
-                                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '8px 16px', fontSize: '0.82rem', fontWeight: '800', borderRadius: '9px', border: 'none', whiteSpace: 'nowrap', background: alreadyApplied ? 'var(--c-disabled)' : '#2563eb', color: alreadyApplied ? 'var(--c-muted)' : '#fff', cursor: alreadyApplied ? 'not-allowed' : 'pointer' }}>
-                                {alreadyApplied ? 'Đã tham gia' : <><Zap size={12} /> Tham gia</>}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </section>
-        )}
-
         {/* 2e. PREMIUM STORE VIEW */}
         {activeView === 'PREMIUM_STORE' && (
           <section className="candidate-premium-workspace np-view">
@@ -3207,6 +3083,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <WalletCards size={16} /> Nạp NP
               </button>
             </div>
+
+            {/* Lịch sử giao dịch. Dữ liệu đã nằm sẵn trong /wallet
+                (recentTransactions, 20 dòng gần nhất) — web vẫn gọi API đó từ
+                trước nhưng bỏ qua trường này, nên đây thuần là việc hiển thị. */}
+            <WalletHistory
+              transactions={wallet?.recentTransactions}
+              loading={walletLoading}
+            />
 
             <div className="candidate-premium-layout">
               <section className={`candidate-premium-pass-card ${wallet?.isPremium ? 'active' : ''}`}>
