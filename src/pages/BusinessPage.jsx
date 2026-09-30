@@ -1475,7 +1475,7 @@ function PendingView({ company, onRefresh, onTabChange }) {
         <div className="b2b-status-copy">
           <h1>Hồ sơ đối tác đang được Admin xét duyệt</h1>
           <p>
-            Chào <strong>{company.representativeName}</strong>, đội ngũ nextplease đang đối chiếu tài liệu xác minh của{' '}
+            Chào <strong>{company.representativeName}</strong>, đội ngũ fonlio đang đối chiếu tài liệu xác minh của{' '}
             <strong>{company.name}</strong>. Thời gian phê duyệt thường từ <strong>2 – 24 giờ làm việc</strong>.
           </p>
         </div>
@@ -3459,7 +3459,7 @@ export function BusinessPage() {
       setAccount({
         appUserId: 'demo-app-user',
         supabaseUserId: 'demo-supabase-user',
-        email: 'partner.demo@nextplease.vn',
+        email: 'partner.demo@fonlio.vn',
         status: 'ACTIVE',
         roles: ['employer_free'],
       });
@@ -3469,8 +3469,8 @@ export function BusinessPage() {
         name: 'FPT Software (Demo)',
         companyType: 'SME',
         taxCode: '0101234567',
-        description: 'Tài khoản demo dành cho đối tác tuyển dụng trên nextplease.',
-        websiteUrl: 'https://nextplease.vn',
+        description: 'Tài khoản demo dành cho đối tác tuyển dụng trên fonlio.',
+        websiteUrl: 'https://fonlio.vn',
         representativeName: 'Phat Tai',
         representativePhone: '0987654321',
         verificationStatus: 'APPROVED',
@@ -3642,7 +3642,7 @@ export function BusinessPage() {
       <aside className={`partner-sidebar ${company?.companyType === 'CLUB' ? 'partner-sidebar--club' : 'partner-sidebar--business'}`}>
         <div className="partner-sidebar-header">
           <div className="partner-sidebar-brand">
-            <span className="partner-sidebar-logo">next please<span className="np-dot">:</span></span>
+            <span className="partner-sidebar-logo">fonlio<span className="np-dot">:</span></span>
             <span className="partner-sidebar-tag">
               {company?.companyType === 'CLUB' ? 'Club' : 'Business'}
             </span>

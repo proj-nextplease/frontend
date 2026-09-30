@@ -360,7 +360,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
           <div className="nph-pill" style={{ width: `${pillWidth}px` }}>
             {/* Logo: chữ ⇄ ô vuông. Hai lớp luôn ở trong DOM để crossfade được;
                 ô bọc co width nên phần còn lại của thanh trượt theo mượt. */}
-            <Link to="/" className="nph-brand" aria-label="nextplease — về trang chủ">
+            <Link to="/" className="nph-brand" aria-label="fonlio — về trang chủ">
               <span className="nph-brand-swap" style={{ width: condensed ? '44px' : '250px' }}>
                 <span
                   className="nph-brand-layer nph-brand-word"
@@ -386,7 +386,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                 >
                   <img
                     src={logoapp1}
-                    alt="nextplease"
+                    alt="fonlio"
                     style={{
                       width: '42px',
                       height: '42px',

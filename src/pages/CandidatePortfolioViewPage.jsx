@@ -86,7 +86,7 @@ export function VerifiedPassport({ profile, isDraft = false }) {
         <button className="vp-close" onClick={() => window.close()}><ArrowLeft size={15} /> Đóng</button>
         <span className="vp-brand">
           {isDraft ? <Eye size={14} /> : <ShieldCheck size={14} />}
-          {isDraft ? 'Bản xem trước Portfolio' : 'Hồ sơ đã xác thực'} · next please
+          {isDraft ? 'Bản xem trước Portfolio' : 'Hồ sơ đã xác thực'} · fonlio
         </span>
       </div>
 

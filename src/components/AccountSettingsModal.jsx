@@ -426,7 +426,7 @@ export function AccountSettingsModal({ onClose, currentDisplayName, currentEmail
                 {activeSection === 'NOTIFICATIONS' && (
                   <div className="np-settings-section" key={activeSection}>
                     <h3 style={{ margin: '0 0 4px', fontSize: '1.02rem', fontWeight: '800', color: 'var(--c-ink)' }}>Tùy chọn thông báo</h3>
-                    <p style={{ margin: '0 0 20px', fontSize: '0.86rem', color: 'var(--c-muted)' }}>Chọn cách bạn muốn nhận thông báo từ nextplease.</p>
+                    <p style={{ margin: '0 0 20px', fontSize: '0.86rem', color: 'var(--c-muted)' }}>Chọn cách bạn muốn nhận thông báo từ fonlio.</p>
                     <StatusBanner status={notifStatus} />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                       {[
@@ -506,7 +506,7 @@ export function AccountSettingsModal({ onClose, currentDisplayName, currentEmail
                 {activeSection === 'SESSIONS' && (
                   <div className="np-settings-section" key={activeSection}>
                     <h3 style={{ margin: '0 0 4px', fontSize: '1.02rem', fontWeight: '800', color: 'var(--c-ink)' }}>Phiên đăng nhập</h3>
-                    <p style={{ margin: '0 0 20px', fontSize: '0.86rem', color: 'var(--c-muted)' }}>nextplease hiện chưa lưu vết chi tiết từng thiết bị đăng nhập. Nếu bạn nghi ngờ tài khoản bị truy cập trái phép, hãy đăng xuất khỏi tất cả thiết bị (kể cả thiết bị này) rồi đổi mật khẩu ngay sau đó.</p>
+                    <p style={{ margin: '0 0 20px', fontSize: '0.86rem', color: 'var(--c-muted)' }}>fonlio hiện chưa lưu vết chi tiết từng thiết bị đăng nhập. Nếu bạn nghi ngờ tài khoản bị truy cập trái phép, hãy đăng xuất khỏi tất cả thiết bị (kể cả thiết bị này) rồi đổi mật khẩu ngay sau đó.</p>
                     <StatusBanner status={sessionsStatus} />
                     <div style={{ border: '1px solid var(--c-line)', borderRadius: '14px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', fontWeight: '700', color: 'var(--c-ink)' }}>

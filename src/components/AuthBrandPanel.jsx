@@ -69,7 +69,7 @@ export function AuthBrandPanel({ animation }) {
       <div style={{ position: 'absolute', top: 'clamp(34px, 4vw, 52px)', left: 'clamp(36px, 3.5vw, 54px)', zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '22px' }}>
         <Link to="/candidates" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: MUTED, fontSize: '0.88rem', fontWeight: '600', textDecoration: 'none' }}>← Trang ứng viên</Link>
         <Link to="/" style={{ display: 'inline-flex', alignItems: 'baseline', textDecoration: 'none' }}>
-          <span style={{ fontSize: '1.4rem', fontWeight: '800', letterSpacing: '-0.03em', color: INK }}>next please</span>
+          <span style={{ fontSize: '1.4rem', fontWeight: '800', letterSpacing: '-0.03em', color: INK }}>fonlio</span>
           <span style={{ fontSize: '1.4rem', fontWeight: '800', color: RED }}>:</span>
         </Link>
       </div>

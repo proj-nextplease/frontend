@@ -229,7 +229,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
           }
 
           // 1. If headline is the default placeholder, parse it as empty
-          const dbHeadline = data.headline === "Ứng viên nextplease" ? "" : (data.headline || "");
+          const dbHeadline = (data.headline === "Ứng viên nextplease" || data.headline === "Ứng viên fonlio") ? "" : (data.headline || "");
 
           // 2. Check if a local draft exists
           const localDraftJson = localStorage.getItem('nextplease:portfolio-draft');
@@ -239,7 +239,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             try {
               const draft = JSON.parse(localDraftJson);
               if (draft.profile) {
-                if (draft.profile.headline === "Ứng viên nextplease") {
+                if (draft.profile.headline === "Ứng viên nextplease" || draft.profile.headline === "Ứng viên fonlio") {
                   draft.profile.headline = "";
                 }
                 setProfile({
@@ -839,8 +839,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             textAlign: 'center'
           }}>
             {isEditing
-              ? 'Hồ sơ và Proof of Work của bạn đã được cập nhật thành công trên hệ thống nextplease.'
-              : 'Hồ sơ và Proof of Work của bạn đã được ghi nhận chính thức trên hệ thống nextplease. Bạn đã sẵn sàng để khám phá các cơ hội nghề nghiệp.'}
+              ? 'Hồ sơ và Proof of Work của bạn đã được cập nhật thành công trên hệ thống fonlio.'
+              : 'Hồ sơ và Proof of Work của bạn đã được ghi nhận chính thức trên hệ thống fonlio. Bạn đã sẵn sàng để khám phá các cơ hội nghề nghiệp.'}
           </p>
 
           {/* Nói trước là trang sắp tự chuyển. Không nói thì cú nhảy sau 2 giây
@@ -1481,7 +1481,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             <div>
               <span>Hoàn tất Portfolio</span>
               <h2>Sẵn sàng lưu hồ sơ của bạn?</h2>
-              <p>Kiểm tra lại thông tin lần cuối, sau đó gửi để lưu Portfolio vào hệ thống nextplease.</p>
+              <p>Kiểm tra lại thông tin lần cuối, sau đó gửi để lưu Portfolio vào hệ thống fonlio.</p>
             </div>
             <button className="button primary-button ready-submit-button" onClick={handleOpenConfirmModal} type="button">
               <Sparkles size={18} />

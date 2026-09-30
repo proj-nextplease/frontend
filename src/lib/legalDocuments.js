@@ -16,7 +16,7 @@ const TERMS_SECTIONS = [
     id: 'chap-nhan',
     h: 'Chấp nhận điều khoản',
     p: [
-      'Bằng việc tạo tài khoản hoặc sử dụng nền tảng next please ("Nền tảng"), bạn đồng ý với các Điều khoản dịch vụ này. Nếu bạn không đồng ý, vui lòng ngừng sử dụng Nền tảng.',
+      'Bằng việc tạo tài khoản hoặc sử dụng nền tảng fonlio ("Nền tảng"), bạn đồng ý với các Điều khoản dịch vụ này. Nếu bạn không đồng ý, vui lòng ngừng sử dụng Nền tảng.',
       'Điều khoản áp dụng cho cả ứng viên (sinh viên) và đối tác (doanh nghiệp, câu lạc bộ, tổ chức).',
     ],
   },
@@ -91,7 +91,7 @@ const TERMS_SECTIONS = [
     id: 'lien-he',
     h: 'Liên hệ',
     p: [
-      'Mọi thắc mắc về Điều khoản, vui lòng liên hệ: lienhe@nextplease.vn.',
+      'Mọi thắc mắc về Điều khoản, vui lòng liên hệ: lienhe@fonlio.vn.',
     ],
   },
 ];
@@ -177,7 +177,7 @@ const PRIVACY_SECTIONS = [
     id: 'lien-he',
     h: 'Liên hệ',
     p: [
-      'Câu hỏi về quyền riêng tư, vui lòng liên hệ: lienhe@nextplease.vn.',
+      'Câu hỏi về quyền riêng tư, vui lòng liên hệ: lienhe@fonlio.vn.',
     ],
   },
 ];
@@ -189,7 +189,7 @@ export const TERMS_DOC = {
   path: '/terms',
   title: 'Điều khoản dịch vụ',
   updated: '29 tháng 6, 2026',
-  intro: 'Điều khoản này quy định quyền và nghĩa vụ khi bạn sử dụng nền tảng next please. Vui lòng đọc kỹ trước khi tạo tài khoản.',
+  intro: 'Điều khoản này quy định quyền và nghĩa vụ khi bạn sử dụng nền tảng fonlio. Vui lòng đọc kỹ trước khi tạo tài khoản.',
   sections: TERMS_SECTIONS,
 };
 
@@ -198,6 +198,6 @@ export const PRIVACY_DOC = {
   path: '/privacy',
   title: 'Chính sách bảo mật',
   updated: '29 tháng 6, 2026',
-  intro: 'Chính sách này mô tả cách next please thu thập, sử dụng và bảo vệ dữ liệu cá nhân của bạn.',
+  intro: 'Chính sách này mô tả cách fonlio thu thập, sử dụng và bảo vệ dữ liệu cá nhân của bạn.',
   sections: PRIVACY_SECTIONS,
 };

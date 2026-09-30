@@ -127,7 +127,7 @@ export function BusinessLandingPage() {
               fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
               display: 'block',
             }}>
-              NEXTPLEASE
+              FONLIO
             </span>
             <span style={{
               fontSize: '1.24rem',
@@ -318,7 +318,7 @@ export function BusinessLandingPage() {
                     fontFamily: 'monospace',
                     marginLeft: 8,
                   }}>
-                    talent.nextplease.vn/tuyen-dung/tao-tin-tuyen-dung/xem-lai
+                    talent.fonlio.vn/tuyen-dung/tao-tin-tuyen-dung/xem-lai
                   </div>
                 </div>
                 <div style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'flex', gap: 8 }}>
@@ -333,7 +333,7 @@ export function BusinessLandingPage() {
                 {/* Mini Left Sidebar */}
                 <div style={{ background: '#f1f5f9', padding: '14px 10px', borderRight: '1px solid #e2e8f0', fontSize: '0.72rem' }}>
                   <div style={{ fontWeight: 900, color: '#1e3a8a', fontStyle: 'italic', marginBottom: 12, fontSize: '0.78rem' }}>
-                    NEXTPLEASE
+                    FONLIO
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 7, color: '#64748b' }}>
                     <span style={{ color: '#94a3b8', fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase' }}>Tuyển dụng</span>
@@ -358,7 +358,7 @@ export function BusinessLandingPage() {
                   <div style={{ marginBottom: 8 }}>
                     <label style={{ color: '#64748b', fontSize: '0.68rem', display: 'block', marginBottom: 3 }}>Hồ sơ công ty</label>
                     <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, padding: '6px 10px', color: '#0f172a', fontWeight: 600 }}>
-                      NextPlease Tech Innovation
+                      Fonlio Tech Innovation
                     </div>
                   </div>
 
@@ -448,7 +448,7 @@ export function BusinessLandingPage() {
             margin: '0 0 20px',
             lineHeight: 1.18,
           }}>
-            Giá trị <span style={GRADIENT_BRAND}>NextPlease Talent One</span><br />
+            Giá trị <span style={GRADIENT_BRAND}>Fonlio Talent One</span><br />
             mang lại
           </h2>
 
@@ -459,7 +459,7 @@ export function BusinessLandingPage() {
             maxWidth: 840,
             margin: '0 auto 72px',
           }}>
-            NextPlease Talent One giúp doanh nghiệp tiết kiệm thời gian và dễ dàng tìm đúng người, thay vì loay hoay với quy trình rời rạc và dữ liệu thiếu tin cậy.
+            Fonlio Talent One giúp doanh nghiệp tiết kiệm thời gian và dễ dàng tìm đúng người, thay vì loay hoay với quy trình rời rạc và dữ liệu thiếu tin cậy.
           </p>
 
           {/* 4 Circular Pastel Value Props - Expanded Grid & Bigger Circle Graphics */}
@@ -821,7 +821,7 @@ export function BusinessLandingPage() {
               Các tính năng <span style={GRADIENT_BRAND}>sắp ra mắt</span>
             </h2>
             <p style={{ fontSize: '1.18rem', color: NAV_MUTED, margin: 0, lineHeight: 1.6 }}>
-              NextPlease Talent One không ngừng hoàn thiện để mang đến trải nghiệm tuyển dụng hiệu quả hơn mỗi ngày.
+              Fonlio Talent One không ngừng hoàn thiện để mang đến trải nghiệm tuyển dụng hiệu quả hơn mỗi ngày.
             </p>
           </div>
 
@@ -933,7 +933,7 @@ export function BusinessLandingPage() {
                     lineHeight: 1.15,
                     fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
                   }}>
-                    NEXTPLEASE
+                    FONLIO
                   </span>
                   <span style={{
                     color: '#ffffff',
@@ -991,7 +991,7 @@ export function BusinessLandingPage() {
             Đồng hành cùng nhiều <span style={GRADIENT_BRAND}>thương hiệu tuyển dụng lớn</span>
           </h2>
           <p style={{ fontSize: '1.2rem', color: NAV_MUTED, margin: 0, lineHeight: 1.6 }}>
-            Hàng trăm doanh nghiệp hàng đầu tin tưởng đồng hành cùng nền tảng NextPlease Talent One.
+            Hàng trăm doanh nghiệp hàng đầu tin tưởng đồng hành cùng nền tảng Fonlio Talent One.
           </p>
         </div>
 
@@ -1168,7 +1168,7 @@ export function BusinessLandingPage() {
               margin: '0 0 42px',
               fontWeight: 500,
             }}>
-              Tuyển dụng dễ hơn, nhanh hơn, chính xác hơn với công nghệ AI đột phá của NextPlease Talent One.
+              Tuyển dụng dễ hơn, nhanh hơn, chính xác hơn với công nghệ AI đột phá của Fonlio Talent One.
             </p>
 
             <Link
@@ -1295,7 +1295,7 @@ export function BusinessLandingPage() {
               }}>
                 <div>
                   <span style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', display: 'block' }}>Tạo thông tin tuyển dụng</span>
-                  <strong style={{ fontSize: '1.25rem', fontWeight: 900, color: '#2563eb' }}>NextPlease AI</strong>
+                  <strong style={{ fontSize: '1.25rem', fontWeight: 900, color: '#2563eb' }}>Fonlio AI</strong>
                 </div>
 
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '10px 14px', fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>
@@ -1387,10 +1387,10 @@ export function BusinessLandingPage() {
               margin: '0 0 20px',
               lineHeight: 1.2,
             }}>
-              Bắt đầu tuyển dụng nhân tài cùng <span style={GRADIENT_BRAND}>NextPlease</span> ngay hôm nay
+              Bắt đầu tuyển dụng nhân tài cùng <span style={GRADIENT_BRAND}>Fonlio</span> ngay hôm nay
             </h2>
             <p style={{ fontSize: '1.1rem', color: NAV_MUTED, lineHeight: 1.68, margin: '0 0 36px' }}>
-              Điền thông tin doanh nghiệp, đội ngũ chuyên viên của NextPlease sẽ liên hệ tư vấn giải pháp tuyển dụng tối ưu nhất trong vòng 24 giờ.
+              Điền thông tin doanh nghiệp, đội ngũ chuyên viên của Fonlio sẽ liên hệ tư vấn giải pháp tuyển dụng tối ưu nhất trong vòng 24 giờ.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -1450,7 +1450,7 @@ export function BusinessLandingPage() {
                   Gửi yêu cầu thành công!
                 </strong>
                 <p style={{ fontSize: '0.92rem', margin: 0 }}>
-                  Chuyên viên giải pháp NextPlease sẽ liên hệ với bạn trong thời gian sớm nhất.
+                  Chuyên viên giải pháp Fonlio sẽ liên hệ với bạn trong thời gian sớm nhất.
                 </p>
               </div>
             ) : (
@@ -1618,7 +1618,7 @@ export function BusinessLandingPage() {
             {/* Column 1: Brand */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 16 }}>
-                <span style={{ fontSize: '1.42rem', fontWeight: 900, fontStyle: 'normal', letterSpacing: '-0.025em', color: '#1e3a8a', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>NEXTPLEASE</span>
+                <span style={{ fontSize: '1.42rem', fontWeight: 900, fontStyle: 'normal', letterSpacing: '-0.025em', color: '#1e3a8a', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>FONLIO</span>
                 <span style={{ fontSize: '1.42rem', fontWeight: 900, fontStyle: 'normal', letterSpacing: '-0.025em', color: '#2563eb', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>TALENT ONE</span>
               </div>
               <p style={{ fontSize: '0.92rem', lineHeight: 1.6, color: '#64748b', margin: 0, maxWidth: '22rem' }}>
@@ -1640,7 +1640,7 @@ export function BusinessLandingPage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#334155' }}>
                   <Mail size={18} color="#2563eb" />
-                  <span>Email: talent-support@nextplease.vn</span>
+                  <span>Email: talent-support@fonlio.vn</span>
                 </div>
               </div>
             </div>
@@ -1649,8 +1649,8 @@ export function BusinessLandingPage() {
             <div>
               <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 16px' }}>Về công ty</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.92rem' }}>
-                <Link to="/" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>NextPlease Group</Link>
-                <Link to="/jobs" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>NextPlease - Tìm việc</Link>
+                <Link to="/" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>Fonlio Group</Link>
+                <Link to="/jobs" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>Fonlio - Tìm việc</Link>
                 <Link to="/thao-luan" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>Cộng đồng Thảo luận sinh viên</Link>
               </div>
             </div>
@@ -1663,7 +1663,7 @@ export function BusinessLandingPage() {
             color: '#94a3b8',
             textAlign: 'left',
           }}>
-            ©2026 NextPlease Talent One. All rights reserved
+            ©2026 Fonlio Talent One. All rights reserved
           </div>
         </div>
       </footer>

@@ -345,7 +345,7 @@ export function CandidateLandingPage() {
       <div style={{ ...INNER, paddingTop: '22px' }}>
         <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', paddingBottom: '14px', flexWrap: 'wrap' }}>
           <Link to="/" style={{ display: 'inline-flex', alignItems: 'baseline', textDecoration: 'none' }}>
-            <span style={{ fontSize: '1.45rem', fontWeight: '800', letterSpacing: '-0.03em', color: INK }}>nextplease</span>
+            <span style={{ fontSize: '1.45rem', fontWeight: '800', letterSpacing: '-0.03em', color: INK }}>fonlio</span>
             <span style={{ fontSize: '1.45rem', fontWeight: '800', color: RED }}>:</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
@@ -412,7 +412,7 @@ export function CandidateLandingPage() {
 
         {/* PARTNER MARQUEE */}
         <section style={{ padding: '14px 0 4px', textAlign: 'center' }}>
-          <p style={{ fontSize: '0.86rem', fontWeight: '700', color: MUTED, marginBottom: '24px' }}>Tổ chức & doanh nghiệp đã tuyển dụng qua nextplease</p>
+          <p style={{ fontSize: '0.86rem', fontWeight: '700', color: MUTED, marginBottom: '24px' }}>Tổ chức & doanh nghiệp đã tuyển dụng qua fonlio</p>
           <div style={{ overflow: 'hidden', WebkitMaskImage: 'linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)', maskImage: 'linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)' }}>
             <div className="np-marquee" style={{ display: 'flex', width: 'max-content' }}>
               <div className="np-mq-group">
@@ -514,7 +514,7 @@ export function CandidateLandingPage() {
         <section style={{ padding: '20px 0' }}>
           <Reveal>
             <p style={{ ...EYEBROW, color: INK }}>Từ cộng đồng</p>
-            <h2 style={{ ...H2, marginBottom: '26px' }}>Ứng viên nói gì về nextplease</h2>
+            <h2 style={{ ...H2, marginBottom: '26px' }}>Ứng viên nói gì về fonlio</h2>
           </Reveal>
           <div className="np-bento-quotes">
             {testimonials.map((t, i) => {
@@ -545,7 +545,7 @@ export function CandidateLandingPage() {
         {/* FOOTER */}
         <footer className="np-footer-grid" style={{ borderTop: `1px solid ${LINE}`, marginTop: '12px', paddingTop: '28px', display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '24px' }}>
           <div>
-            <strong style={{ fontSize: '1.2rem', color: INK }}>next please<span style={{ color: RED }}>:</span></strong>
+            <strong style={{ fontSize: '1.2rem', color: INK }}>fonlio<span style={{ color: RED }}>:</span></strong>
             <p style={{ fontSize: '0.9rem', color: MUTED, lineHeight: 1.6, margin: '8px 0 0', maxWidth: '24rem' }}>
               Không gian dành cho ứng viên biến hoạt động thật, kỹ năng và minh chứng thành hồ sơ uy tín, sẵn sàng cho cơ hội mới.
             </p>
@@ -569,7 +569,7 @@ export function CandidateLandingPage() {
             <span style={{ fontSize: '0.9rem', color: MUTED }}>Backend xác thực RS / EXP</span>
           </div>
           <div style={{ gridColumn: '1 / -1', borderTop: `1px solid ${LINE}`, marginTop: '20px', paddingTop: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '0.84rem', color: MUTED }}>© 2026 next please</span>
+            <span style={{ fontSize: '0.84rem', color: MUTED }}>© 2026 fonlio</span>
             <div style={{ display: 'flex', gap: '18px' }}>
               <Link to="/terms" style={{ fontSize: '0.86rem', color: MUTED, textDecoration: 'none' }}>Điều khoản</Link>
               <Link to="/privacy" style={{ fontSize: '0.86rem', color: MUTED, textDecoration: 'none' }}>Bảo mật</Link>

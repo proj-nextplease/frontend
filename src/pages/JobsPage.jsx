@@ -545,7 +545,7 @@ function JobDetail({ job, onClose, saved, onToggleSave, closing, onApply }) {
   ] : [
     `Mức lương / thù lao: ${job.salary}.`,
     `Hình thức làm việc: ${job.workForm} · ${job.type}.`,
-    'Tích luỹ EXP, RS và NP trên NextPlease sau khi hoàn thành nhiệm vụ.',
+    'Tích luỹ EXP, RS và NP trên Fonlio sau khi hoàn thành nhiệm vụ.',
     'Cơ hội phát triển nghề nghiệp và làm việc cùng đội ngũ chuyên nghiệp.',
   ];
 

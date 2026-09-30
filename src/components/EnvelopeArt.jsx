@@ -7,7 +7,7 @@
 
 export function EnvelopeArt() {
   return (
-    <div className="np-upzi-envelope-wrap" aria-label="NextPlease Letter Illustration">
+    <div className="np-upzi-envelope-wrap" aria-label="Fonlio Letter Illustration">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Comfortaa:wght@600;700&family=Fredoka:wght@500;600;700;800&family=Itim&display=swap');
 
@@ -292,10 +292,10 @@ export function EnvelopeArt() {
 
               {/* Stylized Letter Content (Comfortaa / Fredoka / Itim) */}
               <text className="np-font-letter" x="240" y="114" fontSize="13" fontWeight="600" fill="#1e293b" letterSpacing="-0.2">
-                <tspan fontWeight="700" fill="#0d9488">nextplease</tspan> hiểu cảm giác lạc hướng giữa
+                <tspan fontWeight="700" fill="#0d9488">fonlio</tspan> hiểu cảm giác lạc hướng giữa
               </text>
               <text className="np-font-letter" x="240" y="148" fontSize="13" fontWeight="600" fill="#1e293b" letterSpacing="-0.2">
-                vô vàn lựa chọn. Và <tspan fontWeight="700" fill="#0d9488">nextplease</tspan> ở đây để giúp
+                vô vàn lựa chọn. Và <tspan fontWeight="700" fill="#0d9488">fonlio</tspan> ở đây để giúp
               </text>
               <text className="np-font-letter" x="240" y="182" fontSize="13" fontWeight="600" fill="#1e293b" letterSpacing="-0.2">
                 bạn: <tspan fontWeight="700" fill="#0f172a">Tìm hướng đi, tích proof thật,</tspan> và
@@ -340,15 +340,15 @@ export function EnvelopeArt() {
             </g>
 
             {/* ── ADDRESS SECTION: FROM & TO ── */}
-            {/* FROM: nextplease (Stylized Bubble Sticker) */}
+            {/* FROM: fonlio (Stylized Bubble Sticker) */}
             <g transform="translate(238, 280)">
               <text className="np-font-display" x="0" y="0" fontSize="14" fontWeight="700" fill="#ffffff" letterSpacing="0.8">
                 FROM:
               </text>
               <g transform="translate(62, -20)">
-                <rect x="0" y="0" width="114" height="30" rx="15" fill="#ffffff" filter="drop-shadow(0 2px 5px rgba(0,0,0,0.14))" />
+                <rect x="0" y="0" width="88" height="30" rx="15" fill="#ffffff" filter="drop-shadow(0 2px 5px rgba(0,0,0,0.14))" />
                 <text className="np-font-display" x="12" y="21" fontSize="15.5" fontWeight="800" fill="#059669" letterSpacing="-0.2">
-                  nextplease<tspan fill="#f59e0b">:</tspan>
+                  fonlio<tspan fill="#f59e0b">:</tspan>
                 </text>
               </g>
             </g>

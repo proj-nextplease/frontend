@@ -427,7 +427,7 @@ export function JobDetailPage() {
                 Bạn đang xem tin với tư cách khách chưa đăng ký
               </h4>
               <p style={{ margin: 0, fontSize: '0.86rem', color: MUTED, lineHeight: 1.5 }}>
-                Đăng ký hoặc đăng nhập tài khoản NextPlease để mở khoá tính năng ứng tuyển, lưu tin và tích lũy điểm uy tín RS &amp; EXP!
+                Đăng ký hoặc đăng nhập tài khoản Fonlio để mở khoá tính năng ứng tuyển, lưu tin và tích lũy điểm uy tín RS &amp; EXP!
               </p>
             </div>
           </div>
@@ -751,7 +751,7 @@ export function JobDetailPage() {
             </h2>
             <ul style={{ margin: 0, paddingLeft: '22px', color: MUTED, fontSize: '0.94rem', lineHeight: 1.8 }}>
               <li>Mức thù lao / lương: <b style={{ color: EMERALD }}>{salaryDisplay}</b>.</li>
-              <li>Cơ hội tích lũy Reputation Score và EXP trên hệ thống nextplease.</li>
+              <li>Cơ hội tích lũy Reputation Score và EXP trên hệ thống fonlio.</li>
               <li>Nhận chứng nhận hoàn thành và xác thực năng lực trực tiếp từ nhà tuyển dụng.</li>
               <li>Môi trường làm việc năng động, tôn trọng ý kiến cá nhân của người trẻ Gen Z.</li>
             </ul>
@@ -810,8 +810,8 @@ export function JobDetailPage() {
 
             <p style={{ margin: '0 0 12px', fontSize: '0.88rem', color: MUTED, lineHeight: 1.6 }}>
               {showFullCompanyBio
-                ? (job.companyBio || `${job.companyName || 'Đơn vị tuyển dụng'} là đối tác uy tín trên nền tảng NextPlease, cung cấp các cơ hội nghề nghiệp chất lượng cho sinh viên và bạn trẻ.`)
-                : `${(job.companyBio || `${job.companyName || 'Đơn vị tuyển dụng'} là đối tác uy tín trên nền tảng NextPlease...`).slice(0, 140)}...`}
+                ? (job.companyBio || `${job.companyName || 'Đơn vị tuyển dụng'} là đối tác uy tín trên nền tảng Fonlio, cung cấp các cơ hội nghề nghiệp chất lượng cho sinh viên và bạn trẻ.`)
+                : `${(job.companyBio || `${job.companyName || 'Đơn vị tuyển dụng'} là đối tác uy tín trên nền tảng Fonlio...`).slice(0, 140)}...`}
             </p>
 
             <button
@@ -990,7 +990,7 @@ export function JobDetailPage() {
                     </div>
                     <div>
                       <strong style={{ display: 'block', fontSize: '0.95rem', color: ON_DARK }}>{portfolio.name}</strong>
-                      <span style={{ fontSize: '0.8rem', color: MUTED }}>{portfolio.headline || portfolio.school || 'Ứng viên NextPlease'}</span>
+                      <span style={{ fontSize: '0.8rem', color: MUTED }}>{portfolio.headline || portfolio.school || 'Ứng viên Fonlio'}</span>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>

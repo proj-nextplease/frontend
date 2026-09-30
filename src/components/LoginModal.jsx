@@ -386,7 +386,7 @@ export function LoginModal({ isOpen, role = 'candidate', onClose }) {
               Nhập email để tiếp tục
             </h2>
             <p style={{ margin: 0, fontSize: '0.92rem', color: 'rgba(255,255,255,0.62)', lineHeight: 1.5 }}>
-              Đăng nhập hoặc xác thực tài khoản nextplease để tiếp tục.
+              Đăng nhập hoặc xác thực tài khoản fonlio để tiếp tục.
             </p>
           </div>
 

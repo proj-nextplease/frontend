@@ -980,7 +980,7 @@ export function HomePage() {
       <section id="thao-luan" style={{ ...INNER, marginTop: 'clamp(90px, 11vw, 150px)', scrollMarginTop: '104px' }}>
         <Reveal>
           <SectionTitle align="center" style={{ maxWidth: '640px', margin: '0 auto' }}>
-            nextplease trong mắt sinh viên và nhà tuyển dụng
+            fonlio trong mắt sinh viên và nhà tuyển dụng
           </SectionTitle>
         </Reveal>
         <div className="np-grid-3" style={{ marginTop: '72px' }}>

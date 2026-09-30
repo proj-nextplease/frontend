@@ -67,7 +67,7 @@ export function IdealCompanion() {
         @media (prefers-reduced-motion: reduce) { .np-comp-art { transition: none; } }
       `}</style>
 
-      <h2 className="np-comp-head"><b>nextplease</b> — người bạn đồng hành lý tưởng</h2>
+      <h2 className="np-comp-head"><b>fonlio</b> — người bạn đồng hành lý tưởng</h2>
 
       <div className="np-comp-grid">
         {CARDS.map(({ img, icon, title, desc, tint, blob, fold, rotate }) => (

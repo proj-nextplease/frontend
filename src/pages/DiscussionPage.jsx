@@ -246,7 +246,7 @@ function normalizeComment(raw) {
     author: authorName,
     avatarUrl: isAnon ? '' : (raw.authorAvatarUrl || ''),
     avatarBg: isAnon ? 'rgba(16,185,129,0.2)' : avatarBgFor(authorName),
-    role: isAnon ? 'Thành viên ẩn danh' : (raw.role || 'Thành viên NextPlease'),
+    role: isAnon ? 'Thành viên ẩn danh' : (raw.role || 'Thành viên Fonlio'),
     isAnonymous: isAnon,
     content: raw.content,
     timeAgo: timeAgoFrom(raw.createdAt),
@@ -264,7 +264,7 @@ function normalizePost(raw) {
       avatarUrl: isAnon ? '' : (raw.authorAvatarUrl || ''),
       initials: isAnon ? 'AD' : initialsFor(authorName),
       avatarBg: isAnon ? 'rgba(16,185,129,0.2)' : avatarBgFor(authorName),
-      role: isAnon ? 'Thành viên ẩn danh' : (raw.authorRole || 'Thành viên NextPlease'),
+      role: isAnon ? 'Thành viên ẩn danh' : (raw.authorRole || 'Thành viên Fonlio'),
       isAnonymous: isAnon,
     },
     topicId: raw.topicSlug,
@@ -863,7 +863,7 @@ export function DiscussionPage() {
                       <ShieldCheck size={20} color="#8b5cf6" />
                     </div>
                     <div style={{ fontSize: '0.85rem', color: 'rgba(233,247,242,0.62)', marginBottom: 6 }}>
-                      Chủ đề chính thức · được NextPlease quản trị
+                      Chủ đề chính thức · được Fonlio quản trị
                     </div>
                     <div style={{ fontSize: '0.85rem', color: 'rgba(233,247,242,0.72)', fontWeight: 600 }}>
                       {currentTopic.followersCount} người theo dõi · {currentTopic.postsCount} bài viết

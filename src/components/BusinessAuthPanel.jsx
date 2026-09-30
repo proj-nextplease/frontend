@@ -95,7 +95,7 @@ export function BusinessAuthPanel({ animation }) {
         <Link to="/businesses" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: MUTED, fontSize: '0.88rem', fontWeight: '600', textDecoration: 'none' }}>← Trang đối tác</Link>
         <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
           <span style={{ display: 'inline-flex', alignItems: 'baseline' }}>
-            <span style={{ fontSize: '1.4rem', fontWeight: '800', letterSpacing: '-0.03em', color: '#fff' }}>next please</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: '800', letterSpacing: '-0.03em', color: '#fff' }}>fonlio</span>
             <span style={{ fontSize: '1.4rem', fontWeight: '800', color: BLUE }}>:</span>
           </span>
           <span style={{ fontSize: '0.66rem', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', color: BLUE, border: `1px solid rgba(59,130,246,0.45)`, borderRadius: '6px', padding: '3px 7px' }}>For Business</span>
