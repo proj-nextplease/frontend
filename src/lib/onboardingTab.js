@@ -23,7 +23,7 @@ export const ONBOARDING_TAB_FLAG = 'onboarding_tab';
    trắng trơ trọi và không biết chuyện gì đang xảy ra. Màu lấy theo hệ giấy
    của trang dựng để lúc trang thật vào chỗ không bị giật màu. */
 const PLACEHOLDER = `<!doctype html><meta charset="utf-8">
-<title>nextplease</title>
+<title>fonlio</title>
 <style>
   html,body{height:100%;margin:0}
   body{display:grid;place-items:center;background:#fbf7ef;color:#16150f;

@@ -81,7 +81,7 @@ export function Header() {
       },
       profile: {
         name: portfolio.name || '',
-        headline: portfolio.headline === 'Ứng viên nextplease' ? '' : (portfolio.headline || ''),
+        headline: (portfolio.headline === 'Ứng viên nextplease' || portfolio.headline === 'Ứng viên fonlio') ? '' : (portfolio.headline || ''),
         school: portfolio.school || '',
         location: portfolio.location || '',
         bio: portfolio.bio || '',

@@ -28,7 +28,7 @@ export function EmptyStateMascot({ title, description, action, size = 120, style
         directions="/mascots/frog-directions.webp"
         reactions="/mascots/frog-reactions.webp"
         size={size}
-        label="Linh vật nextplease"
+        label="Linh vật fonlio"
       />
 
       <p style={{ margin: '10px 0 0', fontSize: '1.02rem', fontWeight: 700, color: 'var(--ink)' }}>

@@ -111,7 +111,7 @@ export function SiteFooter() {
             </div>
 
             <div className="np-footer-col">
-              <span className="np-footer-colhead">nextplease</span>
+              <span className="np-footer-colhead">fonlio</span>
               <Link className="np-footer-link" to="/tao-portfolio">Proof hoạt động thế nào</Link>
               <Link className="np-footer-link" to="/terms">Điều khoản</Link>
               <Link className="np-footer-link" to="/privacy">Bảo mật</Link>
@@ -124,7 +124,7 @@ export function SiteFooter() {
             <Link className="np-footer-link" to="/terms">Điều khoản sử dụng</Link>
             <Link className="np-footer-link" to="/privacy">Chính sách bảo mật</Link>
           </div>
-          <span>© 2026 next please. Bảo lưu mọi quyền.</span>
+          <span>© 2026 fonlio. Bảo lưu mọi quyền.</span>
         </div>
       </div>
 

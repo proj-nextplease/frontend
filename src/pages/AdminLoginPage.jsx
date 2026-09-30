@@ -218,7 +218,7 @@ export function AdminLoginPage() {
               <VStack hAlign="center">
                 <Text type="supporting" color="secondary">
                   Chưa có tài khoản?{' '}
-                  <Link href="mailto:support@nextplease.dev" type="supporting">Liên hệ quản trị hệ thống</Link>
+                  <Link href="mailto:support@fonlio.vn" type="supporting">Liên hệ quản trị hệ thống</Link>
                 </Text>
               </VStack>
             </VStack>

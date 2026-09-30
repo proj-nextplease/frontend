@@ -1723,11 +1723,11 @@ export function AdminB2bReviewPage() {
     if (sessionStorage.getItem('nextplease:admin-bypass') === 'true') {
       setCurrentUser({
         id: '00000000-0000-0000-0000-000000000000',
-        email: 'admin@nextplease.vn',
+        email: 'admin@fonlio.vn',
         displayName: 'Quản trị viên Hệ thống',
         roles: ['admin']
       });
-      setAdminEmail('admin@nextplease.vn');
+      setAdminEmail('admin@fonlio.vn');
     } else {
       const storedUser = sessionStorage.getItem('nextplease:current_user') || localStorage.getItem('nextplease:current_user');
       if (storedUser) {
@@ -1748,7 +1748,7 @@ export function AdminB2bReviewPage() {
               ...prev,
               id: profile.appUserId,
               appUserId: profile.appUserId,
-              email: profile.email || prev?.email || 'admin@nextplease.vn',
+              email: profile.email || prev?.email || 'admin@fonlio.vn',
               roles: Array.from(profile.roles || prev?.roles || ['admin'])
             }));
           }
@@ -6489,7 +6489,7 @@ export function AdminB2bReviewPage() {
                   {!isSidebarCollapsed && (
                     <Link to={ADMIN_BASE_PATH} className="admin-sidenav-brand">
                       <span className="admin-sidenav-eyebrow">Admin</span>
-                      <span className="admin-sidenav-title">next please</span>
+                      <span className="admin-sidenav-title">fonlio</span>
                     </Link>
                   )}
                   <ToggleButton
@@ -6505,13 +6505,13 @@ export function AdminB2bReviewPage() {
               }
               topContent={
                 <div className={`admin-sidebar-profile${isSidebarCollapsed ? ' admin-sidebar-profile--collapsed' : ''}`}>
-                  <div className="admin-profile-avatar" title={adminEmail || 'admin@nextplease.vn'}>
+                  <div className="admin-profile-avatar" title={adminEmail || 'admin@fonlio.vn'}>
                     {(adminEmail || 'A').slice(0, 2).toUpperCase()}
                   </div>
                   {!isSidebarCollapsed && (
                     <div className="admin-profile-info">
-                      <span className="admin-profile-name" title={adminEmail || 'admin@nextplease.vn'}>
-                        {adminEmail || 'admin@nextplease.vn'}
+                      <span className="admin-profile-name" title={adminEmail || 'admin@fonlio.vn'}>
+                        {adminEmail || 'admin@fonlio.vn'}
                       </span>
                       <span className="admin-profile-role">Administrator</span>
                     </div>

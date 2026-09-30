@@ -410,7 +410,7 @@ function ApplyModal({
    viền — cộng với hộ chiếu và Next Steps là bốn hộp giống nhau xếp dọc. Ở đây
    gộp làm một, mỗi dòng đeo một nhãn phạm vi, ngăn nhau bằng kẻ mảnh. Cùng
    ngôn ngữ bản-in với danh sách bước bên dưới. */
-function QuestList({ daily, weekly, onClaim, claiming }) {
+function QuestList({ daily, weekly, onClaim, claiming, streak = 0, longestStreak = 0 }) {
   const rows = [
     ...daily.map((q) => ({ ...q, scope: 'DAILY', scopeLabel: 'Ngày' })),
     ...weekly.map((q) => ({ ...q, scope: 'WEEKLY', scopeLabel: 'Tuần' })),
@@ -418,8 +418,70 @@ function QuestList({ daily, weekly, onClaim, claiming }) {
   const doneDaily = daily.filter((q) => q.completed).length;
   const doneWeekly = weekly.filter((q) => q.completed).length;
 
+  const now = new Date();
+  const todayWeekday = now.getDay() === 0 ? 7 : now.getDay();
+  const weekDays = [
+    { label: 'T2', num: 1 },
+    { label: 'T3', num: 2 },
+    { label: 'T4', num: 3 },
+    { label: 'T5', num: 4 },
+    { label: 'T6', num: 5 },
+    { label: 'T7', num: 6 },
+    { label: 'CN', num: 7 },
+  ];
+
   return (
     <section className="np-quests">
+      {streak > 0 && (
+        <div className="np-streak-hero-card">
+          <div className="np-streak-hero-top">
+            <div className="np-streak-hero-icon-wrapper">
+              <div className="np-streak-hero-icon">
+                <Flame size={24} color="#fff" fill="#fff" />
+              </div>
+            </div>
+            <div className="np-streak-hero-meta">
+              <div className="np-streak-hero-title-row">
+                <span className="np-streak-hero-count">CHUỖI {streak} NGÀY LIÊN TIẾP</span>
+                {streak >= longestStreak && streak > 1 && (
+                  <span className="np-streak-badge-record">KỶ LỤC MỚI 🔥</span>
+                )}
+              </div>
+              <div className="np-streak-hero-sub">
+                {longestStreak > streak ? `Kỷ lục: ${longestStreak} ngày liên tiếp · ` : ''}
+                Duy trì điểm danh & làm nhiệm vụ hôm nay để giữ vững ngọn lửa!
+              </div>
+            </div>
+            <div className="np-streak-hero-pill">
+              🔥 RỰC LỬA
+            </div>
+          </div>
+
+          <div className="np-streak-hero-divider" />
+
+          <div className="np-streak-hero-days">
+            {weekDays.map(({ label, num }) => {
+              const isToday = num === todayWeekday;
+              const isPastOrToday = num <= todayWeekday;
+              const isActive = isPastOrToday && (todayWeekday - num < streak);
+
+              return (
+                <div key={label} className={`np-streak-day-item ${isActive ? 'is-active' : ''} ${isToday ? 'is-today' : ''}`}>
+                  <div className="np-streak-day-box">
+                    {isActive || isToday ? (
+                      <Flame size={15} color={isActive ? '#ff9e00' : '#ff5722'} fill={isActive ? '#ff9e00' : 'none'} />
+                    ) : (
+                      <span className="np-streak-day-dot">•</span>
+                    )}
+                  </div>
+                  <span className="np-streak-day-label">{label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="np-quests-head">
         <h2 className="np-steps-title">Nhiệm vụ</h2>
         <div className="np-quests-score">
@@ -1029,7 +1091,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     logoColor: org.logoColor || getCompanyGradient(org.name),
     industry: org.industry || (org.companyType === 'CLUB' ? 'Hoạt động CLB & Tổ chức học thuật' : 'Lĩnh vực kinh doanh & Dịch vụ'),
     location: org.location || 'Việt Nam',
-    website: org.website || 'https://nextplease.net',
+    website: org.website || 'https://fonlio.vn',
     verified: org.verified !== undefined ? org.verified : true,
     type: org.type || (org.companyType === 'CLUB' ? 'CLUB' : 'BUSINESS')
   }));
@@ -1199,7 +1261,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               ...detailedCompany,
               logoColor: detailedCompany.logoColor || getCompanyGradient(detailedCompany.name),
               logoUrl: detailedCompany.logoUrl,
-              website: detailedCompany.websiteUrl || 'https://nextplease.net',
+              website: detailedCompany.websiteUrl || 'https://fonlio.vn',
               type: detailedCompany.companyType === 'CLUB' ? 'CLUB' : 'BUSINESS',
               verified: true
             };
@@ -2335,10 +2397,16 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   </span>
                   <span className="np-pp-cell-cap"><ShieldCheck size={12} /> Trust Score</span>
                 </div>
-                <div className="np-pp-cell">
+                <div className={`np-pp-cell ${streak > 0 ? 'is-streak' : ''}`}>
                   <span className="np-pp-cell-val np-pp-cell-flame">
                     {streak}
-                    <Flame size={18} color="#fb923c" fill={streak > 0 ? '#fb923c' : 'none'} />
+                    <Flame
+                      size={20}
+                      className={streak > 0 ? 'np-streak-flame' : ''}
+                      color="#ff7a00"
+                      fill={streak > 0 ? '#ff7a00' : 'none'}
+                      style={{ filter: streak > 0 ? 'drop-shadow(0 0 6px rgba(255,122,0,0.6))' : 'none' }}
+                    />
                   </span>
                   <span className="np-pp-cell-cap">Chuỗi ngày · dài nhất {gamification?.longestStreak ?? 0}</span>
                 </div>
@@ -2351,6 +2419,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 weekly={weeklyQuests}
                 onClaim={handleClaimQuest}
                 claiming={claimingQuest}
+                streak={streak}
+                longestStreak={gamification?.longestStreak ?? 0}
               />
             )}
 
@@ -3786,7 +3856,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     {selectedOrg.fanpageUrl && (
                       <a href={selectedOrg.fanpageUrl} target="_blank" rel="noopener noreferrer" className="orgw-side-link"><ExternalLink size={14} /> Fanpage chính thức</a>
                     )}
-                    {selectedOrg.website && !/seed:|nextplease\.net/.test(selectedOrg.website) && (
+                    {selectedOrg.website && !/seed:|nextplease\.net|fonlio\.vn/.test(selectedOrg.website) && (
                       <a href={selectedOrg.website} target="_blank" rel="noopener noreferrer" className="orgw-side-link"><ExternalLink size={14} /> Truy cập website</a>
                     )}
                   </div>

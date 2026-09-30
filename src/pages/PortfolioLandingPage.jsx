@@ -33,7 +33,7 @@ const EDITORIAL_STEPS = [
     no: '01',
     label: 'Khởi tạo định danh',
     title: 'Dựng hồ sơ & chọn linh vật đại diện',
-    body: 'Chọn linh vật đồng hành, điền chuyên môn và trường học. Trong vòng 3 phút, bạn sở hữu ngay một đường dẫn riêng mang tên mình (nextplease.vn/p/ten-ban) để gắn vào Bio mạng xã hội hoặc chia sẻ với nhà tuyển dụng.',
+    body: 'Chọn linh vật đồng hành, điền chuyên môn và trường học. Trong vòng 3 phút, bạn sở hữu ngay một đường dẫn riêng mang tên mình (fonlio.vn/p/ten-ban) để gắn vào Bio mạng xã hội hoặc chia sẻ với nhà tuyển dụng.',
   },
   {
     no: '02',
@@ -60,8 +60,8 @@ const COMPARISON = [
 
 const FAQS = [
   {
-    q: 'NextPlease Portfolio khác gì so với một bản CV thông thường?',
-    a: 'CV là văn bản tĩnh do bạn tự soạn, người đọc chỉ có thể tin hoặc nghi ngờ. NextPlease Portfolio là hồ sơ sống kỹ thuật số: mỗi kinh nghiệm và dự án bạn hoàn thành đều có thể được ban tổ chức hoặc doanh nghiệp xác nhận (Verified Proof of Work), kèm điểm uy tín (RS) và cấp bậc (EXP). Khi cần gửi tệp đính kèm qua email tuyển dụng, bạn vẫn có thể xuất bản PDF tiêu chuẩn bất kỳ lúc nào.',
+    q: 'Fonlio Portfolio khác gì so với một bản CV thông thường?',
+    a: 'CV là văn bản tĩnh do bạn tự soạn, người đọc chỉ có thể tin hoặc nghi ngờ. Fonlio Portfolio là hồ sơ sống kỹ thuật số: mỗi kinh nghiệm và dự án bạn hoàn thành đều có thể được ban tổ chức hoặc doanh nghiệp xác nhận (Verified Proof of Work), kèm điểm uy tín (RS) và cấp bậc (EXP). Khi cần gửi tệp đính kèm qua email tuyển dụng, bạn vẫn có thể xuất bản PDF tiêu chuẩn bất kỳ lúc nào.',
   },
   {
     q: 'Tôi chưa có kinh nghiệm đi làm thì dựng Portfolio để làm gì?',
@@ -77,7 +77,7 @@ const FAQS = [
   },
   {
     q: 'Tôi có thể đổi đường dẫn cá nhân (custom URL) của mình không?',
-    a: 'Có. Khi tạo hồ sơ, hệ thống sẽ gợi ý đường link từ tên bạn (ví dụ: nextplease.vn/p/tai-phat). Bạn có thể đổi sang bất kỳ tên nào khác trong trang quản lý hồ sơ, miễn là chưa có người khác đăng ký trước.',
+    a: 'Có. Khi tạo hồ sơ, hệ thống sẽ gợi ý đường link từ tên bạn (ví dụ: fonlio.vn/p/tai-phat). Bạn có thể đổi sang bất kỳ tên nào khác trong trang quản lý hồ sơ, miễn là chưa có người khác đăng ký trước.',
   },
   {
     q: 'Ai có thể xem được hồ sơ Portfolio của tôi?',
@@ -501,7 +501,7 @@ export function PortfolioLandingPage() {
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><FileText size={16} /> CV tự khai thông thường</span>
             </div>
             <div className="pf-cmp-head" style={{ color: isLight ? EMERALD_DARK : TEAL, fontWeight: 700 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><ShieldCheck size={16} /> NextPlease Portfolio</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><ShieldCheck size={16} /> Fonlio Portfolio</span>
             </div>
 
             {COMPARISON.map(([label, cv, pf]) => (
@@ -545,7 +545,7 @@ export function PortfolioLandingPage() {
                   transition: 'all 600ms ease',
                 }}>
                   <span style={{ fontSize: '0.9rem', color: isLight ? TEXT_MUTED_LIGHT : MUTED, userSelect: 'none', fontWeight: 500 }}>
-                    nextplease.vn/p/
+                    fonlio.vn/p/
                   </span>
                   <input
                     type="text"
@@ -567,7 +567,7 @@ export function PortfolioLandingPage() {
                   </Link>
                 </div>
                 <div style={{ fontSize: '0.78rem', color: isLight ? TEXT_MUTED_LIGHT : MUTED, marginTop: 8 }}>
-                  Đường dẫn xem trước: <strong style={{ color: isLight ? EMERALD_DARK : EMERALD }}>nextplease.vn/p/{testHandle || 'ten-ban'}</strong>
+                  Đường dẫn xem trước: <strong style={{ color: isLight ? EMERALD_DARK : EMERALD }}>fonlio.vn/p/{testHandle || 'ten-ban'}</strong>
                 </div>
               </div>
             </div>
