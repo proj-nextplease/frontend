@@ -46,7 +46,7 @@ function PhoneIcon({ className = '', style = {} }) {
 
 function FacebookIcon({ className = '', style = {} }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className={className} style={{ flexShrink: 0, ...style }}>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className={className} style={{ flexShrink: 0, ...style }}>
       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
     </svg>
   );
@@ -54,7 +54,7 @@ function FacebookIcon({ className = '', style = {} }) {
 
 function InstagramIcon({ className = '', style = {} }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={{ flexShrink: 0, ...style }}>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={{ flexShrink: 0, ...style }}>
       <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
       <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
@@ -72,8 +72,8 @@ function TikTokIcon({ className = '', style = {} }) {
 
 function ThreadsIcon({ className = '', style = {} }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className={className} style={{ flexShrink: 0, ...style }}>
-      <path d="M12.186 24C5.467 24 0 18.675 0 12.128 0 5.58 5.467.255 12.186.255c6.643 0 11.977 5.178 12.064 11.724.086 6.547-5.068 11.725-11.71 11.725h-.354v-2.036h.354c5.556 0 9.67-4.218 9.67-9.689 0-5.47-4.269-9.688-9.873-9.688C6.67 1.99 2.036 6.505 2.036 12.128c0 5.623 4.634 10.138 10.15 10.138 3.518 0 6.67-1.85 8.243-4.835l1.802.946C20.24 22.04 16.49 24 12.186 24zm4.01-13.435c-.097-.847-.468-1.572-1.07-2.097-.604-.526-1.397-.81-2.302-.81-1.096 0-2.052.427-2.766 1.235-.714.808-1.127 1.916-1.194 3.205h7.332v-1.533zm-5.296 3.238c.118 1.002.559 1.83 1.277 2.399.718.57 1.636.868 2.656.868 1.455 0 2.72-.577 3.567-1.626l1.528 1.346c-1.22 1.503-2.99 2.316-5.095 2.316-1.597 0-3.023-.497-4.123-1.437-1.1-.94-1.722-2.28-1.8-3.866h9.522c.03-.4.045-.81.045-1.229 0-1.442-.43-2.67-1.244-3.553-.814-.882-1.928-1.35-3.224-1.35-1.433 0-2.645.503-3.504 1.455-.86.951-1.328 2.274-1.357 3.824l1.752.853z" />
+    <svg width="16" height="16" viewBox="0 0 192 192" fill="currentColor" className={className} style={{ flexShrink: 0, ...style }}>
+      <path d="M141.537 88.9883C140.71 88.5919 139.87 88.2104 139.019 87.8451C137.537 60.5382 122.616 44.905 97.5619 44.745C97.4484 44.7443 97.3355 44.7443 97.222 44.745C77.2952 44.745 61.2721 57.5501 55.4851 78.1189L74.2982 83.3986C78.0772 69.9678 86.8407 63.8824 97.222 63.8824C97.2905 63.8824 97.3597 63.8824 97.4282 63.8828C108.634 63.9546 117.873 70.9328 119.508 89.6582C112.553 88.6655 104.991 88.2435 96.8837 88.3887C68.9197 88.8893 50.8404 104.301 51.7877 124.962C52.269 135.452 57.5401 144.375 66.6074 150.096C75.0211 155.405 85.9922 157.946 97.564 157.262C112.784 156.363 124.786 149.277 133.242 136.196C139.845 147.288 150.198 153.86 163.666 153.86C163.799 153.86 163.931 153.859 164.064 153.858C177.34 153.513 186.294 144.208 186.816 130.648L167.683 129.907C167.382 137.747 162.247 141.517 153.308 141.674C143.766 141.841 137.288 135.342 137.288 123.633V122.999C137.288 121.282 137.218 119.544 137.081 117.794C132.88 126.962 124.962 134.42 113.882 138.835C104.912 142.408 94.671 142.827 84.7212 140.03C75.2536 137.369 68.3242 131.258 65.1764 122.787C62.0526 114.381 63.0298 104.382 67.9254 94.6646C73.4916 83.6146 84.3857 77.2764 97.8091 77.0357C107.032 76.8703 115.659 79.5292 122.846 84.7334C122.826 81.3916 122.062 78.4312 120.575 75.9238C117.202 70.2443 109.97 66.8647 100.869 66.8647C93.4475 66.8647 87.2721 69.1171 83.0573 73.3644L70.4705 60.7777C77.4816 53.7665 87.9712 49.8828 100.869 49.8828C116.326 49.8828 128.795 55.7725 135.882 66.425C140.233 72.966 142.378 80.9765 142.378 90.582V124.872C142.378 132.802 144.606 139.111 148.91 143.415C153.214 147.719 159.523 149.947 167.453 149.947C177.307 149.947 184.851 145.419 188.755 137.106C191.011 132.298 192 126.398 192 119.539C192 78.082 163.633 47.9248 123.498 47.9248C81.8213 47.9248 50.8404 79.0305 50.8404 122.259C50.8404 165.487 81.8213 196.593 123.498 196.593C148.647 196.593 170.835 184.148 181.765 163.953L166.726 155.807C158.487 171.028 141.776 180.419 123.498 180.419C90.7226 180.419 66.8647 155.074 66.8647 122.259C66.8647 89.4439 90.7226 64.0991 123.498 64.0991C154.498 64.0991 176.046 87.0519 176.046 119.539C176.046 124.512 175.398 128.847 174.004 132.327C171.864 137.669 168.049 139.774 163.453 139.774C158.857 139.774 155.042 137.669 152.902 132.327C151.508 128.847 150.86 124.512 150.86 119.539V88.9883H141.537ZM123.364 105.748C123.238 103.541 122.684 101.597 121.734 99.9806C119.467 96.1264 114.773 93.9213 108.687 93.9213C108.069 93.9213 107.447 93.944 106.822 93.9889C94.4939 94.8778 85.5562 101.442 84.4535 110.428C83.8441 115.395 85.6416 120.009 89.5161 123.425C93.424 126.87 99.1627 128.783 105.679 128.783C113.846 128.783 120.404 125.138 123.013 118.995C123.284 118.356 123.486 117.65 123.619 116.883C123.504 113.061 123.418 109.309 123.364 105.748Z" />
     </svg>
   );
 }
@@ -97,76 +97,13 @@ export function SiteFooter() {
         .np-footer-inner { padding: clamp(64px, 8vw, 96px) 20px clamp(28px, 3vw, 40px); }
 
         .np-footer-top { display: flex; gap: clamp(40px, 6vw, 80px); align-items: flex-start; justify-content: space-between; }
-        
-        .np-footer-brand-side {
-          flex: 1 1 380px;
-          max-width: 480px;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 28px;
-        }
 
         .np-footer-tagline {
-          margin: 0;
+          flex: 1 1 auto; min-width: 0; margin: 0;
           /* index.css gán 'Baloo 2' cho h1-h3 nên phải khai báo lại font. */
           font-family: inherit;
-          font-size: clamp(1.75rem, 3.2vw, 2.35rem); font-weight: 400; line-height: 1.15;
+          font-size: clamp(1.75rem, 3.4vw, 2.5rem); font-weight: 400; line-height: 1.15;
           letter-spacing: -0.025em; color: ${ON_DARK};
-        }
-
-        .np-footer-contact-block {
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-        }
-
-        .np-footer-contact-items {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 12px 24px;
-        }
-
-        .np-footer-contact-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 0.875rem;
-          line-height: 1.4;
-          letter-spacing: -0.015em;
-          color: rgba(255,255,255,0.75);
-          text-decoration: none;
-          white-space: nowrap;
-          transition: color 150ms ease;
-        }
-        .np-footer-contact-link:hover {
-          color: ${EMERALD};
-        }
-
-        .np-footer-socials {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-        .np-footer-social-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 34px;
-          height: 34px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          color: rgba(255, 255, 255, 0.82);
-          text-decoration: none;
-          transition: all 180ms ease;
-        }
-        .np-footer-social-btn:hover {
-          background: rgba(16, 185, 129, 0.16);
-          border-color: rgba(16, 185, 129, 0.45);
-          color: ${EMERALD};
-          transform: translateY(-2px);
         }
 
         .np-footer-cols { flex: 0 1 auto; display: grid; grid-template-columns: repeat(3, minmax(140px, auto)); gap: clamp(28px, 4vw, 64px); }
@@ -179,8 +116,75 @@ export function SiteFooter() {
         }
         .np-footer-link:hover { color: ${EMERALD}; }
 
+        /* Thanh liên hệ & mạng xã hội riêng biệt */
+        .np-footer-contact-bar {
+          margin-top: clamp(48px, 6vw, 72px);
+          padding: 16px 20px;
+          background: rgba(255, 255, 255, 0.025);
+          border: 1px solid rgba(255, 255, 255, 0.07);
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+          flex-wrap: wrap;
+        }
+
+        .np-footer-contact-info {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+
+        .np-footer-contact-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.875rem;
+          color: rgba(255, 255, 255, 0.82);
+          text-decoration: none;
+          transition: color 150ms ease;
+        }
+        .np-footer-contact-item:hover {
+          color: ${EMERALD};
+        }
+
+        .np-footer-contact-sep {
+          color: rgba(255, 255, 255, 0.25);
+          font-size: 0.75rem;
+        }
+
+        .np-footer-socials {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .np-footer-social-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: rgba(255, 255, 255, 0.85);
+          text-decoration: none;
+          transition: all 180ms ease;
+        }
+        .np-footer-social-btn:hover {
+          background: rgba(16, 185, 129, 0.16);
+          border-color: rgba(16, 185, 129, 0.45);
+          color: ${EMERALD};
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
         .np-footer-bottom {
-          margin-top: clamp(56px, 7vw, 88px); padding-top: 24px;
+          margin-top: 28px;
+          padding-top: 24px;
           border-top: none;
           background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.08) 80%, transparent);
           background-size: 100% 1px;
@@ -198,6 +202,11 @@ export function SiteFooter() {
           .np-footer-top { flex-direction: column; }
           .np-footer-cols { width: 100%; }
         }
+        @media (max-width: 768px) {
+          .np-footer-contact-bar { flex-direction: column; align-items: flex-start; gap: 16px; }
+          .np-footer-contact-sep { display: none; }
+          .np-footer-contact-info { flex-direction: column; align-items: flex-start; gap: 10px; }
+        }
         @media (max-width: 600px) {
           .np-footer-cols { grid-template-columns: 1fr 1fr; }
           .np-footer-bottom { flex-direction: column; align-items: flex-start; }
@@ -206,64 +215,9 @@ export function SiteFooter() {
 
       <div className="np-footer-inner" style={{ ...INNER }}>
         <div className="np-footer-top">
-          <div className="np-footer-brand-side">
-            <h2 className="np-footer-tagline">
-              Hồ sơ dựa trên bằng chứng,<br />cho sinh viên Việt Nam
-            </h2>
-
-            <div className="np-footer-contact-block">
-              <div className="np-footer-contact-items">
-                <a className="np-footer-contact-link" href="mailto:fonlioofficial@gmail.com" title="Email fonlio">
-                  <MailIcon /> fonlioofficial@gmail.com
-                </a>
-                <a className="np-footer-contact-link" href="tel:0981362340" title="Hotline fonlio">
-                  <PhoneIcon /> 0981 362 340
-                </a>
-              </div>
-              <div className="np-footer-socials" aria-label="Mạng xã hội fonlio">
-                <a
-                  className="np-footer-social-btn"
-                  href="https://www.facebook.com/profile.php?id=61594934129474"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Facebook fonlio"
-                  aria-label="Facebook fonlio"
-                >
-                  <FacebookIcon />
-                </a>
-                <a
-                  className="np-footer-social-btn"
-                  href="https://www.instagram.com/fonlioofficial/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Instagram @fonlioofficial"
-                  aria-label="Instagram @fonlioofficial"
-                >
-                  <InstagramIcon />
-                </a>
-                <a
-                  className="np-footer-social-btn"
-                  href="https://www.tiktok.com/@fonlio.official"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="TikTok @fonlio.official"
-                  aria-label="TikTok @fonlio.official"
-                >
-                  <TikTokIcon />
-                </a>
-                <a
-                  className="np-footer-social-btn"
-                  href="https://www.threads.com/@fonlioofficial/post/Dd87ob7j87A?xmt=AQG0sQna5phj3eo0gGFAz7fhAtyjYHfc5dwHr1LkXJ14a9E"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Threads @fonlioofficial"
-                  aria-label="Threads @fonlioofficial"
-                >
-                  <ThreadsIcon />
-                </a>
-              </div>
-            </div>
-          </div>
+          <h2 className="np-footer-tagline">
+            Hồ sơ dựa trên bằng chứng,<br />cho sinh viên Việt Nam
+          </h2>
 
           <div className="np-footer-cols">
             <div className="np-footer-col">
@@ -286,6 +240,62 @@ export function SiteFooter() {
               <Link className="np-footer-link" to="/terms">Điều khoản</Link>
               <Link className="np-footer-link" to="/privacy">Bảo mật</Link>
             </div>
+          </div>
+        </div>
+
+        {/* Thanh liên hệ & Mạng xã hội */}
+        <div className="np-footer-contact-bar">
+          <div className="np-footer-contact-info">
+            <a className="np-footer-contact-item" href="mailto:fonlioofficial@gmail.com" title="Email fonlio">
+              <MailIcon /> fonlioofficial@gmail.com
+            </a>
+            <span className="np-footer-contact-sep">•</span>
+            <a className="np-footer-contact-item" href="tel:0981362340" title="Hotline fonlio">
+              <PhoneIcon /> 0981 362 340
+            </a>
+          </div>
+
+          <div className="np-footer-socials" aria-label="Mạng xã hội fonlio">
+            <a
+              className="np-footer-social-btn"
+              href="https://www.facebook.com/profile.php?id=61594934129474"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Facebook"
+              aria-label="Facebook"
+            >
+              <FacebookIcon />
+            </a>
+            <a
+              className="np-footer-social-btn"
+              href="https://www.instagram.com/fonlioofficial/"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Instagram"
+              aria-label="Instagram"
+            >
+              <InstagramIcon />
+            </a>
+            <a
+              className="np-footer-social-btn"
+              href="https://www.tiktok.com/@fonlio.official"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="TikTok"
+              aria-label="TikTok"
+            >
+              <TikTokIcon />
+            </a>
+            <a
+              className="np-footer-social-btn"
+              href="https://www.threads.com/@fonlioofficial/post/Dd87ob7j87A?xmt=AQG0sQna5phj3eo0gGFAz7fhAtyjYHfc5dwHr1LkXJ14a9E"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Threads"
+              aria-label="Threads"
+            >
+              <ThreadsIcon />
+            </a>
           </div>
         </div>
 
