@@ -409,11 +409,11 @@ export function PortfolioLandingPage() {
               <span className="pf-eyebrow"><i /> Miễn phí toàn bộ cho sinh viên</span>
 
               <h1 className="pf-h1">
-                Đây là hồ sơ của bạn sau ba tháng
+                Hồ sơ của bạn sẽ như thế nào?
               </h1>
 
               <p style={{ margin: 0, maxWidth: '50ch', fontSize: '1.125rem', lineHeight: 1.55, letterSpacing: '-0.015em', color: MUTED }}>
-                Không phải một bản CV tự khai. Là một trang sống, có minh chứng do chính tổ chức xác nhận,
+                Không phải một bản CV tự khai. Là một trang "sống", có minh chứng do chính tổ chức xác nhận,
                 điểm uy tín tích lũy thật, và một đường dẫn định danh mang tên bạn.
               </p>
 
