@@ -543,12 +543,22 @@ export function CandidateLandingPage() {
         </section>
 
         {/* FOOTER */}
-        <footer className="np-footer-grid" style={{ borderTop: `1px solid ${LINE}`, marginTop: '12px', paddingTop: '28px', display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '24px' }}>
+        <footer className="np-footer-grid" style={{ borderTop: `1px solid ${LINE}`, marginTop: '12px', paddingTop: '28px', display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '28px' }}>
           <div>
             <strong style={{ fontSize: '1.2rem', color: INK }}>fonlio<span style={{ color: RED }}>:</span></strong>
-            <p style={{ fontSize: '0.9rem', color: MUTED, lineHeight: 1.6, margin: '8px 0 0', maxWidth: '24rem' }}>
+            <p style={{ fontSize: '0.9rem', color: MUTED, lineHeight: 1.6, margin: '8px 0 16px', maxWidth: '24rem' }}>
               Không gian dành cho ứng viên biến hoạt động thật, kỹ năng và minh chứng thành hồ sơ uy tín, sẵn sàng cho cơ hội mới.
             </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <a href="mailto:fonlioofficial@gmail.com" style={{ fontSize: '0.86rem', color: MUTED, textDecoration: 'none' }}>✉ fonlioofficial@gmail.com</a>
+              <a href="tel:0981362340" style={{ fontSize: '0.86rem', color: MUTED, textDecoration: 'none' }}>✆ 0981 362 340</a>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '4px', flexWrap: 'wrap' }}>
+                <a href="https://www.facebook.com/profile.php?id=61594934129474" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', color: MUTED, textDecoration: 'none' }}>Facebook</a>
+                <a href="https://www.instagram.com/fonlioofficial/" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', color: MUTED, textDecoration: 'none' }}>Instagram</a>
+                <a href="https://www.tiktok.com/@fonlio.official" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', color: MUTED, textDecoration: 'none' }}>TikTok</a>
+                <a href="https://www.threads.com/@fonlioofficial/post/Dd87ob7j87A?xmt=AQG0sQna5phj3eo0gGFAz7fhAtyjYHfc5dwHr1LkXJ14a9E" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.85rem', color: MUTED, textDecoration: 'none' }}>Threads</a>
+              </div>
+            </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <span style={{ fontSize: '0.78rem', fontWeight: '800', color: INK, marginBottom: '4px' }}>Ứng viên</span>
