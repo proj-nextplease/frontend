@@ -96,47 +96,67 @@ export function SiteFooter() {
         .np-footer { background: ${INK}; color: ${ON_DARK}; overflow: hidden; padding-bottom: 0; margin-bottom: 0; }
         .np-footer-inner { padding: clamp(64px, 8vw, 96px) 20px clamp(28px, 3vw, 40px); }
 
-        .np-footer-top { display: flex; gap: clamp(40px, 5vw, 64px); align-items: flex-start; justify-content: space-between; }
+        .np-footer-top { display: flex; gap: clamp(40px, 6vw, 80px); align-items: flex-start; justify-content: space-between; }
+        
+        .np-footer-brand-side {
+          flex: 1 1 380px;
+          max-width: 480px;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 28px;
+        }
+
         .np-footer-tagline {
-          flex: 1 1 280px; min-width: 0; margin: 0;
+          margin: 0;
           /* index.css gán 'Baloo 2' cho h1-h3 nên phải khai báo lại font. */
           font-family: inherit;
-          font-size: clamp(1.75rem, 3vw, 2.35rem); font-weight: 400; line-height: 1.15;
+          font-size: clamp(1.75rem, 3.2vw, 2.35rem); font-weight: 400; line-height: 1.15;
           letter-spacing: -0.025em; color: ${ON_DARK};
         }
 
-        .np-footer-cols { flex: 0 1 auto; display: grid; grid-template-columns: repeat(4, minmax(130px, auto)); gap: clamp(24px, 3vw, 48px); }
-        .np-footer-col { display: flex; flex-direction: column; gap: 12px; }
-        .np-footer-colhead { font-size: 1.125rem; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: ${ON_DARK}; }
-        .np-footer-link {
-          font-size: 0.875rem; line-height: 1.4; letter-spacing: -0.015em;
-          color: rgba(255,255,255,0.8); text-decoration: none; width: fit-content;
-          transition: color 150ms ease;
+        .np-footer-contact-block {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
         }
-        .np-footer-link:hover { color: ${EMERALD}; }
+
+        .np-footer-contact-items {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px 24px;
+        }
 
         .np-footer-contact-link {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          word-break: break-all;
+          font-size: 0.875rem;
+          line-height: 1.4;
+          letter-spacing: -0.015em;
+          color: rgba(255,255,255,0.75);
+          text-decoration: none;
+          white-space: nowrap;
+          transition: color 150ms ease;
+        }
+        .np-footer-contact-link:hover {
+          color: ${EMERALD};
         }
 
         .np-footer-socials {
           display: flex;
           align-items: center;
-          gap: 8px;
-          margin-top: 4px;
+          gap: 10px;
           flex-wrap: wrap;
         }
         .np-footer-social-btn {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 32px;
-          height: 32px;
+          width: 34px;
+          height: 34px;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.06);
+          background: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(255, 255, 255, 0.12);
           color: rgba(255, 255, 255, 0.82);
           text-decoration: none;
@@ -148,6 +168,16 @@ export function SiteFooter() {
           color: ${EMERALD};
           transform: translateY(-2px);
         }
+
+        .np-footer-cols { flex: 0 1 auto; display: grid; grid-template-columns: repeat(3, minmax(140px, auto)); gap: clamp(28px, 4vw, 64px); }
+        .np-footer-col { display: flex; flex-direction: column; gap: 12px; }
+        .np-footer-colhead { font-size: 1.125rem; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: ${ON_DARK}; }
+        .np-footer-link {
+          font-size: 0.875rem; line-height: 1.4; letter-spacing: -0.015em;
+          color: rgba(255,255,255,0.8); text-decoration: none; width: fit-content;
+          transition: color 150ms ease;
+        }
+        .np-footer-link:hover { color: ${EMERALD}; }
 
         .np-footer-bottom {
           margin-top: clamp(56px, 7vw, 88px); padding-top: 24px;
@@ -164,52 +194,32 @@ export function SiteFooter() {
         /* Logo chữ khổng lồ khép lại trang */
         .np-footer-wordmark { display: block; width: 100%; margin-top: clamp(40px, 5vw, 64px); }
 
-        @media (max-width: 1080px) {
-          .np-footer-top { flex-direction: column; gap: 40px; }
-          .np-footer-cols { width: 100%; grid-template-columns: repeat(2, 1fr); gap: 32px; }
+        @media (max-width: 1023px) {
+          .np-footer-top { flex-direction: column; }
+          .np-footer-cols { width: 100%; }
         }
         @media (max-width: 600px) {
-          .np-footer-cols { grid-template-columns: 1fr; }
+          .np-footer-cols { grid-template-columns: 1fr 1fr; }
           .np-footer-bottom { flex-direction: column; align-items: flex-start; }
         }
       `}</style>
 
       <div className="np-footer-inner" style={{ ...INNER }}>
         <div className="np-footer-top">
-          <h2 className="np-footer-tagline">
-            Hồ sơ dựa trên bằng chứng,<br />cho sinh viên Việt Nam
-          </h2>
+          <div className="np-footer-brand-side">
+            <h2 className="np-footer-tagline">
+              Hồ sơ dựa trên bằng chứng,<br />cho sinh viên Việt Nam
+            </h2>
 
-          <div className="np-footer-cols">
-            <div className="np-footer-col">
-              <span className="np-footer-colhead">Ứng viên</span>
-              <Link className="np-footer-link" to="/jobs">Việc làm &amp; Quest</Link>
-              <Link className="np-footer-link" to="/portfolio" onClick={handlePortfolioClick}>Tạo portfolio</Link>
-              <Link className="np-footer-link" to="/thao-luan">Thảo luận</Link>
-            </div>
-
-            <div className="np-footer-col">
-              <span className="np-footer-colhead">Doanh nghiệp &amp; CLB</span>
-              <Link className="np-footer-link" to="/businesses" target="_blank" rel="noopener noreferrer">Vì sao tuyển ở đây</Link>
-              <Link className="np-footer-link" to="/business/register">Đăng ký tuyển dụng</Link>
-              <Link className="np-footer-link" to="/business/login">Đăng nhập đối tác</Link>
-            </div>
-
-            <div className="np-footer-col">
-              <span className="np-footer-colhead">fonlio</span>
-              <Link className="np-footer-link" to="/tao-portfolio">Proof hoạt động thế nào</Link>
-              <Link className="np-footer-link" to="/terms">Điều khoản</Link>
-              <Link className="np-footer-link" to="/privacy">Bảo mật</Link>
-            </div>
-
-            <div className="np-footer-col">
-              <span className="np-footer-colhead">Liên hệ</span>
-              <a className="np-footer-link np-footer-contact-link" href="mailto:fonlioofficial@gmail.com" title="Email fonlio">
-                <MailIcon /> fonlioofficial@gmail.com
-              </a>
-              <a className="np-footer-link np-footer-contact-link" href="tel:0981362340" title="Hotline fonlio">
-                <PhoneIcon /> 0981 362 340
-              </a>
+            <div className="np-footer-contact-block">
+              <div className="np-footer-contact-items">
+                <a className="np-footer-contact-link" href="mailto:fonlioofficial@gmail.com" title="Email fonlio">
+                  <MailIcon /> fonlioofficial@gmail.com
+                </a>
+                <a className="np-footer-contact-link" href="tel:0981362340" title="Hotline fonlio">
+                  <PhoneIcon /> 0981 362 340
+                </a>
+              </div>
               <div className="np-footer-socials" aria-label="Mạng xã hội fonlio">
                 <a
                   className="np-footer-social-btn"
@@ -252,6 +262,29 @@ export function SiteFooter() {
                   <ThreadsIcon />
                 </a>
               </div>
+            </div>
+          </div>
+
+          <div className="np-footer-cols">
+            <div className="np-footer-col">
+              <span className="np-footer-colhead">Ứng viên</span>
+              <Link className="np-footer-link" to="/jobs">Việc làm &amp; Quest</Link>
+              <Link className="np-footer-link" to="/portfolio" onClick={handlePortfolioClick}>Tạo portfolio</Link>
+              <Link className="np-footer-link" to="/thao-luan">Thảo luận</Link>
+            </div>
+
+            <div className="np-footer-col">
+              <span className="np-footer-colhead">Doanh nghiệp &amp; CLB</span>
+              <Link className="np-footer-link" to="/businesses" target="_blank" rel="noopener noreferrer">Vì sao tuyển ở đây</Link>
+              <Link className="np-footer-link" to="/business/register">Đăng ký tuyển dụng</Link>
+              <Link className="np-footer-link" to="/business/login">Đăng nhập đối tác</Link>
+            </div>
+
+            <div className="np-footer-col">
+              <span className="np-footer-colhead">fonlio</span>
+              <Link className="np-footer-link" to="/tao-portfolio">Proof hoạt động thế nào</Link>
+              <Link className="np-footer-link" to="/terms">Điều khoản</Link>
+              <Link className="np-footer-link" to="/privacy">Bảo mật</Link>
             </div>
           </div>
         </div>
