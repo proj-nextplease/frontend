@@ -27,6 +27,7 @@ import { ForgotPasswordPage } from '../pages/ForgotPasswordPage.jsx';
 import { ResetPasswordPage } from '../pages/ResetPasswordPage.jsx';
 import { DiscussionPage } from '../pages/DiscussionPage.jsx';
 import { PortfolioLandingPage } from '../pages/PortfolioLandingPage.jsx';
+import { WaitlistPage } from '../pages/WaitlistPage.jsx';
 
 const CandidatePortfolioPage = lazy(() =>
   import('../pages/CandidatePortfolioPage.jsx').then((module) => ({
@@ -380,6 +381,10 @@ function ProtectedAdminRoute() {
 export function AppRouter() {
   return (
     <Routes>
+      {/* Ngoài AppLayout: trang tự dựng SiteHeader/SiteFooter giống HomePage,
+          nên để trong layout sẽ bị đội hai thanh điều hướng. */}
+      <Route path="/waitlist" element={<WaitlistPage />} />
+
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="/candidates" element={<CandidateLandingPage />} />
