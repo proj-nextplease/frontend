@@ -68,8 +68,7 @@ import {
   getInsight,
   requestExpressVerification,
   subscribeJobMatchAlert,
-  getPremiumConfig,
-  selectTheme
+  getPremiumConfig
 } from '../api/premiumApi.js';
 import { getGamification, pingGamification, claimQuest, recordGamificationEvent } from '../api/gamificationApi.js';
 import { Flame, Target, Gift, ChevronDown, ChevronLeft, ChevronRight, TrendingUp, Eye } from 'lucide-react';
@@ -554,7 +553,6 @@ const RETIRED_TABS = {
 };
 
 const EMERALD_ACCENT = EMERALD;
-
 
 // Which tabSlug values (from the /candidates/dashboard/:tabSlug route) render
 // as a card grid (job/quest/company browsing) vs a flat list (applications,
@@ -1798,7 +1796,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     });
   }
 
-
   const updateSearchUrl = (field, value) => {
     const searchParams = new URLSearchParams(location.search);
     if (value === '' || value === false || value === undefined) {
@@ -1808,7 +1805,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     }
     navigate(`/candidates/dashboard/opportunities?${searchParams.toString()}`, { replace: true });
   };
-
 
   function handleApplyJob(job) {
     viewOpportunityOnce(job.id || job.jobId);
@@ -2032,7 +2028,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const hasSchool = !!portfolio?.school?.trim();
   const hasCredentials = portfolio?.credentials && portfolio.credentials.length > 0;
   const hasApplications = appliedJobs.length > 0;
-
 
   /* Việc cần làm tiếp theo — cùng thứ tự với danh sách bước bên dưới. Hiện
      ngay trong hộ chiếu để mở lên là biết phải làm gì. Trước đây nó nằm ở một
@@ -3236,62 +3231,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <button type="button" className="button secondary-button" disabled>
                     Sắp ra mắt
                   </button>
-                </div>
-              </article>
-
-              <article className={`candidate-premium-service-row ${portfolio?.themeUnlocked ? 'active' : ''}`}>
-                <div className="candidate-premium-service-copy">
-                  <div className="candidate-premium-mark"><Palette size={20} /></div>
-                  <div>
-                    <div className="candidate-premium-service-title">
-                      <h3>Visual Upgrade</h3>
-                      <span className="candidate-premium-soon">Sắp ra mắt</span>
-                    </div>
-                    <p>Tuỳ biến trang portfolio công khai: theme màu, ảnh bìa, phông chữ và đường dẫn riêng. Tính năng đang hoàn thiện.</p>
-                  </div>
-                </div>
-                <div className="candidate-premium-row-action wide">
-                  {portfolio?.themeUnlocked ? (
-                    <div className="premium-theme-grid candidate-premium-theme-grid">
-                      {[
-                        { id: 'DEFAULT', name: 'Classic Default', colorBox: ['#10b981', 'rgba(255,255,255,0.08)'] },
-                        { id: 'DARK_GOLD', name: 'Luxury Gold', colorBox: ['#eab308', '#fef08a'] },
-                        { id: 'CYBERPUNK', name: 'Cyberpunk Neon', colorBox: ['#ec4899', '#06b6d4'] },
-                        { id: 'EMERALD_CLASSIC', name: 'Emerald Executive', colorBox: ['#10b981', '#a7f3d0'] }
-                      ].map(theme => {
-                        const isActive = (portfolio?.selectedTheme || 'DEFAULT') === theme.id;
-                        return (
-                          <button
-                            key={theme.id}
-                            type="button"
-                            onClick={async () => {
-                              try {
-                                await selectTheme(theme.id);
-                                const updated = await getMyPortfolio();
-                                setPortfolio(updated);
-                              } catch (err) {
-                                showToast('error', err.message || 'Thay đổi giao diện thất bại.');
-                              }
-                            }}
-                            className={`premium-theme-option ${isActive ? 'active' : ''}`}
-                          >
-                            <span className="premium-theme-swatches">
-                              {theme.colorBox.map((col, idx) => (
-                                <span key={idx} style={{ background: col }} />
-                              ))}
-                            </span>
-                            <span>{theme.name}{isActive ? ' · đang dùng' : ''}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    /* Người ĐÃ mua vẫn giữ nguyên bộ chọn theme ở nhánh trên —
-                       không gỡ thứ họ đã trả tiền. Chỉ chặn mua mới. */
-                    <button type="button" className="button secondary-button" disabled>
-                      Sắp ra mắt
-                    </button>
-                  )}
                 </div>
               </article>
 

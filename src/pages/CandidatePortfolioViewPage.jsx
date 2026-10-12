@@ -1,21 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import {
-  Award, BriefcaseBusiness, ShieldCheck, ArrowLeft, GraduationCap,
-  MapPin, BadgeCheck, ExternalLink, Code2, Link2, Globe, Mail, Eye, FileUp,
-  Crown,
-} from 'lucide-react';
-import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
+import { Sparkles } from 'lucide-react';
 import { getPublicProfile, getPublicProfileBySlug } from '../api/portfolioApi.js';
-import { parseBanner } from '../components/postingConstants.js';
-import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
+import { FomlioPassport } from '../components/portfolio/FomlioPassport.jsx';
 
-const SOCIAL_META = {
-  github: { icon: Code2, label: 'GitHub', href: (v) => (/^https?:/.test(v) ? v : `https://github.com/${v}`) },
-  linkedin: { icon: Link2, label: 'LinkedIn', href: (v) => (/^https?:/.test(v) ? v : `https://linkedin.com/in/${v}`) },
-  website: { icon: Globe, label: 'Website', href: (v) => (/^https?:/.test(v) ? v : `https://${v}`) },
-  email: { icon: Mail, label: 'Email', href: (v) => (v.startsWith('mailto:') ? v : `mailto:${v}`) },
-};
 
 export function CandidatePortfolioViewPage() {
   // Trang này phục vụ hai đường dẫn: /p/:slug (link đẹp để chia sẻ) và
@@ -33,261 +21,38 @@ export function CandidatePortfolioViewPage() {
       .finally(() => setLoading(false));
   }, [userId, slug]);
 
+  /* Màn chờ và màn lỗi mặc cùng bộ đồ với trang sắp hiện ra. Trước đây chúng
+     dùng lớp `.vp-page` nền giấy của giao diện cũ, nên người xem thấy một
+     trang sáng rồi chớp sang một trang tối — một vết nối không cần thiết. */
   if (loading) {
     return (
-      <section className="vp-page">
-        <div className="vp-loading"><div className="vp-spinner" /><span>Đang tải hồ sơ ứng viên...</span></div>
-      </section>
+      <div className="fom-page fom-page-state">
+        <Sparkles size={28} />
+        <p>Đang tải hồ sơ ứng viên…</p>
+      </div>
     );
   }
   if (error || !profile) {
     return (
-      <section className="vp-page">
-        <div className="vp-loading">
-          <p style={{ color: '#dc2626', fontWeight: 700 }}>{error || 'Không tìm thấy hồ sơ.'}</p>
-          <button className="vp-close" onClick={() => window.close()}>Đóng tab</button>
-        </div>
-      </section>
+      <div className="fom-page fom-page-state">
+        <p>{error || 'Không tìm thấy hồ sơ.'}</p>
+        <button type="button" className="fom-btn" onClick={() => window.close()}>Đóng tab</button>
+      </div>
     );
   }
   return <VerifiedPassport profile={profile} />;
 }
 
 /**
- * Shared presentational passport used both by the public /portfolio/view/:id page
- * (real, saved data with reputation/level) and the draft preview page (unsaved
- * editor state, no reputation stats yet). `isDraft` tones down claims that only
- * hold for a saved, live profile — no invented stats.
+ * Hồ sơ công khai của ứng viên. Dùng chung cho trang thật
+ * (/p/:slug, /portfolio/view/:userId) và tab xem trước bản nháp; `isDraft`
+ * hạ bớt những khẳng định chỉ đúng với hồ sơ đã lưu — không bịa số liệu.
+ *
+ * Trước đây đây là lớp rẽ giữa năm theme. Giờ sản phẩm chỉ còn một giao diện
+ * (Cốm Neon), nên không còn gì để rẽ: mọi hồ sơ, kể cả những hồ sơ cũ còn ghi
+ * selected_theme là DARK_GOLD hay CYBERPUNK trong DB, đều hiện bằng giao diện
+ * này. Giữ nguyên tên `VerifiedPassport` để không phải sửa nơi gọi.
  */
 export function VerifiedPassport({ profile, isDraft = false }) {
-  const skills = Array.isArray(profile.skills) ? profile.skills : [];
-  const experiences = Array.isArray(profile.experiences) ? profile.experiences : [];
-  const credentials = (Array.isArray(profile.credentials) ? profile.credentials : []).filter(c => c.name?.trim());
-  const avatar = profile.avatar && Object.keys(profile.avatar).length > 0 ? profile.avatar : { gender: 'male' };
-  const socialLinks = profile.socialLinks && typeof profile.socialLinks === 'object' ? profile.socialLinks : {};
-
-  const [preview, setPreview] = useState(null);
-  const hasStats = typeof profile.reputationScore === 'number' && typeof profile.currentLevel === 'number';
-  const rs = profile.reputationScore || 0;
-  const verifiedCount = experiences.filter(e => e.verified).length;
-
-  const socialEntries = Object.entries(socialLinks)
-    .filter(([k, v]) => SOCIAL_META[k] && typeof v === 'string' && v.trim())
-    .map(([k, v]) => ({ key: k, value: v.trim(), ...SOCIAL_META[k] }));
-
-  const themeClass = profile.selectedTheme && profile.selectedTheme !== 'DEFAULT' ? `theme-${profile.selectedTheme}` : '';
-  const coverPos = parseBanner(profile.coverBannerPos);
-  const hasContent = profile.bio || skills.length || experiences.length || credentials.length;
-
-  return (
-    <section className={`vp-page ${themeClass}`}>
-      <PassportThemeStyles />
-      <div className="vp-topbar">
-        <button className="vp-close" onClick={() => window.close()}><ArrowLeft size={15} /> Đóng</button>
-        <span className="vp-brand">
-          {isDraft ? <Eye size={14} /> : <ShieldCheck size={14} />}
-          {isDraft ? 'Bản xem trước Portfolio' : 'Hồ sơ đã xác thực'} · fonlio
-        </span>
-      </div>
-
-      <div className="vp-shell">
-        {/* Ảnh bìa: dải ngang trên đầu hồ sơ. Khung hình do người dùng tự căn,
-            lưu dạng "x% y% zoom" giống banner tin tuyển dụng. */}
-        {profile.coverBannerUrl && (
-          <div
-            className="vp-cover vp-reveal"
-            role="img"
-            aria-label={`Ảnh bìa của ${profile.name || 'ứng viên'}`}
-            style={{
-              background: `url(${profile.coverBannerUrl}) ${coverPos.x}% ${coverPos.y}% / ${coverPos.z * 100}% auto no-repeat`,
-            }}
-          />
-        )}
-        <header className="vp-hero vp-reveal">
-          <div className="vp-portrait"><div className="vp-portrait-stage"><PortfolioMascot avatar={avatar} size={190} /></div></div>
-          <div className="vp-identity">
-            <div className="vp-badges">
-              {isDraft ? (
-                <span className="vp-badge draft"><Eye size={14} /> Bản nháp, chưa lưu</span>
-              ) : (
-                <span className="vp-badge verified"><BadgeCheck size={14} /> Đã xác thực</span>
-              )}
-              {profile.openToWork && <span className="vp-badge open"><BriefcaseBusiness size={13} /> Đang tìm việc</span>}
-              {profile.isPremium && <span className="vp-badge premium"><Crown size={13} /> Premium</span>}
-            </div>
-            <h1 className="vp-name">{profile.name || 'Ứng viên'}</h1>
-            {profile.headline && <p className="vp-headline">{profile.headline}</p>}
-            <div className="vp-meta">
-              {profile.school && <span><GraduationCap size={15} /> {profile.school}</span>}
-              {profile.location && <span><MapPin size={15} /> {profile.location}</span>}
-            </div>
-            {socialEntries.length > 0 && (
-              <div className="vp-social">
-                {socialEntries.map((s) => {
-                  const Icon = s.icon;
-                  return (
-                    <a key={s.key} className="vp-social-link" href={s.href(s.value)} target="_blank" rel="noreferrer" title={s.label}>
-                      <Icon size={16} /> <span>{s.label}</span>
-                    </a>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </header>
-
-        {/* Dải kỹ năng. Cần ÍT NHẤT 4 kỹ năng mới cho chạy: dưới ngưỡng đó
-            danh sách ngắn hơn bề ngang khung, dải sẽ hở một khoảng trống chạy
-            qua chạy lại trông như lỗi. Ít hơn thì rơi xuống khối tĩnh cuối
-            trang như cũ. */}
-        {skills.length >= 4 && (
-          <div className="vp-marquee vp-reveal" aria-label="Kỹ năng">
-            <div className="vp-marquee-track">
-              {/* Nhân đôi danh sách để vòng lặp khép kín: khi track trượt hết
-                  50% thì bản sao đã lấp đúng chỗ bản gốc, không thấy mối nối. */}
-              {[0, 1].map((copy) => (
-                <span className="vp-marquee-item" key={copy} aria-hidden={copy === 1}>
-                  {skills.map((sk, i) => <span key={i}>{sk}</span>)}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {hasStats && (
-          <div className="vp-stats vp-reveal">
-            <div className="vp-stat"><span className="vp-stat-label">Điểm uy tín</span><span className="vp-stat-value">{rs.toLocaleString('vi-VN')}</span></div>
-            <div className="vp-stat"><span className="vp-stat-label">Minh chứng xác thực</span><span className="vp-stat-value">{verifiedCount}</span></div>
-          </div>
-        )}
-
-        {profile.bio && (
-          <section className="vp-section vp-section-bio vp-reveal">
-            <h2 className="vp-section-title">Giới thiệu</h2>
-            <p className="vp-bio">{profile.bio}</p>
-          </section>
-        )}
-
-        {experiences.length > 0 && (
-          <section className="vp-section vp-reveal">
-            <h2 className="vp-section-title">Kinh nghiệm đã xác thực</h2>
-            <div className="vp-timeline">
-              {experiences.map((exp, i) => (
-                <article className="vp-tl-item" key={exp.id || i}>
-                  <span className="vp-tl-dot" />
-                  <div className="vp-tl-head">
-                    <h3>{exp.title || 'Vai trò'}</h3>
-                    {exp.verified && <span className="vp-badge verified sm"><BadgeCheck size={12} /> Xác thực</span>}
-                  </div>
-                  <div className="vp-tl-meta">
-                    {exp.organization || 'Tổ chức'}
-                    {exp.startDate && ` · ${exp.startDate}${exp.endDate ? ` - ${exp.endDate}` : ' - nay'}`}
-                  </div>
-                  {exp.detail && <p className="vp-tl-detail">{exp.detail}</p>}
-                  {Array.isArray(exp.proofImages) && exp.proofImages.length > 0 && (
-                    <div className="vp-tl-proof-grid">
-                      {exp.proofImages.map((img, imgI) => (
-                        <button
-                          key={imgI}
-                          type="button"
-                          className="vp-tl-proof-thumb"
-                          onClick={() => setPreview({ src: img, fileName: `Minh chứng ${imgI + 1}` })}
-                        >
-                          <img src={img} alt="Ảnh minh chứng" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  <div className="vp-tl-foot">
-                    {(exp.expReward || exp.rsReward) && (
-                      <span className="vp-reward">+{exp.expReward || 0} EXP · +{exp.rsReward || 0} RS</span>
-                    )}
-                    {exp.proofLink && (
-                      <a className="vp-prooflink" href={/^https?:/.test(exp.proofLink) ? exp.proofLink : `https://${exp.proofLink}`} target="_blank" rel="noreferrer">
-                        Xem minh chứng <ExternalLink size={12} />
-                      </a>
-                    )}
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {credentials.length > 0 && (
-          <section className="vp-section vp-reveal">
-            <h2 className="vp-section-title">Bằng cấp & chứng chỉ</h2>
-            <div className="vp-cred-list">
-              {credentials.map((c, i) => (
-                <div className="vp-cred" key={c.id || i}>
-                  <Award size={16} />
-                  <div>
-                    <h3>{c.name}</h3>
-                    <span>{c.issuer || 'Đơn vị cấp'}{c.issuedAt ? ` · ${c.issuedAt}` : ''}</span>
-                  </div>
-                  {c.fileData && (
-                    <button
-                      type="button"
-                      className="vp-cred-file"
-                      onClick={() => setPreview({ src: c.fileData, fileName: c.fileName })}
-                    >
-                      <FileUp size={13} /> Xem file
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {skills.length > 0 && skills.length < 4 && (
-          <section className="vp-section vp-reveal">
-            <h2 className="vp-section-title">Kỹ năng</h2>
-            <div className="vp-skills">{skills.map((s, i) => <span key={i} className="vp-skill">{s}</span>)}</div>
-          </section>
-        )}
-
-        {!hasContent && (
-          <section className="vp-section"><p className="vp-empty">Ứng viên chưa cập nhật thông tin portfolio.</p></section>
-        )}
-      </div>
-
-      {preview && (
-        <FilePreviewModal src={preview.src} fileName={preview.fileName} onClose={() => setPreview(null)} />
-      )}
-    </section>
-  );
-}
-
-/**
- * Theme người dùng mua ở Premium. Bản trước chỉ đổi một biến --vp-accent; giờ
- * trang dựng trên bộ ba giấy / lime / violet nên mỗi theme đổi cả bộ, không thì
- * mua theme xong mà nhìn không ra khác gì.
- */
-function PassportThemeStyles() {
-  return (
-    <style>{`
-      .vp-page.theme-DARK_GOLD { --vp-paper:#f7f1e4; --vp-lime:#f5c84b; --vp-violet:#1f1a12; --vp-coral:#c2831a; }
-      .vp-page.theme-CYBERPUNK { --vp-paper:#f2eefb; --vp-lime:#7df9ff; --vp-violet:#c026d3; --vp-coral:#ff2d95; }
-      .vp-page.theme-EMERALD_CLASSIC { --vp-paper:#eef7f2; --vp-lime:#7ae5b4; --vp-violet:#047857; --vp-coral:#0f9d6e; }
-
-      /* Bản in: bỏ hết bóng cứng và mảng màu đặc. Chúng ngốn mực, và máy in
-         đen trắng biến nền violet thành một khối xám nuốt chữ trắng trên đó. */
-      @media print {
-        .vp-topbar, .vp-cred-file, .vp-marquee { display: none !important; }
-        .vp-page {
-          background: #ffffff !important; color: #111111 !important;
-          width: auto !important; min-height: 0 !important;
-          margin: 0 !important; padding: 0 24px !important;
-        }
-        .vp-page::before { display: none !important; }
-        .vp-hero, .vp-section, .vp-stat, .vp-tl-item, .vp-cred, .vp-cover {
-          box-shadow: none !important;
-          background: #ffffff !important;
-        }
-        .vp-portrait-stage, .vp-section-title, .vp-badges .vp-badge { transform: none !important; }
-        .vp-hero, .vp-stats, .vp-section, .vp-tl-item { break-inside: avoid; }
-      }
-    `}</style>
-  );
+  return <FomlioPassport profile={profile} isDraft={isDraft} />;
 }

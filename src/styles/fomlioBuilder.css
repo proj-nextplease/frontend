@@ -1,0 +1,784 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Trình dựng portfolio — da Fomlio.
+
+   Thay bộ da "poster giấy" (index.css ~17435) bằng chính ngôn ngữ của trang
+   công khai: nền đen, một màu nhấn lime, viền hairline sáng. Giữ nguyên
+   nguyên tắc đã ghi ở bộ da cũ, vì chúng không phụ thuộc màu:
+     - KHÔNG xoay bất cứ thứ gì nhận thao tác nhập.
+     - Hiệu ứng mạnh chỉ dành cho tấm lớn, không cho từng ô nhập: hơn 30 ô
+       trong một cột mà ô nào cũng phát sáng thì không còn ô nào nổi lên.
+     - Ô nhập bo 12px, viền 1.5px — đọc ra là "chỗ gõ chữ", không phải thẻ.
+
+   Mọi selector gắn thêm `.fomlio-builder` để thắng bộ da cũ về độ ưu tiên,
+   không phụ thuộc thứ tự nạp file giữa dev và bản build.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.portfolio-page.fomlio-builder {
+  --fomb-ink: #07090a;
+  --fomb-panel: #10140f;
+  --fomb-field: #171c15;
+  --fomb-line: rgba(255, 255, 255, 0.14);
+  --fomb-line-strong: rgba(255, 255, 255, 0.28);
+  --fomb-brand: #cbf748;
+  --fomb-secondary: #7b3aec;
+  --fomb-text: #f4f8ec;
+  --fomb-muted: rgba(244, 248, 236, 0.62);
+
+  /* Token toàn cục phải định nghĩa lại trong phạm vi trang: nhiều component
+     con tô màu bằng biến toàn cục qua inline style nên CSS không đè được. */
+  --pf-ink: var(--fomb-ink);
+  --pf-paper: var(--fomb-ink);
+  --pf-lime: var(--fomb-brand);
+  --pf-violet: var(--fomb-secondary);
+  --pf-shadow: none;
+  --pf-shadow-lg: none;
+  --portfolio-bg: var(--fomb-ink);
+  --ink: var(--fomb-text);
+  --ink-muted: var(--fomb-muted);
+  --nav-text: var(--fomb-text);
+  --muted: var(--fomb-muted);
+  --line: var(--fomb-line);
+  --line-strong: var(--fomb-line-strong);
+  --card-bg: var(--fomb-panel);
+  --card-bg-strong: var(--fomb-panel);
+  --soft-card-bg: var(--fomb-field);
+  --surface: var(--fomb-panel);
+  --surface-soft: var(--fomb-field);
+  --field-bg: var(--fomb-field);
+  --primary: var(--fomb-brand);
+  --accent: var(--fomb-brand);
+
+  background: var(--fomb-ink);
+  color: var(--fomb-text);
+  font-family: 'DM Sans', 'Be Vietnam Pro', system-ui, sans-serif;
+
+  /* Container chung của site kẹp nội dung ở 1180px — đúng cho một trang để
+     đọc, sai cho một trình soạn thảo hai khoang: ở màn 1800px nó bỏ không
+     620px nền đen rồi nhét cả form lẫn khung xem trước vào phần còn lại, nên
+     chữ trong khung xem trước nhỏ tới mức không đọc nổi. Nới lên 1720px —
+     vẫn có mép thở ở màn siêu rộng, nhưng khung xem trước đủ to để làm đúng
+     việc của nó. */
+  padding-inline: max(20px, 50vw - 860px);
+  padding-top: clamp(28px, 3vw, 42px);
+}
+
+/* Hạt mịn của bộ da cũ là hạt ĐEN — trên nền đen nó chỉ làm bẩn. Thay bằng
+   một quầng lime rất nhạt ở đầu trang, cùng họ với trang công khai nhưng mờ
+   hơn nhiều: đây là chỗ làm việc, không phải chỗ để gây ấn tượng. */
+.portfolio-page.fomlio-builder::before {
+  background-image: none;
+  background:
+    radial-gradient(90% 420px at 50% 0%, rgba(203, 247, 72, 0.16), transparent 70%),
+    var(--fomb-ink);
+  opacity: 1;
+}
+
+.portfolio-page.fomlio-builder .portfolio-hero h1 {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-variation-settings: normal;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--fomb-text);
+}
+
+.portfolio-page.fomlio-builder .portfolio-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 20px;
+}
+.portfolio-page.fomlio-builder .portfolio-hero > div > p:last-child { max-width: 52ch; }
+
+.portfolio-page.fomlio-builder .portfolio-hero > div > p:last-child,
+.portfolio-page.fomlio-builder .portfolio-back-link { color: var(--fomb-muted); }
+.portfolio-page.fomlio-builder .portfolio-back-link:hover { color: var(--fomb-brand); }
+
+/* ── Khung làm việc ──────────────────────────────────────────────────────
+   Không chia cột nữa. Trang portfolio chiếm trọn khung ở TỈ LỆ THẬT, bảng
+   soạn nổi đè lên một góc và thu gọn được.
+
+   Vì sao bỏ chia cột: trang portfolio là một trang full-width. Nhét nó vào
+   một cột rộng nửa màn thì phải thu nhỏ (trước đây còn 0.78), và mọi khoảng
+   cách thiết kế cho khổ 1280 co lại theo — nhìn lúc nào cũng chật. Chia cột
+   càng cân thì cả hai bên càng hẹp; đó là thế bí của chính bố cục đó.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Tiêu đề trang nhường chỗ: nó chiếm 165px chỉ để nói một câu, mà câu đó đã
+   nằm ngay trong bảng soạn. */
+.portfolio-page.fomlio-builder .portfolio-hero { display: none; }
+
+.portfolio-page.fomlio-builder { padding-top: 0; padding-bottom: 0; }
+
+.portfolio-page.fomlio-builder .portfolio-builder {
+  position: relative;
+  display: block;
+  /* 72px là thanh điều hướng dính của app; 24px là mép thở dưới đáy. */
+  height: calc(100dvh - 96px);
+  min-height: 620px;
+  margin: 12px 0 24px;
+  gap: 0;
+}
+
+/* Bảng soạn ĐẨY chỗ chứ không đè lên. Đè thì nửa trái của trang — đúng chỗ
+   đặt khung chân dung — bị che suốt lúc soạn, và người dùng không bao giờ
+   thấy được thứ mình vừa sửa. Đẩy thì khung xem trước hẹp lại nhưng vẫn là
+   một cửa sổ THẬT ở tỉ lệ 1:1, nên không có gì bị bóp méo; muốn rộng hết thì
+   thu gọn bảng một cú bấm. */
+.pf-stage {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--pf-dock-space, 468px);
+  overflow: hidden;
+  border: 1px solid var(--fomb-line);
+  border-radius: 24px;
+  background: #000;
+  /* Đổi `left` buộc iframe dàn lại cả trang mỗi khung hình — đó là thứ nặng
+     nhất ở đây, không phải đường cong. `contain` cắt phạm vi tính lại bố cục
+     ra khỏi phần còn lại của trang, `will-change` cho trình duyệt dựng sẵn
+     lớp vẽ trước khi chạy.
+     easeOutQuint 420ms: đường cong cũ gắt ở nhịp đầu rồi bò chậm ở cuối. */
+  contain: layout paint;
+  will-change: left;
+  transition: left 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.portfolio-builder:has(.pf-dock.collapsed) .pf-stage { left: 0; }
+
+.pf-live { position: absolute; inset: 0; }
+
+.pf-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #fff;
+}
+
+/* ── Thanh công cụ nổi ───────────────────────────────────────────────────- */
+
+/* Neo ở ĐÁY, canh giữa: đặt trên đỉnh thì nó chồng đúng lên thanh điều hướng
+   và nút "Hire Me" của chính trang portfolio. */
+.pf-live-bar {
+  position: absolute;
+  z-index: 3;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 28px);
+  padding: 7px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(10, 13, 10, 0.72);
+  backdrop-filter: blur(14px);
+}
+
+.pf-live-themes { display: flex; gap: 5px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.pf-live-themes::-webkit-scrollbar { display: none; }
+
+.pf-live-theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px 6px 7px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(244, 248, 236, 0.72);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.pf-live-theme:hover { color: var(--fomb-text); background: rgba(255, 255, 255, 0.07); }
+.pf-live-theme.active { border-color: var(--fomb-brand); color: var(--fomb-ink); background: var(--fomb-brand); }
+
+.pf-live-swatches { display: inline-flex; flex: none; }
+.pf-live-swatches span { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.25); }
+.pf-live-swatches span + span { margin-left: -4px; }
+
+.pf-live-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fomb-text);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.pf-live-open:hover { border-color: var(--fomb-brand); color: var(--fomb-brand); }
+
+/* ── Bảng soạn nổi ───────────────────────────────────────────────────────- */
+
+.pf-dock {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(440px, calc(100% - 28px));
+  --pf-dock-space: 468px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  background: rgba(8, 11, 8, 0.9);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Thu gọn bằng transform chứ không bằng width: đổi width thì nội dung bên
+   trong phải dàn lại và chữ nhảy loạn suốt lúc trượt.
+   KHÔNG mờ dần bảng: nút mở lại là con của bảng, mà `opacity` ở cha thì con
+   không gỡ lại được — bảng mờ về 0 là nút biến mất theo và không còn đường
+   nào mở lại. Chỉ trượt. */
+.pf-dock.collapsed { transform: translateX(calc(-100% - 20px)); }
+
+/* Thẻ kéo dính vào mép phải của bảng, canh GIỮA theo chiều dọc.
+   Trước đây nó nằm ở góc trên và đè lên thanh điều hướng của trang portfolio
+   — vừa che logo vừa trôi đi mỗi khi chiều cao bảng đổi. Ở giữa mép thì nó
+   luôn ở đúng một chỗ, và là nơi tay đã sẵn ở đó khi vừa đóng/mở bảng. */
+/* Nút tròn 40px dính giữa mép phải bảng. Bản trước là viên thuốc có chữ nở
+   ra khi rê chuột — cái nở đó làm mép nút nhảy, trông như lỗi hơn là hiệu
+   ứng. Lúc bảng mở chỉ cần mũi tên; lúc đóng mới kèm chữ, vì khi đó không
+   còn gì trên màn gợi ý rằng có một bảng soạn đang ẩn. */
+.pf-dock-toggle {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 40px;
+  height: 40px;
+  margin-left: 10px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(12, 16, 12, 0.92);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  color: var(--fomb-text);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: width 0.42s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s ease, color 0.18s ease;
+}
+
+.pf-dock-toggle-label { display: none; }
+
+.pf-dock.collapsed .pf-dock-toggle { width: auto; padding: 0 16px 0 12px; }
+.pf-dock.collapsed .pf-dock-toggle-label { display: inline; }
+
+.pf-dock-toggle:hover { border-color: var(--fomb-brand); color: var(--fomb-brand); }
+
+/* Hàng đầu bảng soạn: lối ra + vị trí hiện tại.
+   Lúc dựng bố cục full-bản tôi ẩn `.portfolio-hero`, mà nút "Về trang chủ"
+   nằm trong đó — trang mất sạch lối ra. Đặt lại ở đây, cố định ngoài vùng
+   cuộn để nó không trôi mất khi biểu mẫu dài. */
+.pf-dock-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: none;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--fomb-line);
+}
+
+.pf-dock-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px 7px 10px;
+  border: 1px solid var(--fomb-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fomb-muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+.pf-dock-back:hover { border-color: var(--fomb-brand); color: var(--fomb-brand); }
+
+.pf-dock-head-step { font-size: 0.78rem; color: var(--fomb-muted); white-space: nowrap; }
+
+.pf-dock .pf-editor-col {
+  display: block;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  border-radius: inherit;
+}
+
+.pf-dock .portfolio-form-panel {
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  padding: 20px;
+}
+
+/* ── Tấm ─────────────────────────────────────────────────────────────────── */
+
+.portfolio-page.fomlio-builder .portfolio-studio,
+.portfolio-page.fomlio-builder .portfolio-form-panel,
+.portfolio-page.fomlio-builder .portfolio-preview-action-panel,
+.portfolio-page.fomlio-builder .avatar-customizer,
+.portfolio-page.fomlio-builder .preview-empty-state {
+  background: var(--fomb-panel);
+  border: 1px solid var(--fomb-line);
+  border-radius: 24px;
+  box-shadow: none;
+}
+
+.portfolio-page.fomlio-builder .portfolio-studio { background: var(--fomb-panel); }
+
+/* Lớp phủ "đang tải" của form đọc biến này; mặc định của nó là trắng đục, trên
+   nền tối sẽ loé thành một tấm trắng mỗi lần mở trang. */
+.portfolio-page.fomlio-builder { --theme-loading-bg: rgba(7, 9, 10, 0.72); }
+
+.portfolio-page.fomlio-builder .portfolio-studio {
+  grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+.portfolio-page.fomlio-builder .avatar-stage {
+  height: 200px;
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid var(--fomb-line);
+  background: radial-gradient(70% 70% at 50% 45%, rgba(203, 247, 72, 0.9), rgba(203, 247, 72, 0.25) 70%, transparent 100%);
+}
+
+.portfolio-page.fomlio-builder .pf-mascot-picker { margin-top: 0; }
+.portfolio-page.fomlio-builder .pf-mascot-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.portfolio-page.fomlio-builder .pf-mascot-option {
+  background: var(--fomb-field);
+  border: 1px solid var(--fomb-line);
+  color: var(--fomb-text);
+  box-shadow: none;
+}
+.portfolio-page.fomlio-builder .pf-mascot-option:hover { transform: none; border-color: var(--fomb-line-strong); box-shadow: none; }
+.portfolio-page.fomlio-builder .pf-mascot-option.active {
+  background: var(--fomb-brand);
+  border-color: var(--fomb-brand);
+  color: var(--fomb-ink);
+  box-shadow: none;
+}
+
+/* Thẻ tóm tắt cũ ở cột trái giờ thừa: khung xem trước bên phải là bản thật,
+   để cả hai thì người dùng phải tự hỏi cái nào mới đúng. */
+.portfolio-page.fomlio-builder .portfolio-preview-card { display: none; }
+
+/* ── Tiêu đề khối ─────────────────────────────────────────────────────────── */
+
+/* Tiêu đề khối là một viên lime đặc (kế thừa từ bộ da cũ), nên chữ trên nó
+   phải là mực đen — đặt màu chữ sáng của nền tối lên đây là trắng trên lime,
+   không đọc được. Mọi chỗ còn lại có nền lime đều theo cùng quy tắc này. */
+.portfolio-page.fomlio-builder .form-section-heading h2,
+.portfolio-page.fomlio-builder .pf-mascot-picker-label {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+  color: var(--fomb-ink);
+}
+.portfolio-page.fomlio-builder .form-section-heading p { color: var(--fomb-muted); opacity: 1; }
+.portfolio-page.fomlio-builder .form-section-heading svg { color: var(--fomb-brand); }
+
+/* ── Ô nhập ───────────────────────────────────────────────────────────────── */
+
+.portfolio-page.fomlio-builder .form-input,
+.portfolio-page.fomlio-builder input[type='text'],
+.portfolio-page.fomlio-builder input[type='url'],
+.portfolio-page.fomlio-builder input[type='email'],
+.portfolio-page.fomlio-builder select,
+.portfolio-page.fomlio-builder textarea {
+  background: var(--fomb-field);
+  border: 1.5px solid var(--fomb-line);
+  border-radius: 12px;
+  color: var(--fomb-text);
+  box-shadow: none;
+}
+
+.portfolio-page.fomlio-builder input::placeholder,
+.portfolio-page.fomlio-builder textarea::placeholder { color: rgba(244, 248, 236, 0.34); }
+
+.portfolio-page.fomlio-builder .form-input:focus,
+.portfolio-page.fomlio-builder input:focus,
+.portfolio-page.fomlio-builder select:focus,
+.portfolio-page.fomlio-builder textarea:focus {
+  border-color: var(--fomb-brand);
+  /* Quầng rất mỏng thay cho bóng cứng: đủ để biết con trỏ đang ở đâu khi quét
+     mắt xuống một cột dài, không đủ để át phần còn lại. */
+  box-shadow: 0 0 0 3px rgba(203, 247, 72, 0.18);
+  outline: none;
+}
+
+.portfolio-page.fomlio-builder label,
+.portfolio-page.fomlio-builder .form-label { color: var(--fomb-text); }
+
+.portfolio-page.fomlio-builder input.input-error,
+.portfolio-page.fomlio-builder textarea.input-error { border-color: #ff6b5a; }
+.portfolio-page.fomlio-builder input.input-error:focus,
+.portfolio-page.fomlio-builder textarea.input-error:focus { box-shadow: 0 0 0 3px rgba(255, 107, 90, 0.22); }
+.portfolio-page.fomlio-builder .field-error-message { color: #ff8b7d; }
+
+.portfolio-page.fomlio-builder .experience-edit-card,
+.portfolio-page.fomlio-builder .credential-edit-card {
+  background: var(--fomb-field);
+  border: 1px solid var(--fomb-line);
+  box-shadow: none;
+}
+.portfolio-page.fomlio-builder .experience-edit-card:hover,
+.portfolio-page.fomlio-builder .credential-edit-card:hover {
+  transform: none;
+  border-color: var(--fomb-line-strong);
+  box-shadow: none;
+}
+
+.portfolio-page.fomlio-builder .edit-card-remove {
+  background: var(--fomb-panel);
+  border: 1px solid var(--fomb-line);
+  color: var(--fomb-text);
+  box-shadow: none;
+}
+.portfolio-page.fomlio-builder .edit-card-remove:hover { border-color: #ff6b5a; color: #ff8b7d; box-shadow: none; }
+
+.portfolio-page.fomlio-builder .pf-avail-card,
+.portfolio-page.fomlio-builder .pf-social-input,
+.portfolio-page.fomlio-builder .credential-month-trigger,
+.portfolio-page.fomlio-builder .credential-month-popover,
+.portfolio-page.fomlio-builder [class*='upload'],
+.portfolio-page.fomlio-builder [class*='dropzone'] {
+  background: var(--fomb-field);
+  border: 1px solid var(--fomb-line);
+  color: var(--fomb-text);
+  box-shadow: none;
+}
+.portfolio-page.fomlio-builder .pf-social-input:focus-within { border-color: var(--fomb-brand); box-shadow: none; }
+.portfolio-page.fomlio-builder .pf-avail-title svg,
+.portfolio-page.fomlio-builder .credential-month-trigger svg { color: var(--fomb-brand); }
+.portfolio-page.fomlio-builder .pf-switch { background: var(--fomb-field); border: 1.5px solid var(--fomb-line-strong); }
+.portfolio-page.fomlio-builder .pf-switch .pf-switch-knob { background: var(--fomb-text); }
+.portfolio-page.fomlio-builder .pf-switch.on { background: var(--fomb-brand); border-color: var(--fomb-brand); }
+.portfolio-page.fomlio-builder .pf-switch.on .pf-switch-knob { background: var(--fomb-ink); }
+.portfolio-page.fomlio-builder .credential-month-option { color: var(--fomb-text); }
+.portfolio-page.fomlio-builder .credential-month-option:hover:not(:disabled) { background: var(--fomb-panel); }
+.portfolio-page.fomlio-builder .credential-month-option.selected { background: var(--fomb-brand); color: var(--fomb-ink); }
+.portfolio-page.fomlio-builder .credential-month-helper,
+.portfolio-page.fomlio-builder .select-field-label em { color: var(--fomb-muted); }
+
+/* ── Nút ──────────────────────────────────────────────────────────────────── */
+
+.portfolio-page.fomlio-builder .button {
+  border-radius: 999px;
+  border: 1px solid var(--fomb-line-strong);
+  background: var(--fomb-field);
+  color: var(--fomb-text);
+  box-shadow: none;
+}
+.portfolio-page.fomlio-builder .button:hover { transform: translateY(-1px); border-color: var(--fomb-brand); box-shadow: none; }
+.portfolio-page.fomlio-builder .button:active { transform: scale(0.98); box-shadow: none; }
+.portfolio-page.fomlio-builder .button.primary-button,
+.portfolio-page.fomlio-builder .portfolio-submit-panel .ready-submit-button {
+  background: var(--fomb-brand);
+  border-color: var(--fomb-brand);
+  color: var(--fomb-ink);
+  font-weight: 700;
+}
+.portfolio-page.fomlio-builder .button.primary-button:hover,
+.portfolio-page.fomlio-builder .portfolio-submit-panel .ready-submit-button:hover { background: #d8ff63; }
+.portfolio-page.fomlio-builder .button.secondary-button,
+.portfolio-page.fomlio-builder .ghost-link-button { background: var(--fomb-field); color: var(--fomb-text); }
+
+.portfolio-page.fomlio-builder .portfolio-submit-panel {
+  background: linear-gradient(135deg, rgba(123, 58, 236, 0.9), rgba(60, 24, 130, 0.9));
+  border: 1px solid var(--fomb-line);
+  border-radius: 24px;
+}
+/* Cái span này là một viên lime, không phải chữ trên nền tím — nên cũng là
+   mực đen, cùng quy tắc với tiêu đề khối. */
+.portfolio-page.fomlio-builder .portfolio-submit-panel span { color: var(--fomb-ink) !important; }
+.portfolio-page.fomlio-builder .portfolio-submit-panel h2 { color: #fff !important; }
+
+/* ── Màn hẹp ──────────────────────────────────────────────────────────────
+   Bảng soạn đổi từ "nổi bên trái" thành "sheet kéo từ đáy": trên màn hẹp một
+   bảng 440px phủ gần hết trang, mở ra là không còn thấy gì để mà xem trước. */
+
+@media (max-width: 900px) {
+  .portfolio-page.fomlio-builder .portfolio-builder {
+    height: calc(100dvh - 80px);
+    min-height: 560px;
+  }
+
+  .pf-stage { left: 0; }
+  /* Kẹp phần thân lại: không có overflow:hidden thì dải tay cầm cao 52px vẫn
+     để hở thanh bước nằm ngay dưới nó, trông như sheet đóng chưa hết.
+     Chỉ đặt ở đây — ở khổ desktop thẻ kéo nằm NGOÀI mép bảng nên hidden sẽ
+     cắt mất nó. */
+  .pf-dock { overflow: hidden; }
+  /* `position: fixed` neo vào ĐÁY MÀN HÌNH, không phải đáy khung làm việc.
+     Khung còn cách đáy màn một quãng (margin dưới + thanh điều hướng của
+     app), nên nếu neo theo khung thì lúc thu gọn phần ló ra là 130px chứ
+     không phải 52px — tức là vẫn hở nguyên thanh bước bên dưới tay cầm. */
+  .pf-dock {
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    height: 58dvh;
+    border-radius: 22px 22px 0 0;
+  }
+  /* Sheet chuẩn: thu gọn thì trượt xuống nhưng CHỪA LẠI một dải tay cầm
+     cao 54px. Trượt đi hẳn thì thẻ kéo — vốn neo ngoài mép trên của sheet —
+     cũng bị kéo theo xuống và đè lên thanh công cụ. */
+  .pf-dock.collapsed { transform: translateY(calc(100% - 52px)); }
+
+  /* Thẻ kéo nằm TRONG sheet, ở hàng trên cùng: đúng phần còn ló ra khi sheet
+     đóng, nên nó vừa là nút mở vừa là tay cầm. */
+  /* Ở sheet nút là tay cầm có chữ, không phải nút tròn — phải mở lại
+     width/height, nếu không nó vẫn là ô 40×40 và chữ bị cắt. */
+  .pf-dock-toggle {
+    position: static;
+    align-self: center;
+    width: auto;
+    height: auto;
+    margin: 11px 0 3px;
+    padding: 8px 18px;
+    transform: none;
+  }
+  .pf-dock-toggle-label { display: inline; }
+  .pf-dock.collapsed .pf-dock-toggle { width: auto; padding: 8px 18px; }
+
+  /* Thanh công cụ nằm NGAY TRÊN sheet, không lên đỉnh: trên màn hẹp trang
+     portfolio có thanh điều hướng của chính nó ở đỉnh, đặt chồng lên là che
+     mất logo và nút "Hire Me". */
+  .pf-live-bar {
+    top: auto;
+    bottom: calc(56% + 56px);
+    left: 10px;
+    right: 10px;
+    transform: none;
+    max-width: none;
+    justify-content: center;
+  }
+  .portfolio-builder:has(.pf-dock.collapsed) .pf-live-bar { bottom: 66px; }
+  .pf-live-theme-name { display: none; }
+  .pf-live-theme { padding: 6px; }
+}
+
+@media (max-width: 560px) {
+  .pf-live-open span { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Luồng 5 bước
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.portfolio-page.fomlio-builder .pf-steps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 26px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--fomb-line);
+}
+
+.portfolio-page.fomlio-builder .pf-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 7px;
+  border: 1px solid var(--fomb-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fomb-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.portfolio-page.fomlio-builder .pf-step:hover { border-color: var(--fomb-line-strong); color: var(--fomb-text); }
+
+.portfolio-page.fomlio-builder .pf-step-num {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--fomb-field);
+  color: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.portfolio-page.fomlio-builder .pf-step.current {
+  border-color: var(--fomb-brand);
+  background: var(--fomb-brand);
+  color: var(--fomb-ink);
+}
+.portfolio-page.fomlio-builder .pf-step.current .pf-step-num { background: var(--fomb-ink); color: var(--fomb-brand); }
+
+.portfolio-page.fomlio-builder .pf-step.done { color: var(--fomb-text); border-color: rgba(203, 247, 72, 0.45); }
+.portfolio-page.fomlio-builder .pf-step.done .pf-step-num { background: var(--fomb-brand); color: var(--fomb-ink); }
+
+.portfolio-page.fomlio-builder .pf-stepnav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--fomb-line);
+}
+.portfolio-page.fomlio-builder .pf-stepnav-count { font-size: 0.85rem; color: var(--fomb-muted); }
+.portfolio-page.fomlio-builder .pf-stepnav-done { font-size: 0.85rem; color: var(--fomb-brand); }
+.portfolio-page.fomlio-builder .pf-stepnav .button:disabled { opacity: 0.35; cursor: not-allowed; }
+.portfolio-page.fomlio-builder .pf-stepnav .button:disabled:hover { transform: none; border-color: var(--fomb-line-strong); }
+
+/* ── Ảnh đại diện ở bước 1 ───────────────────────────────────────────────- */
+
+.portfolio-page.fomlio-builder .pf-identity {
+  display: grid;
+  gap: 4px;
+  padding: 18px;
+  border: 1px solid var(--fomb-line);
+  border-radius: 20px;
+  background: var(--fomb-field);
+}
+.portfolio-page.fomlio-builder .pf-identity-title { font-weight: 700; }
+.portfolio-page.fomlio-builder .pf-identity-sub {
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--fomb-muted);
+}
+
+.portfolio-page.fomlio-builder .pf-identity-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 12px;
+}
+
+.portfolio-page.fomlio-builder .pf-identity-stage {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 132px;
+  height: 160px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: radial-gradient(70% 70% at 50% 45%, rgba(203, 247, 72, 0.85), rgba(203, 247, 72, 0.18) 70%, transparent 100%);
+}
+.portfolio-page.fomlio-builder .pf-identity-stage img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+
+.portfolio-page.fomlio-builder .pf-identity-actions { display: grid; gap: 8px; justify-items: start; }
+.portfolio-page.fomlio-builder .pf-identity-upload { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.portfolio-page.fomlio-builder .pf-identity-hint { font-size: 0.78rem; color: var(--fomb-muted); }
+
+/* Bộ chọn linh vật giờ nằm trong bước 1, hàng ngang bốn ô. */
+.portfolio-page.fomlio-builder .pf-mascot-picker.full-field { margin-top: 4px; }
+.portfolio-page.fomlio-builder .pf-mascot-picker.full-field .pf-mascot-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .portfolio-page.fomlio-builder .pf-steps { overflow-x: auto; padding-bottom: 14px; }
+  .portfolio-page.fomlio-builder .pf-step-label { display: none; }
+  .portfolio-page.fomlio-builder .pf-step { padding: 7px; }
+  .portfolio-page.fomlio-builder .pf-identity-row { flex-direction: column; align-items: flex-start; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Bên trong bảng soạn — container query
+   ══════════════════════════════════════════════════════════════════════════
+   Form này vốn dựng cho khoang rộng ~700px: `.portfolio-form-grid`,
+   `.experience-edit-card`, `.credential-edit-card` đều là lưới 2 cột cứng, và
+   `.pf-social-inputs` chỉ gãy về 1 cột khi VIEWPORT ≤640px.
+
+   Giờ nó sống trong một bảng rộng 440px trên màn 1680px — media query theo
+   viewport không bao giờ chạy, nên mọi thứ vẫn cố xếp 2 cột rồi bị cắt cụt ở
+   mép bảng. Phải hỏi "hộp chứa rộng bao nhiêu", không phải "màn hình rộng bao
+   nhiêu" — đó đúng là việc của container query.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.pf-dock {
+  container-type: inline-size;
+  container-name: dock;
+}
+
+@container dock (max-width: 620px) {
+  /* Một cột cho mọi lưới biểu mẫu. Hai cột trong 400px thì mỗi ô còn ~190px —
+     không đủ cho nhãn "Thời gian bắt đầu" lẫn ô nhập MM/YY. */
+  .portfolio-form-grid,
+  .experience-edit-card,
+  .credential-edit-card,
+  .pf-social-inputs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Bốn linh vật một hàng thành 2×2; hàng ngang bị cắt mất con thứ tư. */
+  .pf-mascot-picker.full-field .pf-mascot-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* Thanh bước: 5 viên có nhãn dài hơn bảng. Chỉ viên ĐANG Ở hiện nhãn, bốn
+     viên còn lại thu về số — vẫn bấm được để quay lại, mà vừa một hàng. */
+  .pf-steps { gap: 5px; margin-bottom: 20px; padding-bottom: 16px; }
+  .pf-step { padding: 6px; }
+  .pf-step-label { display: none; }
+  .pf-step.current { padding: 6px 13px 6px 6px; }
+  .pf-step.current .pf-step-label { display: inline; }
+
+  .pf-identity-row { gap: 14px; }
+  .pf-identity-stage { width: 104px; height: 128px; }
+  .pf-identity-actions .button { font-size: 0.82rem; }
+
+  .pf-stepnav { gap: 10px; }
+  .pf-stepnav-count { display: none; }
+}
+
+/* Không khoang nào bên trong được rộng hơn bảng: thiếu min-width:0 thì một ô
+   nhập có placeholder dài cũng kéo cả lưới ra ngoài rồi bị mép bảng cắt. */
+.pf-dock .portfolio-form-grid > *,
+.pf-dock .experience-edit-card > *,
+.pf-dock .credential-edit-card > *,
+.pf-dock .pf-social-inputs > * { min-width: 0; }
+.pf-dock .portfolio-form-panel { overflow-x: hidden; }
+
+/* Nhãn giao diện trong thanh công cụ — không phải nút bấm được. */
+.pf-live-theme-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  padding: 7px 14px 7px 9px;
+  border-radius: 999px;
+  color: rgba(244, 248, 236, 0.82);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-dock,
+  .pf-stage,
+  .pf-dock-toggle-label { transition: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-dock-toggle { transition: none; }
+}

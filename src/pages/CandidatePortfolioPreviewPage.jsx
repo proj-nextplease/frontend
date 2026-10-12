@@ -4,6 +4,7 @@ import {
   PORTFOLIO_PREVIEW_STORAGE_PREFIX,
 } from './CandidatePortfolioPage.jsx';
 import { VerifiedPassport } from './CandidatePortfolioViewPage.jsx';
+import { toPassportProfile } from '../lib/portfolioDraft.js';
 
 function readPortfolioDraft() {
   const params = new URLSearchParams(window.location.search);
@@ -41,27 +42,12 @@ export function CandidatePortfolioPreviewPage() {
     );
   }
 
-  const draftProfile = draft.profile || {};
-  const skills = (draftProfile.skills || '')
-    .split(',')
-    .map((skill) => skill.trim())
-    .filter(Boolean);
-
-  const normalizedProfile = {
-    name: draftProfile.name,
-    headline: draftProfile.headline,
-    school: draftProfile.school,
-    location: draftProfile.location,
-    bio: draftProfile.bio,
-    skills,
+  const normalizedProfile = toPassportProfile({
+    profile: draft.profile || {},
     avatar: draft.avatar || { gender: draft.gender || 'female' },
-    experiences: draft.experiences || [],
-    credentials: draft.credentials || [],
-    openToWork: !!draftProfile.openToWork,
-    socialLinks: draftProfile.socialLinks || {},
-    // No reputationScore/currentLevel/totalExp: those are account-level growth
-    // values, not accurate for an unsaved draft, so the stat strip stays hidden.
-  };
+    experiences: draft.experiences,
+    credentials: draft.credentials,
+  });
 
   return <VerifiedPassport profile={normalizedProfile} isDraft />;
 }

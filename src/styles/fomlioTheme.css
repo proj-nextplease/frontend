@@ -1,0 +1,822 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Theme Fomlio — giao diện portfolio công khai của ứng viên.
+
+   Nguồn: Figma "Portfolio Landing Page 1" (file sBPmEd5bj6MQ3ZWNrkUfvW,
+   node 2:13, khung 1728×5893). Token lấy từ Figma variables, KHÔNG phải
+   DESIGN.md: theme này cố tình nằm ngoài hệ emerald/đen của nextplease,
+   vì nó là bộ mặt của ứng viên chứ không phải của sản phẩm.
+
+   Tất cả selector nằm dưới .fom-page nên không rò ra phần còn lại của app.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.fom-page {
+  /* Figma variables */
+  --fom-brand: #cbf748;        /* Primary Brand */
+  --fom-secondary: #7b3aec;    /* Secondary — chữ trên dải Role trắng */
+  --fom-ink: #000000;          /* Foundation */
+  --fom-white: #ffffff;        /* Header & Footer / White Color */
+
+  /* Lớp kính: bản thiết kế dùng đúng hai công thức này, không thêm bớt */
+  --fom-glass: rgba(255, 255, 255, 0.2);
+  --fom-glass-line: #ffffff;
+  --fom-panel: rgba(255, 255, 255, 0.08);
+  --fom-panel-line: rgba(255, 255, 255, 0.12);
+  --fom-blur: 12px;
+
+  --fom-container: 1140px;     /* 1728 - 294×2 */
+  --fom-radius-card: 24px;
+  --fom-radius-shot: 50px;
+  --fom-radius-pill: 50px;
+
+  position: relative;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0 0 80px;
+  background: var(--fom-ink);
+  color: var(--fom-white);
+  font-family: 'DM Sans', 'Be Vietnam Pro', system-ui, sans-serif;
+  overflow-x: clip;
+}
+
+/* Quầng sáng nền. Bản Figma đặt một ảnh PNG 4083×7215 phủ cả trang; ở đây
+   dựng lại bằng gradient — cùng hình ảnh, nhẹ hơn ~930KB và không vỡ khi
+   trang dài ngắn khác nhau tuỳ dữ liệu ứng viên. */
+.fom-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    /* Tâm quầng sáng, nóng nhất ở giữa trang */
+    radial-gradient(68% 40% at 50% 46%, rgba(203, 247, 72, 0.95) 0%, rgba(203, 247, 72, 0.55) 48%, rgba(203, 247, 72, 0) 80%),
+    /* Dải dọc đen → lime → đen, trải theo chiều dài thật của trang */
+    linear-gradient(180deg,
+      #000000 0%,
+      #000000 12%,
+      rgba(78, 112, 14, 0.85) 23%,
+      rgba(140, 190, 32, 0.92) 40%,
+      rgba(140, 190, 32, 0.92) 60%,
+      rgba(68, 100, 12, 0.85) 77%,
+      #000000 90%,
+      #000000 100%),
+    var(--fom-ink);
+}
+
+.fom-page > * { position: relative; z-index: 1; }
+
+/* Cùng bẫy Astryx như `.portfolio-page` trong index.css: màu chữ của h1..h4
+   được đặt bằng light-dark() qua adopted stylesheet, nên máy nào để dark mode
+   thì mọi tiêu đề thành #fafafa — kể cả tiêu đề nằm trong thẻ chuyên môn nền
+   sáng, thành chữ trắng trên nền lime. Ép thừa kế lại để mỗi khối tự quyết
+   màu chữ của mình.
+
+   KHÔNG đưa `a` vào danh sách: `.fom-page a` (0,1,1) thắng `.fom-btn` (0,1,0),
+   nên mọi nút dạng liên kết sẽ thành chữ trắng trên nền trắng. */
+.fom-page h1, .fom-page h2, .fom-page h3, .fom-page h4,
+.fom-page p, .fom-page li { color: inherit; }
+
+.fom-shell {
+  width: min(var(--fom-container), calc(100% - 48px));
+  margin-inline: auto;
+}
+
+/* ── Chữ ──────────────────────────────────────────────────────────────── */
+
+.fom-display {           /* Big Heading — Poppins SemiBold 40 */
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(28px, 2.4vw, 40px);
+  line-height: 1.22;
+  margin: 0;
+}
+
+.fom-section-title {     /* Tiêu đề khối — 64px trong thiết kế */
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(34px, 4vw, 64px);
+  line-height: 1.16;
+  text-align: center;
+  margin: 0;
+  max-width: 742px;
+}
+
+.fom-lede {              /* Body 24 */
+  font-size: clamp(16px, 1.4vw, 24px);
+  line-height: 1.5;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+/* ── Pill / nút ───────────────────────────────────────────────────────── */
+
+.fom-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--fom-glass-line);
+  border-radius: var(--fom-radius-pill);
+  background: var(--fom-glass);
+  backdrop-filter: blur(var(--fom-blur));
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: clamp(16px, 1.8vw, 20px);
+  line-height: 1;
+  color: var(--fom-white);
+}
+
+.fom-pill.fom-eyebrow {
+  font-size: clamp(18px, 2vw, 32px);
+  padding: 10px 24px;
+  text-transform: uppercase;
+}
+
+
+.fom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 44px;
+  border: 0;
+  border-radius: var(--fom-radius-pill);
+  background: var(--fom-white);
+  color: var(--fom-ink);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 20px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.fom-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35); }
+
+.fom-btn.lg { font-size: clamp(18px, 1.5vw, 24px); padding: 17px 48px; }
+
+.fom-btn.ghost {
+  padding: 11px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  /* Nền trắng của .fom-btn phải bị xoá hẳn, nếu không lớp gradient mờ bên
+     trên chỉ phủ lên nó và nút vẫn trắng đặc, nuốt mất chữ trắng. */
+  background-color: transparent;
+  background-image: linear-gradient(171.6deg, rgba(255, 255, 255, 0.12) 16.8%, rgba(255, 255, 255, 0.08) 85.4%);
+  backdrop-filter: blur(var(--fom-blur));
+  color: var(--fom-white);
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Thanh điều hướng ─────────────────────────────────────────────────── */
+
+.fom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 45px;
+}
+
+/* Tên ứng viên đứng chỗ nhãn hiệu. Chữ thay vì ảnh nên không phải lo ảnh vỡ
+   ở màn retina, và tự co theo tên dài ngắn. */
+.fom-logo {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(17px, 1.5vw, 21px);
+  letter-spacing: -0.01em;
+  color: var(--fom-brand);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 34ch;
+}
+
+.fom-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  border: 1px solid var(--fom-glass-line);
+  border-radius: var(--fom-radius-pill);
+  background: var(--fom-glass);
+  backdrop-filter: blur(var(--fom-blur));
+}
+
+.fom-nav a {
+  padding: 9px 20px;
+  border-radius: var(--fom-radius-pill);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 20px;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--fom-white);
+  white-space: nowrap;
+}
+
+.fom-nav a.active { background: var(--fom-white); color: var(--fom-ink); }
+
+/* ── Hero ─────────────────────────────────────────────────────────────────
+   Bản Figma dựng hero quanh một tấm chân dung 562×674 lấp kín vòng tròn.
+   Sản phẩm này phần lớn dùng linh vật — một bức tranh nhỏ — nên bố cục phải
+   chịu được cả hai mà không bên nào trông như lỗi:
+     - Khung chân dung là HÌNH VUÔNG chứ không phải 562/674. Tỉ lệ dọc là của
+       tấm ảnh người thật; ép linh vật vào đó thì thừa ra một mảng nền cao
+       bằng nửa khung.
+     - Đĩa lime dựng bằng CSS, không dùng ring.svg của Figma: file đó có tâm
+       tối vì trong thiết kế nó luôn bị tấm ảnh che. Dùng với linh vật thì lộ
+       ra một lỗ đen giữa đĩa.
+     - Chữ canh TRÁI, không canh phải như Figma. Tiếng Việt dấu nhiều và tên
+       trường/địa chỉ dài, canh phải cho ra mép trái răng cưa rất khó đọc; và
+       canh trái thì bản xếp dọc trên điện thoại không phải đổi gì. */
+
+.fom-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 72px);
+  padding: clamp(48px, 7vw, 96px) 0 clamp(32px, 4vw, 56px);
+}
+
+.fom-hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(14px, 1.6vw, 22px);
+  min-width: 0;
+}
+
+.fom-hero-copy .fom-display { max-width: 18ch; }
+.fom-hero-copy .fom-lede { max-width: 42ch; }
+
+/* Trường học và nơi ở thành hai viên riêng. Nối bằng dấu chấm giữa thì ra
+   một dòng dài loằng ngoằng, mà địa chỉ đầy đủ thì gần như luôn dài. */
+/* max-width phải đặt ở ĐÂY nữa: trong flex-column với align-items:center,
+   con có width:auto = rộng theo nội dung, nên nếu chỉ kẹp viên con thì hộp
+   chứa vẫn phình ra bằng chuỗi dài nhất. */
+.fom-hero-tags { display: flex; flex-wrap: wrap; gap: 8px; max-width: 100%; }
+
+.fom-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  /* Flex item mặc định không co nhỏ hơn nội dung, nên nếu thiếu dòng này thì
+     ellipsis của <span> bên trong không bao giờ chạy và địa chỉ dài tràn ra
+     ngoài màn hình điện thoại. */
+  min-width: 0;
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--fom-radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 14px;
+  line-height: 1.3;
+}
+.fom-hero-tag span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fom-hero-tag svg { flex: none; }
+
+.fom-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; max-width: 100%; }
+
+/* ── Khung chân dung ──────────────────────────────────────────────────── */
+
+.fom-portrait {
+  position: relative;
+  aspect-ratio: 1;
+  width: 100%;
+  isolation: isolate;
+}
+
+/* Đĩa lime + quầng sáng, một lớp duy nhất. */
+.fom-portrait-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 44%,
+      #d7fb66 0%,
+      #cbf748 52%,
+      rgba(203, 247, 72, 0.55) 68%,
+      rgba(203, 247, 72, 0.18) 80%,
+      rgba(203, 247, 72, 0) 92%);
+}
+
+.fom-portrait-stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: end center;
+  /* Linh vật/ảnh đứng trên đáy đĩa, chừa 8% để nó không chạm mép. */
+  padding-bottom: 8%;
+}
+
+/* Linh vật là tranh có độ phân giải cố định — không phóng to cho lấp đầy đĩa,
+   phóng lên là vỡ. Nó đứng trong khung, không lấp khung. */
+.fom-portrait-stage > :not(.fom-portrait-photo) {
+  max-width: 74%;
+  height: auto;
+}
+
+.fom-portrait-stage.has-photo { place-items: stretch; padding-bottom: 0; }
+
+.fom-portrait-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 50%;
+}
+
+/* Nút tròn "DOWNLOAD CV": đè lên mép dưới-phải của đĩa, không đè lên mặt
+   nhân vật. Kích thước theo đĩa để không vỡ bố cục khi khung co lại. */
+.fom-download {
+  position: absolute;
+  /* Tâm nút rơi vào khoảng (81%, 81%) của khung vuông — đúng điểm mép
+     dưới-phải của đường tròn nội tiếp, nên nó cưỡi lên viền đĩa thay vì nằm
+     lọt bên trong và đè lên nhân vật. */
+  left: 64%;
+  top: 64%;
+  width: 36%;
+  max-width: 160px;
+  aspect-ratio: 1;
+  height: auto;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--fom-white);
+  z-index: 2;
+}
+
+.fom-download:hover .fom-download-spin { animation-duration: 6s; }
+.fom-download img { position: absolute; inset: 0; margin: auto; }
+.fom-download-outer { width: 76%; height: 76%; }
+.fom-download-inner { width: 40%; height: 40%; }
+.fom-download-icon { width: 18%; height: 18%; }
+
+.fom-download-spin {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: fom-spin 18s linear infinite;
+}
+
+.fom-download-spin text {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  fill: currentColor;
+  letter-spacing: 1.4px;
+}
+
+@keyframes fom-spin { to { transform: rotate(360deg); } }
+
+/* ── Dải Role chạy ngang ──────────────────────────────────────────────── */
+
+.fom-marquee {
+  position: relative;
+  margin: 40px 0;
+  padding: 1px 0;
+  background: var(--fom-brand);
+  height: 110px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Dải trắng nghiêng 1° nằm đè lên dải lime — đúng hai lớp của bản thiết kế. */
+.fom-marquee-band {
+  position: absolute;
+  left: -1%;
+  width: 102%;
+  height: 80px;
+  background: var(--fom-white);
+  transform: rotate(-1deg);
+}
+
+.fom-marquee-track {
+  position: relative;
+  display: flex;
+  width: max-content;
+  gap: 40px;
+  transform: rotate(-1deg);
+  animation: fom-marquee 26s linear infinite;
+}
+
+.fom-marquee-group { display: flex; gap: 40px; padding-right: 40px; }
+
+/* Dấu chấm ngăn giữa các kỹ năng, thay cho con dấu nhãn hiệu bé xíu trước
+   đây — ở cỡ 35px nó chỉ còn là một vệt mờ không ai đọc ra. */
+.fom-marquee-item::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.fom-marquee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 20px;
+  color: var(--fom-secondary);
+  white-space: nowrap;
+}
+
+@keyframes fom-marquee { to { transform: rotate(-1deg) translateX(-50%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fom-marquee-track, .fom-download-spin { animation: none; }
+}
+
+/* ── About ────────────────────────────────────────────────────────────── */
+
+/* Không có đoạn giới thiệu thì khối co về một cột và canh giữa, thay vì để
+   một nửa trống. */
+.fom-about.is-bare { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; padding: 72px 0; }
+.fom-about.is-bare .fom-about-copy { align-items: center; }
+
+.fom-about {
+  display: grid;
+  grid-template-columns: minmax(0, 462px) minmax(0, 598px);
+  justify-content: space-between;
+  align-items: center;
+  gap: 80px;
+  padding: 100px 0;
+}
+
+.fom-about-copy { display: flex; flex-direction: column; gap: 30px; align-items: flex-start; }
+
+/* Khối kim cương gradient bên phải — hình vuông xoay 42.53° của bản thiết kế. */
+.fom-about-gem {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+.fom-about-gem::before {
+  content: '';
+  /* 70.8% là tỉ lệ lấy nguyên từ Figma, nơi khối About luôn có đoạn giới
+     thiệu dài cân lại. Thu còn một nửa để nó là điểm nhấn chứ không phải
+     nhân vật chính. */
+  width: 52%;
+  aspect-ratio: 1;
+  transform: rotate(-42.53deg);
+  background-image: linear-gradient(45.13deg, rgb(203, 247, 72) 6.18%, rgba(217, 217, 217, 0) 73.1%);
+}
+
+/* ── Chỉ số ───────────────────────────────────────────────────────────── */
+
+.fom-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 30px;
+}
+
+.fom-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  min-height: 180px;
+  padding: 30px 22px 29px;
+  border: 1px solid var(--fom-panel-line);
+  border-radius: var(--fom-radius-card);
+  background: var(--fom-panel);
+  backdrop-filter: blur(var(--fom-blur));
+  text-align: center;
+}
+
+.fom-stat-value {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(44px, 4.3vw, 70px);
+  line-height: 1;
+  margin: 0;
+}
+
+.fom-stat-value span { color: var(--fom-brand); }
+
+.fom-stat-label {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: clamp(18px, 2vw, 32px);
+  line-height: 1.2;
+  margin: 0;
+}
+
+/* ── Khối tiêu đề giữa trang ──────────────────────────────────────────── */
+
+.fom-heading-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 100px 0 56px;
+}
+
+.fom-heading-star { width: 27px; height: 26px; }
+
+/* ── Thẻ chuyên môn ───────────────────────────────────────────────────── */
+
+.fom-specialities {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 31px;
+}
+
+.fom-speciality {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 347px;
+  padding: 30px 22px 29px;
+  border: 1px solid var(--fom-glass-line);
+  border-radius: var(--fom-radius-card);
+  background: var(--fom-glass);
+  backdrop-filter: blur(var(--fom-blur));
+  color: var(--fom-ink);
+}
+
+.fom-speciality-icon { width: 60px; height: 60px; object-fit: contain; object-position: left center; }
+
+.fom-speciality h3 {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: clamp(22px, 2.1vw, 32px);
+  line-height: 1.2;
+  margin: 12px 0 0;
+  word-break: break-word;
+}
+
+.fom-speciality p {
+  font-size: 16px;
+  line-height: 1.45;
+  margin: 0;
+  color: rgba(0, 0, 0, 0.78);
+}
+
+/* ── Lưới dự án ───────────────────────────────────────────────────────── */
+
+.fom-projects {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 40px 30px;
+}
+
+.fom-project {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 23px 24px 24px;
+  border: 2px solid var(--fom-white);
+  border-radius: var(--fom-radius-shot);
+  background: rgba(217, 217, 217, 0.08);
+}
+
+.fom-project-shot {
+  aspect-ratio: 508 / 336;
+  width: 100%;
+  border: 2px solid var(--fom-white);
+  border-radius: var(--fom-radius-shot);
+  object-fit: cover;
+  display: block;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.fom-project-shot.placeholder {
+  display: grid;
+  place-items: center;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(20px, 2.4vw, 34px);
+  color: var(--fom-brand);
+  text-align: center;
+  padding: 24px;
+}
+
+.fom-project-body { padding: 0 12px 8px; }
+
+.fom-project h3 {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(18px, 1.7vw, 26px);
+  line-height: 1.25;
+  margin: 0 0 6px;
+}
+
+.fom-project-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.fom-project-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--fom-brand);
+  color: var(--fom-ink);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* ── Ngôi sao trang trí ───────────────────────────────────────────────── */
+
+.fom-star {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 10px rgba(203, 247, 72, 0.55));
+}
+
+/* ── Rỗng / chân trang ────────────────────────────────────────────────── */
+
+.fom-empty {
+  text-align: center;
+  padding: 80px 0;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.fom-foot {
+  display: flex;
+  justify-content: center;
+  padding-top: 48px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ── Màn hẹp ──────────────────────────────────────────────────────────────
+   Ba ngưỡng, mỗi ngưỡng gỡ một thứ hỏng cụ thể chứ không chỉ "thu nhỏ lại":
+     1024 — hai cột hero không còn đủ chỗ cho cột chữ 42ch.
+      860 — thanh điều hướng ngang bắt đầu gãy dòng.
+      560 — đĩa chân dung và nút CV phải nhỏ hẳn, lưới về một cột. */
+
+@media (max-width: 1024px) {
+  .fom-hero {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+    padding-top: clamp(32px, 6vw, 56px);
+  }
+  /* Chữ lên trên: trên màn hẹp người đọc cần biết đây là ai trước khi nhìn
+     ảnh, và đĩa chân dung cao gần bằng cả màn hình. */
+  /* `justify-items: center` biến item lưới thành rộng-theo-nội-dung, nên cột
+     chữ phình ra bằng viên địa chỉ dài nhất và tràn khỏi màn hình. Ép đúng
+     bề ngang cột thì max-width/ellipsis bên trong mới có tác dụng. */
+  .fom-hero-copy { order: -1; align-items: center; width: 100%; }
+  .fom-hero-copy .fom-display,
+  .fom-hero-copy .fom-lede { max-width: 32ch; }
+  .fom-hero-tags, .fom-hero-actions { justify-content: center; }
+
+  /* Khoá bề ngang đĩa, nếu không nó nở hết cột và đẩy nhân vật xuống tận
+     đáy màn hình. */
+  .fom-portrait { width: min(340px, 72vw); }
+
+  /* Sao trang trí bỏ hẳn: cột hẹp lại thì chúng rơi trúng chữ. */
+  .fom-star { display: none; }
+
+  .fom-about { grid-template-columns: minmax(0, 1fr); gap: 36px; padding: 64px 0; }
+  .fom-about-gem { display: none; }
+  .fom-specialities { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 860px) {
+  .fom-header { flex-wrap: wrap; row-gap: 14px; padding-top: 28px; }
+  /* Thanh điều hướng ngang gãy thành hai hàng trước khi vỡ — cho nó cuộn
+     ngang thay vì xuống dòng, và nút "Hire Me" giữ nguyên một dòng. */
+  .fom-nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+  .fom-nav::-webkit-scrollbar { display: none; }
+  .fom-btn { white-space: nowrap; }
+}
+
+@media (max-width: 560px) {
+  .fom-shell { width: calc(100% - 32px); }
+  .fom-portrait { width: min(260px, 74vw); }
+  .fom-download-spin text { font-size: 13px; }
+  .fom-stats { grid-template-columns: minmax(0, 1fr); }
+  .fom-specialities { grid-template-columns: minmax(0, 1fr); }
+  .fom-projects { grid-template-columns: minmax(0, 1fr); }
+  .fom-speciality { min-height: 0; }
+  .fom-project { padding: 16px; border-radius: 28px; }
+  .fom-project-shot { border-radius: 24px; }
+  .fom-heading-block { padding: 56px 0 32px; }
+  .fom-marquee { height: 86px; margin: 28px 0; }
+  .fom-marquee-band { height: 64px; }
+}
+
+/* ── Bản in ───────────────────────────────────────────────────────────── */
+
+@media print {
+  .fom-page::before, .fom-star, .fom-download, .fom-nav, .fom-marquee { display: none !important; }
+  .fom-page { background: #fff !important; color: #111 !important; padding: 0 24px !important; }
+  .fom-display, .fom-section-title, .fom-lede, .fom-stat-value, .fom-stat-label, .fom-project h3 { color: #111 !important; }
+  .fom-stat, .fom-speciality, .fom-project {
+    background: #fff !important;
+    border-color: #d4d4d4 !important;
+    backdrop-filter: none !important;
+    break-inside: avoid;
+  }
+  .fom-speciality { color: #111 !important; }
+}
+
+/* ── Chân dung thật ───────────────────────────────────────────────────────
+   Khi có ảnh, ảnh lấp đầy vòng tròn đúng như bản thiết kế. Khi không, linh
+   vật đứng ở đáy vòng tròn như một nhân vật đứng trong khung — không phóng
+   to một bức tranh nhỏ cho vừa, vì phóng lên là vỡ. */
+
+.fom-portrait-stage.has-photo { align-items: stretch; }
+
+.fom-portrait-photo {
+  /* Hẹp hơn khung một nhịp để vành lime phía sau còn lộ ra — ảnh phủ kín
+     100% thì vòng tròn biến mất và hero chỉ còn là một khối ảnh chữ nhật. */
+  width: 86%;
+  height: 94%;
+  align-self: flex-end;
+  object-fit: cover;
+  object-position: top center;
+  /* Bo theo vòng tròn phía sau, chừa một vành lime mỏng lộ ra. */
+  border-radius: 50% 50% 46% 46% / 54% 54% 42% 42%;
+}
+
+.fom-hero-meta {
+  margin: 0;
+  font-size: clamp(14px, 1.1vw, 18px);
+  color: rgba(255, 255, 255, 0.68);
+}
+
+/* Nút CV: neo vào mép phải của khung chân dung và nằm trọn bên trong. Bản
+   trước đặt `right: 4%; bottom: -6%` nên nó thò ra ngoài và bị cắt. */
+.fom-download { right: 0; bottom: 4%; }
+
+/* ── Gợi ý ở bản nháp ────────────────────────────────────────────────────- */
+
+.fom-draft-hint {
+  max-width: 54ch;
+  margin: 0;
+  padding: 14px 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ── Đèn rọi khối đang sửa ───────────────────────────────────────────────-
+   Chỉ một vành sáng, không làm mờ phần còn lại: làm mờ cả trang thì người
+   dùng mất luôn ngữ cảnh "khối này nằm ở đâu trong trang". */
+
+.fom-spotlight {
+  outline: 2px solid var(--fom-brand);
+  outline-offset: 10px;
+  border-radius: 12px;
+  animation: fom-spotlight-in 0.45s ease;
+}
+
+@keyframes fom-spotlight-in {
+  from { outline-color: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fom-spotlight { animation: none; }
+}
+
+/* ── Màn chờ / màn lỗi ────────────────────────────────────────────────────
+   Cùng nền, cùng chữ với trang hồ sơ, để lúc tải xong không có cú chớp từ
+   nền sáng sang nền tối. */
+
+.fom-page-state {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  min-height: 100dvh;
+  padding: 24px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.fom-page-state p { margin: 0; font-size: 1.05rem; }
+.fom-page-state svg { color: var(--fom-brand); }

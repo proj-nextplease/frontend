@@ -1,12 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { HeroMesh } from '../components/HeroMesh.jsx';
 import { ONBOARDING_TAB_FLAG, announcePortfolioSaved } from '../lib/onboardingTab.js';
 import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
+import { LivePortfolioPreview } from '../components/portfolio/LivePortfolioPreview.jsx';
+import { toPassportProfile } from '../lib/portfolioDraft.js';
+import '../styles/fomlioBuilder.css';
 import { MASCOTS, mascotSheets, resolveMascot } from '../lib/mascots.js';
 import {
   ArrowLeft,
+  ArrowRight,
   Award,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  ImagePlus,
   BadgeCheck,
   BriefcaseBusiness,
   FileUp,
@@ -139,6 +147,32 @@ const defaultCredentials = [
    phẳng, để khu vực nhập liệu không phải đọc chữ trên nền loang màu. */
 const PF_MESH_MASK = 'linear-gradient(to bottom, #000 0px, #000 260px, transparent 720px)';
 
+/**
+ * Năm bước của trình dựng.
+ *
+ * Chia nhỏ vì bản cũ là một biểu mẫu hơn 30 ô trong một lần cuộn: người điền
+ * lần đầu không biết còn thiếu gì, cũng không biết điền xong trang sẽ ra sao.
+ * Mỗi bước gắn với một khối trên trang công khai (`preview`) để khung xem
+ * trước soi đúng chỗ vừa gõ.
+ *
+ * `errorPrefix` quyết định lỗi nào thuộc bước nào; null nghĩa là bước đó
+ * không có trường bắt buộc.
+ */
+const BUILDER_STEPS = [
+  { id: 1, label: 'Bạn là ai', preview: 'fom-top', errorPrefix: ['name'] },
+  { id: 2, label: 'Giới thiệu', preview: 'fom-about', errorPrefix: [] },
+  { id: 3, label: 'Kinh nghiệm', preview: 'fom-portfolio', errorPrefix: ['experience_'] },
+  { id: 4, label: 'Bằng cấp', preview: 'fom-credentials', errorPrefix: ['credential_'] },
+  { id: 5, label: 'Hoàn tất', preview: 'fom-top', errorPrefix: null },
+];
+
+function errorBelongsToStep(key, stepId) {
+  const prefixes = BUILDER_STEPS[stepId - 1]?.errorPrefix;
+  // Bước cuối soi lại toàn bộ: đó là cửa cuối trước khi lưu.
+  if (prefixes === null) return true;
+  return prefixes.some((prefix) => key === prefix || key.startsWith(prefix));
+}
+
 export function CandidatePortfolioPage({ isEditing = false }) {
   const navigate = useNavigate();
   const [avatar, setAvatar] = useState(defaultAvatar);
@@ -156,6 +190,13 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   });
   const [experiences, setExperiences] = useState(defaultExperiences);
   const [credentials, setCredentials] = useState(defaultCredentials);
+  /* Khối bên cột trái mà người dùng đang gõ, dùng để cuộn khung xem trước tới
+     đúng chỗ tương ứng. */
+  const [activeSection, setActiveSection] = useState(null);
+  const [step, setStep] = useState(1);
+  const [dockOpen, setDockOpen] = useState(true);
+  const lastPreviewY = useRef(0);
+  const editorColRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -211,6 +252,39 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   const [isDraftDirty, setIsDraftDirty] = useState(false);
   const [showExitWarningModal, setShowExitWarningModal] = useState(false);
   const [errors, setErrors] = useState({});
+
+  /* Bảng soạn tự nhường chỗ khi người dùng đang xem trang.
+     Cuộn XUỐNG là tín hiệu "giờ tôi muốn ngắm", nên thu bảng lại; về sát đỉnh
+     mới mở lại. Cố ý KHÔNG mở lại khi chỉ cuộn ngược lên một đoạn — bảng
+     thụt ra thụt vào giữa chừng còn khó chịu hơn là cứ đóng. */
+  const handlePreviewScroll = useCallback((y, programmatic) => {
+    const previous = lastPreviewY.current;
+    lastPreviewY.current = y;
+    /* Cuộn do code (nhảy bước làm khung xem trước chạy tới khối tương ứng)
+       chỉ cập nhật mốc, không đụng tới bảng soạn: người dùng vừa bấm "Tiếp
+       theo" là đang muốn gõ tiếp, đóng bảng ngay lúc đó là phản tác dụng. */
+    if (programmatic) return;
+    if (y <= 8) setDockOpen(true);
+    // Ngưỡng 4px để rung lắc nhỏ của trackpad không kích hoạt.
+    else if (y > previous + 4) setDockOpen(false);
+  }, []);
+
+  /* Người dùng gõ vào ô nào thì khung xem trước nhảy tới khối chứa ô đó. Bắt
+     ở một chỗ duy nhất trên cả cột thay vì gắn onFocus cho hơn 30 ô: tìm mốc
+     `data-preview-target` gần nhất đứng trước phần tử đang focus. */
+  const handleEditorFocus = useCallback((event) => {
+    const col = editorColRef.current;
+    if (!col) return;
+    const marks = Array.from(col.querySelectorAll('[data-preview-target]'));
+    let found = null;
+    for (const mark of marks) {
+      // DOCUMENT_POSITION_FOLLOWING: phần tử đang focus nằm SAU mốc này.
+      if (mark.compareDocumentPosition(event.target) & Node.DOCUMENT_POSITION_FOLLOWING) {
+        found = mark.dataset.previewTarget;
+      }
+    }
+    if (found) setActiveSection(found);
+  }, []);
 
   function markDirty() {
     setIsDraftDirty(true);
@@ -411,6 +485,32 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     }
   }
 
+
+  /* Ảnh chân dung cho hero của trang công khai.
+     Lưu vào `avatar.portraitUrl` chứ không phải một cột riêng: `avatar_config`
+     là JSONB được backend ghi/đọc nguyên khối (PortfolioRequest.avatar là một
+     Map tự do), nên khoá mới đi qua được mà không cần migration hay sửa DTO.
+     Nó cũng đúng về mặt ngữ nghĩa — ảnh đại diện chính là cấu hình avatar,
+     cùng chỗ với `mascot`.
+     KHÔNG dùng `profiles.avatar_url`: cột đó bị syncSocialAvatar ghi đè theo
+     ảnh của nhà cung cấp đăng nhập, ảnh người dùng chọn sẽ bị mất. */
+  function handlePortraitUpload(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setErrorMsg('Vui lòng chọn một tệp ảnh.');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setErrorMsg('Ảnh chân dung phải nhỏ hơn 2MB.');
+      return;
+    }
+    setErrorMsg('');
+    const reader = new FileReader();
+    reader.onload = () => updateAvatar('portraitUrl', reader.result);
+    reader.readAsDataURL(file);
+  }
 
   function updateAvatar(field, value) {
     markDirty();
@@ -642,9 +742,10 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     });
   }
 
-  function validatePortfolio() {
-    setErrorMsg('');
-    setSuccessMsg('');
+  /* Thu thập lỗi mà KHÔNG đụng vào state. Tách ra để bước nào chỉ soi lỗi
+     của bước đó — nếu gọi thẳng validatePortfolio lúc bấm "Tiếp" thì người
+     dùng đang ở bước 1 đã thấy đỏ rực mấy ô kinh nghiệm chưa hề mở ra. */
+  function collectErrors() {
     const newErrors = {};
 
     if (!profile.name.trim()) {
@@ -720,20 +821,53 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       }
     });
 
-    setErrors(newErrors);
+    return newErrors;
+  }
 
+  function focusFirstError() {
+    setTimeout(() => {
+      const firstErrorEl = document.querySelector('.input-error');
+      if (firstErrorEl) {
+        firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstErrorEl.focus();
+      }
+    }, 50);
+  }
+
+  function validatePortfolio() {
+    setErrorMsg('');
+    setSuccessMsg('');
+    const newErrors = collectErrors();
+    setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
-      setTimeout(() => {
-        const firstErrorEl = document.querySelector('.input-error');
-        if (firstErrorEl) {
-          firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          firstErrorEl.focus();
-        }
-      }, 50);
+      focusFirstError();
       return false;
     }
-
     return true;
+  }
+
+  /** Chỉ chặn bước hiện tại; lỗi của bước sau để dành cho lúc tới đó. */
+  function validateStep(stepId) {
+    setErrorMsg('');
+    const own = Object.fromEntries(
+      Object.entries(collectErrors()).filter(([key]) => errorBelongsToStep(key, stepId)),
+    );
+    setErrors(own);
+    if (Object.keys(own).length > 0) {
+      focusFirstError();
+      return false;
+    }
+    return true;
+  }
+
+  function goToStep(next) {
+    const target = Math.min(BUILDER_STEPS.length, Math.max(1, next));
+    // Đi tới thì phải qua cửa kiểm; đi lui luôn cho qua, không ai bị nhốt lại
+    // trong một bước vì một ô ở bước sau.
+    if (target > step && !validateStep(step)) return;
+    setStep(target);
+    setActiveSection(BUILDER_STEPS[target - 1].preview);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleOpenConfirmModal() {
@@ -886,17 +1020,23 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   // portfolio là bước bắt buộc ngay sau khi đăng ký, nên "thoát" bị hiểu là
   // bỏ dở việc tạo tài khoản. Giờ nó là một trang bình thường, đăng xuất
   // người dùng khi họ bấm "Về trang chủ" là sai.
+  /* Lúc SỬA thì lối ra là khu vực ứng viên — đó là nơi họ vừa đi ra.
+     Lúc TẠO MỚI thì không: hồ sơ chưa hoàn tất nên ProtectedDashboardRoute sẽ
+     đá ngược về đúng trang này, thành một vòng lặp. Về trang chủ. */
+  const exitLabel = isEditing ? 'Khu vực của tôi' : 'Trang chủ';
+  const exitTarget = isEditing ? '/candidates/dashboard/overview' : '/';
+
   const handleExitClick = (e) => {
     if (e) e.preventDefault();
     if (isDraftDirty) {
       setShowExitWarningModal(true);
     } else {
-      navigate('/');
+      navigate(exitTarget);
     }
   };
 
   return (
-    <section className="portfolio-page">
+    <section className="portfolio-page fomlio-builder">
       {/* Cùng tấm mesh với trang chủ và khu vực ứng viên, cùng mốc tan tính
           bằng px — trình dựng là một biểu mẫu rất dài (~3200px), để mesh loang
           theo % chiều cao khung thì nửa dưới trang toàn màu. Xem HeroMesh. */}
@@ -936,59 +1076,41 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       </div>
 
       <div className="portfolio-builder">
-        <aside className="portfolio-studio">
-          <div className="avatar-stage">
-            <PortfolioMascot avatar={avatar} size={200} />
-          </div>
-          {/* Bộ chọn linh vật.
-              Trước đây chỗ này là chọn giới tính + màu da + kiểu tóc + phụ kiện
-              + dáng đứng, vì nhân vật 3D dựng từng bộ phận nên tuỳ biến được.
-              Linh vật là tranh cố định, không có bộ phận nào để đổi, nên chỉ
-              còn một việc: chọn một trong bốn. Bày hết cả bốn ra thay vì bắt
-              chọn giới tính trước rồi mới thấy hai — bốn cái vừa một hàng, và
-              người dùng thấy ngay toàn bộ lựa chọn của mình. */}
-          <div className="pf-mascot-picker">
-            <span className="pf-mascot-picker-label">Chọn linh vật</span>
-            <div className="pf-mascot-row" role="radiogroup" aria-label="Chọn linh vật đại diện">
-              {MASCOTS.map((m) => {
-                const active = resolveMascot(avatar) === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={active}
-                    className={active ? 'pf-mascot-option active' : 'pf-mascot-option'}
-                    onClick={() => updateAvatar('mascot', m.id)}
-                  >
-                    <span
-                      className="pf-mascot-thumb"
-                      aria-hidden="true"
-                      style={{ backgroundImage: `url(${mascotSheets(m.id).directions})` }}
-                    />
-                    <span>{m.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+        {/* Trang portfolio chiếm trọn khung làm việc ở TỈ LỆ THẬT. Bản trước
+            nhét nó vào một cột rộng nửa màn rồi thu nhỏ còn 0.78, nên mọi
+            khoảng cách thiết kế cho khổ 1280 đều co lại — đó là cảm giác
+            "xát nhau", không phải sai padding ở đâu đó. */}
+        <div className="pf-stage">
+          <LivePortfolioPreview
+            profile={toPassportProfile({ profile, avatar, experiences, credentials })}
+            onOpenInNewTab={openPortfolioPreview}
+            scrollToSection={activeSection}
+            onScroll={handlePreviewScroll}
+          />
+        </div>
+
+        <aside className={`pf-dock${dockOpen ? '' : ' collapsed'}`}>
+          <div className="pf-dock-head">
+            <button type="button" className="pf-dock-back" onClick={handleExitClick}>
+              <ArrowLeft size={16} />
+              {exitLabel}
+            </button>
+            <span className="pf-dock-head-step">Bước {step}/{BUILDER_STEPS.length}</span>
           </div>
 
-          <div className="portfolio-preview-card">
-            <h2>{profile.name || 'Tên ứng viên'}</h2>
-            <p>{profile.headline || 'Headline nghề nghiệp'}</p>
-            <div className="preview-meta">
-              <span>{profile.school || 'Trường học'}</span>
-              <span>{profile.location || 'Địa điểm'}</span>
-            </div>
-            <div className="skill-cloud">
-              {skills.length ? (
-                skills.map((skill) => <span key={skill}>{skill}</span>)
-              ) : (
-                <span>Kỹ năng sẽ hiển thị tại đây</span>
-              )}
-            </div>
-          </div>
-        </aside>
+          <button
+            type="button"
+            className="pf-dock-toggle"
+            onClick={() => setDockOpen((open) => !open)}
+            aria-expanded={dockOpen}
+            aria-label={dockOpen ? 'Thu gọn bảng soạn để xem trọn trang' : 'Mở bảng soạn'}
+            title={dockOpen ? 'Thu gọn bảng soạn để xem trọn trang' : 'Mở bảng soạn'}
+          >
+            {dockOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+            <span className="pf-dock-toggle-label">Soạn tiếp</span>
+          </button>
+
+        <div className="pf-editor-col" ref={editorColRef} onFocusCapture={handleEditorFocus}>
 
         <div className="portfolio-form-panel" style={{ position: 'relative' }}>
           {isLoading && (
@@ -1053,7 +1175,23 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             </div>
           )}
 
-          <div className="form-section-heading">
+          <nav className="pf-steps" aria-label="Các bước dựng portfolio">
+            {BUILDER_STEPS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className={`pf-step${s.id === step ? ' current' : ''}${s.id < step ? ' done' : ''}`}
+                aria-current={s.id === step ? 'step' : undefined}
+                onClick={() => goToStep(s.id)}
+              >
+                <span className="pf-step-num">{s.id < step ? <Check size={13} /> : s.id}</span>
+                <span className="pf-step-label">{s.label}</span>
+              </button>
+            ))}
+          </nav>
+
+{step === 1 && (<>
+          <div className="form-section-heading" data-preview-target="fom-top">
             <UserRound size={22} />
             <div>
               <h2>Thông tin cơ bản</h2>
@@ -1105,6 +1243,85 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                 value={profile.location}
               />
             </label>
+            <div className="full-field pf-identity">
+              <span className="pf-identity-title">Ảnh đại diện</span>
+              <span className="pf-identity-sub">
+                Giao diện portfolio dựng quanh một tấm chân dung. Có ảnh thật thì phần đầu trang
+                trông đúng như thiết kế; chưa có thì dùng linh vật, trang vẫn chỉn chu.
+              </span>
+
+              <div className="pf-identity-row">
+                <div className="pf-identity-stage">
+                  {avatar.portraitUrl
+                    ? <img src={avatar.portraitUrl} alt="Ảnh chân dung của bạn" />
+                    : <PortfolioMascot avatar={avatar} size={132} />}
+                </div>
+
+                <div className="pf-identity-actions">
+                  <label className="button secondary-button pf-identity-upload">
+                    <ImagePlus size={16} />
+                    {avatar.portraitUrl ? 'Đổi ảnh' : 'Tải ảnh chân dung'}
+                    <input type="file" accept="image/*" onChange={handlePortraitUpload} hidden />
+                  </label>
+                  {avatar.portraitUrl && (
+                    <button
+                      type="button"
+                      className="button secondary-button"
+                      onClick={() => updateAvatar('portraitUrl', '')}
+                    >
+                      Bỏ ảnh, dùng linh vật
+                    </button>
+                  )}
+                  <span className="pf-identity-hint">Ảnh dọc, dưới 2MB.</span>
+                </div>
+              </div>
+            </div>
+
+          {/* Bộ chọn linh vật.
+              Trước đây chỗ này là chọn giới tính + màu da + kiểu tóc + phụ kiện
+              + dáng đứng, vì nhân vật 3D dựng từng bộ phận nên tuỳ biến được.
+              Linh vật là tranh cố định, không có bộ phận nào để đổi, nên chỉ
+              còn một việc: chọn một trong bốn. Bày hết cả bốn ra thay vì bắt
+              chọn giới tính trước rồi mới thấy hai — bốn cái vừa một hàng, và
+              người dùng thấy ngay toàn bộ lựa chọn của mình. */}
+          <div className="pf-mascot-picker full-field">
+            <span className="pf-mascot-picker-label">{avatar.portraitUrl ? 'Linh vật (dùng ở các trang khác)' : 'Chọn linh vật'}</span>
+            <div className="pf-mascot-row" role="radiogroup" aria-label="Chọn linh vật đại diện">
+              {MASCOTS.map((m) => {
+                const active = resolveMascot(avatar) === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    className={active ? 'pf-mascot-option active' : 'pf-mascot-option'}
+                    onClick={() => updateAvatar('mascot', m.id)}
+                  >
+                    <span
+                      className="pf-mascot-thumb"
+                      aria-hidden="true"
+                      style={{ backgroundImage: `url(${mascotSheets(m.id).directions})` }}
+                    />
+                    <span>{m.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          </div>
+</>)}
+
+{step === 2 && (<>
+          <div className="form-section-heading" data-preview-target="fom-about">
+            <Sparkles size={22} />
+            <div>
+              <h2>Giới thiệu &amp; kỹ năng</h2>
+              <p>Phần này quyết định trang của bạn đầy hay trống — nhất là ô kỹ năng.</p>
+            </div>
+          </div>
+
+          <div className="portfolio-form-grid">
             <label className="full-field">
               Giới thiệu ngắn
               <textarea
@@ -1179,8 +1396,11 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             </label>
           </div>
 
+</>)}
+
+{step === 3 && (
           <div className="experience-editor">
-            <div className="form-section-heading">
+            <div className="form-section-heading" data-preview-target="fom-portfolio">
               <BriefcaseBusiness size={22} />
               <div>
                 <h2>Kinh nghiệm</h2>
@@ -1363,8 +1583,11 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             </button>
           </div>
 
+)}
+
+{step === 4 && (
           <div className="credential-editor">
-            <div className="form-section-heading">
+            <div className="form-section-heading" data-preview-target="fom-credentials">
               <Award size={22} />
               <div>
                 <h2>Bằng cấp & chứng chỉ</h2>
@@ -1461,6 +1684,9 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             </button>
           </div>
 
+)}
+
+{step === 5 && (<>
           <div className="portfolio-preview-action-panel">
             <div className="form-section-heading">
               <Eye size={22} />
@@ -1488,7 +1714,29 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               Tôi đã sẵn sàng
             </button>
           </div>
+</>)}
+
+          <div className="pf-stepnav">
+            <button
+              type="button"
+              className="button secondary-button"
+              onClick={() => goToStep(step - 1)}
+              disabled={step === 1}
+            >
+              <ArrowLeft size={16} /> Quay lại
+            </button>
+            <span className="pf-stepnav-count">Bước {step}/{BUILDER_STEPS.length}</span>
+            {step < BUILDER_STEPS.length ? (
+              <button type="button" className="button primary-button" onClick={() => goToStep(step + 1)}>
+                Tiếp theo <ArrowRight size={16} />
+              </button>
+            ) : (
+              <span className="pf-stepnav-done">Xong — bấm “Tôi đã sẵn sàng” ở trên</span>
+            )}
+          </div>
         </div>
+        </div>
+        </aside>
       </div>
 
       {showConfirmModal && (
