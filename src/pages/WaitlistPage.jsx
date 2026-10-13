@@ -3,7 +3,7 @@ import {
   ArrowRight, BadgeCheck, ChevronDown,
   Copy, ShieldCheck, Sparkles, Star,
   Trophy, Users, Zap, RefreshCw, Menu, X, Phone, Mail, MapPin,
-  MailCheck, Award, Eye, CreditCard, CheckCheck,
+  MailCheck, Award, Eye, CreditCard, CheckCheck, Clock,
 } from 'lucide-react';
 import { HeroMesh } from '../components/HeroMesh.jsx';
 import { NeonBloom } from '../components/NeonBloom.jsx';
@@ -16,14 +16,16 @@ import { getWaitlistCount, joinWaitlist } from '../api/waitlistApi.js';
 
 /* Bảng màu neon chuẩn dùng chung theo HomePage & neonPalette.js */
 import {
-  INK, SURFACE, SURFACE_HI, HAIRLINE, LINE, LINE_STRONG,
+  INK, SURFACE, SURFACE_HI, HAIRLINE,
   EMERALD, EMERALD_BRIGHT, NEON_RGB, TEAL_ACCENT,
   ON_DARK, MUTED, GLOW_SM, GLOW_MD, GLOW_LG,
 } from '../styles/neonPalette.js';
 
 /* ──────────────────────────────────────────────────────────────────────────
-   DỮ LIỆU CỐT LÕI CHO TRANG WAITLIST TÂN TIẾN
+   DỮ LIỆU CỐT LÕI CHO TRANG WAITLIST HỌC HỎI TỪ FIGMA COMMUNITY & SAAS ELITE
    ────────────────────────────────────────────────────────────────────────── */
+
+const LAUNCH_TARGET = new Date('2026-11-15T00:00:00Z').getTime();
 
 const QUICK_ROLES = [
   { id: 'student', label: 'Sinh viên năng nổ', specialization: 'Đang khám phá định hướng', stage: 'Sinh viên năm 1 – 2' },
@@ -64,28 +66,24 @@ const COMPARISONS = [
 const BENTO_PROJECTS = {
   marketing: {
     title: 'Chiến dịch Activation Tân Sinh Viên 2025',
-    role: 'Trưởng ban Truyền thông (Leader)',
     metric: 'Đạt 12.000 tiếp cận · 850 lượt đăng ký',
     tags: ['Chiến dịch thực tế', 'Báo cáo số liệu', 'Content & Thiết kế'],
     verifiedBy: 'Chủ nhiệm CLB Truyền thông',
   },
   design: {
     title: 'Hệ thống Thiết kế UI/UX Ứng dụng EduMatch',
-    role: 'Lead UI/UX Designer',
     metric: '32 màn hình hoàn chỉnh · Figma Prototype 100%',
     tags: ['Figma link', 'User Research', 'Design System'],
     verifiedBy: 'Mentor Đồ án Tốt nghiệp',
   },
   tech: {
     title: 'Nền tảng Quản lý Điểm danh CLB qua QR Code',
-    role: 'Fullstack Developer',
     metric: '1.200 lượt quét/tháng · 99.8% Uptime',
     tags: ['GitHub Repo', 'Live Demo', 'PostgreSQL'],
     verifiedBy: 'Trưởng ban Kỹ thuật CLB IT',
   },
   club: {
     title: 'Đêm nhạc Gây quỹ Hơi Ấm Mùa Đông 2024',
-    role: 'Phó ban Tổ chức — Điều phối Sự kiện',
     metric: 'Gây quỹ 45.000.000đ · 600 khán giả',
     tags: ['Kế hoạch tổng thể', 'Hợp đồng tài trợ', 'Album ảnh'],
     verifiedBy: 'Đại diện Đoàn trường',
@@ -199,6 +197,34 @@ const EMPTY_FORM = {
   emailConsent: true,
   botField: '',
 };
+
+/* Deterministic Countdown Hook */
+function useCountdown(targetDate) {
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const diff = Math.max(0, targetDate - Date.now());
+    return {
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((diff / 1000 / 60) % 60),
+      seconds: Math.floor((diff / 1000) % 60),
+    };
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const diff = Math.max(0, targetDate - Date.now());
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / 1000 / 60) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
+  return timeLeft;
+}
 
 /* Scroll Reveal Helper */
 function Reveal({ children, delay = 0, y = 24, style }) {
@@ -366,6 +392,7 @@ export function WaitlistPage() {
   const [bentoCategory, setBentoCategory] = useState('marketing');
   const [stamped, setStamped] = useState(false);
 
+  const countdown = useCountdown(LAUNCH_TARGET);
   const successRef = useRef(null);
 
   // Fetch live count
@@ -732,17 +759,6 @@ export function WaitlistPage() {
           box-shadow: ${GLOW_LG};
           transform: translateY(-2px);
         }
-        .wl-btn-ghost {
-          background: rgba(255, 255, 255, 0.04);
-          color: ${ON_DARK};
-          border-color: ${HAIRLINE};
-        }
-        .wl-btn-ghost:hover {
-          border-color: ${EMERALD};
-          background: rgba(185, 255, 0, 0.08);
-          color: ${EMERALD};
-          transform: translateY(-2px);
-        }
 
         /* ── HERO SECTION ────────────────────────────────────────────────── */
         .wl-hero {
@@ -803,12 +819,48 @@ export function WaitlistPage() {
           font-weight: 700;
         }
 
+        /* Social Proof Avatar Cluster (Figma Inspired) */
+        .wl-social-proof {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          margin-top: 24px;
+        }
+        .wl-avatar-cluster {
+          display: flex;
+          align-items: center;
+        }
+        .wl-avatar-circle {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          border: 2px solid ${INK};
+          margin-left: -10px;
+          display: grid;
+          place-items: center;
+          font-size: 0.72rem;
+          font-weight: 800;
+          color: #ffffff;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+        .wl-avatar-circle:first-child {
+          margin-left: 0;
+        }
+        .wl-proof-text {
+          font-size: 0.88rem;
+          color: ${MUTED};
+          line-height: 1.4;
+        }
+        .wl-proof-text b {
+          color: ${ON_DARK};
+        }
+
         /* Hero Quick-Mint Box */
         .wl-quick-mint-box {
-          margin-top: 32px;
+          margin-top: 28px;
           padding: 24px;
           border-radius: 24px;
-          background: linear-gradient(145deg, rgba(15, 19, 24, 0.9) 0%, rgba(10, 14, 20, 0.96) 100%);
+          background: linear-gradient(145deg, rgba(15, 19, 24, 0.92) 0%, rgba(10, 14, 20, 0.98) 100%);
           border: 1.5px solid rgba(185, 255, 0, 0.32);
           box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(${NEON_RGB}, 0.12);
         }
@@ -1074,6 +1126,58 @@ export function WaitlistPage() {
           font-size: 0.84rem;
           color: ${MUTED};
           margin-top: 14px;
+        }
+
+        /* ── COUNTDOWN TIMER (FIGMA DARK WIREFRAME INSPIRED) ─────────────── */
+        .wl-timer-wrap {
+          margin: 36px auto 0;
+          max-width: 620px;
+          padding: 24px 32px;
+          border-radius: 24px;
+          background: rgba(15, 19, 24, 0.85);
+          border: 1px solid ${HAIRLINE};
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(${NEON_RGB}, 0.08);
+          backdrop-filter: blur(16px);
+          text-align: center;
+        }
+        .wl-timer-grid {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: clamp(10px, 3vw, 22px);
+          margin-top: 14px;
+        }
+        .wl-timer-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .wl-timer-num {
+          font-family: 'Archivo', monospace;
+          font-size: clamp(2rem, 4vw, 2.8rem);
+          font-weight: 900;
+          line-height: 1;
+          color: ${EMERALD};
+          text-shadow: ${GLOW_SM};
+          background: rgba(255, 255, 255, 0.03);
+          padding: 10px 16px;
+          border-radius: 14px;
+          border: 1px solid rgba(185, 255, 0, 0.25);
+          min-width: 68px;
+        }
+        .wl-timer-label {
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          color: ${MUTED};
+          text-transform: uppercase;
+          margin-top: 6px;
+        }
+        .wl-timer-colon {
+          font-size: 1.8rem;
+          font-weight: 800;
+          color: rgba(255, 255, 255, 0.3);
+          margin-bottom: 20px;
         }
 
         /* ── SECTION SO SÁNH (CONTRAST ARENA) ────────────────────────────── */
@@ -1741,6 +1845,9 @@ export function WaitlistPage() {
           .wl-hero-copy {
             text-align: center;
           }
+          .wl-social-proof {
+            justify-content: center;
+          }
           .wl-quick-inputs {
             grid-template-columns: minmax(0, 1fr);
           }
@@ -1820,7 +1927,7 @@ export function WaitlistPage() {
                 <div className="wl-live-pill">
                   <span className="wl-pulse-dot" />
                   <span>
-                    GENESIS BATCH 2026 · <b>{displayCount}</b> bạn trẻ đã giữ chỗ · 8/10 suất VIP còn lại
+                    ✦ GENESIS BATCH 2026 · <b>{displayCount}</b> bạn trẻ đã giữ chỗ · 8/10 suất VIP còn lại
                   </span>
                 </div>
 
@@ -1834,6 +1941,19 @@ export function WaitlistPage() {
                   Đừng để kỹ năng của bạn bị chôn vùi trong thư mục Drive hay những gạch đầu dòng CV vô hồn.
                   <b> FONLIO</b> là nền tảng Living Portfolio chuẩn mực — nơi mọi dự án, sản phẩm và thành tựu đều được đồng nghiệp và người giao việc bảo chứng minh bạch.
                 </p>
+
+                {/* Social Proof Avatar Cluster (Figma Inspired) */}
+                <div className="wl-social-proof">
+                  <div className="wl-avatar-cluster">
+                    <div className="wl-avatar-circle" style={{ background: 'linear-gradient(135deg, #b9ff00, #0d9488)', color: '#070a0f' }}>TN</div>
+                    <div className="wl-avatar-circle" style={{ background: 'linear-gradient(135deg, #38bdf8, #6366f1)' }}>HQ</div>
+                    <div className="wl-avatar-circle" style={{ background: 'linear-gradient(135deg, #f472b6, #fb7185)' }}>ML</div>
+                    <div className="wl-avatar-circle" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>DK</div>
+                  </div>
+                  <div className="wl-proof-text">
+                    <b>{displayCount} sinh viên &amp; bạn trẻ</b> đã tham gia · <span style={{ color: EMERALD }}>Top 10 nhận VIP trọn đời</span>
+                  </div>
+                </div>
 
                 {/* Quick 3D Minting Box */}
                 <div className="wl-quick-mint-box">
@@ -1949,7 +2069,7 @@ export function WaitlistPage() {
                     <p className="wl-mock-note">Bức thư Fonlio gửi gắm đến các bạn trẻ đang tìm kiếm cơ hội.</p>
                   </TiltCard>
                 ) : (
-                  /* 3D Portfolio Mockup */
+                  /* 3D Portfolio Mockup (Figma Profile Card Inspired) */
                   <TiltCard maxTilt={14} className="wl-mock-shell">
                     <div className="wl-mock-card" aria-label="Hình minh họa giao diện portfolio FONLIO 3D">
                       <div className="wl-mock-profile">
@@ -2010,6 +2130,36 @@ export function WaitlistPage() {
               </div>
             </Reveal>
           </div>
+
+          {/* ── COUNTDOWN TIMER (FIGMA DARK WIREFRAME INSPIRED) ─────────── */}
+          <Reveal delay={200}>
+            <div className="wl-timer-wrap">
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: EMERALD, fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                <Clock size={16} /> MỞ CỔNG EARLY ACCESS GENESIS TRONG
+              </div>
+              <div className="wl-timer-grid">
+                <div className="wl-timer-box">
+                  <div className="wl-timer-num">{String(countdown.days).padStart(2, '0')}</div>
+                  <span className="wl-timer-label">Ngày</span>
+                </div>
+                <span className="wl-timer-colon">:</span>
+                <div className="wl-timer-box">
+                  <div className="wl-timer-num">{String(countdown.hours).padStart(2, '0')}</div>
+                  <span className="wl-timer-label">Giờ</span>
+                </div>
+                <span className="wl-timer-colon">:</span>
+                <div className="wl-timer-box">
+                  <div className="wl-timer-num">{String(countdown.minutes).padStart(2, '0')}</div>
+                  <span className="wl-timer-label">Phút</span>
+                </div>
+                <span className="wl-timer-colon">:</span>
+                <div className="wl-timer-box">
+                  <div className="wl-timer-num">{String(countdown.seconds).padStart(2, '0')}</div>
+                  <span className="wl-timer-label">Giây</span>
+                </div>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
