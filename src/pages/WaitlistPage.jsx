@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import {
   CheckCheck, Clock, Copy, RefreshCw,
-  Sparkles, Users, ArrowUpRight,
+  Sparkles, Users, ArrowUpRight, ShieldCheck, Award,
 } from 'lucide-react';
 import { BrandWordmark } from '../components/BrandWordmark.jsx';
 import { HoloVIPCard } from '../components/HoloVIPCard.jsx';
@@ -10,8 +10,9 @@ import { getWaitlistCount, joinWaitlist } from '../api/waitlistApi.js';
 
 /* Bảng màu neon & luxury dark theo phong cách studio */
 import {
-  INK, EMERALD, EMERALD_BRIGHT, NEON_RGB,
-  ON_DARK, MUTED, GLOW_SM,
+  INK, SURFACE, HAIRLINE,
+  EMERALD, EMERALD_BRIGHT, NEON_RGB, TEAL_ACCENT,
+  ON_DARK, MUTED, GLOW_SM, GLOW_MD,
 } from '../styles/neonPalette.js';
 
 const LAUNCH_TARGET = new Date('2026-11-15T00:00:00Z').getTime();
@@ -33,10 +34,11 @@ const QUICK_ROLES = [
   { id: 'club', label: 'Quản lý CLB / Event', roleBadge: 'COMMUNITY LEADER' },
 ];
 
-const MANIFESTO_WORDS = [
-  'ĐẸP', 'THÔI', 'CHƯA', 'ĐỦ.', 'CHÚNG', 'TÔI', 'TẠO', 'RA',
-  'LIVING', 'PROOF', 'KHIẾN', 'NHÀ', 'TUYỂN', 'DỤNG',
-  'TIN,', 'Ở', 'LẠI', 'VÀ', 'TRAO', 'CƠ', 'HỘI.'
+const PARCOURS_BEATS = [
+  { tag: '01 / THỰC TẾ', headline: 'HÀNG TRIỆU HỒ SƠ', sub: 'Gửi đi mỗi năm nhưng 99% bị vứt bỏ sau 6 giây lướt qua.' },
+  { tag: '02 / BƯỚC NGOẶT', headline: 'CHỮ TỰ VIẾT LỖI THỜI', sub: 'Ai sẽ tin một bản PDF tự chấm kỹ năng 5 sao mà không có sản phẩm chứng minh?' },
+  { tag: '03 / ĐỘT PHÁ', headline: 'FONLIO THAY ĐỔI CUỘC CHƠI', sub: 'Nơi từng dòng code, bản thiết kế và chiến dịch đều CÓ THẬT và được bảo chứng.' },
+  { tag: '04 / ĐÍCH ĐẾN', headline: 'LIVING PROOF BẢO CHỨNG', sub: 'Đồng nghiệp, Mentor và Doanh nghiệp trực tiếp xác thực uy tín nghề nghiệp cho bạn.' },
 ];
 
 const SHOWCASE_PROJECTS = [
@@ -86,7 +88,7 @@ function useCountdown(targetTimestamp) {
       days: Math.floor(diff / (1000 * 60 * 60 * 24)),
       hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
       minutes: Math.floor((diff / (1000 * 60)) % 60),
-      seconds: Math.floor((diff / (1000 * 60)) % 60),
+      seconds: Math.floor((diff / 1000) % 60),
     };
   });
 
@@ -97,7 +99,7 @@ function useCountdown(targetTimestamp) {
         days: Math.floor(diff / (1000 * 60 * 60 * 24)),
         hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
         minutes: Math.floor((diff / (1000 * 60)) % 60),
-        seconds: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
       });
     }, 1000);
     return () => clearInterval(timer);
@@ -117,24 +119,12 @@ export function WaitlistPage() {
   const audioCtxRef = useRef(null);
   const oscRef = useRef(null);
 
-  // Section references for precise scroll tracking
-  const heroTrackRef = useRef(null);
-  const manifestoTrackRef = useRef(null);
-  const parcoursTrackRef = useRef(null);
-  const toolkitTrackRef = useRef(null);
-  const projectsTrackRef = useRef(null);
-  const waitlistTrackRef = useRef(null);
-
-  // Normalized scroll progresses (0.0 to 1.0)
-  const [heroProg, setHeroProg] = useState(0);
-  const [manifestoProg, setManifestoProg] = useState(0);
-  const [parcoursProg, setParcoursProg] = useState(0);
-  const [toolkitProg, setToolkitProg] = useState(0);
-  const [projectsProg, setProjectsProg] = useState(0);
-  const [waitlistProg, setWaitlistProg] = useState(0);
-
-  // Active section indicator
+  // Active section tracking
   const [activeSection, setActiveSection] = useState('hero');
+
+  // Parcours step tracker (smooth cross-fade)
+  const [parcoursStep, setParcoursStep] = useState(0);
+  const parcoursContainerRef = useRef(null);
 
   // Form & Waitlist state
   const countdown = useCountdown(LAUNCH_TARGET);
@@ -154,7 +144,7 @@ export function WaitlistPage() {
     return QUICK_ROLES.find((r) => r.id === formData.roleId) || QUICK_ROLES[0];
   }, [formData.roleId]);
 
-  // Load count from API
+  // Load waitlist count
   useEffect(() => {
     let isMounted = true;
     getWaitlistCount()
@@ -175,7 +165,7 @@ export function WaitlistPage() {
   useEffect(() => {
     if (introDone) return undefined;
 
-    const duration = 2000;
+    const duration = 1800;
     const start = performance.now();
 
     const frame = (now) => {
@@ -191,7 +181,7 @@ export function WaitlistPage() {
         setTimeout(() => {
           setIntroDone(true);
           sessionStorage.setItem('fonlio_intro_seen', 'true');
-        }, 850);
+        }, 800);
       }
     };
 
@@ -236,52 +226,30 @@ export function WaitlistPage() {
     }
   };
 
-  // ── CORE SCROLL ANIMATION TRACKER (MATCHING GSAP SCROLLTRIGGER OF XIMITECH) ──
+  // Scroll listener: update activeSection & parcours step smoothly
   useEffect(() => {
-    const calcProgress = (el) => {
-      if (!el) return 0;
-      const rect = el.getBoundingClientRect();
-      const totalDist = el.scrollHeight - window.innerHeight;
-      if (totalDist <= 0) return 0;
-      return Math.max(0, Math.min(1, -rect.top / totalDist));
-    };
-
     const handleScroll = () => {
       const vh = window.innerHeight;
 
-      // Track individual section progress
-      const p1 = calcProgress(heroTrackRef.current);
-      const p2 = calcProgress(manifestoTrackRef.current);
-      const p3 = calcProgress(parcoursTrackRef.current);
-      const p4 = calcProgress(toolkitTrackRef.current);
-      const p5 = calcProgress(projectsTrackRef.current);
-      const p6 = calcProgress(waitlistTrackRef.current);
+      // 1. Parcours step calculation (clean 0 -> 3 based on scroll)
+      if (parcoursContainerRef.current) {
+        const rect = parcoursContainerRef.current.getBoundingClientRect();
+        const totalDist = parcoursContainerRef.current.scrollHeight - vh;
+        if (totalDist > 0) {
+          const prog = Math.max(0, Math.min(1, -rect.top / totalDist));
+          const step = Math.min(3, Math.floor(prog * 4));
+          setParcoursStep(step);
+        }
+      }
 
-      setHeroProg(p1);
-      setManifestoProg(p2);
-      setParcoursProg(p3);
-      setToolkitProg(p4);
-      setProjectsProg(p5);
-      setWaitlistProg(p6);
-
-      // Detect active section for navigation indicator
-      const list = [
-        { id: 'hero', ref: heroTrackRef },
-        { id: 'manifesto', ref: manifestoTrackRef },
-        { id: 'parcours', ref: parcoursTrackRef },
-        { id: 'toolkit', ref: toolkitTrackRef },
-        { id: 'projects', ref: projectsTrackRef },
-        { id: 'waitlist', ref: waitlistTrackRef },
-      ];
-
-      for (let i = list.length - 1; i >= 0; i--) {
-        const item = list[i];
-        if (item.ref.current) {
-          const rect = item.ref.current.getBoundingClientRect();
-          if (rect.top <= vh * 0.45) {
-            setActiveSection(item.id);
-            break;
-          }
+      // 2. Active section detection
+      const sections = NAV_SECTIONS.map((s) => document.getElementById(s.id)).filter(Boolean);
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const sec = sections[i];
+        const rect = sec.getBoundingClientRect();
+        if (rect.top <= vh * 0.45) {
+          setActiveSection(sec.id);
+          break;
         }
       }
     };
@@ -297,7 +265,7 @@ export function WaitlistPage() {
     el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Form Submit handler
+  // Form submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -361,17 +329,14 @@ export function WaitlistPage() {
     });
   };
 
-  // Trajectory sentence index calculation
-  const trajectoryIndex = Math.min(3, Math.floor(parcoursProg * 4));
-
   return (
     <div className="ximi-style-page" style={{ background: INK, color: ON_DARK }}>
       <style>{`
-        /* ── RESET & LUXURY TYPOGRAPHY (INSPIRED BY LAB1.XIMITECH.VN) ── */
+        /* ── STUDIO RESET & BALANCED PROPORTIONS ───────────────────────── */
         .ximi-style-page {
           --color-cream: #f5e7df;
           --color-dark: #070a0f;
-          --letter-spacing-display: -0.035em;
+          --letter-spacing-display: -0.03em;
           position: relative;
           width: 100%;
           min-height: 100vh;
@@ -392,7 +357,7 @@ export function WaitlistPage() {
           background: #06090e;
           color: #ffffff;
           clip-path: inset(0 0 0 0);
-          transition: clip-path 0.85s cubic-bezier(0.76, 0, 0.24, 1);
+          transition: clip-path 0.8s cubic-bezier(0.76, 0, 0.24, 1);
         }
         .fonlio-intro.is-leaving {
           clip-path: inset(0 0 100% 0);
@@ -417,7 +382,6 @@ export function WaitlistPage() {
           gap: 18px;
         }
         .fonlio-intro__word {
-          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
           font-size: clamp(48px, 9vw, 92px);
           font-weight: 900;
           letter-spacing: 0.16em;
@@ -466,7 +430,7 @@ export function WaitlistPage() {
           transition: width 0.1s linear;
         }
 
-        /* ── 2. SITE HEADER (FLOATING CAPSULE) ─────────────────────────── */
+        /* ── 2. SITE HEADER (FLOATING GLASS CAPSULE) ───────────────────── */
         .site-header {
           position: fixed;
           top: 0;
@@ -476,7 +440,7 @@ export function WaitlistPage() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 24px clamp(20px, 3.5vw, 48px);
+          padding: 22px clamp(20px, 3.5vw, 48px);
           box-sizing: border-box;
           pointer-events: none;
         }
@@ -491,18 +455,18 @@ export function WaitlistPage() {
           pointer-events: auto;
           display: flex;
           align-items: center;
-          gap: clamp(12px, 2.4vw, 32px);
-          height: clamp(52px, 4.8vw, 64px);
-          padding-inline: clamp(16px, 2.5vw, 32px);
+          gap: clamp(12px, 2.2vw, 30px);
+          height: clamp(50px, 4.5vw, 60px);
+          padding-inline: clamp(16px, 2.4vw, 30px);
           border-radius: 999px;
-          background: rgba(15, 19, 24, 0.72);
+          background: rgba(15, 19, 24, 0.78);
           border: 1px solid rgba(255, 255, 255, 0.12);
           backdrop-filter: blur(20px);
           box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
         }
         .site-header__link {
           color: rgba(255, 255, 255, 0.7);
-          font-size: clamp(14px, 1.05vw, 16px);
+          font-size: clamp(13px, 1vw, 15px);
           font-weight: 500;
           text-decoration: none;
           cursor: pointer;
@@ -545,7 +509,7 @@ export function WaitlistPage() {
           font-size: 12px;
           font-weight: 600;
           letter-spacing: 0.05em;
-          color: rgba(255, 255, 255, 0.8);
+          color: rgba(255, 255, 255, 0.85);
           opacity: 0;
           pointer-events: none;
           transition: opacity 0.2s;
@@ -561,12 +525,12 @@ export function WaitlistPage() {
           transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.35s;
         }
         .scroll-indicator__item.is-active .scroll-indicator__bar {
-          width: 48px;
+          width: 46px;
           background: ${EMERALD};
           box-shadow: 0 0 10px ${EMERALD};
         }
         .scroll-indicator__item.is-neighbor .scroll-indicator__bar {
-          width: 26px;
+          width: 24px;
           background: rgba(255, 255, 255, 0.6);
         }
 
@@ -581,7 +545,7 @@ export function WaitlistPage() {
           gap: 12px;
           padding: 10px 18px;
           border-radius: 999px;
-          background: rgba(15, 19, 24, 0.72);
+          background: rgba(15, 19, 24, 0.78);
           border: 1px solid rgba(255, 255, 255, 0.12);
           backdrop-filter: blur(20px);
           color: #ffffff;
@@ -616,24 +580,17 @@ export function WaitlistPage() {
           50% { height: 14px; }
         }
 
-        /* ── 5. HERO SECTION PIN & FRAME SHRINK (MATCHING XIMITECH) ────── */
-        .hero-track-wrap {
+        /* ── 5. HERO SECTION (#hero) ───────────────────────────────────── */
+        .hero-section {
           position: relative;
           width: 100%;
-          height: 180vh; /* Pinned runway */
-        }
-        .hero-sticky-frame {
-          position: sticky;
-          top: 0;
-          width: 100%;
-          height: 100vh;
+          min-height: 100vh;
           overflow: hidden;
           background: #06090e;
-          transform-origin: center top;
-          will-change: transform, border-radius;
-          transition: transform 0.1s linear, border-radius 0.1s linear;
+          display: flex;
+          align-items: flex-end;
         }
-        .hero-three__canvas-wrap {
+        .hero-canvas-bg {
           position: absolute;
           inset: 0;
           z-index: 1;
@@ -642,18 +599,14 @@ export function WaitlistPage() {
           position: relative;
           z-index: 2;
           width: 100%;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          padding: clamp(24px, 5vw, 64px);
+          padding: clamp(32px, 6vw, 72px);
           box-sizing: border-box;
           pointer-events: none;
         }
         .hero-main-title {
-          font-size: clamp(3rem, 7.5vw, 8rem);
+          font-size: clamp(3.2rem, 7.8vw, 7.6rem);
           font-weight: 900;
-          line-height: 0.92;
+          line-height: 0.95;
           letter-spacing: var(--letter-spacing-display);
           color: #ffffff;
           margin: 0 0 20px;
@@ -661,13 +614,13 @@ export function WaitlistPage() {
           max-width: 14ch;
         }
         .hero-main-desc {
-          font-size: clamp(1.1rem, 2vw, 1.45rem);
+          font-size: clamp(1.1rem, 1.8vw, 1.45rem);
           color: ${MUTED};
-          max-width: 580px;
-          line-height: 1.5;
+          max-width: 600px;
+          line-height: 1.6;
           margin: 0;
         }
-        /* Floating lab badge in bottom right (Exactly like lab1.ximitech.vn) */
+        /* Floating lab badge in bottom right (Like lab1.ximitech.vn) */
         .lab-badge {
           position: absolute;
           right: clamp(24px, 3.5vw, 48px);
@@ -679,7 +632,7 @@ export function WaitlistPage() {
           max-width: 340px;
           padding: 20px 22px;
           border-radius: 24px;
-          background: rgba(15, 19, 24, 0.78);
+          background: rgba(15, 19, 24, 0.82);
           border: 1px solid rgba(255, 255, 255, 0.14);
           backdrop-filter: blur(20px);
           box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
@@ -716,7 +669,7 @@ export function WaitlistPage() {
           to { transform: scale(2.8); opacity: 0; }
         }
         .lab-badge__skills {
-          font-size: clamp(19px, 1.6vw, 24px);
+          font-size: clamp(18px, 1.5vw, 22px);
           font-weight: 700;
           line-height: 1.15;
           color: #ffffff;
@@ -744,49 +697,55 @@ export function WaitlistPage() {
           box-shadow: 0 6px 20px rgba(${NEON_RGB}, 0.4);
         }
 
-        /* ── 6. MANIFESTO HORIZONTAL KINETIC SCROLL & WORD BOUNCE ─────── */
-        .manifesto-track-wrap {
+        /* ── 6. MANIFESTO EDITORIAL SECTION (#manifesto) ───────────────── */
+        .manifesto-section {
           position: relative;
           width: 100%;
-          height: 320vh; /* Pinned horizontal runway */
-          background: #06090e;
-        }
-        .manifesto-sticky-stage {
-          position: sticky;
-          top: 0;
-          width: 100%;
-          height: 100vh;
-          overflow: hidden;
+          min-height: 75vh;
           display: flex;
           align-items: center;
+          justify-content: center;
+          padding: 100px clamp(24px, 6vw, 100px);
+          box-sizing: border-box;
           background: #06090e;
         }
-        .manifesto-kinetic-row {
-          display: flex;
-          align-items: center;
-          gap: clamp(24px, 3vw, 48px);
-          white-space: nowrap;
-          will-change: transform;
+        .manifesto-inner {
+          max-width: 1120px;
+          text-align: center;
         }
-        .manifesto-kinetic-word {
-          font-size: clamp(4rem, 11vw, 12rem);
-          font-weight: 900;
-          letter-spacing: var(--letter-spacing-display);
-          line-height: 0.9;
-          color: #ffffff;
+        .manifesto-tag {
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: ${EMERALD};
+          margin-bottom: 20px;
           display: inline-block;
-          will-change: transform;
-          text-shadow: 0 8px 40px rgba(0, 0, 0, 0.9);
+        }
+        .manifesto-text {
+          font-size: clamp(2.4rem, 5.4vw, 5.4rem);
+          font-weight: 800;
+          line-height: 1.12;
+          letter-spacing: var(--letter-spacing-display);
+          color: #ffffff;
+          margin: 0 0 28px;
+        }
+        .manifesto-sub {
+          font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+          color: ${MUTED};
+          line-height: 1.6;
+          max-width: 780px;
+          margin: 0 auto;
         }
 
-        /* ── 7. TRAJECTORY PINNED SCROLLYTELLING & SIDE WINGS (#parcours) ─ */
-        .trajectory-track-wrap {
+        /* ── 7. PARCOURS SCROLLYTELLING RUNWAY (#parcours) ─────────────── */
+        .parcours-runway {
           position: relative;
           width: 100%;
-          height: 450vh; /* Pinned 4-beat runway */
+          height: 220vh; /* Smooth, natural 220vh track, NOT 500vh */
           background: #06090e;
         }
-        .trajectory-sticky-stage {
+        .parcours-sticky-box {
           position: sticky;
           top: 0;
           width: 100%;
@@ -797,83 +756,76 @@ export function WaitlistPage() {
           justify-content: center;
           background: #06090e;
         }
-        /* Side wings sliding in like lab1.ximitech.vn */
-        .trajectory-visual-left {
+        .parcours-wing-left {
           position: absolute;
           top: 0;
           bottom: 0;
           left: 0;
-          width: 50vw;
-          background: linear-gradient(90deg, rgba(185, 255, 0, 0.08) 0%, transparent 100%);
-          border-right: 1px solid rgba(185, 255, 0, 0.15);
+          width: 35vw;
+          background: linear-gradient(90deg, rgba(185, 255, 0, 0.06) 0%, transparent 100%);
+          border-right: 1px solid rgba(185, 255, 0, 0.12);
           pointer-events: none;
-          z-index: 1;
-          will-change: transform;
         }
-        .trajectory-visual-right {
+        .parcours-wing-right {
           position: absolute;
           top: 0;
           bottom: 0;
           right: 0;
-          width: 50vw;
-          background: linear-gradient(-90deg, rgba(45, 212, 191, 0.08) 0%, transparent 100%);
-          border-left: 1px solid rgba(45, 212, 191, 0.15);
+          width: 35vw;
+          background: linear-gradient(-90deg, rgba(45, 212, 191, 0.06) 0%, transparent 100%);
+          border-left: 1px solid rgba(45, 212, 191, 0.12);
           pointer-events: none;
-          z-index: 1;
-          will-change: transform;
         }
-        .trajectory-sentences-box {
+        .parcours-center-stage {
           position: relative;
           z-index: 2;
           width: 100%;
-          max-width: 1200px;
+          max-width: 980px;
           padding: 0 24px;
           text-align: center;
         }
-        .trajectory-sentence-huge {
-          font-size: clamp(3.2rem, 8.5vw, 8.5rem);
-          font-weight: 900;
-          line-height: 0.94;
-          letter-spacing: var(--letter-spacing-display);
-          color: #ffffff;
-          margin: 0;
-          text-shadow: 0 6px 30px rgba(0, 0, 0, 0.9);
-          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+        .parcours-card-animated {
+          transition: opacity 0.35s ease, transform 0.35s ease;
         }
-        .trajectory-sentence-tag {
-          font-size: clamp(1rem, 1.8vw, 1.4rem);
-          font-weight: 700;
-          letter-spacing: 0.15em;
+        .parcours-beat-tag {
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: 0.16em;
           text-transform: uppercase;
           color: ${EMERALD};
-          margin-bottom: 16px;
+          margin-bottom: 14px;
+        }
+        .parcours-beat-title {
+          font-size: clamp(2.8rem, 6.8vw, 6.4rem);
+          font-weight: 900;
+          line-height: 0.98;
+          letter-spacing: var(--letter-spacing-display);
+          color: #ffffff;
+          margin: 0 0 18px;
+          text-shadow: 0 6px 30px rgba(0, 0, 0, 0.9);
+        }
+        .parcours-beat-sub {
+          font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+          color: ${MUTED};
+          line-height: 1.6;
+          max-width: 650px;
+          margin: 0 auto;
         }
 
-        /* ── 8. TOOLKIT 3D FANNING CARD DECK & FLIP (#toolkit) ─────────── */
-        .toolkit-track-wrap {
+        /* ── 8. TOOLKIT / CAPABILITIES (#toolkit) ──────────────────────── */
+        .toolkit-section {
           position: relative;
           width: 100%;
-          height: 350vh; /* Pinned 3D card fanning runway */
+          padding: 100px clamp(24px, 5vw, 80px);
+          box-sizing: border-box;
           background: #06090e;
-        }
-        .toolkit-sticky-stage {
-          position: sticky;
-          top: 0;
-          width: 100%;
-          height: 100vh;
-          overflow: hidden;
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          background: #06090e;
-          perspective: 1600px;
         }
         .section-header-center {
           text-align: center;
-          margin-bottom: 40px;
-          position: relative;
-          z-index: 10;
+          margin-bottom: 50px;
         }
         .section-tag {
           font-size: 13px;
@@ -885,60 +837,55 @@ export function WaitlistPage() {
           display: inline-block;
         }
         .section-title {
-          font-size: clamp(2.4rem, 5vw, 4.8rem);
+          font-size: clamp(2.4rem, 5vw, 4.4rem);
           font-weight: 900;
-          line-height: 1;
+          line-height: 1.05;
           letter-spacing: var(--letter-spacing-display);
           color: #ffffff;
           margin: 0;
         }
-        .toolkit-fanning-stage {
-          position: relative;
+        .toolkit-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 24px;
           width: 100%;
-          max-width: 1100px;
-          height: 480px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transform-style: preserve-3d;
+          max-width: 1140px;
         }
-        .fanning-card-wrapper {
-          position: absolute;
-          width: clamp(280px, 28vw, 360px);
-          transform-style: preserve-3d;
-          transition: transform 0.15s ease-out;
-          will-change: transform;
-        }
-        .toolkit-pillar-card {
+        .toolkit-card-clean {
           padding: 34px 30px;
-          border-radius: 28px;
-          background: rgba(15, 19, 24, 0.85);
-          border: 1.5px solid rgba(255, 255, 255, 0.14);
-          backdrop-filter: blur(20px);
-          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
-          min-height: 380px;
-          box-sizing: border-box;
+          border-radius: 24px;
+          background: rgba(15, 19, 24, 0.78);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          backdrop-filter: blur(16px);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+          transition: transform 0.25s ease, border-color 0.25s ease;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
+          min-height: 340px;
+        }
+        .toolkit-card-clean:hover {
+          transform: translateY(-6px);
+          border-color: rgba(185, 255, 0, 0.45);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 25px rgba(${NEON_RGB}, 0.12);
         }
         .pillar-num {
           font-family: 'Space Mono', monospace;
-          font-size: 14px;
+          font-size: 13px;
           color: ${EMERALD};
           font-weight: 700;
         }
         .pillar-title {
-          font-size: 26px;
+          font-size: 24px;
           font-weight: 800;
           color: #ffffff;
-          margin: 14px 0 8px;
+          margin: 12px 0 8px;
         }
         .pillar-desc {
-          font-size: 15px;
+          font-size: 14.5px;
           color: ${MUTED};
           line-height: 1.6;
-          margin: 0 0 24px;
+          margin: 0 0 22px;
         }
         .pillar-badges {
           display: flex;
@@ -955,24 +902,11 @@ export function WaitlistPage() {
           color: #ffffff;
         }
 
-        /* ── 9. PROJECTS STAGGERED ELEVATION (#projects) ───────────────── */
-        .projects-track-wrap {
+        /* ── 9. PROJECTS SHOWCASE (#projects) ──────────────────────────── */
+        .projects-section {
           position: relative;
           width: 100%;
-          height: 280vh; /* Pinned staggered runway */
-          background: #06090e;
-        }
-        .projects-sticky-stage {
-          position: sticky;
-          top: 0;
-          width: 100%;
-          height: 100vh;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 0 clamp(24px, 5vw, 80px);
+          padding: 90px clamp(24px, 5vw, 80px);
           box-sizing: border-box;
           background: #06090e;
         }
@@ -980,22 +914,27 @@ export function WaitlistPage() {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
           gap: 18px;
-          width: 100%;
           max-width: 1140px;
+          margin: 0 auto;
         }
         .project-row-item {
           padding: 24px 28px;
-          border-radius: 20px;
-          background: rgba(15, 19, 24, 0.7);
+          border-radius: 18px;
+          background: rgba(15, 19, 24, 0.65);
           border: 1px solid rgba(255, 255, 255, 0.08);
           display: flex;
           align-items: center;
           justify-content: space-between;
-          will-change: transform, opacity;
-          transition: transform 0.12s linear, opacity 0.12s linear;
+          transition: all 0.22s ease;
+          cursor: default;
+        }
+        .project-row-item:hover {
+          background: rgba(15, 19, 24, 0.95);
+          border-color: rgba(185, 255, 0, 0.4);
+          transform: translateX(4px);
         }
         .project-item-name {
-          font-size: clamp(20px, 2vw, 26px);
+          font-size: clamp(20px, 1.8vw, 25px);
           font-style: italic;
           font-weight: 400;
           color: #ffffff;
@@ -1006,44 +945,29 @@ export function WaitlistPage() {
           color: ${MUTED};
         }
 
-        /* ── 10. CURVED SVG PATH & CIRCULAR PORTAL REVEAL (#waitlist) ──── */
-        .waitlist-track-wrap {
+        /* ── 10. CURVED SVG PATH BANNER ─────────────────────────────────── */
+        .next-path-section {
           position: relative;
           width: 100%;
-          height: 360vh; /* Pinned circular portal runway */
-          background: #06090e;
-        }
-        .waitlist-sticky-stage {
-          position: sticky;
-          top: 0;
-          width: 100%;
-          height: 100vh;
+          padding: 40px 0 10px;
           overflow: hidden;
           background: #06090e;
-          display: flex;
-          align-items: center;
-          justify-content: center;
         }
-        /* Kinetic SVG Curve background wave */
-        .curved-svg-kinetic {
-          position: absolute;
-          inset: 0;
+        .curved-svg-container {
           width: 100%;
-          height: 100%;
-          pointer-events: none;
-          z-index: 1;
+          overflow: visible;
         }
-        /* Circular Portal mask that expands to reveal the finale terminal */
-        .waitlist-portal-container {
-          position: absolute;
-          inset: 0;
-          z-index: 5;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 24px;
+
+        /* ── 11. WAITLIST FINALE FORM & VIP CARD (#waitlist) ───────────── */
+        .waitlist-finale-section {
+          position: relative;
+          width: 100%;
+          padding: 90px clamp(24px, 5vw, 80px) 70px;
           box-sizing: border-box;
-          will-change: clip-path;
+          background: #06090e;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
         .finale-terminal-card {
           display: grid;
@@ -1052,7 +976,7 @@ export function WaitlistPage() {
           align-items: center;
           max-width: 1140px;
           width: 100%;
-          background: rgba(15, 19, 24, 0.92);
+          background: rgba(15, 19, 24, 0.88);
           border: 1.5px solid rgba(185, 255, 0, 0.38);
           border-radius: 36px;
           padding: clamp(28px, 4vw, 48px);
@@ -1138,7 +1062,7 @@ export function WaitlistPage() {
           box-shadow: 0 14px 44px rgba(${NEON_RGB}, 0.6);
         }
 
-        /* ── 11. GIANT FOOTER BRAND WORDMARK ───────────────────────────── */
+        /* ── 12. GIANT FOOTER BRAND WORDMARK ───────────────────────────── */
         .giant-brand-footer {
           width: 100%;
           padding: 80px 24px 60px;
@@ -1163,7 +1087,7 @@ export function WaitlistPage() {
         }
       `}</style>
 
-      {/* ── 1. PRELOADER INTRO SCREEN (LIKE LAB1.XIMITECH.VN) ───────────── */}
+      {/* ── 1. PRELOADER INTRO SCREEN ─────────────────────────────────── */}
       {!introDone && (
         <div className={`fonlio-intro ${introLeaving ? 'is-leaving' : ''}`} aria-hidden="true">
           <div className="fonlio-intro__glow" />
@@ -1182,7 +1106,7 @@ export function WaitlistPage() {
         </div>
       )}
 
-      {/* ── 2. SITE HEADER (FLOATING GLASS CAPSULE) ─────────────────────── */}
+      {/* ── 2. SITE HEADER (FLOATING GLASS CAPSULE) ───────────────────── */}
       <header className="site-header">
         <div className="site-header__logo" onClick={() => scrollToId('hero')}>
           <BrandWordmark size="32px" glow />
@@ -1214,7 +1138,7 @@ export function WaitlistPage() {
         </button>
       </header>
 
-      {/* ── 3. VERTICAL SEGMENTED SCROLL INDICATOR ──────────────────────── */}
+      {/* ── 3. VERTICAL SEGMENTED SCROLL INDICATOR ────────────────────── */}
       <nav className="scroll-indicator" aria-label="Điều hướng các phần">
         {NAV_SECTIONS.map((sec, idx) => {
           const isAct = activeSection === sec.id;
@@ -1235,7 +1159,7 @@ export function WaitlistPage() {
         })}
       </nav>
 
-      {/* ── 4. SOUND TOGGLE BUTTON ──────────────────────────────────────── */}
+      {/* ── 4. SOUND TOGGLE BUTTON ────────────────────────────────────── */}
       <button
         type="button"
         className={`sound-toggle ${soundActive ? 'is-playing' : ''}`}
@@ -1249,279 +1173,74 @@ export function WaitlistPage() {
       </button>
 
       <main>
-        {/* ── 5. HERO SECTION PIN & FRAME SHRINK (#hero) ────────────────── */}
-        <section className="hero-track-wrap" id="hero" ref={heroTrackRef}>
-          <div
-            className="hero-sticky-frame"
-            style={{
-              transform: `scale(${1 - heroProg * 0.06})`,
-              borderRadius: `${heroProg * 28}px`,
-            }}
-          >
-            <div className="hero-three__canvas-wrap">
-              <CinematicScene3D progress={heroProg * 0.25} currentScene={0} />
-            </div>
+        {/* ── 5. HERO SECTION (#hero) ─────────────────────────────────── */}
+        <section className="hero-section" id="hero">
+          <div className="hero-canvas-bg">
+            <CinematicScene3D progress={0.15} currentScene={0} />
+          </div>
 
-            <div className="hero-content">
-              <h1 className="hero-main-title">
-                NĂNG LỰC SỐNG ĐỘNG.
-              </h1>
-              <p className="hero-main-desc">
-                FONLIO biến từng dòng code, bản thiết kế và chiến dịch của bạn thành Living Proof được bảo chứng minh bạch từ người thật, việc thật.
+          <div className="hero-content">
+            <h1 className="hero-main-title">
+              NĂNG LỰC SỐNG ĐỘNG.
+            </h1>
+            <p className="hero-main-desc">
+              FONLIO biến từng dòng code, bản thiết kế và chiến dịch của bạn thành Living Proof được bảo chứng minh bạch từ người thật, việc thật.
+            </p>
+
+            <aside className="lab-badge">
+              <div className="lab-badge__eyebrow">
+                <span className="lab-badge__dot" />
+                <span>GENESIS BATCH 2026 · EARLY ACCESS</span>
+              </div>
+              <p className="lab-badge__skills">
+                Living Proof · 3D · Bảo chứng
               </p>
-
-              {/* Lab Badge floating in bottom-right */}
-              <aside className="lab-badge">
-                <div className="lab-badge__eyebrow">
-                  <span className="lab-badge__dot" />
-                  <span>GENESIS BATCH 2026 · EARLY ACCESS</span>
-                </div>
-                <p className="lab-badge__skills">
-                  Living Proof · 3D · Bảo chứng
-                </p>
-                <button
-                  type="button"
-                  className="lab-badge__cta"
-                  onClick={() => scrollToId('waitlist')}
-                >
-                  Giữ chỗ sớm <ArrowUpRight size={15} />
-                </button>
-              </aside>
-            </div>
+              <button
+                type="button"
+                className="lab-badge__cta"
+                onClick={() => scrollToId('waitlist')}
+              >
+                Giữ chỗ sớm <ArrowUpRight size={15} />
+              </button>
+            </aside>
           </div>
         </section>
 
-        {/* ── 6. MANIFESTO HORIZONTAL KINETIC SCROLL & WORD BOUNCE (#manifesto) */}
-        <section className="manifesto-track-wrap" id="manifesto" ref={manifestoTrackRef}>
-          <div
-            className="manifesto-sticky-stage"
-            style={{
-              transform: `scale(${1 - Math.max(0, (manifestoProg - 0.85) * 0.3)})`,
-              borderRadius: manifestoProg > 0.85 ? '0 0 32px 32px' : '0px',
-            }}
-          >
-            <div
-              className="manifesto-kinetic-row"
-              style={{
-                transform: `translateX(${75 - manifestoProg * 185}vw)`,
-              }}
-            >
-              {MANIFESTO_WORDS.map((w, i) => {
-                const bounceY = Math.sin(manifestoProg * 12 + i) * 35;
-                const bounceRot = Math.sin(manifestoProg * 9 + i) * 6;
-                const isHighlight = ['LIVING', 'PROOF', 'TIN,', 'CƠ', 'HỘI.'].includes(w);
-
-                return (
-                  <span
-                    key={`${w}-${i}`}
-                    className="manifesto-kinetic-word"
-                    style={{
-                      transform: `translateY(${bounceY}px) rotate(${bounceRot}deg)`,
-                      color: isHighlight ? EMERALD : '#ffffff',
-                      textShadow: isHighlight ? `0 0 30px rgba(${NEON_RGB}, 0.5)` : undefined,
-                    }}
-                  >
-                    {w}
-                  </span>
-                );
-              })}
-            </div>
+        {/* ── 6. MANIFESTO EDITORIAL SECTION (#manifesto) ─────────────── */}
+        <section className="manifesto-section" id="manifesto">
+          <div className="manifesto-inner">
+            <span className="manifesto-tag">TUYÊN NGÔN FONLIO</span>
+            <p className="manifesto-text">
+              Đẹp thôi chưa đủ. Chúng tôi tạo ra Living Proof khiến nhà tuyển dụng tin, ở lại và trao cơ hội.
+            </p>
+            <p className="manifesto-sub">
+              Một bản CV giấy tự chấm 5 sao không thể nói lên năng lực thật. Đã đến lúc các sản phẩm và thành tựu thực tế của bạn tự cất tiếng nói.
+            </p>
           </div>
         </section>
 
-        {/* ── 7. TRAJECTORY PINNED SCROLLYTELLING & SIDE WINGS (#parcours) ─ */}
-        <section className="trajectory-track-wrap" id="parcours" ref={parcoursTrackRef}>
-          <div className="trajectory-sticky-stage">
-            {/* Sliding Side Wings like lab1.ximitech.vn */}
-            <div
-              className="trajectory-visual-left"
-              style={{
-                transform: `translateX(${-100 + parcoursProg * 100}%)`,
-              }}
-            />
-            <div
-              className="trajectory-visual-right"
-              style={{
-                transform: `translateX(${100 - parcoursProg * 100}%)`,
-              }}
-            />
+        {/* ── 7. PARCOURS SCROLLYTELLING RUNWAY (#parcours) ───────────── */}
+        <section className="parcours-runway" id="parcours" ref={parcoursContainerRef}>
+          <div className="parcours-sticky-box">
+            <div className="parcours-wing-left" />
+            <div className="parcours-wing-right" />
 
-            <div className="trajectory-sentences-box">
-              {/* Sentence 0 */}
-              <div
-                style={{
-                  display: trajectoryIndex === 0 ? 'block' : 'none',
-                  animation: 'fadeInUp 0.4s ease both',
-                }}
-              >
-                <div className="trajectory-sentence-tag">HÀNG TRIỆU HỒ SƠ</div>
-                <p className="trajectory-sentence-huge">Gửi đi mỗi năm.</p>
-              </div>
-
-              {/* Sentence 1 */}
-              <div
-                style={{
-                  display: trajectoryIndex === 1 ? 'block' : 'none',
-                  animation: 'fadeInUp 0.4s ease both',
-                }}
-              >
-                <div className="trajectory-sentence-tag" style={{ color: '#f87171' }}>CHỈ 6 GIÂY</div>
-                <p className="trajectory-sentence-huge">Để bị lãng quên mãi mãi.</p>
-              </div>
-
-              {/* Sentence 2 */}
-              <div
-                style={{
-                  display: trajectoryIndex === 2 ? 'block' : 'none',
-                  animation: 'fadeInUp 0.4s ease both',
-                }}
-              >
-                <div className="trajectory-sentence-tag">HÔM NAY</div>
-                <p className="trajectory-sentence-huge">FONLIO thay đổi cuộc chơi.</p>
-              </div>
-
-              {/* Sentence 3 */}
-              <div
-                style={{
-                  display: trajectoryIndex === 3 ? 'block' : 'none',
-                  animation: 'fadeInUp 0.4s ease both',
-                }}
-              >
-                <div className="trajectory-sentence-tag">LIVING PROOF</div>
-                <p
-                  className="trajectory-sentence-huge"
-                  style={{
-                    WebkitTextStroke: '1.5px #f5e7df',
-                    color: 'transparent',
-                    textShadow: 'none',
-                  }}
-                >
-                  Bảo chứng bằng sự thật.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── 8. TOOLKIT 3D FANNING CARD DECK & 180° FLIP (#toolkit) ────── */}
-        <section className="toolkit-track-wrap" id="toolkit" ref={toolkitTrackRef}>
-          <div className="toolkit-sticky-stage">
-            <div className="section-header-center">
-              <span className="section-tag">TRỤ CỘT BẢO CHỨNG</span>
-              <h2 className="section-title">
-                {toolkitProg < 0.5 ? 'Năng lực Kỹ thuật & Sáng tạo' : 'Tín nhiệm & Quyền lợi VIP'}
-              </h2>
-            </div>
-
-            <div className="toolkit-fanning-stage">
-              {/* Card Left: Lập trình */}
-              <div
-                className="fanning-card-wrapper"
-                style={{
-                  transform: `translateX(${-360 * Math.min(1, toolkitProg * 2.2)}px) rotate(${-12 * Math.min(1, toolkitProg * 2.2)}deg) scale(${0.92 + toolkitProg * 0.08})`,
-                  zIndex: 2,
-                }}
-              >
-                <div className="toolkit-pillar-card">
-                  <div>
-                    <span className="pillar-num">01 / TECH</span>
-                    <h3 className="pillar-title">Lập trình &amp; Dữ liệu</h3>
-                    <p className="pillar-desc">
-                      Liên kết trực tiếp commit GitHub, repo thực tế, độ khả dụng sản phẩm và tỷ lệ đóng góp dòng code.
-                    </p>
-                  </div>
-                  <div className="pillar-badges">
-                    <span className="pillar-badge">GitHub Sync</span>
-                    <span className="pillar-badge">Live Deploy</span>
-                    <span className="pillar-badge">Tech Lead Stamp</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Center: VIP Holo Pass (Flips 180deg on scroll!) */}
-              <div
-                className="fanning-card-wrapper"
-                style={{
-                  transform: `translateX(0px) rotateY(${toolkitProg > 0.5 ? ((toolkitProg - 0.5) / 0.5) * 180 : 0}deg) scale(1.08)`,
-                  zIndex: 10,
-                }}
-              >
-                <HoloVIPCard
-                  name="FONLIO PIONEER"
-                  role="GENESIS VIP PASS"
-                  tier="FOUNDING MEMBER"
-                  code="#FL-GENESIS-2026"
-                />
-              </div>
-
-              {/* Card Right: Sáng tạo & Sự kiện */}
-              <div
-                className="fanning-card-wrapper"
-                style={{
-                  transform: `translateX(${360 * Math.min(1, toolkitProg * 2.2)}px) rotate(${12 * Math.min(1, toolkitProg * 2.2)}deg) scale(${0.92 + toolkitProg * 0.08})`,
-                  zIndex: 2,
-                }}
-              >
-                <div className="toolkit-pillar-card">
-                  <div>
-                    <span className="pillar-num">02 / CREATIVE</span>
-                    <h3 className="pillar-title">Thiết kế &amp; Tác động</h3>
-                    <p className="pillar-desc">
-                      Bảo chứng nguyên mẫu Figma, Design System hoàn chỉnh và số liệu tiếp cận chiến dịch thực chiến.
-                    </p>
-                  </div>
-                  <div className="pillar-badges">
-                    <span className="pillar-badge">Figma Interactive</span>
-                    <span className="pillar-badge">Verified Metrics</span>
-                    <span className="pillar-badge">Art Director Sign</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── 9. PROJECTS STAGGERED ELEVATION (#projects) ───────────────── */}
-        <section className="projects-track-wrap" id="projects" ref={projectsTrackRef}>
-          <div
-            className="projects-sticky-stage"
-            style={{
-              transform: `scale(${1 - Math.max(0, (projectsProg - 0.85) * 0.25)})`,
-              borderRadius: projectsProg > 0.85 ? '0 0 32px 32px' : '0px',
-            }}
-          >
-            <div
-              className="section-header-center"
-              style={{
-                opacity: Math.min(1, projectsProg * 3),
-                transform: `translateY(${Math.max(0, (1 - projectsProg * 3) * 30)}px)`,
-              }}
-            >
-              <span className="section-tag">TIÊU BIỂU</span>
-              <h2 className="section-title">Dự án đã bảo chứng</h2>
-            </div>
-
-            <div className="projects-grid">
-              {SHOWCASE_PROJECTS.map((proj, idx) => {
-                const staggerProg = Math.max(0, Math.min(1, projectsProg * 3.5 - idx * 0.25));
-                const translateY = (1 - staggerProg) * 60;
-
+            <div className="parcours-center-stage">
+              {PARCOURS_BEATS.map((beat, idx) => {
+                const isCurrent = parcoursStep === idx;
                 return (
                   <div
-                    key={proj.name}
-                    className="project-row-item"
+                    key={beat.tag}
+                    className="parcours-card-animated"
                     style={{
-                      opacity: staggerProg,
-                      transform: `translateY(${translateY}px)`,
+                      display: isCurrent ? 'block' : 'none',
+                      opacity: isCurrent ? 1 : 0,
+                      transform: isCurrent ? 'translateY(0)' : 'translateY(20px)',
                     }}
                   >
-                    <div>
-                      <h4 className="project-item-name">{proj.name}</h4>
-                      <div className="project-item-sub">{proj.type} · {proj.verifier}</div>
-                    </div>
-                    <span style={{ fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '6px', background: 'rgba(255, 255, 255, 0.08)', color: EMERALD }}>
-                      {proj.tag}
-                    </span>
+                    <div className="parcours-beat-tag">{beat.tag}</div>
+                    <h2 className="parcours-beat-title">{beat.headline}</h2>
+                    <p className="parcours-beat-sub">{beat.sub}</p>
                   </div>
                 );
               })}
@@ -1529,206 +1248,272 @@ export function WaitlistPage() {
           </div>
         </section>
 
-        {/* ── 10. CURVED SVG PATH & CIRCULAR PORTAL REVEAL (#waitlist) ──── */}
-        <section className="waitlist-track-wrap" id="waitlist" ref={waitlistTrackRef}>
-          <div className="waitlist-sticky-stage">
-            {/* Kinetic SVG Curve background wave */}
-            <svg
-              className="curved-svg-kinetic"
-              fill="none"
-              viewBox="0 0 2400 360"
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                opacity: waitlistProg < 0.75 ? 1 - waitlistProg : 0,
-              }}
-            >
-              <path
-                id="fonlioMasterCurve"
-                d="M0 260 C 400 60, 800 360, 1200 180 C 1600 40, 2000 320, 2400 140"
+        {/* ── 8. TOOLKIT / CAPABILITIES (#toolkit) ────────────────────── */}
+        <section className="toolkit-section" id="toolkit">
+          <div className="section-header-center">
+            <span className="section-tag">TRỤ CỘT BẢO CHỨNG</span>
+            <h2 className="section-title">Năng lực thực chứng</h2>
+          </div>
+
+          <div className="toolkit-grid">
+            {/* Pillar 1: Lập trình */}
+            <div className="toolkit-card-clean">
+              <div>
+                <span className="pillar-num">01 / TECH</span>
+                <h3 className="pillar-title">Lập trình &amp; Dữ liệu</h3>
+                <p className="pillar-desc">
+                  Liên kết trực tiếp commit GitHub, repo thực tế, độ khả dụng sản phẩm và tỷ lệ đóng góp dòng code.
+                </p>
+              </div>
+              <div className="pillar-badges">
+                <span className="pillar-badge">GitHub Sync</span>
+                <span className="pillar-badge">Live Deploy</span>
+                <span className="pillar-badge">Tech Lead Stamp</span>
+              </div>
+            </div>
+
+            {/* Pillar 2: Thẻ VIP Hologram */}
+            <div style={{ transform: 'scale(1.02)' }}>
+              <HoloVIPCard
+                name={formData.name || 'NGƯỜI TIÊN PHONG'}
+                role={selectedRole.roleBadge}
+                tier="GENESIS VIP PASS"
+                code="#FL-GENESIS-2026"
               />
-              <text fill="rgba(255, 255, 255, 0.9)" fontSize="44" fontWeight="800" letterSpacing="-0.02em">
-                <textPath href="#fonlioMasterCurve" startOffset={`${(1 - waitlistProg * 1.5) * 40}%`}>
-                  Ý TƯỞNG &amp; NĂNG LỰC CỦA BẠN XỨNG ĐÁNG MỘT NƠI TỎA SÁNG ĐÍCH THỰC ✦ FONLIO GENESIS BATCH 2026 ✦
-                </textPath>
-              </text>
-            </svg>
+            </div>
 
-            {/* Expanding Circular Portal Mask (Expanding from 0% to 150% radius) */}
-            <div
-              className="waitlist-portal-container"
-              style={{
-                clipPath: `circle(${Math.max(0, waitlistProg * 150)}% at 50% 50%)`,
-                WebkitClipPath: `circle(${Math.max(0, waitlistProg * 150)}% at 50% 50%)`,
-                pointerEvents: waitlistProg > 0.4 ? 'auto' : 'none',
-              }}
-            >
-              <div className="finale-terminal-card">
-                {/* Cột trái: Thẻ VIP Hologram thời gian thực & Đồng hồ đếm ngược */}
-                <div className="finale-left-col">
-                  <HoloVIPCard
-                    name={formData.name || 'NGƯỜI TIÊN PHONG'}
-                    role={selectedRole.roleBadge}
-                    tier={successData?.tier || 'TOP 10 VIP FOUNDER'}
-                    code={successData?.referralCode || '#FL-GENESIS-2026'}
-                  />
+            {/* Pillar 3: Thiết kế & Sáng tạo */}
+            <div className="toolkit-card-clean">
+              <div>
+                <span className="pillar-num">02 / CREATIVE</span>
+                <h3 className="pillar-title">Thiết kế &amp; Sáng tạo</h3>
+                <p className="pillar-desc">
+                  Showcase nguyên mẫu tương tác Figma, hệ thống thiết kế và số liệu tiếp cận chiến dịch thực chiến.
+                </p>
+              </div>
+              <div className="pillar-badges">
+                <span className="pillar-badge">Figma Interactive</span>
+                <span className="pillar-badge">Design System</span>
+                <span className="pillar-badge">Art Director Verified</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
-                  {/* Countdown Wireframe module */}
-                  <div style={{ textAlign: 'center', width: '100%' }}>
-                    <div style={{ fontSize: '11px', color: MUTED, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 700 }}>
-                      <Clock size={12} style={{ display: 'inline', verticalAlign: '-1px', marginRight: 4 }} />
-                      MỞ CỔNG EARLY ACCESS TRONG
-                    </div>
-                    <div style={{ display: 'flex', gap: 10, justifyContent: 'center', fontFamily: 'Space Mono, monospace', fontSize: '1.3rem', fontWeight: 800, color: EMERALD }}>
-                      <span>{String(countdown.days).padStart(2, '0')}d</span> :
-                      <span>{String(countdown.hours).padStart(2, '0')}h</span> :
-                      <span>{String(countdown.minutes).padStart(2, '0')}m</span> :
-                      <span>{String(countdown.seconds).padStart(2, '0')}s</span>
-                    </div>
-                  </div>
+        {/* ── 9. PROJECTS SHOWCASE (#projects) ────────────────────────── */}
+        <section className="projects-section" id="projects">
+          <div className="section-header-center">
+            <span className="section-tag">TIÊU BIỂU</span>
+            <h2 className="section-title">Dự án đã bảo chứng</h2>
+          </div>
+
+          <div className="projects-grid">
+            {SHOWCASE_PROJECTS.map((proj) => (
+              <div key={proj.name} className="project-row-item">
+                <div>
+                  <h4 className="project-item-name">{proj.name}</h4>
+                  <div className="project-item-sub">{proj.type} · {proj.verifier}</div>
                 </div>
+                <span style={{ fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '6px', background: 'rgba(255, 255, 255, 0.08)', color: EMERALD }}>
+                  {proj.tag}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
 
-                {/* Cột phải: Form đăng ký */}
-                <div className="finale-right-col">
-                  {successData ? (
-                    <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                      <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'rgba(185, 255, 0, 0.15)', border: `2px solid ${EMERALD}`, display: 'grid', placeItems: 'center', margin: '0 auto 18px', color: EMERALD }}>
-                        <CheckCheck size={30} />
-                      </div>
-                      <h3 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#ffffff', margin: '0 0 8px' }}>
-                        CHÚC MỪNG {successData.name}!
-                      </h3>
-                      <p style={{ color: MUTED, fontSize: '0.94rem', lineHeight: 1.6, margin: '0 0 22px' }}>
-                        Bạn đã giữ thành công vị trí <b>#{successData.number}</b> trong Genesis Batch. Thẻ VIP cá nhân đã được tạo!
-                      </p>
+        {/* ── 10. CURVED SVG PATH BANNER ───────────────────────────────── */}
+        <section className="next-path-section">
+          <svg
+            className="curved-svg-container"
+            fill="none"
+            viewBox="0 0 2400 240"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              id="fonlioMasterCurve"
+              d="M0 180 C 400 40, 800 240, 1200 120 C 1600 20, 2000 200, 2400 80"
+            />
+            <text fill="rgba(255, 255, 255, 0.9)" fontSize="42" fontWeight="800" letterSpacing="-0.02em">
+              <textPath href="#fonlioMasterCurve" startOffset="5%">
+                Ý TƯỞNG &amp; NĂNG LỰC CỦA BẠN XỨNG ĐÁNG MỘT NƠI TỎA SÁNG ĐÍCH THỰC ✦ FONLIO GENESIS BATCH 2026 ✦
+              </textPath>
+            </text>
+          </svg>
+        </section>
 
-                      <div style={{ background: 'rgba(0, 0, 0, 0.5)', padding: 16, borderRadius: 16, border: '1px solid rgba(255, 255, 255, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
-                        <code style={{ color: EMERALD, fontFamily: 'Space Mono', fontWeight: 700, fontSize: '1.05rem' }}>
-                          {successData.referralCode}
-                        </code>
-                        <button
-                          type="button"
-                          onClick={handleCopyLink}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: 'rgba(255, 255, 255, 0.12)', border: 'none', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 700 }}
-                        >
-                          <Copy size={14} /> {copiedLink ? 'Đã sao chép!' : 'Sao chép link'}
-                        </button>
-                      </div>
+        {/* ── 11. WAITLIST FINALE FORM & VIP CARD (#waitlist) ─────────── */}
+        <section className="waitlist-finale-section" id="waitlist">
+          <div className="section-header-center" style={{ marginBottom: 40 }}>
+            <span className="section-tag">GENESIS BATCH 2026</span>
+            <h2 className="section-title">Khắc tên &amp; Giữ chỗ ngay</h2>
+          </div>
 
-                      <p style={{ fontSize: '0.82rem', color: MUTED }}>
-                        Thư mời kích hoạt sớm sẽ được gửi tới <b>{successData.email}</b>.
-                      </p>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      <div>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: EMERALD, fontSize: '12px', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
-                          <Users size={13} /> {displayCount} bạn trẻ đã tham gia
-                        </div>
-                        <h3 style={{ fontSize: '1.65rem', fontWeight: 900, color: '#ffffff', margin: '0 0 4px' }}>
-                          ĐĂNG KÝ GENESIS PASS
-                        </h3>
-                        <p style={{ color: MUTED, fontSize: '0.86rem', margin: 0 }}>
-                          Gõ tên bạn — Thẻ VIP bên cạnh lập tức được khắc tên theo thời gian thực!
-                        </p>
-                      </div>
+          <div className="finale-terminal-card">
+            {/* Cột trái: Thẻ VIP Hologram thời gian thực & Đồng hồ đếm ngược */}
+            <div className="finale-left-col">
+              <HoloVIPCard
+                name={formData.name || 'NGƯỜI TIÊN PHONG'}
+                role={selectedRole.roleBadge}
+                tier={successData?.tier || 'TOP 10 VIP FOUNDER'}
+                code={successData?.referralCode || '#FL-GENESIS-2026'}
+              />
 
-                      {/* Vai trò */}
-                      <div>
-                        <label style={{ fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
-                          Vai trò chuyên môn:
-                        </label>
-                        <div className="role-selector-pills">
-                          {QUICK_ROLES.map((role) => (
-                            <button
-                              key={role.id}
-                              type="button"
-                              className={`role-pill-btn ${formData.roleId === role.id ? 'active' : ''}`}
-                              onClick={() => setFormData((prev) => ({ ...prev, roleId: role.id }))}
-                            >
-                              {role.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Họ tên */}
-                      <div>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: MUTED, marginBottom: 5 }}>
-                          Họ và tên của bạn:
-                        </label>
-                        <input
-                          type="text"
-                          className="finale-input-field"
-                          placeholder="Ví dụ: Nguyễn Minh Tuấn"
-                          value={formData.name}
-                          onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                          maxLength={50}
-                        />
-                      </div>
-
-                      {/* Email */}
-                      <div>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: MUTED, marginBottom: 5 }}>
-                          Email nhận mã vé kích hoạt:
-                        </label>
-                        <input
-                          type="email"
-                          className="finale-input-field"
-                          placeholder="tuan.nguyen@example.com"
-                          value={formData.email}
-                          onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                        />
-                      </div>
-
-                      {/* Trường đại học */}
-                      <div>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: MUTED, marginBottom: 5 }}>
-                          Trường đại học / Tổ chức (tùy chọn):
-                        </label>
-                        <input
-                          type="text"
-                          className="finale-input-field"
-                          placeholder="ĐH FPT, Bách Khoa, RMIT..."
-                          value={formData.school}
-                          onChange={(e) => setFormData((prev) => ({ ...prev, school: e.target.value }))}
-                        />
-                      </div>
-
-                      {errorMsg && (
-                        <div style={{ color: '#f87171', fontSize: '0.84rem', fontWeight: 600 }}>
-                          {errorMsg}
-                        </div>
-                      )}
-
-                      <button type="submit" className="finale-submit-btn" disabled={submitting}>
-                        {submitting ? (
-                          <>
-                            <RefreshCw size={17} className="animate-spin" /> Đang tạo thẻ VIP...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles size={17} /> Khắc tên &amp; Nhận thẻ Genesis ngay
-                          </>
-                        )}
-                      </button>
-
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, fontSize: '12px', color: MUTED }}>
-                        <span>🔒 Miễn phí 100%</span>
-                        <span>·</span>
-                        <span>✦ Top 10 nhận VIP trọn đời</span>
-                        <span>·</span>
-                        <span>⚡ Nhận vé tức thì</span>
-                      </div>
-                    </form>
-                  )}
+              {/* Countdown Wireframe module */}
+              <div style={{ textAlign: 'center', width: '100%' }}>
+                <div style={{ fontSize: '11px', color: MUTED, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 700 }}>
+                  <Clock size={12} style={{ display: 'inline', verticalAlign: '-1px', marginRight: 4 }} />
+                  MỞ CỔNG EARLY ACCESS TRONG
+                </div>
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'center', fontFamily: 'Space Mono, monospace', fontSize: '1.3rem', fontWeight: 800, color: EMERALD }}>
+                  <span>{String(countdown.days).padStart(2, '0')}d</span> :
+                  <span>{String(countdown.hours).padStart(2, '0')}h</span> :
+                  <span>{String(countdown.minutes).padStart(2, '0')}m</span> :
+                  <span>{String(countdown.seconds).padStart(2, '0')}s</span>
                 </div>
               </div>
+            </div>
+
+            {/* Cột phải: Form đăng ký */}
+            <div className="finale-right-col">
+              {successData ? (
+                <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                  <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'rgba(185, 255, 0, 0.15)', border: `2px solid ${EMERALD}`, display: 'grid', placeItems: 'center', margin: '0 auto 18px', color: EMERALD }}>
+                    <CheckCheck size={30} />
+                  </div>
+                  <h3 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#ffffff', margin: '0 0 8px' }}>
+                    CHÚC MỪNG {successData.name}!
+                  </h3>
+                  <p style={{ color: MUTED, fontSize: '0.94rem', lineHeight: 1.6, margin: '0 0 22px' }}>
+                    Bạn đã giữ thành công vị trí <b>#{successData.number}</b> trong Genesis Batch. Thẻ VIP cá nhân đã được tạo!
+                  </p>
+
+                  <div style={{ background: 'rgba(0, 0, 0, 0.5)', padding: 16, borderRadius: 16, border: '1px solid rgba(255, 255, 255, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
+                    <code style={{ color: EMERALD, fontFamily: 'Space Mono', fontWeight: 700, fontSize: '1.05rem' }}>
+                      {successData.referralCode}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={handleCopyLink}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: 'rgba(255, 255, 255, 0.12)', border: 'none', color: '#fff', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 700 }}
+                    >
+                      <Copy size={14} /> {copiedLink ? 'Đã sao chép!' : 'Sao chép link'}
+                    </button>
+                  </div>
+
+                  <p style={{ fontSize: '0.82rem', color: MUTED }}>
+                    Thư mời kích hoạt sớm sẽ được gửi tới <b>{successData.email}</b>.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: EMERALD, fontSize: '12px', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
+                      <Users size={13} /> {displayCount} bạn trẻ đã tham gia
+                    </div>
+                    <h3 style={{ fontSize: '1.65rem', fontWeight: 900, color: '#ffffff', margin: '0 0 4px' }}>
+                      ĐĂNG KÝ GENESIS PASS
+                    </h3>
+                    <p style={{ color: MUTED, fontSize: '0.86rem', margin: 0 }}>
+                      Gõ tên bạn — Thẻ VIP bên cạnh lập tức được khắc tên theo thời gian thực!
+                    </p>
+                  </div>
+
+                  {/* Vai trò */}
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
+                      Vai trò chuyên môn:
+                    </label>
+                    <div className="role-selector-pills">
+                      {QUICK_ROLES.map((role) => (
+                        <button
+                          key={role.id}
+                          type="button"
+                          className={`role-pill-btn ${formData.roleId === role.id ? 'active' : ''}`}
+                          onClick={() => setFormData((prev) => ({ ...prev, roleId: role.id }))}
+                        >
+                          {role.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Họ tên */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: MUTED, marginBottom: 5 }}>
+                      Họ và tên của bạn:
+                    </label>
+                    <input
+                      type="text"
+                      className="finale-input-field"
+                      placeholder="Ví dụ: Nguyễn Minh Tuấn"
+                      value={formData.name}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                      maxLength={50}
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: MUTED, marginBottom: 5 }}>
+                      Email nhận mã vé kích hoạt:
+                    </label>
+                    <input
+                      type="email"
+                      className="finale-input-field"
+                      placeholder="tuan.nguyen@example.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                    />
+                  </div>
+
+                  {/* Trường đại học */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: MUTED, marginBottom: 5 }}>
+                      Trường đại học / Tổ chức (tùy chọn):
+                    </label>
+                    <input
+                      type="text"
+                      className="finale-input-field"
+                      placeholder="ĐH FPT, Bách Khoa, RMIT..."
+                      value={formData.school}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, school: e.target.value }))}
+                    />
+                  </div>
+
+                  {errorMsg && (
+                    <div style={{ color: '#f87171', fontSize: '0.84rem', fontWeight: 600 }}>
+                      {errorMsg}
+                    </div>
+                  )}
+
+                  <button type="submit" className="finale-submit-btn" disabled={submitting}>
+                    {submitting ? (
+                      <>
+                        <RefreshCw size={17} className="animate-spin" /> Đang tạo thẻ VIP...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={17} /> Khắc tên &amp; Nhận thẻ Genesis ngay
+                      </>
+                    )}
+                  </button>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, fontSize: '12px', color: MUTED }}>
+                    <span>🔒 Miễn phí 100%</span>
+                    <span>·</span>
+                    <span>✦ Top 10 nhận VIP trọn đời</span>
+                    <span>·</span>
+                    <span>⚡ Nhận vé tức thì</span>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </section>
       </main>
 
-      {/* ── 11. GIANT FOOTER BRAND WORDMARK (EXACTLY AS BRAND STANDARD) ── */}
+      {/* ── 12. GIANT FOOTER BRAND WORDMARK (EXACTLY AS BRAND STANDARD) ── */}
       <footer className="giant-brand-footer">
         <div style={{ width: 'min(1440px, 100%)', maxHeight: 480, display: 'flex', justifyContent: 'center' }}>
           <BrandWordmark size="100%" maxHeight="480px" glow />
