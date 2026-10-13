@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowRight, BadgeCheck, Check, CheckCircle2, ChevronDown,
-  Copy, FolderOpen, Layers, ShieldCheck, Sparkles, Star,
+  ArrowRight, BadgeCheck, ChevronDown,
+  Copy, ShieldCheck, Sparkles, Star,
   Trophy, Users, Zap, RefreshCw, Menu, X, Phone, Mail, MapPin,
-  MailCheck, Award, Eye, CreditCard,
+  MailCheck, Award, Eye, CreditCard, CheckCheck,
 } from 'lucide-react';
 import { HeroMesh } from '../components/HeroMesh.jsx';
 import { NeonBloom } from '../components/NeonBloom.jsx';
@@ -22,222 +22,185 @@ import {
 } from '../styles/neonPalette.js';
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Trang Waitlist / Early Access — Phiên bản 3D Animation & Visual Cao Cấp:
-   - Header & Footer hoàn toàn độc lập, chỉ trỏ anchor nội bộ (#ve-fonlio,
-     #gia-tri, #cach-hoat-dong, #danh-cho-ai, #faq, #dang-ky)
-   - Hero 3D Stage: Chuyển đổi linh hoạt giữa EnvelopeArt 3D sống động
-     (bức thư Fonlio gửi sinh viên) và Hồ sơ Mẫu Verified Proof 3D tương tác
-   - Real-time Mouse-tracking 3D Tilt Physics & Specular Glare trên mọi thẻ
-   - 3D Floating Orbital Rings & Gyroscopic Rings phát sáng đa chiều
-   - Hiệu ứng chiều sâu đa tầng (Layered Z-axis Parallax: translateZ)
-   - Form đăng ký hiện đại, pháo hoa giấy Confetti và vé VIP chúc mừng
+   DỮ LIỆU CỐT LÕI CHO TRANG WAITLIST TÂN TIẾN
    ────────────────────────────────────────────────────────────────────────── */
 
-const PROBLEMS = [
+const QUICK_ROLES = [
+  { id: 'student', label: 'Sinh viên năng nổ', specialization: 'Đang khám phá định hướng', stage: 'Sinh viên năm 1 – 2' },
+  { id: 'design', label: 'Design / Creative', specialization: 'Design / UI/UX / Video Creative', stage: 'Sinh viên năm 3 – 4' },
+  { id: 'marketing', label: 'Marketing / PR', specialization: 'Marketing / Truyền thông / PR', stage: 'Sinh viên năm 3 – 4' },
+  { id: 'tech', label: 'Lập trình / Tech', specialization: 'Công nghệ thông tin / Lập trình', stage: 'Mới tốt nghiệp / Đang tìm việc' },
+  { id: 'club', label: 'Quản lý CLB / Event', specialization: 'Sự kiện / Quản lý CLB / Activation', stage: 'Sinh viên năm 1 – 2' },
+];
+
+const COMPARISONS = [
   {
-    num: '01',
-    title: 'Kinh nghiệm nằm rải rác khắp nơi',
-    desc: 'Slide thuyết trình, sản phẩm thiết kế, chứng nhận CLB và link bài viết nằm tản mác trong Google Drive, Canva, Facebook... Đến lúc nộp thực tập thì cuống cuồng đi tìm lại.',
-    solution: 'FONLIO gom tất cả về một đường dẫn hồ sơ duy nhất mang tên bạn.',
+    feature: 'Cách tiếp cận năng lực',
+    traditional: 'Tự khai kỹ năng 5 sao trong CV giấy, thiếu cơ chế xác minh.',
+    fonlio: 'Đính kèm sản phẩm thực tế và tỷ lệ đóng góp minh bạch từng dự án.',
   },
   {
-    num: '02',
-    title: 'Làm việc nhóm khó chứng minh vai trò cá nhân',
-    desc: 'Dự án có 5 người, ai cũng để tên trên báo cáo. Nhà tuyển dụng không thể biết bạn thực sự đóng góp 80% công sức hay chỉ là người đứng tên hỗ trợ.',
-    solution: 'Đính kèm sản phẩm thực tế và tỷ lệ đóng góp minh bạch cho từng dự án.',
+    feature: 'Lưu trữ & Hệ thống',
+    traditional: 'File nằm rải rác trong Drive, Canva, link bài Facebook thất lạc.',
+    fonlio: 'Gom toàn bộ vào một Living Vault với đường link duy nhất fonlio.me/@ban.',
   },
   {
-    num: '03',
-    title: 'CV tự khai thiếu độ tin cậy đối với doanh nghiệp',
-    desc: 'Ai cũng có thể tự viết "Kỹ năng lãnh đạo 5 sao" hoặc "Tổ chức sự kiện 1000 người". Nhà tuyển dụng ngày càng hoài nghi các dòng text tự đánh bóng trong CV giấy.',
-    solution: 'Cơ chế Verified Proof of Work: người giao việc trực tiếp đóng dấu bảo chứng.',
+    feature: 'Độ tin cậy với Recruiter',
+    traditional: 'Nhà tuyển dụng chỉ lướt 6 giây và luôn hoài nghi chữ tự viết.',
+    fonlio: 'Verified Proof of Work: Mentor, Leader trực tiếp đóng dấu bảo chứng.',
+  },
+  {
+    feature: 'Đánh giá làm việc nhóm',
+    traditional: 'Cả nhóm chung tên báo cáo, không rõ ai gánh team ai hỗ trợ.',
+    fonlio: 'Phân tách vai trò rõ ràng: Trưởng nhóm, Thiết kế, Nghiên cứu số liệu.',
+  },
+  {
+    feature: 'Giá trị dài hạn',
+    traditional: 'Mỗi lần ứng tuyển là một lần sửa lại file PDF từ đầu.',
+    fonlio: 'Tích lũy Reputation Score và huy hiệu danh tín nghề nghiệp vĩnh viễn.',
   },
 ];
 
-const VALUES = [
-  {
-    tag: 'CREATE',
-    icon: <Layers size={24} />,
-    title: 'Tạo portfolio',
-    desc: 'Dựng portfolio chuyên nghiệp từ dự án, sản phẩm và vai trò của bạn, theo một cấu trúc rõ ràng, dễ chia sẻ.',
-    highlights: ['Link cá nhân riêng', 'Giao diện chuẩn Recruiter', 'Chia sẻ 1-click lên Bio'],
+const BENTO_PROJECTS = {
+  marketing: {
+    title: 'Chiến dịch Activation Tân Sinh Viên 2025',
+    role: 'Trưởng ban Truyền thông (Leader)',
+    metric: 'Đạt 12.000 tiếp cận · 850 lượt đăng ký',
+    tags: ['Chiến dịch thực tế', 'Báo cáo số liệu', 'Content & Thiết kế'],
+    verifiedBy: 'Chủ nhiệm CLB Truyền thông',
   },
-  {
-    tag: 'ORGANIZE',
-    icon: <FolderOpen size={24} />,
-    title: 'Hệ thống hóa kinh nghiệm',
-    desc: 'Gom dự án, hoạt động ngoại khóa và trải nghiệm rời rạc về một nơi, để bạn luôn có sẵn khi cần.',
-    highlights: ['Hub dự án tập trung', 'Lưu trữ tài liệu & sản phẩm', 'Bộ lọc chuyên môn rõ ràng'],
+  design: {
+    title: 'Hệ thống Thiết kế UI/UX Ứng dụng EduMatch',
+    role: 'Lead UI/UX Designer',
+    metric: '32 màn hình hoàn chỉnh · Figma Prototype 100%',
+    tags: ['Figma link', 'User Research', 'Design System'],
+    verifiedBy: 'Mentor Đồ án Tốt nghiệp',
   },
-  {
-    tag: 'VERIFY',
-    icon: <ShieldCheck size={24} />,
-    title: 'Gắn bằng chứng, hỗ trợ xác thực',
-    desc: 'Gắn bằng chứng cho từng dự án và mời người liên quan xác nhận vai trò, đóng góp của bạn.',
-    highlights: ['Verified Proof of Work', 'Tăng 3x độ tin cậy', 'Tích lũy Reputation Score'],
+  tech: {
+    title: 'Nền tảng Quản lý Điểm danh CLB qua QR Code',
+    role: 'Fullstack Developer',
+    metric: '1.200 lượt quét/tháng · 99.8% Uptime',
+    tags: ['GitHub Repo', 'Live Demo', 'PostgreSQL'],
+    verifiedBy: 'Trưởng ban Kỹ thuật CLB IT',
   },
-];
+  club: {
+    title: 'Đêm nhạc Gây quỹ Hơi Ấm Mùa Đông 2024',
+    role: 'Phó ban Tổ chức — Điều phối Sự kiện',
+    metric: 'Gây quỹ 45.000.000đ · 600 khán giả',
+    tags: ['Kế hoạch tổng thể', 'Hợp đồng tài trợ', 'Album ảnh'],
+    verifiedBy: 'Đại diện Đoàn trường',
+  },
+};
 
 const STEPS = [
   {
     step: '01',
     keyword: 'Khởi tạo',
-    title: 'Tạo hồ sơ cá nhân',
-    body: 'Giới thiệu bản thân, lĩnh vực chuyên môn và mục tiêu nghề nghiệp để nhận đường dẫn riêng.',
+    title: 'Tạo Living Bio cá nhân',
+    body: 'Định hình danh tính nghề nghiệp chỉ trong 3 phút với đường dẫn riêng mang tên bạn.',
     tag: '3 phút khởi tạo',
   },
   {
     step: '02',
-    keyword: 'Dự án',
-    title: 'Thêm dự án & kết quả',
-    body: 'Ghi lại dự án, vai trò, sản phẩm và những kết quả bạn đã tạo ra kèm ảnh minh họa.',
+    keyword: 'Gom nhặt',
+    title: 'Gom dự án & sản phẩm thật',
+    body: 'Kéo thả sản phẩm, slide thuyết trình, repo code và ghi rõ tỷ lệ đóng góp của bạn.',
     tag: 'Không cần đợi CV giấy',
   },
   {
     step: '03',
     keyword: 'Bảo chứng',
-    title: 'Gắn bằng chứng',
-    body: 'Đính kèm sản phẩm thật và mời người liên quan xác nhận vai trò khi bạn sẵn sàng.',
-    tag: 'Xác thực minh bạch',
+    title: 'Gắn bằng chứng & Xác thực',
+    body: 'Mời Mentor, Trưởng nhóm hoặc người giao việc đóng dấu xác nhận vai trò thực tế.',
+    tag: 'Minh bạch 100%',
   },
   {
     step: '04',
-    keyword: 'Chia sẻ',
-    title: 'Xuất bản & chia sẻ',
-    body: 'Xuất bản portfolio và gửi đường link cho nhà tuyển dụng hoặc đối tác xem ngay.',
-    tag: 'Nổi bật giữa hàng trăm CV',
-  },
-];
-
-const AUDIENCES = [
-  {
-    role: 'Sinh viên',
-    highlight: 'Dành cho người năng nổ',
-    body: 'Đang làm CLB, tổ chức sự kiện, tham gia cuộc thi hay dự án học thuật? Gom lại thành một hồ sơ để sẵn sàng khi ứng tuyển thực tập.',
-    perk: 'Dựng hồ sơ sớm trước mùa thực tập',
-  },
-  {
-    role: 'Thực tập sinh & Người mới đi làm',
-    highlight: 'Dành cho người bứt phá',
-    body: 'Mới có vài dự án đầu tay vẫn đáng được trình bày bài bản. Cho thấy bạn đã làm gì, đóng góp ra sao thay vì một trang CV chữ khô khan.',
-    perk: 'Gây ấn tượng mạnh với Hiring Manager',
-  },
-  {
-    role: 'Freelancer & Cộng tác viên',
-    highlight: 'Dành cho người làm tự do',
-    body: 'Nhiều khách hàng, nhiều dự án nhỏ lẻ? Gom về một nơi, gắn bằng chứng để khách mới nhìn là hiểu năng lực của bạn.',
-    perk: 'Chốt khách hàng với sản phẩm thật',
-  },
-  {
-    role: 'Người làm nghề ở mọi lĩnh vực',
-    highlight: 'Dành cho người đa ngành',
-    body: 'Dù bạn làm Marketing, Thiết kế, Công nghệ, Kinh doanh hay lĩnh vực khác, dự án và sản phẩm của bạn cần một chỗ đứng đẹp và đáng tin hơn một thư mục Drive.',
-    perk: 'Chứng minh năng lực qua sản phẩm',
+    keyword: 'Bứt phá',
+    title: 'Chia sẻ & Mở lối cơ hội',
+    body: 'Gửi 1 đường link cho nhà tuyển dụng để nổi bật tuyệt đối giữa hàng trăm CV truyền thống.',
+    tag: 'Chuẩn Recruiter',
   },
 ];
 
 const PERKS_LIST = [
   {
-    icon: <Zap size={20} />,
-    title: 'Quyền trải nghiệm MVP đầu tiên',
-    desc: 'Được cấp quyền truy cập sớm nhất phiên bản Fonlio thử nghiệm ngay khi mở đợt Early Access.',
+    icon: <Zap size={22} />,
+    title: 'Quyền trải nghiệm MVP đầu tiên (Genesis Batch)',
+    desc: 'Cấp quyền truy cập sớm nhất phiên bản Fonlio thử nghiệm ngay khi đợt mở cổng bắt đầu.',
   },
   {
-    icon: <Trophy size={20} />,
+    icon: <Trophy size={22} />,
     title: 'Huy hiệu Founding Member vĩnh viễn',
-    desc: 'Được gắn huy hiệu thành viên tiên phong trên trang cá nhân kèm điểm uy tín (RS) khởi đầu.',
+    desc: 'Được gắn huy hiệu người tiên phong trên hồ sơ cùng điểm uy tín Reputation Score khởi điểm.',
   },
   {
-    icon: <Star size={20} />,
-    title: 'Tùy biến giao diện VIP trọn đời cho Top 10',
-    desc: '10 bạn đăng ký sớm nhất nhận gói tài khoản VIP nhất của Fonlio cùng quà tặng từ các đối tác.',
+    icon: <Star size={22} />,
+    title: 'Tặng trọn đời gói VIP Fonlio cho Top 10',
+    desc: '10 bạn đăng ký sớm nhất nhận bản tài khoản cao cấp nhất của Fonlio cùng quà tặng đối tác.',
   },
   {
-    icon: <Users size={20} />,
-    title: 'Ưu tiên kết nối với Nhà tuyển dụng',
-    desc: 'Hồ sơ của bạn được đưa vào danh sách ưu tiên xem xét trong các đợt tuyển thực tập đối tác.',
+    icon: <Users size={22} />,
+    title: 'Ưu tiên kết nối Nhà tuyển dụng & Đối tác',
+    desc: 'Hồ sơ của bạn được đưa vào danh sách đề xuất ưu tiên cho các doanh nghiệp trong mạng lưới.',
   },
 ];
 
 const FAQS = [
   {
-    q: 'FONLIO là gì?',
-    a: 'FONLIO là nền tảng tạo portfolio, lưu trữ và xác thực kinh nghiệm dành cho đa dạng ngành nghề. FONLIO giúp bạn biến các dự án, sản phẩm sáng tạo, hoạt động ngoại khoá và trải nghiệm rời rạc thành một hồ sơ năng lực có cấu trúc, có bằng chứng và có thể chia sẻ.',
+    q: 'FONLIO khác gì so với Canva, Notion hay CV PDF thông thường?',
+    a: 'Canva và CV PDF chỉ là các tài liệu chữ tĩnh, tự đánh bóng kỹ năng và không ai kiểm chứng. Notion thì tốn nhiều công sức định dạng và không chuẩn gu nhà tuyển dụng. FONLIO là Living Portfolio chuẩn hóa, cho phép đính kèm sản phẩm thực tế kèm cơ chế bảo chứng (Verified Proof) trực tiếp từ Mentor và Leader của bạn.',
   },
   {
-    q: 'FONLIO có dành cho sinh viên chưa có nhiều kinh nghiệm không?',
-    a: 'Có. Sinh viên và người mới bắt đầu là nhóm mà FONLIO hướng tới. Dù bạn mới có vài hoạt động CLB, một cuộc thi hay một dự án học thuật, đó đều là điểm xuất phát tốt để bắt đầu portfolio.',
+    q: 'Mình là sinh viên năm nhất/năm hai chưa có kinh nghiệm thì có dùng được không?',
+    a: 'Hoàn toàn phù hợp! FONLIO được sinh ra dành riêng cho người trẻ năng nổ. Bất kỳ hoạt động nào bạn từng tham gia — như chạy sự kiện CLB, bài tiểu luận nghiên cứu, thiết kế banner hay dự án bài tập lớn — đều có thể đưa vào để xây dựng hồ sơ sớm trước mùa thực tập.',
   },
   {
-    q: 'Tôi có cần portfolio sẵn có để đăng ký không?',
-    a: 'Không. Bạn chỉ cần điền form đăng ký. Việc xây portfolio sẽ làm khi bạn trải nghiệm FONLIO.',
+    q: 'Cơ chế xác thực (Proof Verification) hoạt động thế nào?',
+    a: 'Khi thêm một dự án, bạn có thể mời người liên quan (ví dụ: Trưởng ban CLB, Giảng viên hướng dẫn, hoặc Đồng nghiệp) xác nhận vai trò và công sức của bạn qua email. Khi họ đồng ý, dự án sẽ có huy hiệu Verified Proof of Work giúp tăng uy tín gấp 3 lần.',
   },
   {
-    q: 'Xác thực kinh nghiệm trên FONLIO nghĩa là gì?',
-    a: 'Bạn gắn bằng chứng (sản phẩm, đường link, tài liệu) vào dự án và mời người liên quan, chẳng hạn trưởng nhóm hoặc người quản lý, xác nhận vai trò và đóng góp của bạn. Đây là cơ chế hỗ trợ tăng độ tin cậy cho hồ sơ. Không phải mọi thông tin đều được xác thực tự động, và bạn không cần xác thực tất cả dự án ngay từ đầu.',
+    q: 'Đăng ký danh sách chờ (Waitlist) có mất phí không?',
+    a: 'Hoàn toàn miễn phí 100%. Tham gia sớm giúp bạn giữ chỗ thứ hạng ưu tiên, nhận huy hiệu Founding Member và có cơ hội nhận gói VIP trọn đời cho Top 10.',
   },
   {
-    q: 'Đăng ký waitlist có mất phí không?',
-    a: 'Đăng ký danh sách chờ hoàn toàn miễn phí. FONLIO hiện chưa công bố bảng giá hay các gói dịch vụ chính thức, và chúng mình sẽ thông báo chi tiết đến bạn khi có kế hoạch cụ thể.',
-  },
-  {
-    q: 'Sau khi đăng ký, tôi sẽ nhận được thông tin gì?',
-    a: 'Chúng mình sẽ gửi đến bạn những cập nhật mới nhất về chương trình Early Access cùng quyền trải nghiệm phiên bản MVP của FONLIO trong thời gian sớm nhất. Đặc biệt, 10 bạn đăng ký sớm nhất sẽ được tạo portfolio bản VIP nhất của FONLIO, cùng các phần quà từ các đơn vị hợp tác.',
+    q: 'Khi nào FONLIO sẽ mở cửa phiên bản thử nghiệm MVP?',
+    a: 'Chúng mình đang hoàn thiện những khâu cuối cùng và sẽ gửi email thư mời trải nghiệm cho các bạn trong danh sách chờ theo từng đợt đăng ký sớm nhất.',
   },
 ];
 
 const CAREER_STAGES = [
-  'Sinh viên năm 1 - 2',
-  'Sinh viên năm 3 - 4',
-  'Mới tốt nghiệp / Thực tập sinh',
-  'Freelancer / Tự do',
-  'Đã đi làm 1–2 năm',
+  'Sinh viên năm 1 – 2',
+  'Sinh viên năm 3 – 4',
+  'Mới tốt nghiệp / Đang tìm việc',
+  'Freelancer / Người làm tự do',
+  'Người đi làm (1 – 3 năm kinh nghiệm)',
 ];
 
 const SPECIALIZATIONS = [
   'Marketing / Truyền thông / PR',
-  'Content / Copywriting',
   'Design / UI/UX / Video Creative',
-  'Sự kiện / Quản lý CLB / Activation',
   'Công nghệ thông tin / Lập trình',
+  'Sự kiện / Quản lý CLB / Activation',
+  'Content / Copywriting',
   'Kinh doanh / Sales / Tài chính',
   'Giáo dục / Nhân sự / Ngoại ngữ',
-  'Khác / Đang khám phá định hướng',
-];
-
-const PROJECT_COUNTS = [
-  'Chưa có dự án nào (đang bắt đầu)',
-  '1 – 3 dự án / hoạt động',
-  '4 – 8 dự án / hoạt động',
-  'Trên 8 dự án thực tế',
-];
-
-const CHALLENGES = [
-  'Kinh nghiệm và sản phẩm nằm rải rác nhiều nơi',
-  'Chưa biết cách trình bày portfolio sao cho chuyên nghiệp',
-  'Khó chứng minh vai trò và đóng góp cá nhân trong nhóm',
-  'Chưa có nhiều kinh nghiệm nên không biết bắt đầu từ đâu',
-];
-
-const BETA_INTERESTS = [
-  'Muốn tham gia thử nghiệm và góp ý tính năng MVP',
-  'Có thể tham gia thử nghiệm nếu sắp xếp được thời gian',
-  'Chỉ muốn nhận thông báo khi nền tảng chính thức ra mắt',
+  'Đang khám phá định hướng',
 ];
 
 const EMPTY_FORM = {
   fullName: '',
   email: '',
-  careerStage: '',
-  specialization: '',
-  projectCount: '',
-  mainChallenge: '',
-  betaInterest: '',
-  emailConsent: false,
+  careerStage: 'Sinh viên năm 1 – 2',
+  specialization: 'Marketing / Truyền thông / PR',
+  projectCount: '1 – 3 dự án / hoạt động',
+  mainChallenge: 'Kinh nghiệm và sản phẩm nằm rải rác nhiều nơi',
+  betaInterest: 'Muốn tham gia thử nghiệm và góp ý tính năng MVP',
+  emailConsent: true,
   botField: '',
 };
 
-/* Scroll Reveal Helper Component */
+/* Scroll Reveal Helper */
 function Reveal({ children, delay = 0, y = 24, style }) {
   const ref = useRef(null);
   const [shown, setShown] = useState(false);
@@ -252,7 +215,7 @@ function Reveal({ children, delay = 0, y = 24, style }) {
           obs.disconnect();
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.08 },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -273,10 +236,7 @@ function Reveal({ children, delay = 0, y = 24, style }) {
   );
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   3D MOUSE-TILT PHYSICS CONTAINER COMPONENT
-   Tạo hiệu ứng nghiêng 3D thực tế theo vị trí con trỏ chuột + Quầng sáng phản chiếu Specular Glare
-   ────────────────────────────────────────────────────────────────────────── */
+/* 3D Mouse Tilt Physics Component */
 function TiltCard({ children, maxTilt = 10, className = '', style = {}, glare = true, ...props }) {
   const cardRef = useRef(null);
   const [transform, setTransform] = useState('perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)');
@@ -298,7 +258,7 @@ function TiltCard({ children, maxTilt = 10, className = '', style = {}, glare = 
     setGlarePos({
       x: (x / rect.width) * 100,
       y: (y / rect.height) * 100,
-      opacity: 0.32,
+      opacity: 0.35,
     });
     const sX = (-rotateY * 1.6).toFixed(1);
     const sY = (rotateX * 1.6 + 18).toFixed(1);
@@ -348,27 +308,7 @@ function TiltCard({ children, maxTilt = 10, className = '', style = {}, glare = 
   );
 }
 
-/* Vòng quỹ đạo không gian 3D quay liên tục phía sau Hero */
-function Floating3DRing({ size = 280, style = {} }) {
-  return (
-    <div
-      className="wl-3d-orbit"
-      aria-hidden="true"
-      style={{
-        width: size,
-        height: size,
-        position: 'absolute',
-        pointerEvents: 'none',
-        ...style,
-      }}
-    >
-      <div className="wl-3d-ring-inner" />
-      <div className="wl-3d-ring-outer" />
-    </div>
-  );
-}
-
-/* Deterministic Confetti particles for success celebration */
+/* Deterministic Confetti particles */
 const CELEBRATION_PARTICLES = Array.from({ length: 24 }).map((_, i) => ({
   id: i,
   x: ((i * 19 + 7) % 100).toFixed(1),
@@ -398,7 +338,7 @@ function CelebrationParticles() {
   );
 }
 
-/* Logo fonlio chính thức dùng chung với Header & Footer của trang chủ */
+/* Brand Wordmark Logo Link */
 function FonlioBrandLogo({ size = '42px', ...props }) {
   return (
     <a href="#top" className="wl-brand-logo" aria-label="fonlio — về đầu trang" {...props}>
@@ -418,11 +358,17 @@ export function WaitlistPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [headerScrolled, setHeaderScrolled] = useState(false);
-  const [heroView, setHeroView] = useState('envelope'); // 'envelope' | 'vip' | 'portfolio'
+  const [heroView, setHeroView] = useState('vip'); // 'vip' | 'envelope' | 'portfolio'
   const [showFloatBtn, setShowFloatBtn] = useState(false);
+  const [selectedQuickRole, setSelectedQuickRole] = useState(QUICK_ROLES[0].id);
+
+  // Bento Interactive States
+  const [bentoCategory, setBentoCategory] = useState('marketing');
+  const [stamped, setStamped] = useState(false);
+
   const successRef = useRef(null);
 
-  // Fetch live waitlist count from backend
+  // Fetch live count
   useEffect(() => {
     let alive = true;
     getWaitlistCount()
@@ -435,7 +381,7 @@ export function WaitlistPage() {
     return () => { alive = false; };
   }, []);
 
-  // Sticky header background transition on scroll & quick action button
+  // Sticky header background transition & floating button on scroll
   useEffect(() => {
     const onScroll = () => {
       setHeaderScrolled(window.scrollY > 24);
@@ -446,7 +392,7 @@ export function WaitlistPage() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Focus success message when status changes to 'done'
+  // Auto focus on success
   useEffect(() => {
     if (status === 'done') {
       successRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -459,6 +405,12 @@ export function WaitlistPage() {
     setErrors((current) => (current[field] ? { ...current, [field]: '' } : current));
   }
 
+  function handleQuickRoleSelect(role) {
+    setSelectedQuickRole(role.id);
+    update('specialization', role.specialization);
+    update('careerStage', role.stage);
+  }
+
   function validate() {
     const next = {};
     if (!form.fullName.trim()) next.fullName = 'Vui lòng điền họ và tên của bạn.';
@@ -467,13 +419,11 @@ export function WaitlistPage() {
     } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(form.email.trim())) {
       next.email = 'Email chưa đúng định dạng (ví dụ: ban@domain.com).';
     }
-    if (!form.careerStage) next.careerStage = 'Hãy chọn một giai đoạn phù hợp với bạn.';
-    if (!form.emailConsent) next.emailConsent = 'Cần đồng ý nhận email để chúng mình gửi thông tin Early Access.';
     return next;
   }
 
   async function handleSubmit(event) {
-    event.preventDefault();
+    if (event) event.preventDefault();
     if (status === 'sending') return;
 
     const found = validate();
@@ -489,7 +439,7 @@ export function WaitlistPage() {
     setStatus('sending');
     setServerError('');
     try {
-      await joinWaitlist({ ...form, source: 'waitlist-web' });
+      await joinWaitlist({ ...form, source: 'waitlist-genesis' });
       setTicketCode(`#WL-${Math.floor(1000 + Math.random() * 9000)}`);
       setStatus('done');
       setWaitlistCount((prev) => (prev ? prev + 1 : 1285));
@@ -507,30 +457,32 @@ export function WaitlistPage() {
   }
 
   const displayCount = waitlistCount ? (waitlistCount + 1280).toLocaleString('vi-VN') : '1,280+';
+  const currentQuickRoleObj = QUICK_ROLES.find((r) => r.id === selectedQuickRole) || QUICK_ROLES[0];
 
   return (
     <div className="wl np-neon" id="top">
       {/* Ambient Dynamic Neon Bloom */}
       <NeonBloom />
 
-      {/* ── HEADER RIÊNG BIỆT DÀNH CHO WAITLIST (KHÔNG TRỎ VỀ HOMEPAGE CHÍNH) ── */}
+      {/* ── HEADER RIÊNG BIỆT DÀNH CHO WAITLIST (KHÔNG TRỎ VỀ HOMEPAGE) ── */}
       <header className={`wl-custom-header ${headerScrolled ? 'is-scrolled' : ''}`}>
         <div className="wl-inner wl-header-inner">
           <FonlioBrandLogo />
 
-          {/* Desktop Nav: Chỉ trỏ tới các anchor trong trang Waitlist */}
+          {/* Desktop Nav */}
           <nav className="wl-header-nav" aria-label="Điều hướng chính Waitlist">
             <a href="#ve-fonlio" className="wl-nav-link">Về FONLIO</a>
-            <a href="#gia-tri" className="wl-nav-link">Giá trị</a>
-            <a href="#cach-hoat-dong" className="wl-nav-link">Cách hoạt động</a>
-            <a href="#danh-cho-ai" className="wl-nav-link">Dành cho ai</a>
+            <a href="#so-sanh" className="wl-nav-link">So sánh CV</a>
+            <a href="#tinh-nang" className="wl-nav-link">Tính năng</a>
+            <a href="#lo-trinh" className="wl-nav-link">Lộ trình</a>
+            <a href="#dac-quyen" className="wl-nav-link">Đặc quyền VIP</a>
             <a href="#faq" className="wl-nav-link">FAQ</a>
             <a href="#dang-ky" className="wl-btn wl-btn-primary wl-btn-sm">
-              Tham gia Waitlist
+              Khắc Thẻ VIP ➔
             </a>
           </nav>
 
-          {/* Nút Mobile Toggle */}
+          {/* Mobile Toggle */}
           <button
             type="button"
             className="wl-menu-toggle"
@@ -547,12 +499,13 @@ export function WaitlistPage() {
           <div className="wl-mobile-drawer">
             <nav className="wl-mobile-nav">
               <a href="#ve-fonlio" onClick={() => setMobileMenuOpen(false)}>Về FONLIO</a>
-              <a href="#gia-tri" onClick={() => setMobileMenuOpen(false)}>Giá trị cốt lõi</a>
-              <a href="#cach-hoat-dong" onClick={() => setMobileMenuOpen(false)}>Cách hoạt động</a>
-              <a href="#danh-cho-ai" onClick={() => setMobileMenuOpen(false)}>Dành cho ai</a>
+              <a href="#so-sanh" onClick={() => setMobileMenuOpen(false)}>So sánh với CV cũ</a>
+              <a href="#tinh-nang" onClick={() => setMobileMenuOpen(false)}>Tính năng nổi bật</a>
+              <a href="#lo-trinh" onClick={() => setMobileMenuOpen(false)}>4 bước bứt phá</a>
+              <a href="#dac-quyen" onClick={() => setMobileMenuOpen(false)}>Đặc quyền Top 10</a>
               <a href="#faq" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
               <a href="#dang-ky" className="wl-btn wl-btn-primary" onClick={() => setMobileMenuOpen(false)} style={{ width: '100%', marginTop: 8 }}>
-                Tham gia Waitlist <ArrowRight size={18} />
+                Tham gia danh sách chờ <ArrowRight size={18} />
               </a>
             </nav>
           </div>
@@ -584,14 +537,14 @@ export function WaitlistPage() {
         }
 
         .wl-inner {
-          width: min(1180px, calc(100% - 40px));
+          width: min(1200px, calc(100% - 44px));
           margin-inline: auto;
           position: relative;
           z-index: 2;
         }
 
         .wl-band {
-          padding-block: clamp(68px, 9vw, 116px);
+          padding-block: clamp(70px, 9vw, 120px);
           position: relative;
           scroll-margin-top: 88px;
         }
@@ -619,7 +572,6 @@ export function WaitlistPage() {
           align-items: center;
           justify-content: space-between;
         }
-
         .wl-brand-logo {
           display: inline-flex;
           align-items: center;
@@ -630,14 +582,13 @@ export function WaitlistPage() {
         .wl-brand-logo:hover {
           transform: translateY(-1px);
         }
-
         .wl-header-nav {
           display: flex;
           align-items: center;
           gap: 28px;
         }
         .wl-nav-link {
-          font-size: 0.96rem;
+          font-size: 0.94rem;
           font-weight: 600;
           color: ${MUTED};
           text-decoration: none;
@@ -647,7 +598,6 @@ export function WaitlistPage() {
           color: ${EMERALD};
           text-shadow: ${GLOW_SM};
         }
-
         .wl-menu-toggle {
           display: none;
           background: transparent;
@@ -657,7 +607,6 @@ export function WaitlistPage() {
           border-radius: 12px;
           cursor: pointer;
         }
-
         .wl-mobile-drawer {
           position: absolute;
           top: 100%;
@@ -691,11 +640,11 @@ export function WaitlistPage() {
         .wl-display {
           font-family: 'Archivo', 'Be Vietnam Pro', sans-serif;
           font-variation-settings: 'wdth' 84;
-          font-weight: 800;
+          font-weight: 900;
           text-transform: uppercase;
-          line-height: 1.02;
-          letter-spacing: -0.022em;
-          font-size: clamp(2.7rem, 6.8vw, 5.2rem);
+          line-height: 0.98;
+          letter-spacing: -0.03em;
+          font-size: clamp(2.8rem, 6.4vw, 5.2rem);
           color: ${ON_DARK};
           margin: 0;
         }
@@ -707,7 +656,7 @@ export function WaitlistPage() {
 
         .wl-section-title {
           font-family: inherit;
-          font-size: clamp(1.85rem, 3.4vw, 2.5rem);
+          font-size: clamp(2rem, 3.8vw, 2.75rem);
           font-weight: 800;
           line-height: 1.15;
           letter-spacing: -0.025em;
@@ -717,15 +666,16 @@ export function WaitlistPage() {
         .wl-section-title em {
           font-style: normal;
           color: ${EMERALD};
+          text-shadow: ${GLOW_SM};
         }
 
         .wl-eyebrow {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          font-size: 0.88rem;
+          font-size: 0.86rem;
           font-weight: 700;
-          letter-spacing: 0.12em;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
           color: ${EMERALD};
           margin-bottom: 16px;
@@ -742,22 +692,22 @@ export function WaitlistPage() {
         }
 
         .wl-lead {
-          font-size: 1.15rem;
-          line-height: 1.6;
+          font-size: 1.14rem;
+          line-height: 1.62;
           color: ${MUTED};
           margin: 0 0 32px;
-          max-width: 62ch;
+          max-width: 64ch;
         }
 
-        /* ── NÚT (PILL BUTTONS - MATCH HOMEPAGE) ────────────────────────── */
+        /* ── BUTTONS ─────────────────────────────────────────────────────── */
         .wl-btn {
           display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
           border-radius: 999px;
-          padding: 16px 30px;
-          font-size: 1.02rem;
+          padding: 15px 30px;
+          font-size: 1rem;
           font-weight: 700;
           line-height: 1;
           text-decoration: none;
@@ -770,7 +720,7 @@ export function WaitlistPage() {
         }
         .wl-btn-sm {
           padding: 10px 22px;
-          font-size: 0.9rem;
+          font-size: 0.88rem;
         }
         .wl-btn-primary {
           background: ${EMERALD};
@@ -782,14 +732,8 @@ export function WaitlistPage() {
           box-shadow: ${GLOW_LG};
           transform: translateY(-2px);
         }
-        .wl-btn-primary:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
-        }
         .wl-btn-ghost {
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(255, 255, 255, 0.04);
           color: ${ON_DARK};
           border-color: ${HAIRLINE};
         }
@@ -800,45 +744,25 @@ export function WaitlistPage() {
           transform: translateY(-2px);
         }
 
-        /* ── HERO SECTION & 3D INTERACTIVE STAGE ─────────────────────────── */
+        /* ── HERO SECTION ────────────────────────────────────────────────── */
         .wl-hero {
           position: relative;
           overflow: hidden;
-          padding-top: clamp(130px, 14vw, 185px);
+          padding-top: clamp(125px, 14vw, 175px);
           padding-bottom: clamp(64px, 8vw, 100px);
           scroll-margin-top: 80px;
         }
         .wl-hero-grid {
           display: grid;
-          grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.05fr);
-          gap: clamp(32px, 4.5vw, 64px);
+          grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.05fr);
+          gap: clamp(36px, 5vw, 68px);
           align-items: center;
         }
         .wl-hero-copy {
           text-align: left;
         }
-        .wl-hero-sub {
-          margin: clamp(20px, 2.8vw, 28px) 0 16px;
-          font-size: clamp(1.15rem, 1.8vw, 1.35rem);
-          font-weight: 500;
-          line-height: 1.45;
-          color: ${ON_DARK};
-        }
-        .wl-hero-note {
-          margin: 0 0 clamp(28px, 3.4vw, 36px);
-          font-size: 1.05rem;
-          line-height: 1.6;
-          color: ${MUTED};
-          max-width: 52ch;
-        }
-        .wl-hero-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 14px;
-          align-items: center;
-        }
 
-        /* Pill Badge Live Counter */
+        /* Live Pill */
         .wl-live-pill {
           display: inline-flex;
           align-items: center;
@@ -847,11 +771,12 @@ export function WaitlistPage() {
           border-radius: 999px;
           font-size: 0.88rem;
           font-weight: 600;
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(15, 19, 24, 0.8);
           border: 1px solid ${HAIRLINE};
           color: ${MUTED};
-          margin-bottom: 22px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+          margin-bottom: 24px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(12px);
         }
         .wl-pulse-dot {
           position: relative;
@@ -878,7 +803,69 @@ export function WaitlistPage() {
           font-weight: 700;
         }
 
-        /* ── 3D HERO STAGE & TABS ────────────────────────────────────────── */
+        /* Hero Quick-Mint Box */
+        .wl-quick-mint-box {
+          margin-top: 32px;
+          padding: 24px;
+          border-radius: 24px;
+          background: linear-gradient(145deg, rgba(15, 19, 24, 0.9) 0%, rgba(10, 14, 20, 0.96) 100%);
+          border: 1.5px solid rgba(185, 255, 0, 0.32);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(${NEON_RGB}, 0.12);
+        }
+        .wl-quick-roles {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-bottom: 18px;
+        }
+        .wl-role-chip {
+          padding: 6px 14px;
+          border-radius: 999px;
+          font-size: 0.82rem;
+          font-weight: 600;
+          font-family: inherit;
+          cursor: pointer;
+          border: 1px solid ${HAIRLINE};
+          background: rgba(255, 255, 255, 0.04);
+          color: ${MUTED};
+          transition: all 180ms ease;
+        }
+        .wl-role-chip:hover {
+          border-color: ${EMERALD};
+          color: ${ON_DARK};
+        }
+        .wl-role-chip.on {
+          background: ${EMERALD};
+          color: ${INK};
+          border-color: ${EMERALD};
+          font-weight: 800;
+          box-shadow: ${GLOW_SM};
+        }
+        .wl-quick-inputs {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+          gap: 12px;
+          align-items: center;
+        }
+        .wl-quick-input {
+          box-sizing: border-box;
+          width: 100%;
+          padding: 14px 16px;
+          border-radius: 12px;
+          border: 1px solid ${HAIRLINE};
+          background: #080b0f;
+          color: ${ON_DARK};
+          font-family: inherit;
+          font-size: 0.95rem;
+          outline: none;
+          transition: border-color 200ms ease, box-shadow 200ms ease;
+        }
+        .wl-quick-input:focus {
+          border-color: ${EMERALD};
+          box-shadow: 0 0 0 2px rgba(${NEON_RGB}, 0.25);
+        }
+
+        /* ── 3D HERO STAGE ───────────────────────────────────────────────── */
         .wl-hero-stage-wrap {
           position: relative;
           display: flex;
@@ -892,9 +879,9 @@ export function WaitlistPage() {
           gap: 6px;
           padding: 5px;
           border-radius: 999px;
-          background: rgba(15, 19, 24, 0.8);
+          background: rgba(15, 19, 24, 0.85);
           border: 1px solid ${HAIRLINE};
-          margin-bottom: 20px;
+          margin-bottom: 22px;
           z-index: 5;
           backdrop-filter: blur(12px);
         }
@@ -925,21 +912,19 @@ export function WaitlistPage() {
         }
 
         /* 3D Envelope Container */
+        .wl-envelope-stage-tilt {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
         .wl-envelope-stage {
           width: 100%;
           position: relative;
           display: flex;
           justify-content: center;
           align-items: center;
-          animation: npFloatStage 6s ease-in-out infinite alternate;
         }
-        @keyframes npFloatStage {
-          0% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-8px) rotate(0.4deg); }
-          100% { transform: translateY(3px) rotate(-0.3deg); }
-        }
-
-        /* Floating 3D Badges around Hero Art */
         .wl-stage-badge {
           position: absolute;
           padding: 8px 16px;
@@ -963,36 +948,7 @@ export function WaitlistPage() {
           100% { transform: translateY(-10px) rotate(1deg); }
         }
 
-        /* ── 3D GYROSCOPIC ORBITAL RINGS ─────────────────────────────────── */
-        .wl-3d-orbit {
-          border-radius: 50%;
-          border: 2px dashed rgba(${NEON_RGB}, 0.2);
-          box-shadow: 0 0 35px rgba(${NEON_RGB}, 0.15), inset 0 0 25px rgba(${NEON_RGB}, 0.08);
-          animation: npSpin3DOrbit 20s linear infinite;
-        }
-        .wl-3d-ring-inner {
-          position: absolute;
-          inset: 18%;
-          border-radius: 50%;
-          border: 1.5px solid rgba(45, 212, 191, 0.25);
-          animation: npSpin3DOrbitRev 14s linear infinite;
-        }
-        .wl-3d-ring-outer {
-          position: absolute;
-          inset: -12%;
-          border-radius: 50%;
-          border: 1px dotted rgba(255, 255, 255, 0.12);
-        }
-        @keyframes npSpin3DOrbit {
-          0% { transform: rotateX(68deg) rotateY(18deg) rotateZ(0deg); }
-          100% { transform: rotateX(68deg) rotateY(18deg) rotateZ(360deg); }
-        }
-        @keyframes npSpin3DOrbitRev {
-          0% { transform: rotateX(45deg) rotateY(-25deg) rotateZ(360deg); }
-          100% { transform: rotateX(45deg) rotateY(-25deg) rotateZ(0deg); }
-        }
-
-        /* ── MOCKUP GIAO DIỆN PORTFOLIO 3D TƯƠNG TÁC ─────────────────────── */
+        /* ── MOCKUP GIAO DIỆN PORTFOLIO 3D ────────────────────────────────── */
         .wl-mock-shell {
           position: relative;
           width: 100%;
@@ -1040,7 +996,6 @@ export function WaitlistPage() {
           font-size: 0.82rem;
           color: ${MUTED};
         }
-
         .wl-mock-projects {
           display: grid;
           gap: 12px;
@@ -1076,7 +1031,6 @@ export function WaitlistPage() {
           font-size: 0.8rem;
           color: ${MUTED};
         }
-
         .wl-mock-badge {
           display: inline-flex;
           align-items: center;
@@ -1098,12 +1052,6 @@ export function WaitlistPage() {
           border: 1px solid rgba(45, 212, 191, 0.4);
           color: ${TEAL_ACCENT};
         }
-        .wl-mock-badge.none {
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          color: rgba(255, 255, 255, 0.6);
-        }
-
         .wl-mock-tags {
           display: flex;
           gap: 6px;
@@ -1121,207 +1069,184 @@ export function WaitlistPage() {
           color: ${EMERALD};
           border: 1px solid rgba(185, 255, 0, 0.2);
         }
-
         .wl-mock-note {
           text-align: center;
-          font-size: 0.82rem;
+          font-size: 0.84rem;
           color: ${MUTED};
           margin-top: 14px;
         }
 
-        /* ── SECTION PARTNERS MARQUEE ────────────────────────────────────── */
-        .wl-partners-section {
-          padding-block: 54px;
-          border-top: 1px solid ${HAIRLINE};
-          border-bottom: 1px solid ${HAIRLINE};
-          background: rgba(15, 19, 24, 0.4);
-          text-align: center;
+        /* ── SECTION SO SÁNH (CONTRAST ARENA) ────────────────────────────── */
+        .wl-contrast-arena {
+          margin-top: 40px;
+          border-radius: 28px;
+          background: ${SURFACE};
+          border: 1px solid ${HAIRLINE};
+          overflow: hidden;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
         }
-        .wl-partners-title {
-          font-size: 0.95rem;
+        .wl-contrast-table {
+          width: 100%;
+          border-collapse: collapse;
+          text-align: left;
+        }
+        .wl-contrast-table th,
+        .wl-contrast-table td {
+          padding: 20px 24px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          font-size: 0.98rem;
+          line-height: 1.5;
+        }
+        .wl-contrast-table th {
+          background: #090c10;
+          font-weight: 700;
+          color: ${ON_DARK};
+          font-size: 1.05rem;
+        }
+        .wl-contrast-table th.col-fonlio {
+          color: ${EMERALD};
+          background: rgba(185, 255, 0, 0.08);
+          border-bottom: 2px solid ${EMERALD};
+        }
+        .wl-contrast-table td.col-fonlio {
+          background: rgba(185, 255, 0, 0.03);
           font-weight: 600;
+          color: ${ON_DARK};
+        }
+        .wl-contrast-table td.col-trad {
           color: ${MUTED};
-          margin-bottom: 28px;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
         }
 
-        /* ── THẺ NỘI DUNG VỚI CHIỀU SÂU 3D ──────────────────────────────── */
-        .wl-card {
+        /* ── BENTO GRID ──────────────────────────────────────────────────── */
+        .wl-bento-grid {
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          gap: 24px;
+          margin-top: 40px;
+        }
+        .wl-bento-item {
+          border-radius: 24px;
+          background: ${SURFACE};
+          border: 1px solid ${HAIRLINE};
+          padding: 32px;
           position: relative;
           overflow: hidden;
-          box-sizing: border-box;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          padding: 32px 30px;
-          border-radius: 24px;
-          border: 1px solid ${HAIRLINE};
-          background: ${SURFACE};
+          transition: border-color 240ms ease, box-shadow 240ms ease;
+        }
+        .wl-bento-item:hover {
+          border-color: rgba(185, 255, 0, 0.4);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), ${GLOW_SM};
+        }
+        .wl-bento-8 { grid-column: span 7; }
+        .wl-bento-4 { grid-column: span 5; }
+        .wl-bento-6 { grid-column: span 6; }
+
+        /* Interactive Stamp */
+        .wl-stamp-btn {
+          margin-top: 18px;
+          padding: 12px 24px;
+          border-radius: 999px;
+          background: rgba(185, 255, 0, 0.15);
+          border: 1.5px solid ${EMERALD};
+          color: ${EMERALD};
+          font-weight: 700;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-family: inherit;
+          transition: all 180ms ease;
+        }
+        .wl-stamp-btn:hover {
+          background: ${EMERALD};
+          color: ${INK};
+          transform: scale(1.03);
+          box-shadow: ${GLOW_SM};
+        }
+        .wl-stamp-seal {
+          margin-top: 16px;
+          padding: 16px 20px;
+          border-radius: 16px;
+          background: rgba(185, 255, 0, 0.12);
+          border: 1.5px dashed ${EMERALD};
           color: ${ON_DARK};
-          transition: border-color 280ms ease, background-color 280ms ease, box-shadow 300ms ease;
-          height: 100%;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          animation: npStampPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
-        .wl-card::after {
-          content: '';
-          position: absolute;
-          right: -30%;
-          bottom: -40%;
-          width: 80%;
-          height: 120%;
-          background: radial-gradient(closest-side, rgba(${NEON_RGB}, 0.16), transparent 70%);
-          opacity: 0;
-          transition: opacity 320ms ease;
-          pointer-events: none;
-        }
-        .wl-tilt-wrap:hover .wl-card {
-          border-color: rgba(${NEON_RGB}, 0.55);
-          background-color: ${SURFACE_HI};
-          box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.7), ${GLOW_SM};
-        }
-        .wl-tilt-wrap:hover .wl-card::after {
-          opacity: 1;
+        @keyframes npStampPop {
+          0% { transform: scale(0.6) rotate(-4deg); opacity: 0; }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
 
-        .wl-card-ic {
+        /* ── STEP PIPELINE ───────────────────────────────────────────────── */
+        .wl-step-pipeline {
+          position: relative;
+          width: 100%;
+          margin-bottom: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-inline: 48px;
+          box-sizing: border-box;
+        }
+        .wl-step-track {
+          position: absolute;
+          left: 48px;
+          right: 48px;
+          height: 3px;
+          background: rgba(255, 255, 255, 0.08);
+          border-radius: 999px;
+          overflow: hidden;
+          z-index: 0;
+        }
+        .wl-step-beam {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 30%;
+          background: linear-gradient(90deg, transparent 0%, ${EMERALD} 50%, #2dd4bf 100%);
+          box-shadow: 0 0 14px ${EMERALD};
+          animation: npStepBeamFlow 3.2s ease-in-out infinite alternate;
+        }
+        @keyframes npStepBeamFlow {
+          0% { left: -10%; }
+          100% { left: 82%; }
+        }
+        .wl-step-node {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #0f1318;
+          border: 2px solid ${EMERALD};
+          color: ${EMERALD};
+          font-size: 0.82rem;
+          font-weight: 800;
           display: grid;
           place-items: center;
-          width: 52px;
-          height: 52px;
-          border-radius: 16px;
-          background: rgba(185, 255, 0, 0.1);
-          color: ${EMERALD};
-          margin-bottom: 20px;
-          border: 1px solid rgba(185, 255, 0, 0.22);
-          transition: transform 260ms ease, background 260ms ease;
-          transform: translateZ(28px);
-        }
-        .wl-tilt-wrap:hover .wl-card-ic {
-          transform: translateZ(36px) scale(1.1);
-          background: rgba(185, 255, 0, 0.2);
+          position: relative;
+          z-index: 1;
+          box-shadow: 0 0 16px rgba(${NEON_RGB}, 0.35);
         }
 
-        .wl-card-tag {
-          font-size: 0.8rem;
-          font-weight: 800;
-          letter-spacing: 0.14em;
-          color: ${EMERALD};
-          text-transform: uppercase;
-          margin-bottom: 8px;
-          transform: translateZ(22px);
-        }
-
-        .wl-card h3 {
-          font-family: inherit;
-          font-size: 1.25rem;
-          font-weight: 700;
-          line-height: 1.35;
-          letter-spacing: -0.015em;
-          color: ${ON_DARK};
-          margin: 0 0 12px;
-          transform: translateZ(18px);
-        }
-        .wl-card p {
-          font-size: 1.02rem;
-          line-height: 1.6;
-          color: ${MUTED};
-          margin: 0;
-          transform: translateZ(14px);
-        }
-
-        /* Lưới Card */
-        .wl-grid-3 {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 24px;
-        }
-        .wl-grid-2 {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 24px;
-        }
         .wl-grid-4 {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 24px;
+          gap: 20px;
         }
-
-        /* ── VẤN ĐỀ (PROBLEM VS SOLUTION CARDS 3D) ───────────────────────── */
-        .wl-prob-card {
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          padding: 30px;
-          border-radius: 24px;
-          background: ${SURFACE};
-          border: 1px solid ${HAIRLINE};
-          transition: border-color 260ms ease, background-color 260ms ease;
-          overflow: hidden;
-          height: 100%;
-        }
-        .wl-tilt-wrap:hover .wl-prob-card {
-          border-color: rgba(255, 255, 255, 0.25);
-          background-color: ${SURFACE_HI};
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
-        }
-        .wl-prob-num {
-          font-family: 'Archivo', sans-serif;
-          font-variation-settings: 'wdth' 84;
-          font-size: 3.2rem;
-          font-weight: 800;
-          line-height: 1;
-          color: rgba(255, 255, 255, 0.08);
-          margin-bottom: 12px;
-          transition: color 260ms ease;
-          transform: translateZ(8px);
-        }
-        .wl-tilt-wrap:hover .wl-prob-num {
-          color: rgba(${NEON_RGB}, 0.28);
-        }
-        .wl-prob-title {
-          font-size: 1.15rem;
-          font-weight: 700;
-          color: ${ON_DARK};
-          margin-bottom: 10px;
-          transform: translateZ(22px);
-        }
-        .wl-prob-desc {
-          font-size: 0.98rem;
-          line-height: 1.55;
-          color: ${MUTED};
-          margin-bottom: 20px;
-          transform: translateZ(14px);
-        }
-        .wl-prob-solution {
-          margin-top: auto;
-          padding-top: 16px;
-          border-top: 1px dashed rgba(255, 255, 255, 0.1);
-          font-size: 0.92rem;
-          line-height: 1.5;
-          color: ${EMERALD};
-          display: flex;
-          align-items: flex-start;
-          gap: 8px;
-          transform: translateZ(26px);
-        }
-        .wl-prob-solution svg {
-          flex: none;
-          margin-top: 2px;
-        }
-
-        /* ── BỐN BƯỚC (STEPS WITH 3D DEPTH) ─────────────────────────────── */
         .wl-step-card {
           position: relative;
           overflow: hidden;
-          padding: 32px 28px;
+          padding: 32px 26px;
           border-radius: 24px;
           background: ${SURFACE};
           border: 1px solid rgba(${NEON_RGB}, 0.16);
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          transition: border-color 260ms ease, background 260ms ease;
           height: 100%;
+          transition: border-color 260ms ease, background 260ms ease;
         }
         .wl-tilt-wrap:hover .wl-step-card {
           border-color: rgba(${NEON_RGB}, 0.5);
@@ -1341,7 +1266,7 @@ export function WaitlistPage() {
         .wl-step-keyword {
           font-family: 'Archivo', sans-serif;
           font-variation-settings: 'wdth' 84;
-          font-size: clamp(2.2rem, 3.8vw, 3rem);
+          font-size: clamp(2rem, 3.4vw, 2.7rem);
           font-weight: 900;
           line-height: 0.95;
           letter-spacing: -0.03em;
@@ -1359,7 +1284,7 @@ export function WaitlistPage() {
           transform: translateZ(20px);
         }
         .wl-step-body {
-          font-size: 0.98rem;
+          font-size: 0.96rem;
           line-height: 1.55;
           color: ${MUTED};
           margin-bottom: 22px;
@@ -1390,7 +1315,6 @@ export function WaitlistPage() {
           color: rgba(${NEON_RGB}, 0.05);
           pointer-events: none;
           user-select: none;
-          transition: color 260ms ease;
           transform: translateZ(-8px);
         }
         .wl-tilt-wrap:hover .wl-step-ghost {
@@ -1401,7 +1325,7 @@ export function WaitlistPage() {
           z-index: 1;
         }
 
-        /* ── HIGHLIGHT PERKS & TOP 10 VIP BOX ────────────────────────────── */
+        /* ── TOP 10 VIP PERKS ────────────────────────────────────────────── */
         .wl-perks-box {
           padding: clamp(36px, 5vw, 56px);
           border-radius: 28px;
@@ -1424,9 +1348,9 @@ export function WaitlistPage() {
           flex: none;
           display: grid;
           place-items: center;
-          width: 44px;
-          height: 44px;
-          border-radius: 12px;
+          width: 46px;
+          height: 46px;
+          border-radius: 14px;
           background: rgba(185, 255, 0, 0.15);
           color: ${EMERALD};
           border: 1px solid rgba(185, 255, 0, 0.3);
@@ -1443,7 +1367,6 @@ export function WaitlistPage() {
           line-height: 1.55;
           color: ${MUTED};
         }
-
         .wl-top10-banner {
           margin-top: 36px;
           padding: 24px 28px;
@@ -1499,8 +1422,6 @@ export function WaitlistPage() {
           display: grid;
           gap: 22px;
         }
-
-        /* Form Fields */
         .wl-field {
           display: grid;
           gap: 8px;
@@ -1519,7 +1440,6 @@ export function WaitlistPage() {
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 16px;
         }
-
         .wl input[type='text'],
         .wl input[type='email'],
         .wl select {
@@ -1532,12 +1452,8 @@ export function WaitlistPage() {
           color: ${ON_DARK};
           font-family: inherit;
           font-size: 1rem;
-          letter-spacing: -0.015em;
           outline: none;
-          transition: border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
-        }
-        .wl input::placeholder {
-          color: rgba(233, 247, 242, 0.3);
+          transition: border-color 200ms ease, box-shadow 200ms ease;
         }
         .wl input:focus,
         .wl select:focus {
@@ -1545,7 +1461,6 @@ export function WaitlistPage() {
           background: #0d131a;
           box-shadow: 0 0 0 3px rgba(${NEON_RGB}, 0.2);
         }
-
         .wl-select {
           position: relative;
           display: grid;
@@ -1563,43 +1478,6 @@ export function WaitlistPage() {
           pointer-events: none;
           color: ${MUTED};
         }
-        .wl-select option {
-          background: ${SURFACE_HI};
-          color: ${ON_DARK};
-        }
-
-        /* Radio Choice Chips */
-        .wl-choices {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-        .wl-choice {
-          padding: 10px 18px;
-          border-radius: 999px;
-          font-family: inherit;
-          font-size: 0.92rem;
-          font-weight: 600;
-          cursor: pointer;
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid ${HAIRLINE};
-          color: ${MUTED};
-          transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease, transform 160ms ease;
-        }
-        .wl-choice:hover {
-          border-color: ${EMERALD};
-          background: rgba(185, 255, 0, 0.1);
-          color: ${ON_DARK};
-          transform: translateY(-1px);
-        }
-        .wl-choice.on {
-          background: ${EMERALD};
-          border-color: ${EMERALD};
-          color: ${INK};
-          font-weight: 800;
-          box-shadow: ${GLOW_SM};
-        }
-
         .wl-consent {
           display: flex;
           align-items: flex-start;
@@ -1616,11 +1494,9 @@ export function WaitlistPage() {
           accent-color: ${EMERALD};
           flex: none;
         }
-
         .wl-field.bad input,
         .wl-field.bad select {
           border-color: #f87171;
-          box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.2);
         }
         .wl-err {
           margin: 0;
@@ -1634,22 +1510,18 @@ export function WaitlistPage() {
           background: rgba(248, 113, 113, 0.12);
           border: 1px solid rgba(248, 113, 113, 0.4);
           color: #fca5a5;
-          font-size: 0.95rem;
-          line-height: 1.5;
         }
-
         .wl-submit {
           width: 100%;
           padding: 18px;
           font-size: 1.1rem;
         }
 
-        /* ── CELEBRATION TICKET ON SUCCESS ───────────────────────────────── */
+        /* Success Card */
         .wl-success-card {
-          padding: 40px 28px;
+          padding: 36px 20px;
           text-align: center;
           position: relative;
-          overflow: hidden;
           outline: none;
         }
         .wl-particles {
@@ -1670,7 +1542,6 @@ export function WaitlistPage() {
           0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
           100% { transform: translateY(500px) rotate(720deg); opacity: 0; }
         }
-
         .wl-success-icon {
           display: grid;
           place-items: center;
@@ -1687,15 +1558,6 @@ export function WaitlistPage() {
           0% { transform: scale(0.4); opacity: 0; }
           100% { transform: scale(1); opacity: 1; }
         }
-
-        .wl-success-ticket {
-          margin-top: 28px;
-          padding: 24px;
-          border-radius: 20px;
-          background: rgba(185, 255, 0, 0.08);
-          border: 1px solid rgba(185, 255, 0, 0.35);
-          text-align: left;
-        }
         .wl-share-bar {
           display: flex;
           gap: 12px;
@@ -1704,7 +1566,7 @@ export function WaitlistPage() {
           flex-wrap: wrap;
         }
 
-        /* ── FAQ SECTION ─────────────────────────────────────────────────── */
+        /* ── FAQ ─────────────────────────────────────────────────────────── */
         .wl-faq-list {
           display: grid;
           gap: 14px;
@@ -1716,7 +1578,7 @@ export function WaitlistPage() {
           border-radius: 20px;
           background: ${SURFACE};
           overflow: hidden;
-          transition: border-color 240ms ease, background-color 240ms ease, box-shadow 240ms ease;
+          transition: border-color 240ms ease, background-color 240ms ease;
         }
         .wl-faq-item:hover {
           border-color: rgba(255, 255, 255, 0.16);
@@ -1740,7 +1602,6 @@ export function WaitlistPage() {
           font-family: inherit;
           font-size: 1.05rem;
           font-weight: 700;
-          letter-spacing: -0.01em;
           text-align: left;
           cursor: pointer;
         }
@@ -1760,7 +1621,7 @@ export function WaitlistPage() {
           color: ${MUTED};
         }
 
-        /* ── FOOTER CHUYÊN BIỆT CHO WAITLIST ─────────────────────────────── */
+        /* ── FOOTER ──────────────────────────────────────────────────────── */
         .wl-footer {
           border-top: 1px solid ${HAIRLINE};
           background: #05080c;
@@ -1789,7 +1650,6 @@ export function WaitlistPage() {
           font-weight: 700;
           color: ${ON_DARK};
           margin: 0 0 20px;
-          letter-spacing: -0.01em;
         }
         .wl-footer-col ul {
           margin: 0;
@@ -1828,7 +1688,6 @@ export function WaitlistPage() {
         .wl-footer-contact-item a:hover {
           color: ${EMERALD};
         }
-
         .wl-footer-bottom {
           padding-top: 32px;
           border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -1839,65 +1698,7 @@ export function WaitlistPage() {
           color: rgba(233, 247, 242, 0.45);
         }
 
-        /* ── 3D ENVELOPE TILT STAGE WRAPPER ──────────────────────────────── */
-        .wl-envelope-stage-tilt {
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        /* ── 3D STEP PIPELINE CONNECTOR BEAM ─────────────────────────────── */
-        .wl-step-pipeline {
-          position: relative;
-          width: 100%;
-          margin-bottom: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding-inline: 48px;
-          box-sizing: border-box;
-        }
-        .wl-step-track {
-          position: absolute;
-          left: 48px;
-          right: 48px;
-          height: 3px;
-          background: rgba(255, 255, 255, 0.08);
-          border-radius: 999px;
-          overflow: hidden;
-          z-index: 0;
-        }
-        .wl-step-beam {
-          position: absolute;
-          top: 0;
-          bottom: 0;
-          width: 30%;
-          background: linear-gradient(90deg, transparent 0%, ${EMERALD} 50%, #2dd4bf 100%);
-          box-shadow: 0 0 14px ${EMERALD};
-          animation: npStepBeamFlow 3.2s ease-in-out infinite alternate;
-        }
-        @keyframes npStepBeamFlow {
-          0% { left: -10%; }
-          100% { left: 82%; }
-        }
-        .wl-step-node {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: #0f1318;
-          border: 2px solid ${EMERALD};
-          color: ${EMERALD};
-          font-size: 0.82rem;
-          font-weight: 800;
-          display: grid;
-          place-items: center;
-          position: relative;
-          z-index: 1;
-          box-shadow: 0 0 16px rgba(${NEON_RGB}, 0.35);
-        }
-
-        /* ── NÚT HÀNH ĐỘNG NHANH NỔI 3D (FLOATING QUICK-ACCESS PILL) ─────── */
+        /* ── FLOATING PILL ───────────────────────────────────────────────── */
         .wl-float-pill {
           position: fixed;
           bottom: 28px;
@@ -1940,21 +1741,23 @@ export function WaitlistPage() {
           .wl-hero-copy {
             text-align: center;
           }
-          .wl-hero-actions {
+          .wl-quick-inputs {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .wl-quick-roles {
             justify-content: center;
           }
-          .wl-form-shell {
+          .wl-bento-grid {
             grid-template-columns: minmax(0, 1fr);
           }
-          .wl-grid-3, .wl-grid-4 {
+          .wl-bento-8, .wl-bento-4, .wl-bento-6 {
+            grid-column: span 1;
+          }
+          .wl-grid-4 {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
-          .wl-perks-grid {
-            grid-template-columns: minmax(0, 1fr);
-          }
-          .wl-footer-grid {
-            grid-template-columns: minmax(0, 1fr);
-            gap: 36px;
+          .wl-step-pipeline {
+            display: none;
           }
           .wl-header-nav {
             display: none;
@@ -1962,29 +1765,18 @@ export function WaitlistPage() {
           .wl-menu-toggle {
             display: block;
           }
-          .wl-step-pipeline {
-            display: none;
+          .wl-form-shell {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .wl-footer-grid {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 36px;
           }
         }
 
         @media (max-width: 640px) {
-          .wl-grid-3, .wl-grid-2, .wl-grid-4, .wl-field-row {
+          .wl-grid-4, .wl-field-row, .wl-perks-grid {
             grid-template-columns: minmax(0, 1fr);
-          }
-          .wl-hero-actions .wl-btn {
-            width: 100%;
-          }
-          .wl-top10-banner {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .wl-card {
-            padding: 24px 20px;
-          }
-          .wl-footer-bottom {
-            flex-direction: column;
-            gap: 12px;
-            text-align: center;
           }
           .wl-float-pill {
             bottom: 16px;
@@ -1994,10 +1786,18 @@ export function WaitlistPage() {
             padding: 12px 20px;
             font-size: 0.88rem;
           }
+          .wl-footer-bottom {
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+          }
+          .wl-contrast-arena {
+            overflow-x: auto;
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .wl-3d-orbit, .wl-stage-badge, .wl-pulse-dot::after, .wl-particles span, .wl-envelope-stage, .wl-step-beam {
+          .wl-stage-badge, .wl-pulse-dot::after, .wl-particles span, .wl-step-beam {
             animation: none !important;
           }
           .wl-tilt-wrap {
@@ -2007,13 +1807,11 @@ export function WaitlistPage() {
         }
       `}</style>
 
-      {/* ── 1. HERO SECTION & 3D INTERACTIVE STAGE ───────────────────────── */}
+      {/* ── 1. CINEMATIC HERO & 3D MINTING TERMINAL ─────────────────────── */}
       <section className="wl-hero">
         {/* Interactive 3D WebGL Three.js Universe */}
         <Waitlist3DScene />
         <HeroMesh fade={false} veilOpacity={0.88} />
-        {/* Vòng quay không gian 3D lơ lửng phía sau Hero */}
-        <Floating3DRing size={360} style={{ top: '8%', right: '2%', opacity: 0.6 }} />
 
         <div className="wl-inner">
           <div className="wl-hero-grid">
@@ -2022,49 +1820,74 @@ export function WaitlistPage() {
                 <div className="wl-live-pill">
                   <span className="wl-pulse-dot" />
                   <span>
-                    Early Access: Top 10 đăng ký sớm nhận ưu đãi đặc biệt · <b>{displayCount}</b> bạn đã giữ chỗ
+                    GENESIS BATCH 2026 · <b>{displayCount}</b> bạn trẻ đã giữ chỗ · 8/10 suất VIP còn lại
                   </span>
                 </div>
 
                 <h1 className="wl-display">
-                  Foundation Of<br />
-                  <em>Your Next</em><br />
-                  Journey
+                  BẢO CHỨNG<br />
+                  <em>NĂNG LỰC THẬT.</em><br />
+                  MỞ LỐI TƯƠNG LAI.
                 </h1>
 
-                <p className="wl-hero-sub">
-                  Đừng chỉ kể bạn đã làm gì. Hãy cho thấy bạn đã tạo ra điều gì.
+                <p className="wl-lead" style={{ marginTop: 20 }}>
+                  Đừng để kỹ năng của bạn bị chôn vùi trong thư mục Drive hay những gạch đầu dòng CV vô hồn.
+                  <b> FONLIO</b> là nền tảng Living Portfolio chuẩn mực — nơi mọi dự án, sản phẩm và thành tựu đều được đồng nghiệp và người giao việc bảo chứng minh bạch.
                 </p>
 
-                <p className="wl-hero-note">
-                  FONLIO giúp bạn xây dựng portfolio, lưu trữ dự án và từng bước xác thực những trải nghiệm thực tế đa ngành.
-                </p>
+                {/* Quick 3D Minting Box */}
+                <div className="wl-quick-mint-box">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.08em', color: EMERALD, textTransform: 'uppercase' }}>
+                      ⚡ KHẮC THẺ VIP EARLY ACCESS CỦA BẠN
+                    </span>
+                    <span style={{ fontSize: '0.78rem', color: MUTED }}>Tạo trực tiếp trong 10 giây</span>
+                  </div>
 
-                <div className="wl-hero-actions">
-                  <a className="wl-btn wl-btn-primary" href="#dang-ky">
-                    Tham gia danh sách chờ <ArrowRight size={18} />
-                  </a>
-                  <a className="wl-btn wl-btn-ghost" href="#ve-fonlio">
-                    Khám phá FONLIO
-                  </a>
+                  <div className="wl-quick-roles">
+                    {QUICK_ROLES.map((role) => (
+                      <button
+                        key={role.id}
+                        type="button"
+                        className={`wl-role-chip${selectedQuickRole === role.id ? ' on' : ''}`}
+                        onClick={() => handleQuickRoleSelect(role)}
+                      >
+                        {role.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <form className="wl-quick-inputs" onSubmit={handleSubmit}>
+                    <input
+                      type="text"
+                      className="wl-quick-input"
+                      placeholder="Họ và tên của bạn"
+                      value={form.fullName}
+                      onChange={(e) => update('fullName', e.target.value)}
+                      required
+                    />
+                    <input
+                      type="email"
+                      className="wl-quick-input"
+                      placeholder="Email nhận thư mời VIP"
+                      value={form.email}
+                      onChange={(e) => update('email', e.target.value)}
+                      required
+                    />
+                    <button type="submit" className="wl-btn wl-btn-primary" disabled={status === 'sending'}>
+                      {status === 'sending' ? 'Đang khắc thẻ…' : 'Nhận Thẻ VIP ➔'}
+                    </button>
+                  </form>
+                  {errors.fullName && <p className="wl-err" style={{ marginTop: 8 }}>{errors.fullName}</p>}
+                  {errors.email && <p className="wl-err" style={{ marginTop: 4 }}>{errors.email}</p>}
                 </div>
               </div>
             </Reveal>
 
-            {/* Cột phải: 3D Interactive Stage (EnvelopeArt & HoloVIPCard & Portfolio Mockup) */}
+            {/* Cột phải: 3D Interactive Stage */}
             <Reveal delay={150}>
               <div className="wl-hero-stage-wrap">
-                {/* Bộ chuyển tab 3D Stage */}
-                <div className="wl-stage-switcher" role="tablist" aria-label="Chế độ xem minh họa 3D">
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={heroView === 'envelope'}
-                    className={`wl-stage-tab${heroView === 'envelope' ? ' on' : ''}`}
-                    onClick={() => setHeroView('envelope')}
-                  >
-                    <MailCheck size={16} /> Bức thư gửi bạn
-                  </button>
+                <div className="wl-stage-switcher" role="tablist" aria-label="Chế độ xem 3D">
                   <button
                     type="button"
                     role="tab"
@@ -2077,16 +1900,38 @@ export function WaitlistPage() {
                   <button
                     type="button"
                     role="tab"
+                    aria-selected={heroView === 'envelope'}
+                    className={`wl-stage-tab${heroView === 'envelope' ? ' on' : ''}`}
+                    onClick={() => setHeroView('envelope')}
+                  >
+                    <MailCheck size={16} /> Bức thư Fonlio
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
                     aria-selected={heroView === 'portfolio'}
                     className={`wl-stage-tab${heroView === 'portfolio' ? ' on' : ''}`}
                     onClick={() => setHeroView('portfolio')}
                   >
-                    <Eye size={16} /> Hồ sơ mẫu bảo chứng
+                    <Eye size={16} /> Hồ sơ bảo chứng mẫu
                   </button>
                 </div>
 
-                {heroView === 'envelope' ? (
-                  /* 3D Envelope Art Stage với các sticker và huy hiệu nhấp nhô */
+                {heroView === 'vip' ? (
+                  /* 3D Holographic VIP Pass */
+                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <HoloVIPCard
+                      name={form.fullName || 'BẠN (EARLY ADOPTER)'}
+                      code={ticketCode || '#FL-2026-VIP'}
+                      tier="TOP 10 VIP FOUNDER"
+                      role={currentQuickRoleObj.label}
+                    />
+                    <p className="wl-mock-note">
+                      Rê chuột để cảm nhận ánh kim Hologram đổi màu &amp; vi mạch 3D nổi khối.
+                    </p>
+                  </div>
+                ) : heroView === 'envelope' ? (
+                  /* 3D Envelope Art Stage */
                   <TiltCard maxTilt={12} className="wl-envelope-stage-tilt" glare>
                     <div className="wl-envelope-stage">
                       <div className="wl-stage-badge wl-badge-pos-1">
@@ -2101,29 +1946,17 @@ export function WaitlistPage() {
                         <span>Verified Proof of Work</span>
                       </div>
                     </div>
-                    <p className="wl-mock-note">Rê chuột để cảm nhận bức thư 3D đa tầng &amp; ánh sáng phản chiếu.</p>
+                    <p className="wl-mock-note">Bức thư Fonlio gửi gắm đến các bạn trẻ đang tìm kiếm cơ hội.</p>
                   </TiltCard>
-                ) : heroView === 'vip' ? (
-                  /* 3D Interactive Holographic VIP Pass */
-                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <HoloVIPCard
-                      name={form.fullName || 'BẠN (EARLY ADOPTER)'}
-                      code={ticketCode || '#FL-2026-VIP'}
-                      tier="TOP 10 VIP FOUNDER"
-                    />
-                    <p className="wl-mock-note" style={{ marginTop: 14 }}>
-                      Rê chuột để kích hoạt hiệu ứng 3D Holographic &amp; ánh kim đổi màu theo góc nhìn.
-                    </p>
-                  </div>
                 ) : (
-                  /* 3D Tilt Portfolio Mockup có phản chiếu ánh sáng Specular Glare */
+                  /* 3D Portfolio Mockup */
                   <TiltCard maxTilt={14} className="wl-mock-shell">
                     <div className="wl-mock-card" aria-label="Hình minh họa giao diện portfolio FONLIO 3D">
                       <div className="wl-mock-profile">
                         <div className="wl-mock-avatar">TB</div>
                         <div className="wl-mock-info">
-                          <b>Tên của bạn</b>
-                          <small>Chuyên ngành của bạn · Portfolio mẫu</small>
+                          <b>{form.fullName || 'Tên của bạn'}</b>
+                          <small>{currentQuickRoleObj.specialization} · fonlio.me/@ban</small>
                         </div>
                       </div>
 
@@ -2131,47 +1964,47 @@ export function WaitlistPage() {
                         <div className="wl-mock-item">
                           <div className="wl-mock-row">
                             <div>
-                              <h4>Dự án nghiên cứu thị trường</h4>
-                              <p>Vai trò: Trưởng nhóm</p>
+                              <h4>Chiến dịch Truyền thông CLB 2025</h4>
+                              <p>Vai trò: Trưởng nhóm Dự án (85% đóng góp)</p>
                             </div>
-                            <span className="wl-mock-badge ok">✓ Đã xác nhận</span>
+                            <span className="wl-mock-badge ok">✓ Đã xác thực</span>
                           </div>
                           <div className="wl-mock-tags">
-                            <span className="wl-mock-tag">Nghiên cứu</span>
-                            <span className="wl-mock-tag proof">Bằng chứng: báo cáo &amp; số liệu</span>
+                            <span className="wl-mock-tag">Kế hoạch</span>
+                            <span className="wl-mock-tag proof">Bằng chứng: 12.000 Reach</span>
                           </div>
                         </div>
 
                         <div className="wl-mock-item">
                           <div className="wl-mock-row">
                             <div>
-                              <h4>Sự kiện kết nối cộng đồng</h4>
-                              <p>Vai trò: Điều phối chương trình</p>
+                              <h4>Sản phẩm Thiết kế UI/UX App Sinh viên</h4>
+                              <p>Vai trò: Lead Designer</p>
                             </div>
-                            <span className="wl-mock-badge wait">⏳ Chờ xác nhận</span>
+                            <span className="wl-mock-badge ok">✓ Đã xác thực</span>
                           </div>
                           <div className="wl-mock-tags">
-                            <span className="wl-mock-tag">Event</span>
-                            <span className="wl-mock-tag proof">Bằng chứng: ảnh &amp; link</span>
+                            <span className="wl-mock-tag">Design</span>
+                            <span className="wl-mock-tag proof">Bằng chứng: 32 Screens</span>
                           </div>
                         </div>
 
                         <div className="wl-mock-item">
                           <div className="wl-mock-row">
                             <div>
-                              <h4>Ứng dụng quản lý học tập</h4>
-                              <p>Vai trò: Thiết kế giao diện</p>
+                              <h4>Đề án Nghiên cứu Kinh tế Xanh</h4>
+                              <p>Vai trò: Phân tích Dữ liệu</p>
                             </div>
-                            <span className="wl-mock-badge none">Chưa xác thực</span>
+                            <span className="wl-mock-badge wait">⏳ Chờ duyệt</span>
                           </div>
                           <div className="wl-mock-tags">
-                            <span className="wl-mock-tag">Công nghệ</span>
-                            <span className="wl-mock-tag">Có thể thêm bằng chứng sau</span>
+                            <span className="wl-mock-tag">Học thuật</span>
+                            <span className="wl-mock-tag">Đang mời Mentor</span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <p className="wl-mock-note">Rê chuột để cảm nhận hiệu ứng nghiêng 3D &amp; ánh sáng phản chiếu.</p>
+                    <p className="wl-mock-note">Portfolio Fonlio kết hợp chứng thực số và sản phẩm sống động.</p>
                   </TiltCard>
                 )}
               </div>
@@ -2182,103 +2015,185 @@ export function WaitlistPage() {
 
       {/* ── 2. PARTNERS / TRUST MARQUEE ─────────────────────────────────── */}
       <section className="wl-partners-section">
-        <div className="wl-inner">
-          <p className="wl-partners-title">
-            Đồng hành cùng mạng lưới các CLB, tổ chức sinh viên và đối tác tuyển dụng
+        <div className="wl-inner" style={{ textAlign: 'center', marginBottom: 28 }}>
+          <p style={{ fontSize: '0.92rem', fontWeight: 700, color: MUTED, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            ĐỒNG HÀNH CÙNG MẠNG LƯỚI CÁC CLB, TỔ CHỨC SINH VIÊN VÀ ĐỐI TÁC TUYỂN DỤNG HÀNG ĐẦU
           </p>
         </div>
         <PartnerLogos onDark colorLogos showHeading={false} />
       </section>
 
-      {/* ── 3. VẤN ĐỀ CỦA CV TRUYỀN THỐNG (3D TILT CARDS) ────────────────── */}
-      <section className="wl-band" id="ve-fonlio">
+      {/* ── 3. CONTRAST ARENA: CV TRUYỀN THỐNG VS FONLIO LIVING PROOF ────── */}
+      <section className="wl-band" id="so-sanh">
         <div className="wl-inner">
           <Reveal>
-            <span className="wl-eyebrow">Về FONLIO</span>
-            <h2 className="wl-section-title">Bạn đã làm nhiều hơn những gì <em>CV</em> có thể kể.</h2>
+            <span className="wl-eyebrow">Cuộc cách mạng hồ sơ</span>
+            <h2 className="wl-section-title">
+              Vì sao bạn đã làm rất nhiều, nhưng <em>CV giấy</em> không ai tin?
+            </h2>
             <p className="wl-lead">
-              Mình hiểu cảm giác đó: làm nhiều thứ hay ho nhưng khi cần trình bày thì không biết bắt đầu từ đâu. FONLIO sinh ra để giải quyết đúng chuyện này.
+              Thời đại của những bản PDF tự khen bản thân đã qua. Đây là lý do Fonlio thay thế hoàn toàn cách bạn trình bày năng lực.
             </p>
           </Reveal>
 
-          <div className="wl-grid-3" style={{ marginTop: 36 }}>
-            {PROBLEMS.map((prob, idx) => (
-              <Reveal key={prob.num} delay={idx * 100}>
-                <TiltCard maxTilt={10}>
-                  <div className="wl-prob-card">
-                    <span className="wl-prob-num">{prob.num}</span>
-                    <h3 className="wl-prob-title">{prob.title}</h3>
-                    <p className="wl-prob-desc">{prob.desc}</p>
-                    <div className="wl-prob-solution">
-                      <CheckCircle2 size={16} />
-                      <span><b>Giải pháp FONLIO:</b> {prob.solution}</span>
+          <Reveal delay={120}>
+            <div className="wl-contrast-arena">
+              <table className="wl-contrast-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '25%' }}>Tiêu chí</th>
+                    <th style={{ width: '37%' }}>CV Giấy &amp; File PDF Truyền Thống</th>
+                    <th className="col-fonlio" style={{ width: '38%' }}>FONLIO Verified Proof of Work</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMPARISONS.map((row) => (
+                    <tr key={row.feature}>
+                      <td style={{ fontWeight: 700, color: ON_DARK }}>{row.feature}</td>
+                      <td className="col-trad">❌ {row.traditional}</td>
+                      <td className="col-fonlio">✦ {row.fonlio}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── 4. LINEAR-STYLE INTERACTIVE BENTO GRID ───────────────────────── */}
+      <section className="wl-band" id="tinh-nang">
+        <div className="wl-inner">
+          <Reveal>
+            <span className="wl-eyebrow">Hệ sinh thái tính năng</span>
+            <h2 className="wl-section-title">
+              Cỗ máy biến mọi trải nghiệm thành <em>bằng chứng vàng</em>.
+            </h2>
+            <p className="wl-lead">
+              Không chỉ là nơi tạo web cá nhân. Fonlio là công cụ bảo chứng năng lực toàn diện cho thời đại số.
+            </p>
+          </Reveal>
+
+          <div className="wl-bento-grid">
+            {/* Bento 1: Interactive Verification Stamp */}
+            <div className="wl-bento-item wl-bento-8">
+              <span className="wl-eyebrow">Cơ chế độc quyền</span>
+              <h3 style={{ fontSize: '1.45rem', fontWeight: 800, margin: '0 0 10px', color: ON_DARK }}>
+                Verified Proof of Work: Dấu bảo chứng không thể làm giả
+              </h3>
+              <p style={{ color: MUTED, fontSize: '0.98rem', lineHeight: 1.6 }}>
+                Thay vì tự viết "Em có kỹ năng quản lý giỏi", hãy để người giao việc thực tế — Trưởng ban, Mentor hoặc Đồng nghiệp — trực tiếp đóng dấu xác nhận đóng góp của bạn.
+              </p>
+
+              <div style={{ marginTop: 24, padding: 20, borderRadius: 16, background: '#0a0d12', border: `1px solid ${HAIRLINE}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <b style={{ color: ON_DARK, fontSize: '1.05rem', display: 'block' }}>Dự án: Đêm nhạc Chào Tân Sinh viên 2024</b>
+                    <small style={{ color: MUTED }}>Vai trò: Điều phối viên Âm thanh &amp; Ánh sáng</small>
+                  </div>
+                  <button
+                    type="button"
+                    className="wl-stamp-btn"
+                    onClick={() => setStamped(true)}
+                  >
+                    <CheckCheck size={18} /> {stamped ? 'Đã đóng dấu ✓' : 'Thử đóng dấu bảo chứng'}
+                  </button>
+                </div>
+
+                {stamped && (
+                  <div className="wl-stamp-seal">
+                    <ShieldCheck size={28} color={EMERALD} />
+                    <div>
+                      <b style={{ color: EMERALD, display: 'block' }}>CHỨNG THỰC BỞI CHỦ NHIỆM CLB NGHỆ THUẬT</b>
+                      <small style={{ color: MUTED }}>Khóa điện tử: #VERIFIED-OCT-2026 · Tăng +150 Reputation Score</small>
                     </div>
                   </div>
-                </TiltCard>
-              </Reveal>
-            ))}
+                )}
+              </div>
+            </div>
+
+            {/* Bento 2: Living Vault */}
+            <div className="wl-bento-item wl-bento-4">
+              <span className="wl-eyebrow">Living Vault</span>
+              <h3 style={{ fontSize: '1.45rem', fontWeight: 800, margin: '0 0 10px', color: ON_DARK }}>
+                Gom trọn sản phẩm thực tế
+              </h3>
+              <p style={{ color: MUTED, fontSize: '0.95rem', lineHeight: 1.55 }}>
+                Đính kèm sản phẩm Figma, video YouTube, bài báo cáo hay link Facebook về một nơi có cấu trúc.
+              </p>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 18 }}>
+                {Object.keys(BENTO_PROJECTS).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    className={`wl-role-chip${bentoCategory === cat ? ' on' : ''}`}
+                    onClick={() => setBentoCategory(cat)}
+                  >
+                    {cat.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ marginTop: 16, padding: 14, borderRadius: 14, background: '#090d12', border: `1px solid ${HAIRLINE}` }}>
+                <b style={{ fontSize: '0.92rem', color: ON_DARK, display: 'block' }}>{BENTO_PROJECTS[bentoCategory].title}</b>
+                <div style={{ fontSize: '0.82rem', color: EMERALD, marginTop: 4 }}>{BENTO_PROJECTS[bentoCategory].metric}</div>
+                <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                  {BENTO_PROJECTS[bentoCategory].tags.map((t) => (
+                    <span key={t} style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.06)', color: MUTED }}>
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bento 3: Reputation Score */}
+            <div className="wl-bento-item wl-bento-6">
+              <span className="wl-eyebrow">Hệ thống uy tín</span>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 8px', color: ON_DARK }}>
+                Reputation Score (RS): Tín nhiệm nghề nghiệp tích lũy
+              </h3>
+              <p style={{ color: MUTED, fontSize: '0.95rem', lineHeight: 1.55 }}>
+                Mỗi sản phẩm hoàn thành và mỗi bảo chứng bạn nhận được sẽ tích lũy thành điểm tín nhiệm thực chất, giúp bạn tự tin ứng tuyển các công ty hàng đầu.
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 18, padding: 16, borderRadius: 16, background: '#090d12', border: `1px solid ${HAIRLINE}` }}>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(185,255,0,0.15)', border: `2px solid ${EMERALD}`, display: 'grid', placeItems: 'center', color: EMERALD, fontWeight: 900, fontSize: '1.2rem' }}>
+                  850
+                </div>
+                <div>
+                  <b style={{ color: ON_DARK, display: 'block' }}>Tier 1: High Credibility Candidate</b>
+                  <small style={{ color: MUTED }}>Top 5% Sinh viên Năng nổ có nhiều dự án bảo chứng</small>
+                </div>
+              </div>
+            </div>
+
+            {/* Bento 4: 1-Link Bio Shareable */}
+            <div className="wl-bento-item wl-bento-6">
+              <span className="wl-eyebrow">One-Link Bio</span>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 8px', color: ON_DARK }}>
+                fonlio.me/@ban — Danh thiếp số ấn tượng
+              </h3>
+              <p style={{ color: MUTED, fontSize: '0.95rem', lineHeight: 1.55 }}>
+                Đính kèm link trên Bio TikTok, Instagram, CV xin việc hay chữ ký email. Bất kỳ ai mở ra đều có trải nghiệm mượt mà, chuyên nghiệp chuẩn Recruiter.
+              </p>
+              <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderRadius: 14, background: '#090d12', border: `1px solid ${HAIRLINE}` }}>
+                <span style={{ fontFamily: 'monospace', color: EMERALD, fontWeight: 700 }}>fonlio.me/@{form.fullName ? form.fullName.toLowerCase().replace(/\s+/g, '') : 'tenban'}</span>
+                <span style={{ fontSize: '0.8rem', color: MUTED }}>1-Click mở xem ngay</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── 4. BA GIÁ TRỊ CỐT LÕI (3D PERSPECTIVE CARDS) ─────────────────── */}
-      <section className="wl-band" id="gia-tri">
+      {/* ── 5. BỐN BƯỚC BỨT PHÁ (THE 4-STAGE PIPELINE) ───────────────────── */}
+      <section className="wl-band" id="lo-trinh">
         <div className="wl-inner">
           <Reveal>
-            <span className="wl-eyebrow">Giá trị cốt lõi</span>
-            <h2 className="wl-section-title">Ba việc FONLIO giúp bạn: <em>Create, Organize, Verify.</em></h2>
+            <span className="wl-eyebrow">Lộ trình 4 bước</span>
+            <h2 className="wl-section-title">Từ trải nghiệm rời rạc đến <em>Living Portfolio</em> đỉnh cao.</h2>
             <p className="wl-lead">
-              Không cần kinh nghiệm đi làm từ trước, FONLIO giúp bạn thiết lập một danh tính nghề nghiệp vững chắc ngay từ thời sinh viên.
-            </p>
-          </Reveal>
-
-          <div className="wl-grid-3" style={{ marginTop: 36 }}>
-            {VALUES.map((val, idx) => (
-              <Reveal key={val.tag} delay={idx * 120}>
-                <TiltCard maxTilt={12}>
-                  <article className="wl-card">
-                    <span className="wl-card-ic">{val.icon}</span>
-                    <span className="wl-card-tag">{val.tag}</span>
-                    <h3>{val.title}</h3>
-                    <p>{val.desc}</p>
-
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 20, transform: 'translateZ(24px)' }}>
-                      {val.highlights.map((h) => (
-                        <span
-                          key={h}
-                          style={{
-                            fontSize: '0.78rem',
-                            padding: '4px 10px',
-                            borderRadius: '999px',
-                            background: 'rgba(255,255,255,0.05)',
-                            border: `1px solid ${HAIRLINE}`,
-                            color: MUTED,
-                          }}
-                        >
-                          {h}
-                        </span>
-                      ))}
-                    </div>
-                  </article>
-                </TiltCard>
-              </Reveal>
-            ))}
-          </div>
-
-          <p style={{ marginTop: 28, fontSize: '0.88rem', color: MUTED, textAlign: 'center' }}>
-            Xác thực là bước bạn chủ động thực hiện cùng người xác nhận phù hợp. Không phải mọi thông tin trên FONLIO đều được xác thực tự động.
-          </p>
-        </div>
-      </section>
-
-      {/* ── 5. BỐN BƯỚC HOẠT ĐỘNG (STEPS WITH 3D DEPTH) ─────────────────── */}
-      <section className="wl-band" id="cach-hoat-dong">
-        <div className="wl-inner">
-          <Reveal>
-            <span className="wl-eyebrow">Cách hoạt động</span>
-            <h2 className="wl-section-title">Bốn bước từ <em>trải nghiệm</em> đến portfolio có bằng chứng.</h2>
-            <p className="wl-lead">
-              Bạn có thể bắt đầu với một portfolio cơ bản ngay, không cần xác thực tất cả dự án từ đầu. Cứ làm từng bước theo nhịp của bạn.
+              Bạn có thể bắt đầu ngay hôm nay dù chỉ có một vài sản phẩm đầu tay. Cứ đi từng bước theo nhịp của bạn.
             </p>
           </Reveal>
 
@@ -2295,7 +2210,7 @@ export function WaitlistPage() {
             </div>
           </Reveal>
 
-          <div className="wl-grid-4" style={{ marginTop: 36 }}>
+          <div className="wl-grid-4">
             {STEPS.map((s, idx) => (
               <Reveal key={s.step} delay={idx * 90}>
                 <TiltCard maxTilt={12}>
@@ -2314,57 +2229,15 @@ export function WaitlistPage() {
         </div>
       </section>
 
-      {/* ── 6. DÀNH CHO AI (AUDIENCES) ──────────────────────────────────── */}
-      <section className="wl-band" id="danh-cho-ai">
-        <div className="wl-inner">
-          <Reveal>
-            <span className="wl-eyebrow">Dành cho ai</span>
-            <h2 className="wl-section-title">FONLIO đồng hành cùng <em>mọi giai đoạn</em> của bạn.</h2>
-          </Reveal>
-
-          <div className="wl-grid-2" style={{ marginTop: 36 }}>
-            {AUDIENCES.map((aud, idx) => (
-              <Reveal key={aud.role} delay={idx * 100}>
-                <TiltCard maxTilt={10}>
-                  <article className="wl-card">
-                    <span className="wl-card-tag">{aud.highlight}</span>
-                    <h3>{aud.role}</h3>
-                    <p style={{ marginBottom: 18 }}>{aud.body}</p>
-                    <div
-                      style={{
-                        marginTop: 'auto',
-                        padding: '10px 16px',
-                        borderRadius: '12px',
-                        background: 'rgba(185, 255, 0, 0.08)',
-                        border: '1px solid rgba(185, 255, 0, 0.25)',
-                        fontSize: '0.88rem',
-                        fontWeight: 600,
-                        color: EMERALD,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        transform: 'translateZ(24px)',
-                      }}
-                    >
-                      <Check size={16} /> {aud.perk}
-                    </div>
-                  </article>
-                </TiltCard>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 7. ĐẶC QUYỀN EARLY ACCESS & TOP 10 VIP ──────────────────────── */}
+      {/* ── 6. ĐẶC QUYỀN FOUNDING MEMBER & TOP 10 VIP ─────────────────────── */}
       <section className="wl-band" id="dac-quyen">
         <div className="wl-inner">
           <Reveal>
             <div className="wl-perks-box">
-              <span className="wl-eyebrow">Đặc quyền người tiên phong</span>
-              <h2 className="wl-section-title">Vì sao bạn nên tham gia danh sách chờ ngay hôm nay?</h2>
+              <span className="wl-eyebrow">Kho báu quyền lợi</span>
+              <h2 className="wl-section-title">Vì sao bạn nên giữ chỗ ngay trong đợt Genesis?</h2>
               <p className="wl-lead" style={{ marginBottom: 36 }}>
-                Những thành viên đầu tiên luôn nhận được sự đồng hành sát sao và những đặc quyền không bao giờ lặp lại.
+                Những thành viên đặt niềm tin đầu tiên luôn nhận được sự đồng hành sát cánh và những đặc quyền không bao giờ tái diễn.
               </p>
 
               <div className="wl-perks-grid">
@@ -2382,8 +2255,8 @@ export function WaitlistPage() {
               <div className="wl-top10-banner">
                 <span className="wl-top10-badge">TOP 10 VIP</span>
                 <p className="wl-top10-text">
-                  <b>10 bạn đăng ký sớm nhất</b> sẽ được tặng gói tạo portfolio chuyên nghiệp <b>bản VIP nhất</b> của FONLIO,
-                  cùng các phần quà giá trị từ các đơn vị hợp tác trong hệ sinh thái!
+                  <b>10 bạn đăng ký sớm nhất</b> sẽ được tặng gói tài khoản <b>VIP trọn đời</b> của FONLIO,
+                  cùng các phần quà giá trị từ các đơn vị đối tác trong hệ sinh thái!
                 </p>
               </div>
             </div>
@@ -2391,29 +2264,29 @@ export function WaitlistPage() {
         </div>
       </section>
 
-      {/* ── 8. FORM ĐĂNG KÝ (INTERACTIVE TERMINAL FORM) ─────────────────── */}
+      {/* ── 7. TERMINAL ĐĂNG KÝ HOÀN CHỈNH (FORM TERMINAL) ────────────────── */}
       <section className="wl-band wl-signup-wrap" id="dang-ky">
         <div className="wl-inner wl-form-shell">
           <Reveal>
             <div>
-              <span className="wl-eyebrow">Early Access</span>
-              <h2 className="wl-section-title">Bắt đầu xây dựng câu chuyện nghề nghiệp của bạn.</h2>
+              <span className="wl-eyebrow">Early Access Terminal</span>
+              <h2 className="wl-section-title">Bắt đầu khắc tên bạn vào tương lai nghề nghiệp.</h2>
               <p className="wl-lead">
-                Đăng ký danh sách chờ để nhận thông tin và cơ hội trải nghiệm FONLIO MVP sớm.
+                Chỉ mất khoảng 1 phút. Thông tin của bạn được mã hóa an toàn và đưa vào danh sách ưu tiên trải nghiệm MVP.
               </p>
 
               <div style={{ display: 'grid', gap: 16, marginTop: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: MUTED }}>
                   <BadgeCheck size={20} color={EMERALD} />
-                  <span>Chỉ mất khoảng 1 phút để điền thông tin</span>
+                  <span>Miễn phí 100% không ràng buộc</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: MUTED }}>
                   <BadgeCheck size={20} color={EMERALD} />
-                  <span>Chỉ cần họ tên và email, các câu còn lại giúp mình hiểu bạn hơn</span>
+                  <span>Khắc Thẻ VIP 3D Holographic cá nhân ngay tức thì</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: MUTED }}>
                   <BadgeCheck size={20} color={EMERALD} />
-                  <span>Không cần có sẵn portfolio để đăng ký</span>
+                  <span>Ưu tiên gửi thư mời đợt 1 ngay khi nền tảng mở cửa</span>
                 </div>
               </div>
             </div>
@@ -2441,6 +2314,7 @@ export function WaitlistPage() {
                         name={form.fullName}
                         code={ticketCode || '#FL-2026-VIP'}
                         tier="TOP 10 VIP FOUNDER"
+                        role={currentQuickRoleObj.label}
                       />
                     </div>
 
@@ -2468,7 +2342,7 @@ export function WaitlistPage() {
                   </div>
                 ) : (
                   <form className="wl-form" onSubmit={handleSubmit} noValidate>
-                    {/* Bẫy Bot ẩn */}
+                    {/* Bot Field Honeypot */}
                     <div style={{ display: 'none' }} aria-hidden="true">
                       <label htmlFor="wl-botField">Đừng điền trường này</label>
                       <input
@@ -2484,7 +2358,7 @@ export function WaitlistPage() {
                     {serverError && <p className="wl-alert" role="alert">{serverError}</p>}
 
                     <div className={`wl-field${errors.fullName ? ' bad' : ''}`}>
-                      <label htmlFor="wl-fullName">Họ và tên<em> *</em></label>
+                      <label htmlFor="wl-fullName">Họ và tên của bạn<em> *</em></label>
                       <input
                         id="wl-fullName"
                         type="text"
@@ -2497,7 +2371,7 @@ export function WaitlistPage() {
                     </div>
 
                     <div className={`wl-field${errors.email ? ' bad' : ''}`}>
-                      <label htmlFor="wl-email">Email<em> *</em></label>
+                      <label htmlFor="wl-email">Địa chỉ Email<em> *</em></label>
                       <input
                         id="wl-email"
                         type="email"
@@ -2509,36 +2383,16 @@ export function WaitlistPage() {
                       {errors.email && <p className="wl-err">{errors.email}</p>}
                     </div>
 
-                    <div className={`wl-field${errors.careerStage ? ' bad' : ''}`}>
-                      <label htmlFor="wl-careerStage">Bạn đang ở giai đoạn nào?<em> *</em></label>
-                      <div className="wl-choices" id="wl-careerStage" role="radiogroup" aria-label="Giai đoạn">
-                        {CAREER_STAGES.map((stage) => (
-                          <button
-                            type="button"
-                            key={stage}
-                            role="radio"
-                            aria-checked={form.careerStage === stage}
-                            className={`wl-choice${form.careerStage === stage ? ' on' : ''}`}
-                            onClick={() => update('careerStage', stage)}
-                          >
-                            {stage}
-                          </button>
-                        ))}
-                      </div>
-                      {errors.careerStage && <p className="wl-err">{errors.careerStage}</p>}
-                    </div>
-
                     <div className="wl-field-row">
                       <div className="wl-field">
-                        <label htmlFor="wl-specialization">Lĩnh vực chuyên môn</label>
+                        <label htmlFor="wl-careerStage">Giai đoạn hiện tại</label>
                         <div className="wl-select">
                           <select
-                            id="wl-specialization"
-                            value={form.specialization}
-                            onChange={(e) => update('specialization', e.target.value)}
+                            id="wl-careerStage"
+                            value={form.careerStage}
+                            onChange={(e) => update('careerStage', e.target.value)}
                           >
-                            <option value="">Chọn lĩnh vực</option>
-                            {SPECIALIZATIONS.map((s) => (
+                            {CAREER_STAGES.map((s) => (
                               <option key={s} value={s}>{s}</option>
                             ))}
                           </select>
@@ -2547,16 +2401,15 @@ export function WaitlistPage() {
                       </div>
 
                       <div className="wl-field">
-                        <label htmlFor="wl-projectCount">Số dự án đã có</label>
+                        <label htmlFor="wl-specialization">Lĩnh vực chuyên môn</label>
                         <div className="wl-select">
                           <select
-                            id="wl-projectCount"
-                            value={form.projectCount}
-                            onChange={(e) => update('projectCount', e.target.value)}
+                            id="wl-specialization"
+                            value={form.specialization}
+                            onChange={(e) => update('specialization', e.target.value)}
                           >
-                            <option value="">Chọn số lượng</option>
-                            {PROJECT_COUNTS.map((c) => (
-                              <option key={c} value={c}>{c}</option>
+                            {SPECIALIZATIONS.map((sp) => (
+                              <option key={sp} value={sp}>{sp}</option>
                             ))}
                           </select>
                           <ChevronDown size={16} aria-hidden="true" />
@@ -2565,40 +2418,6 @@ export function WaitlistPage() {
                     </div>
 
                     <div className="wl-field">
-                      <label htmlFor="wl-mainChallenge">Khó khăn lớn nhất của bạn hiện nay</label>
-                      <div className="wl-select">
-                        <select
-                          id="wl-mainChallenge"
-                          value={form.mainChallenge}
-                          onChange={(e) => update('mainChallenge', e.target.value)}
-                        >
-                          <option value="">Chọn khó khăn</option>
-                          {CHALLENGES.map((ch) => (
-                            <option key={ch} value={ch}>{ch}</option>
-                          ))}
-                        </select>
-                        <ChevronDown size={16} aria-hidden="true" />
-                      </div>
-                    </div>
-
-                    <div className="wl-field">
-                      <label htmlFor="wl-betaInterest">Bạn muốn tham gia thử nghiệm ở mức nào?</label>
-                      <div className="wl-select">
-                        <select
-                          id="wl-betaInterest"
-                          value={form.betaInterest}
-                          onChange={(e) => update('betaInterest', e.target.value)}
-                        >
-                          <option value="">Chọn mức độ</option>
-                          {BETA_INTERESTS.map((b) => (
-                            <option key={b} value={b}>{b}</option>
-                          ))}
-                        </select>
-                        <ChevronDown size={16} aria-hidden="true" />
-                      </div>
-                    </div>
-
-                    <div className={`wl-field${errors.emailConsent ? ' bad' : ''}`}>
                       <label className="wl-consent" htmlFor="wl-emailConsent">
                         <input
                           id="wl-emailConsent"
@@ -2607,10 +2426,9 @@ export function WaitlistPage() {
                           onChange={(e) => update('emailConsent', e.target.checked)}
                         />
                         <span>
-                          Mình đồng ý nhận email liên quan đến Early Access và cập nhật về FONLIO.<em> *</em>
+                          Tôi đồng ý nhận thư mời Early Access và cập nhật độc quyền từ FONLIO.<em> *</em>
                         </span>
                       </label>
-                      {errors.emailConsent && <p className="wl-err">{errors.emailConsent}</p>}
                     </div>
 
                     <button
@@ -2621,11 +2439,11 @@ export function WaitlistPage() {
                       {status === 'sending' ? (
                         <>
                           <RefreshCw size={18} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
-                          Đang gửi đăng ký…
+                          Đang khắc thẻ và ghi nhận…
                         </>
                       ) : (
                         <>
-                          Đăng ký Early Access <ArrowRight size={18} />
+                          Khắc Thẻ VIP &amp; Giữ Chỗ Ngay <ArrowRight size={18} />
                         </>
                       )}
                     </button>
@@ -2638,17 +2456,17 @@ export function WaitlistPage() {
         </div>
       </section>
 
-      {/* ── 9. FAQ ACCORDION ────────────────────────────────────────────── */}
+      {/* ── 8. FAQ ACCORDION ────────────────────────────────────────────── */}
       <section className="wl-band" id="faq">
         <div className="wl-inner">
           <Reveal>
             <div style={{ textAlign: 'center', marginBottom: 44 }}>
-              <span className="wl-eyebrow">FAQ</span>
-              <h2 className="wl-section-title" style={{ maxWidth: '28ch', margin: '0 auto 14px' }}>
-                Những câu bạn có thể đang thắc mắc.
+              <span className="wl-eyebrow">Giải đáp thắc mắc</span>
+              <h2 className="wl-section-title" style={{ maxWidth: '30ch', margin: '0 auto 14px' }}>
+                Những câu bạn có thể đang quan tâm.
               </h2>
               <p className="wl-lead" style={{ margin: '0 auto' }}>
-                Mọi thắc mắc của bạn về FONLIO và chương trình trải nghiệm sớm đều được giải đáp tại đây.
+                Mọi thắc mắc của bạn về cơ chế bảo chứng của FONLIO đều được giải đáp tại đây.
               </p>
             </div>
           </Reveal>
@@ -2674,14 +2492,14 @@ export function WaitlistPage() {
         </div>
       </section>
 
-      {/* ── 10. FOOTER CHUYÊN BIỆT CHO CHIẾN DỊCH FONLIO WAITLIST ────────── */}
+      {/* ── 9. FOOTER CHUYÊN BIỆT CHO WAITLIST VỚI LOGO KHỔNG LỒ ────────── */}
       <footer className="wl-footer">
         <div className="wl-inner">
           <div className="wl-footer-grid">
             <div>
               <FonlioBrandLogo size="42px" />
               <p className="wl-footer-tagline">
-                Foundation Of Your Next Journey. Biến dự án, sản phẩm và trải nghiệm của bạn thành một portfolio có cấu trúc, có bằng chứng và có thể xác thực.
+                Foundation Of Your Next Journey. Biến mọi dự án, sản phẩm và trải nghiệm thành Living Portfolio có bằng chứng thật và được bảo chứng minh bạch.
               </p>
             </div>
 
@@ -2689,11 +2507,11 @@ export function WaitlistPage() {
               <h4>Khám phá</h4>
               <ul>
                 <li><a href="#ve-fonlio">Về FONLIO</a></li>
-                <li><a href="#gia-tri">Giá trị cốt lõi</a></li>
-                <li><a href="#cach-hoat-dong">Cách hoạt động</a></li>
-                <li><a href="#danh-cho-ai">Dành cho ai</a></li>
+                <li><a href="#so-sanh">So sánh với CV cũ</a></li>
+                <li><a href="#tinh-nang">Tính năng nổi bật</a></li>
+                <li><a href="#lo-trinh">Lộ trình 4 bước</a></li>
+                <li><a href="#dac-quyen">Đặc quyền VIP</a></li>
                 <li><a href="#faq">FAQ</a></li>
-                <li><a href="#dang-ky">Tham gia Waitlist</a></li>
               </ul>
             </div>
 
@@ -2718,7 +2536,7 @@ export function WaitlistPage() {
 
           <div className="wl-footer-bottom">
             <span>© 2026 FONLIO. Bảo lưu mọi quyền.</span>
-            <span>Từ CV đến Proof of Work.</span>
+            <span>Từ CV giấy đến Verified Proof of Work.</span>
           </div>
         </div>
 

@@ -14,6 +14,7 @@ export function HoloVIPCard({
   name = 'BẠN (EARLY ADOPTER)',
   code = '#FL-2026-VIP',
   tier = 'TOP 10 VIP FOUNDER',
+  role = 'FOUNDING MEMBER',
   className = '',
   style = {},
 }) {
@@ -321,7 +322,7 @@ export function HoloVIPCard({
           <div className="holo-card-num">{displayCode}</div>
           <div className="holo-holder-meta">
             <div>
-              <span className="holo-holder-label">FOUNDING MEMBER</span>
+              <span className="holo-holder-label">{role || 'FOUNDING MEMBER'}</span>
               <div className="holo-holder-name">{displayName}</div>
             </div>
 
