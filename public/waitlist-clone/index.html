@@ -538,6 +538,45 @@ x-w.fonlio-brand-word .letter {
 .trajectory-sentences__sentence {
   color: #ffffff !important;
 }
+/* TOOLKIT SECTION - DARK THEME & HIGH CONTRAST */
+.toolkit,
+.toolkit__container {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.toolkit__header {
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+html:lang(vi) .toolkit__title,
+.toolkit__title {
+  color: #ffffff !important;
+  font-family: CabinetGrotesk-Bold, CabinetGrotesk-Variable, 'Be Vietnam Pro', sans-serif !important;
+  font-size: clamp(48px, 6vw, 84px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+  text-shadow: 0 0 32px rgba(255, 255, 255, 0.25) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.toolkit__subtitle-wrap {
+  height: 3.2em !important;
+  margin-top: 1.5vh !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+html:lang(vi) .toolkit__subtitle,
+.toolkit__subtitle,
+.toolkit__subtitle--front,
+.toolkit__subtitle--art {
+  color: #b9ff00 !important;
+  font-family: 'Fredoka', 'Baloo 2', Satoshi-Variable, 'Be Vietnam Pro', sans-serif !important;
+  font-size: clamp(18px, 1.8vw, 24px) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  text-shadow: 0 0 20px rgba(185, 255, 0, 0.6), 0 0 40px rgba(45, 212, 191, 0.3) !important;
+}
 .projects {
   background-color: #070a0f !important;
 }
