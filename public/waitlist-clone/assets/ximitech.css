@@ -571,3 +571,29 @@ html[data-home-loader-state="restoring"] .sound-toggle {
     transform: scaleY(0.7);
   }
 }
+
+/* ---------- Fonlio Brand Typography Header Logo ---------- */
+.site-header__logo.fonlio-header-brand {
+  width: auto !important;
+  height: clamp(38px, 4.2vw, 48px) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  text-decoration: none !important;
+}
+
+.fonlio-header-wordmark {
+  height: clamp(36px, 3.8vw, 44px) !important;
+  width: auto !important;
+  max-width: 220px !important;
+  object-fit: contain !important;
+  display: block !important;
+  user-select: none !important;
+  filter: drop-shadow(0 0 16px rgba(185, 255, 0, 0.45)) drop-shadow(0 0 36px rgba(45, 212, 191, 0.25)) !important;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease !important;
+}
+
+.site-header__logo.fonlio-header-brand:hover .fonlio-header-wordmark {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 22px rgba(185, 255, 0, 0.7)) drop-shadow(0 0 44px rgba(45, 212, 191, 0.45)) !important;
+}
+

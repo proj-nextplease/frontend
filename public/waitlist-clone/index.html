@@ -138,6 +138,29 @@
     <link rel="stylesheet" href="assets/ximitech.css">
   
 <style>
+/* FONLIO BRAND HEADER LOGO */
+.site-header__logo.fonlio-header-brand {
+  width: auto !important;
+  height: clamp(38px, 4.2vw, 48px) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  text-decoration: none !important;
+}
+.fonlio-header-wordmark {
+  height: clamp(36px, 3.8vw, 44px) !important;
+  width: auto !important;
+  max-width: 220px !important;
+  object-fit: contain !important;
+  display: block !important;
+  user-select: none !important;
+  filter: drop-shadow(0 0 16px rgba(185, 255, 0, 0.45)) drop-shadow(0 0 36px rgba(45, 212, 191, 0.25)) !important;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease !important;
+}
+.site-header__logo.fonlio-header-brand:hover .fonlio-header-wordmark {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 22px rgba(185, 255, 0, 0.7)) drop-shadow(0 0 44px rgba(45, 212, 191, 0.45)) !important;
+}
+
 /* FONLIO LUXURY WAITLIST EMBED IN FOOTER */
 .next-footer {
   height: calc(86vh - 18px) !important;
@@ -470,8 +493,27 @@
       }
     </script>
 
-    <!-------- HEADER -------->
-    <header class="site-header"></header>
+    <header class="site-header">
+      <a
+        class="site-header__logo fonlio-header-brand"
+        href="/"
+        target="_top"
+        aria-label="Về trang chủ"
+      >
+        <img
+          src="/waitlist-clone/brand/logoland4.png"
+          alt="fonlio:"
+          class="fonlio-header-wordmark"
+        />
+      </a>
+      <nav class="site-header__nav" aria-label="Điều hướng chính">
+        <a class="site-header__link site-header__link--secondary" href="#parcours">hành trình</a>
+        <a class="site-header__link site-header__link--secondary" href="#toolkit">công cụ</a>
+        <a class="site-header__link" href="#projects">dự án</a>
+        <a class="site-header__link site-header__link--playground" href="/" target="_blank" rel="noreferrer">fonlio.vn</a>
+        <a class="site-header__link" href="#contact">liên hệ</a>
+      </nav>
+    </header>
 
     <nav
       class="scroll-indicator"
