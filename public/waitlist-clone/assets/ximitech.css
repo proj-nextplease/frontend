@@ -616,4 +616,13 @@ html[data-home-loader-state="restoring"] .sound-toggle {
   fill: url(#nextTextGradient) !important;
 }
 
+/* Đảm bảo khung footer luôn đè lên trên chữ lượn sóng SVG */
+.next-footer {
+  z-index: 10 !important;
+}
+
+.next-section__svg {
+  z-index: 1 !important;
+}
+
 
