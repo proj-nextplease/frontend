@@ -5,13 +5,11 @@
 
     <!-------- LANGUAGE --------->
     <script>
-      // Đặt lang trước khi vẽ để font tiếng Việt áp dụng ngay, tránh nháy font.
+      // Mặc định luôn là tiếng Việt (vi)
       try {
-        const lang = localStorage.getItem("ximitech.language")
-        document.documentElement.lang = lang === "en" ? "en" : "vi"
-      } catch (error) {
-        // Không đọc được localStorage thì giữ tiếng Việt
-      }
+        localStorage.setItem("ximitech.language", "vi");
+      } catch (error) {}
+      document.documentElement.lang = "vi";
     </script>
 
     <!-------- SCROLL INTENT + LOADER STATE --------->
@@ -866,7 +864,6 @@ html:lang(vi) .toolkit__subtitle,
         <a class="site-header__link site-header__link--secondary" href="#parcours">hành trình</a>
         <a class="site-header__link site-header__link--secondary" href="#toolkit">công cụ</a>
         <a class="site-header__link" href="#projects">đặc quyền</a>
-        <a class="site-header__link site-header__link--playground" href="/" target="_blank" rel="noreferrer">fonlio.vn</a>
         <a class="site-header__link" href="#contact">liên hệ</a>
       </nav>
     </header>

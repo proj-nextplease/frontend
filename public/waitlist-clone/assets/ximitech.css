@@ -20,9 +20,14 @@ x-w {
   }
 }
 
-.site-header__link,
-.site-header__language-switch {
+.site-header__link {
   white-space: nowrap;
+}
+
+/* Ẩn hoàn toàn fonlio.vn và bộ chuyển ngôn ngữ VN|EN trên header */
+.site-header__language-switch,
+.site-header__link--playground {
+  display: none !important;
 }
 
 /* ---------- Footer: thêm pháp nhân, founder, liên hệ ---------- */
