@@ -648,71 +648,93 @@ html[data-home-loader-state="restoring"] .sound-toggle {
 
 .next-footer__inner {
   width: 100% !important;
-  gap: clamp(24px, 3vw, 52px) !important;
+  max-width: 1260px !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(360px, 1fr) minmax(460px, 580px) !important;
+  grid-template-rows: auto auto !important;
+  grid-template-areas:
+    "main card"
+    "nav  card" !important;
+  column-gap: clamp(36px, 4.5vw, 68px) !important;
+  row-gap: 28px !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  display: flex !important;
 }
 
 .next-footer__main {
-  flex: 1 1 30% !important;
-  max-width: 420px !important;
-  gap: clamp(16px, 2.2vh, 32px) !important;
-  justify-content: space-between !important;
+  grid-area: main !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 100% !important;
   min-width: 0 !important;
+  padding: 0 !important;
 }
 
 .next-footer__headline {
-  font-size: clamp(26px, 2.4vw, 38px) !important;
+  font-size: clamp(26px, 2.5vw, 42px) !important;
   line-height: 1.18 !important;
   letter-spacing: -0.02em !important;
+  margin: 0 !important;
+  color: #120e20 !important;
 }
 
 .next-footer__headline span {
-  display: inline-block !important;
-  white-space: nowrap !important;
+  display: inline !important;
+  white-space: normal !important;
 }
 
 .next-footer__meta {
-  font-size: 13.5px !important;
+  font-size: 13px !important;
   gap: 16px !important;
   flex-wrap: wrap !important;
+  color: rgba(18, 14, 32, 0.7) !important;
 }
 
 .next-footer__nav {
-  flex: 0 0 auto !important;
-  gap: clamp(24px, 2.6vw, 48px) !important;
-  padding-top: 0 !important;
+  grid-area: nav !important;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: clamp(32px, 4vw, 56px) !important;
+  align-items: flex-start !important;
+  padding-top: 14px !important;
+  border-top: 1px solid rgba(18, 14, 32, 0.1) !important;
 }
 
 .next-footer__group {
-  gap: 10px !important;
+  gap: 8px !important;
   min-width: 120px !important;
 }
 
 .next-footer__group-title {
-  font-size: 20px !important;
-  margin-bottom: 6px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  margin-bottom: 4px !important;
+  color: #120e20 !important;
 }
 
 .next-footer__group a {
-  font-size: 14.5px !important;
+  font-size: 13.5px !important;
+  color: rgba(18, 14, 32, 0.82) !important;
 }
 
 .fonlio-waitlist-card {
-  flex: 0 1 680px !important;
-  max-width: 680px !important;
+  grid-area: card !important;
   width: 100% !important;
+  max-width: 580px !important;
   box-sizing: border-box !important;
-  background: rgba(255, 255, 255, 0.26) !important;
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
   box-shadow: 0 24px 50px -12px rgba(35, 12, 55, 0.16), 
               0 0 0 1px rgba(255, 255, 255, 0.4) inset,
               0 8px 24px rgba(255, 255, 255, 0.15) !important;
   backdrop-filter: blur(36px) saturate(190%) !important;
   -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
   border-radius: 20px !important;
-  padding: 22px 28px !important;
+  padding: 22px 24px !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
@@ -724,7 +746,7 @@ html[data-home-loader-state="restoring"] .sound-toggle {
   overflow-y: auto !important;
   scrollbar-width: thin !important;
   scrollbar-color: rgba(18, 14, 32, 0.25) transparent !important;
-  margin: 0 auto !important;
+  margin: 0 !important;
 }
 .fonlio-waitlist-card::before {
   content: '' !important;
@@ -947,13 +969,14 @@ html[data-home-loader-state="restoring"] .sound-toggle {
   border-radius: 999px !important;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .next-footer {
     height: auto !important;
     min-height: 90vh !important;
     position: relative !important;
   }
   .next-footer__inner {
+    display: flex !important;
     flex-direction: column !important;
     gap: 32px !important;
   }
@@ -968,6 +991,10 @@ html[data-home-loader-state="restoring"] .sound-toggle {
   }
   .fonlio-pills {
     grid-template-columns: 1fr !important;
+  }
+  .next-footer__nav {
+    flex-direction: column !important;
+    gap: 20px !important;
   }
 }
 
