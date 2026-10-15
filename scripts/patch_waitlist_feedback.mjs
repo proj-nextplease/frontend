@@ -236,7 +236,14 @@ body {
   color: #ffffff !important;
 }
 .next-section__text {
-  fill: #131b24 !important;
+  fill: #ffffff !important;
+  font-family: 'Be Vietnam Pro', CabinetGrotesk-Variable, sans-serif !important;
+}
+#nextTextCream {
+  fill: #ffffff !important;
+}
+#nextTextGradientPart {
+  fill: url(#nextTextGradient) !important;
 }
 `;
 

@@ -602,3 +602,18 @@ html[data-home-loader-state="restoring"] .sound-toggle {
   filter: drop-shadow(0 0 22px rgba(185, 255, 0, 0.7)) drop-shadow(0 0 44px rgba(45, 212, 191, 0.45)) !important;
 }
 
+/* Next Section (Hồ sơ của bạn xứng đáng...) - Tăng độ tương phản rực rỡ, rõ nét */
+.next-section__text {
+  fill: #ffffff !important;
+  font-family: "Be Vietnam Pro", CabinetGrotesk-Variable, sans-serif !important;
+}
+
+#nextTextCream {
+  fill: #ffffff !important;
+}
+
+#nextTextGradientPart {
+  fill: url(#nextTextGradient) !important;
+}
+
+
