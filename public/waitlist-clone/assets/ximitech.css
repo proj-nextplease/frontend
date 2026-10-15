@@ -705,22 +705,36 @@ html[data-home-loader-state="restoring"] .sound-toggle {
   align-items: center !important;
   justify-content: space-between !important;
   gap: 16px !important;
-  padding: 12px 20px !important;
-  background: rgba(14, 11, 22, 0.76) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  border-radius: 14px !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22) !important;
+  padding: 13px 22px !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  backdrop-filter: blur(36px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 20px 48px -12px rgba(35, 12, 55, 0.14),
+              0 0 0 1px rgba(255, 255, 255, 0.45) inset,
+              0 8px 24px rgba(255, 255, 255, 0.15) !important;
   box-sizing: border-box !important;
   width: 100% !important;
   max-width: 580px !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.next-footer__nav.np-footer-contact-bar:hover,
+.np-footer-contact-bar:hover {
+  background: rgba(255, 255, 255, 0.42) !important;
+  border-color: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 26px 54px -10px rgba(35, 12, 55, 0.18),
+              0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+              0 12px 28px rgba(255, 255, 255, 0.22) !important;
+  transform: translateY(-2px) !important;
 }
 
 .np-footer-contact-info {
   display: flex !important;
   align-items: center !important;
-  gap: 12px !important;
+  gap: 14px !important;
   flex-wrap: wrap !important;
 }
 
@@ -728,29 +742,33 @@ html[data-home-loader-state="restoring"] .sound-toggle {
   display: inline-flex !important;
   align-items: center !important;
   gap: 8px !important;
-  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-size: 13.5px !important;
-  font-weight: 500 !important;
-  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 600 !important;
+  color: #120e20 !important;
   text-decoration: none !important;
-  transition: color 0.18s ease !important;
-}
-
-.np-footer-contact-item:hover {
-  color: #34d399 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .np-footer-contact-item svg {
-  color: rgba(255, 255, 255, 0.75) !important;
-  transition: color 0.18s ease !important;
+  color: #120e20 !important;
+  opacity: 0.8 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.np-footer-contact-item:hover {
+  color: #ff6b4a !important;
+  transform: translateY(-1px) !important;
 }
 
 .np-footer-contact-item:hover svg {
-  color: #34d399 !important;
+  color: #ff6b4a !important;
+  opacity: 1 !important;
+  transform: scale(1.12) !important;
 }
 
 .np-footer-contact-sep {
-  color: rgba(255, 255, 255, 0.35) !important;
+  color: rgba(18, 14, 32, 0.3) !important;
   font-size: 11px !important;
   user-select: none !important;
 }
@@ -766,23 +784,36 @@ html[data-home-loader-state="restoring"] .sound-toggle {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 34px !important;
-  height: 34px !important;
+  width: 36px !important;
+  height: 36px !important;
   border-radius: 50% !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  color: rgba(255, 255, 255, 0.88) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  color: #120e20 !important;
   text-decoration: none !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   cursor: pointer !important;
 }
 
+.np-footer-social-btn svg {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
 .np-footer-social-btn:hover {
-  background: rgba(52, 211, 153, 0.2) !important;
-  border-color: rgba(52, 211, 153, 0.5) !important;
-  color: #34d399 !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(52, 211, 153, 0.25) !important;
+  background: #120e20 !important;
+  border-color: #120e20 !important;
+  color: #ffffff !important;
+  transform: translateY(-3px) scale(1.08) !important;
+  box-shadow: 0 8px 18px rgba(18, 14, 32, 0.24) !important;
+}
+
+.np-footer-social-btn:hover svg {
+  transform: scale(1.08) !important;
+}
+
+.np-footer-social-btn:active {
+  transform: scale(0.95) !important;
 }
 
 .fonlio-waitlist-card {
