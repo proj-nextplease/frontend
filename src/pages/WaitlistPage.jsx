@@ -32,7 +32,7 @@ export function WaitlistPage() {
     >
       <iframe
         id="fonlioWaitlistFrame"
-        src="/waitlist-clone/index.html"
+        src="/waitlist-clone/index.html?v=4"
         title="FONLIO — Living Portfolio & Bảo chứng năng lực sinh viên"
         onLoad={() => setLoaded(true)}
         style={{
