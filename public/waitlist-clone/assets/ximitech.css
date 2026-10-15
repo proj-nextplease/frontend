@@ -698,33 +698,91 @@ html[data-home-loader-state="restoring"] .sound-toggle {
   color: rgba(18, 14, 32, 0.7) !important;
 }
 
-.next-footer__nav {
+.next-footer__nav.np-footer-contact-bar,
+.np-footer-contact-bar {
   grid-area: nav !important;
   display: flex !important;
-  flex-direction: row !important;
-  gap: clamp(32px, 4vw, 56px) !important;
-  align-items: flex-start !important;
-  padding-top: 14px !important;
-  border-top: 1px solid rgba(18, 14, 32, 0.1) !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  padding: 12px 20px !important;
+  background: rgba(14, 11, 22, 0.76) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 580px !important;
 }
 
-.next-footer__group {
+.np-footer-contact-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+.np-footer-contact-item {
+  display: inline-flex !important;
+  align-items: center !important;
   gap: 8px !important;
-  min-width: 120px !important;
-}
-
-.next-footer__group-title {
-  font-size: 16px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.08em !important;
-  margin-bottom: 4px !important;
-  color: #120e20 !important;
-}
-
-.next-footer__group a {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
   font-size: 13.5px !important;
-  color: rgba(18, 14, 32, 0.82) !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-decoration: none !important;
+  transition: color 0.18s ease !important;
+}
+
+.np-footer-contact-item:hover {
+  color: #34d399 !important;
+}
+
+.np-footer-contact-item svg {
+  color: rgba(255, 255, 255, 0.75) !important;
+  transition: color 0.18s ease !important;
+}
+
+.np-footer-contact-item:hover svg {
+  color: #34d399 !important;
+}
+
+.np-footer-contact-sep {
+  color: rgba(255, 255, 255, 0.35) !important;
+  font-size: 11px !important;
+  user-select: none !important;
+}
+
+.np-footer-socials {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.np-footer-social-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.np-footer-social-btn:hover {
+  background: rgba(52, 211, 153, 0.2) !important;
+  border-color: rgba(52, 211, 153, 0.5) !important;
+  color: #34d399 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(52, 211, 153, 0.25) !important;
 }
 
 .fonlio-waitlist-card {
@@ -1007,9 +1065,11 @@ html[data-home-loader-state="restoring"] .sound-toggle {
   .fonlio-pills {
     grid-template-columns: 1fr !important;
   }
-  .next-footer__nav {
+  .next-footer__nav.np-footer-contact-bar {
     flex-direction: column !important;
-    gap: 20px !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+    max-width: 100% !important;
   }
 }
 
