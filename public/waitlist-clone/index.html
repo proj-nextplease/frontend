@@ -138,7 +138,7 @@
     <link rel="stylesheet" href="assets/ximitech.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,700&family=Fredoka:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Fredoka:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
 <style>
 /* FONLIO BRAND HEADER LOGO */
@@ -260,7 +260,7 @@
   position: relative !important;
   overflow: hidden !important;
   color: #120e20 !important;
-  font-family: "Be Vietnam Pro", Satoshi-Variable, sans-serif !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   max-height: calc(88vh - 40px) !important;
   overflow-y: auto !important;
   scrollbar-width: thin !important;
@@ -286,6 +286,7 @@
   text-transform: uppercase !important;
   letter-spacing: 0.1em !important;
   color: #120e20 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   background: rgba(255, 255, 255, 0.5) !important;
   border: 1px solid rgba(255, 255, 255, 0.75) !important;
   padding: 4px 12px !important;
@@ -295,19 +296,20 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
 }
 .fonlio-card-title {
-  font-family: CabinetGrotesk-Variable, "Be Vietnam Pro", sans-serif !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-size: 21px !important;
-  font-weight: 700 !important;
+  font-weight: 800 !important;
   margin: 0 0 4px 0 !important;
-  line-height: 1.2 !important;
+  line-height: 1.25 !important;
   color: #120e20 !important;
   letter-spacing: -0.02em !important;
 }
 .fonlio-card-subtitle {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-size: 12.5px !important;
-  color: rgba(18, 14, 32, 0.72) !important;
+  color: rgba(18, 14, 32, 0.75) !important;
   margin: 0 0 12px 0 !important;
-  line-height: 1.4 !important;
+  line-height: 1.45 !important;
 }
 .fonlio-form-row {
   display: flex !important;
@@ -323,11 +325,12 @@
   min-width: 0 !important;
 }
 .fonlio-field label {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-size: 10.5px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.06em !important;
-  color: rgba(18, 14, 32, 0.82) !important;
+  letter-spacing: 0.05em !important;
+  color: rgba(18, 14, 32, 0.85) !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -340,7 +343,8 @@
   padding: 8px 12px !important;
   color: #120e20 !important;
   font-size: 13.5px !important;
-  font-family: "Be Vietnam Pro", Satoshi-Variable, sans-serif !important;
+  font-weight: 500 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   outline: none !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.7) !important;
   box-sizing: border-box !important;
@@ -348,12 +352,46 @@
   transition: border-color 0.25s, box-shadow 0.25s, background 0.25s !important;
 }
 .fonlio-input::placeholder {
-  color: rgba(18, 14, 32, 0.4) !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  color: rgba(18, 14, 32, 0.45) !important;
 }
 .fonlio-input:focus {
   background: rgba(255, 255, 255, 0.85) !important;
   border-color: #120e20 !important;
   box-shadow: 0 0 0 3px rgba(18, 14, 32, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+.fonlio-select {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: 10px !important;
+  height: 38px !important;
+  padding: 8px 32px 8px 12px !important;
+  color: #120e20 !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  outline: none !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.7) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23120e20' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  cursor: pointer !important;
+}
+.fonlio-select:focus {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: #120e20 !important;
+  box-shadow: 0 0 0 3px rgba(18, 14, 32, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+.fonlio-select option {
+  background: #ffffff !important;
+  color: #120e20 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 14px !important;
 }
 .fonlio-pills {
   display: grid !important;
@@ -365,12 +403,12 @@
   cursor: pointer !important;
   background: rgba(255, 255, 255, 0.4) !important;
   border: 1px solid rgba(255, 255, 255, 0.65) !important;
-  color: rgba(18, 14, 32, 0.82) !important;
+  color: rgba(18, 14, 32, 0.85) !important;
   padding: 6px 10px !important;
   border-radius: 999px !important;
   font-size: 11.5px !important;
   font-weight: 500 !important;
-  font-family: "Be Vietnam Pro", Satoshi-Variable, sans-serif !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
   user-select: none !important;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
@@ -390,8 +428,29 @@
   background: #120e20 !important;
   border-color: #120e20 !important;
   color: #ffffff !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   box-shadow: 0 4px 14px rgba(18, 14, 32, 0.22) !important;
+}
+.fonlio-consent {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  color: rgba(18, 14, 32, 0.85) !important;
+  cursor: pointer !important;
+  line-height: 1.35 !important;
+  user-select: none !important;
+  margin-bottom: 10px !important;
+}
+.fonlio-consent input[type="checkbox"] {
+  width: 15px !important;
+  height: 15px !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  accent-color: #120e20 !important;
+  flex-shrink: 0 !important;
 }
 .fonlio-submit-btn {
   cursor: pointer !important;
@@ -403,10 +462,10 @@
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 11px !important;
   color: #ffffff !important;
-  font-family: CabinetGrotesk-Variable, "Be Vietnam Pro", sans-serif !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-size: 13.5px !important;
   font-weight: 800 !important;
-  letter-spacing: 0.04em !important;
+  letter-spacing: 0.03em !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -436,9 +495,10 @@
   position: relative;
   overflow: hidden;
   color: #120e20;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 .fonlio-ticket-number {
-  font-family: CabinetGrotesk-Variable, sans-serif;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-size: 32px;
   font-weight: 900;
   color: #120e20;
@@ -446,12 +506,14 @@
   margin-bottom: 8px;
 }
 .fonlio-ticket-name {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-size: 16px;
   font-weight: 600;
   color: #120e20;
   margin-bottom: 14px;
 }
 .fonlio-ticket-perks {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-size: 13px;
   color: rgba(18, 14, 32, 0.85);
   line-height: 1.6;
