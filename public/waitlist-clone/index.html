@@ -1,0 +1,1598 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-------- LANGUAGE --------->
+    <script>
+      // Mặc định luôn là tiếng Việt (vi)
+      try {
+        localStorage.setItem("ximitech.language", "vi");
+      } catch (error) {}
+      document.documentElement.lang = "vi";
+    </script>
+
+    <!-------- SCROLL INTENT + LOADER STATE --------->
+    <script>
+      {
+        // Capture scroll and hash before native restoration.
+        const navigationType = performance.getEntriesByType("navigation")[0]?.type
+        const isReload = navigationType === "reload"
+
+        history.scrollRestoration = isReload ? "manual" : "auto"
+
+        const supportedHashes = [
+          "#hero",
+          "#manifesto",
+          "#parcours",
+          "#toolkit",
+          "#projects",
+          "#contact",
+        ]
+
+        const initialHash = supportedHashes.includes(location.hash) ? location.hash : null
+
+        // Strip the fragment before any element carries that id.
+        if (initialHash) {
+          history.replaceState(null, "", location.pathname + location.search)
+        }
+
+        let homeLoaderShown = false
+        let storedScroll = 0
+        let storedTheme = "cream"
+        let hasIncomingTransition = false
+
+        try {
+          homeLoaderShown = sessionStorage.getItem("homeLoaderShown") === "true"
+          storedScroll = Math.max(0, Number(sessionStorage.getItem("homeScrollOffset")) || 0)
+          storedTheme = sessionStorage.getItem("homeScrollTheme") === "dark" ? "dark" : "cream"
+          hasIncomingTransition = sessionStorage.getItem("pageTransitionPending") === "true"
+        } catch (error) {
+          // Without sessionStorage the default flow still works
+        }
+
+        const initialScroll = isReload && !initialHash ? storedScroll : 0
+
+        window.__homeScrollIntent = {
+          hash: initialHash,
+          offset: initialScroll,
+        }
+
+        const shouldShowHomeLoader = !homeLoaderShown
+        const hasScrollToRestore = initialHash !== null || initialScroll > 0
+
+        // Avoid stacking the restore cover with an incoming transition.
+        const shouldCoverRestore =
+          !shouldShowHomeLoader && hasScrollToRestore && !hasIncomingTransition
+
+        document.documentElement.dataset.homeLoaderState = shouldShowHomeLoader
+          ? "pending"
+          : shouldCoverRestore
+            ? "restoring"
+            : "skipped"
+
+        if (shouldCoverRestore) {
+          document.documentElement.dataset.homeLoaderTheme = storedTheme
+        }
+
+        if (shouldShowHomeLoader) {
+          try {
+            sessionStorage.setItem("homeLoaderShown", "true")
+          } catch (error) {
+            // The loader will simply show again
+          }
+        }
+      }
+    </script>
+
+    <!-------- LINKS --------->
+    <!-- CSS -->
+
+    <!-- JS -->
+
+    <!-- FAV -->
+    <link rel="icon" href="brand/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="brand/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="author" content="FONLIO Team" />
+    <meta
+      name="description"
+      content="FONLIO — Nền tảng Portfolio sống và bảo chứng năng lực thực chiến dành cho sinh viên. Đăng ký sớm nhận thẻ VIP Genesis."
+      data-i18n-attr="content:home.description"
+    />
+
+    <title data-i18n="home.title">FONLIO — Living Portfolio &amp; Cơ hội việc làm cho sinh viên</title>
+    <link rel="canonical" href="https://lab1.ximitech.vn/" />
+    <meta
+      property="og:title"
+      content="FONLIO — Living Portfolio cho Sinh viên"
+    />
+    <meta
+      property="og:description"
+      content="FONLIO — Nền tảng Portfolio sống và bảo chứng năng lực thực chiến dành cho sinh viên. Đăng ký sớm nhận thẻ VIP Genesis."
+      data-i18n-attr="content:home.description"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://lab1.ximitech.vn/" />
+    <meta property="og:image" content="https://ximitech.vn/OG.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Logo 3D FONLIO cùng bảo chứng Living Proof"
+      data-i18n-attr="content:home.imageAlt"
+    />
+    <script type="module" crossorigin src="assets/home-xt2.js"></script>
+    <link rel="modulepreload" crossorigin href="assets/chunk-Deb1DmFP.js">
+    <link rel="modulepreload" crossorigin href="assets/setupCrossPageTransitions-xt2.js">
+    <link rel="modulepreload" crossorigin href="assets/Observer-C5OqvjuH.js">
+    <link rel="modulepreload" crossorigin href="assets/ScrollTrigger-Or8JzwiZ.js">
+    <link rel="modulepreload" crossorigin href="assets/setupHeaderVisibility-D-FHk4jp.js">
+    <link rel="modulepreload" crossorigin href="assets/three.module-fBMLdKIM.js">
+    <link rel="stylesheet" crossorigin href="assets/setupCrossPageTransitions-D60GSfRM.css">
+    <link rel="stylesheet" crossorigin href="assets/setupHeaderVisibility-fOJvfYOR.css">
+    <link rel="stylesheet" crossorigin href="assets/home-xt2.css">
+    <link rel="stylesheet" href="assets/fonts-vi.css">
+    <link rel="stylesheet" href="assets/ximitech.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Fredoka:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+<style>
+/* FONLIO BRAND HEADER LOGO */
+.site-header__logo.fonlio-header-brand {
+  width: auto !important;
+  height: clamp(38px, 4.2vw, 48px) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  text-decoration: none !important;
+}
+.fonlio-header-wordmark {
+  height: clamp(36px, 3.8vw, 44px) !important;
+  width: auto !important;
+  max-width: 220px !important;
+  object-fit: contain !important;
+  display: block !important;
+  user-select: none !important;
+  filter: drop-shadow(0 0 16px rgba(185, 255, 0, 0.45)) drop-shadow(0 0 36px rgba(45, 212, 191, 0.25)) !important;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease !important;
+}
+.site-header__logo.fonlio-header-brand:hover .fonlio-header-wordmark {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 22px rgba(185, 255, 0, 0.7)) drop-shadow(0 0 44px rgba(45, 212, 191, 0.45)) !important;
+}
+
+/* FONLIO LUXURY WAITLIST EMBED IN FOOTER */
+.next-footer {
+  height: auto !important;
+  min-height: calc(88vh - 18px) !important;
+  max-height: none !important;
+  z-index: 10 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+.next-section__svg {
+  z-index: 1 !important;
+}
+.next-footer__content {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: clamp(24px, 3vw, 44px) clamp(24px, 3.8vw, 64px) !important;
+  align-items: center !important;
+  display: flex !important;
+}
+.next-footer__inner {
+  width: 100% !important;
+  max-width: 1260px !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(360px, 1fr) minmax(460px, 580px) !important;
+  grid-template-rows: auto auto !important;
+  grid-template-areas:
+    "main card"
+    "nav  card" !important;
+  column-gap: clamp(36px, 4.5vw, 68px) !important;
+  row-gap: 28px !important;
+  align-items: center !important;
+}
+.next-footer__main {
+  grid-area: main !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+}
+.next-footer__headline {
+  font-size: clamp(26px, 2.5vw, 42px) !important;
+  line-height: 1.18 !important;
+  letter-spacing: -0.02em !important;
+  margin: 0 !important;
+  color: #120e20 !important;
+}
+.next-footer__headline span {
+  display: inline !important;
+  white-space: normal !important;
+}
+.next-footer__meta {
+  font-size: 13px !important;
+  gap: 16px !important;
+  flex-wrap: wrap !important;
+  color: rgba(18, 14, 32, 0.7) !important;
+}
+.next-footer__nav {
+  grid-area: nav !important;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: clamp(32px, 4vw, 56px) !important;
+  align-items: flex-start !important;
+  padding-top: 14px !important;
+  border-top: 1px solid rgba(18, 14, 32, 0.1) !important;
+}
+.next-footer__proof {
+  font-family: Satoshi-Variable, sans-serif;
+  font-size: clamp(14px, 1.1vw, 18px);
+  color: #34d399;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}
+.fonlio-waitlist-card {
+  grid-area: card !important;
+  width: 100% !important;
+  max-width: 580px !important;
+  box-sizing: border-box !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+  box-shadow: 0 24px 50px -12px rgba(35, 12, 55, 0.16), 
+              0 0 0 1px rgba(255, 255, 255, 0.4) inset,
+              0 8px 24px rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(36px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
+  border-radius: 20px !important;
+  padding: 22px 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+  color: #120e20 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  max-height: calc(88vh - 40px) !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(18, 14, 32, 0.25) transparent !important;
+  margin: 0 !important;
+}
+.fonlio-waitlist-card::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -80px !important;
+  right: -80px !important;
+  width: 200px !important;
+  height: 200px !important;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%) !important;
+  pointer-events: none !important;
+}
+.fonlio-card-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  color: #120e20 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  margin-bottom: 8px !important;
+  width: fit-content !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+.fonlio-card-title {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 21px !important;
+  font-weight: 800 !important;
+  margin: 0 0 4px 0 !important;
+  line-height: 1.25 !important;
+  color: #120e20 !important;
+  letter-spacing: -0.02em !important;
+}
+.fonlio-card-subtitle {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 12.5px !important;
+  color: rgba(18, 14, 32, 0.75) !important;
+  margin: 0 0 12px 0 !important;
+  line-height: 1.45 !important;
+}
+.fonlio-form-row {
+  display: flex !important;
+  gap: 12px !important;
+  margin-bottom: 9px !important;
+}
+.fonlio-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  margin-bottom: 9px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+.fonlio-field label {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: rgba(18, 14, 32, 0.85) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.fonlio-input {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: 10px !important;
+  height: 38px !important;
+  padding: 8px 12px !important;
+  color: #120e20 !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  outline: none !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.7) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s !important;
+}
+.fonlio-input::placeholder {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  color: rgba(18, 14, 32, 0.45) !important;
+}
+.fonlio-input:focus {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: #120e20 !important;
+  box-shadow: 0 0 0 3px rgba(18, 14, 32, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+.fonlio-select {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: 10px !important;
+  height: 38px !important;
+  padding: 8px 32px 8px 12px !important;
+  color: #120e20 !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  outline: none !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.7) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23120e20' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  cursor: pointer !important;
+}
+.fonlio-select:focus {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: #120e20 !important;
+  box-shadow: 0 0 0 3px rgba(18, 14, 32, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+.fonlio-select option {
+  background: #ffffff !important;
+  color: #120e20 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 14px !important;
+}
+.fonlio-pills {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+.fonlio-pill {
+  cursor: pointer !important;
+  background: rgba(255, 255, 255, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+  color: rgba(18, 14, 32, 0.85) !important;
+  padding: 6px 10px !important;
+  border-radius: 999px !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  user-select: none !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.fonlio-pill:hover {
+  background: rgba(255, 255, 255, 0.75) !important;
+  color: #120e20 !important;
+  transform: translateY(-1px) !important;
+}
+.fonlio-pill.is-active {
+  background: #120e20 !important;
+  border-color: #120e20 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(18, 14, 32, 0.22) !important;
+}
+.fonlio-consent {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  color: rgba(18, 14, 32, 0.85) !important;
+  cursor: pointer !important;
+  line-height: 1.35 !important;
+  user-select: none !important;
+  margin-bottom: 10px !important;
+}
+.fonlio-consent input[type="checkbox"] {
+  width: 15px !important;
+  height: 15px !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  accent-color: #120e20 !important;
+  flex-shrink: 0 !important;
+}
+.fonlio-submit-btn {
+  cursor: pointer !important;
+  width: 100% !important;
+  margin-top: 4px !important;
+  height: 44px !important;
+  padding: 11px 18px !important;
+  background: #120e20 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 11px !important;
+  color: #ffffff !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.03em !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: 0 10px 24px rgba(18, 14, 32, 0.25) !important;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+.fonlio-submit-btn:hover {
+  transform: translateY(-2px) !important;
+  background: linear-gradient(135deg, #ff6b4a 0%, #9b7cff 100%) !important;
+  box-shadow: 0 14px 30px rgba(255, 107, 74, 0.38) !important;
+}
+.fonlio-submit-btn:active {
+  transform: translateY(1px) !important;
+}
+.fonlio-vip-result {
+  text-align: center;
+  padding: 10px;
+}
+.fonlio-vip-ticket {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1.5px solid rgba(18, 14, 32, 0.2);
+  border-radius: 16px;
+  padding: 24px;
+  margin: 16px 0;
+  box-shadow: 0 12px 30px rgba(35, 12, 55, 0.12);
+  position: relative;
+  overflow: hidden;
+  color: #120e20;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+.fonlio-ticket-number {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 32px;
+  font-weight: 900;
+  color: #120e20;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.fonlio-ticket-name {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 16px;
+  font-weight: 600;
+  color: #120e20;
+  margin-bottom: 14px;
+}
+.fonlio-ticket-perks {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 13px;
+  color: rgba(18, 14, 32, 0.85);
+  line-height: 1.6;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+.fonlio-copy-btn {
+  background: #120e20;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.fonlio-copy-btn:hover {
+  background: linear-gradient(135deg, #ff6b4a 0%, #9b7cff 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(255, 107, 74, 0.35);
+}
+@media (max-width: 960px) {
+  .next-footer {
+    height: auto !important;
+    min-height: 90vh !important;
+    position: relative !important;
+  }
+  .next-footer__inner {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 32px !important;
+  }
+  .fonlio-waitlist-card {
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+    padding: 20px 18px !important;
+  }
+  .fonlio-form-row {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+  .fonlio-pills {
+    grid-template-columns: 1fr !important;
+  }
+  .next-footer__nav {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+}
+
+/* ==========================================================================
+   FONLIO DARK THEME & USER CUSTOMIZATIONS
+   ========================================================================== */
+:root {
+  --color-dark: #070a0f !important;
+  --color-cream: #070a0f !important;
+  --color-accent: #b9ff00 !important;
+  --color-accent-soft: #0e141d !important;
+  --lab-bg: #070a0f !important;
+}
+
+body {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+
+/* 1. HIDE IMAGE 1 ELEMENTS */
+.lab-badge,
+.sound-toggle {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+/* 2. HIDE IMAGE 5 ELEMENT */
+.next-section__playground-link,
+.playground-link {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+/* 3. HARD REFRESH INTRO FONLIO LOGO */
+.ximi-intro {
+  background: #070a0f !important;
+}
+.ximi-intro__glow {
+  background: radial-gradient(circle, rgba(185, 255, 0, 0.28) 0%, rgba(45, 212, 191, 0.12) 40%, rgba(7, 10, 15, 0) 70%) !important;
+}
+.ximi-intro__logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.ximi-intro__brand-logo {
+  width: clamp(160px, 20vw, 260px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 24px rgba(185, 255, 0, 0.85)) drop-shadow(0 0 55px rgba(45, 212, 191, 0.45));
+  animation: fonlio-intro-pulse 1.4s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+}
+@keyframes fonlio-intro-pulse {
+  0% { transform: scale(0.96); filter: drop-shadow(0 0 18px rgba(185, 255, 0, 0.6)) drop-shadow(0 0 35px rgba(45, 212, 191, 0.3)); }
+  100% { transform: scale(1.04); filter: drop-shadow(0 0 30px rgba(185, 255, 0, 0.95)) drop-shadow(0 0 65px rgba(45, 212, 191, 0.6)); }
+}
+.ximi-intro__word {
+  color: #ffffff !important;
+  letter-spacing: 0.2em !important;
+  font-family: CabinetGrotesk-Variable, sans-serif !important;
+  font-weight: 800 !important;
+}
+.ximi-intro__tagline {
+  color: #34d399 !important;
+  letter-spacing: 0.12em !important;
+  font-size: 13px !important;
+  text-transform: uppercase !important;
+}
+
+/* 4. IMAGE 2: HEADING WORDMARK & BRAND LETTERS STYLING */
+.fonlio-heading-wordmark,
+.fonlio-brand-letter,
+.trajectory .title .fonlio-brand-letter,
+.trajectory .title x-w.fonlio-brand-word .letter,
+x-w.fonlio-brand-word .letter {
+  font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em !important;
+  text-transform: uppercase !important;
+  color: #b9ff00 !important;
+  text-shadow: 0 0 24px rgba(185, 255, 0, 0.7), 0 0 45px rgba(45, 212, 191, 0.4) !important;
+  display: inline-block !important;
+}
+
+/* 5. IMAGE 3: TRAJECTORY DIALOGUE LOGO */
+.fonlio-dialogue-logo {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.fonlio-trajectory-logo-img {
+  height: clamp(54px, 7.5vw, 96px) !important;
+  width: auto !important;
+  max-width: 85vw !important;
+  object-fit: contain !important;
+  vertical-align: middle !important;
+  filter: drop-shadow(0 0 22px rgba(185, 255, 0, 0.8)) drop-shadow(0 0 48px rgba(45, 212, 191, 0.4)) !important;
+}
+
+/* 6. DARK THEME SECTIONS */
+.manifesto {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.manifesto .text {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+.trajectory {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.trajectory .entry .title {
+  color: #ffffff !important;
+}
+.trajectory-sentences__container {
+  background-color: #070a0f !important;
+}
+.trajectory-sentences__sentence {
+  color: #ffffff !important;
+}
+/* TOOLKIT SECTION - DARK THEME & HIGH CONTRAST */
+.toolkit,
+.toolkit__container {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.toolkit__header {
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+html:lang(vi) .toolkit__title,
+.toolkit__title {
+  color: #ffffff !important;
+  font-family: 'Be Vietnam Pro', Arial, sans-serif !important;
+  font-size: max(48px, 6vw) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.toolkit__subtitle-wrap {
+  height: 3.2em !important;
+  margin-top: 1.5vh !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+html:lang(vi) .toolkit__subtitle,
+.toolkit__subtitle,
+.toolkit__subtitle--front,
+.toolkit__subtitle--art {
+  color: #b9ff00 !important;
+  font-family: 'Be Vietnam Pro', Arial, sans-serif !important;
+  font-size: max(20px, 2vw) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+}
+.projects {
+  background-color: #070a0f !important;
+}
+.projects__container {
+  background-color: #0a0e16 !important;
+  color: #ffffff !important;
+  border-top: 1px solid rgba(185, 255, 0, 0.12) !important;
+  border-bottom: 1px solid rgba(185, 255, 0, 0.12) !important;
+}
+.projects__title {
+  color: #ffffff !important;
+}
+.projects__link {
+  color: rgba(255, 255, 255, 0.76) !important;
+  transition: color 0.3s ease, text-shadow 0.3s ease !important;
+}
+.projects__link:hover {
+  color: #b9ff00 !important;
+  text-shadow: 0 0 20px rgba(185, 255, 0, 0.6) !important;
+}
+.next-section {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.next-section__container {
+  background-color: #070a0f !important;
+}
+.next-section__intro {
+  color: #ffffff !important;
+}
+.next-section__text {
+  fill: #ffffff !important;
+  font-family: 'Be Vietnam Pro', CabinetGrotesk-Variable, sans-serif !important;
+}
+#nextTextCream {
+  fill: #ffffff !important;
+}
+#nextTextGradientPart {
+  fill: url(#nextTextGradient) !important;
+}
+
+</style>
+
+</head>
+  <body>
+    <!-------- HOME LOADER -------->
+    <div
+      class="home-loader"
+      role="status"
+      aria-label="Đang tải trang"
+      data-i18n-attr="aria-label:home.loaderLabel"
+    >
+      <canvas class="home-loader__canvas" aria-hidden="true"></canvas>
+    </div>
+
+    <!-------- INTRO XIMITECH (chỉ lần mở đầu tiên trong phiên) -------->
+    <div class="ximi-intro" aria-hidden="true" hidden>
+      <div class="ximi-intro__glow"></div>
+      <div class="ximi-intro__center">
+        <div class="ximi-intro__logo-wrap">
+          <img src="/waitlist-clone/brand/logoland4.png" alt="FONLIO" class="ximi-intro__brand-logo" />
+        </div>
+        <p class="ximi-intro__word"><span class="ximi-intro__letter" style="--i:0">F</span><span class="ximi-intro__letter" style="--i:1">O</span><span class="ximi-intro__letter" style="--i:2">N</span><span class="ximi-intro__letter" style="--i:3">L</span><span class="ximi-intro__letter" style="--i:4">I</span><span class="ximi-intro__letter" style="--i:5">O</span></p>
+        <p class="ximi-intro__tagline">Living Portfolio · Living Proof for Students</p>
+      </div>
+      <div class="ximi-intro__meta">
+        <span class="ximi-intro__count">000</span>
+        <span class="ximi-intro__line"><span></span></span>
+        <span>fonlio.vn</span>
+      </div>
+    </div>
+    <script>
+      {
+        // Intro chạy trước loader gốc. Bundle chờ window.__ximiIntro rồi mới
+        // lộ logo và hero, nên hai hiệu ứng nối tiếp chứ không chồng nhau.
+        const intro = document.querySelector(".ximi-intro")
+        const firstVisit = document.documentElement.dataset.homeLoaderState === "pending"
+        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+        if (intro && firstVisit && !reduce) {
+          intro.hidden = false
+          const count = intro.querySelector(".ximi-intro__count")
+          const total = 2300
+          const start = performance.now()
+
+          window.__ximiIntro = new Promise((resolve) => {
+            const tick = (now) => {
+              const t = Math.min((now - start) / total, 1)
+              const eased = 1 - Math.pow(1 - t, 3)
+              count.textContent = String(Math.round(eased * 100)).padStart(3, "0")
+              if (t < 1) return requestAnimationFrame(tick)
+
+              intro.classList.add("is-leaving")
+              setTimeout(() => {
+                intro.remove()
+                resolve()
+              }, 950)
+            }
+            requestAnimationFrame(tick)
+          })
+        } else if (intro) {
+          intro.remove()
+        }
+      }
+    </script>
+
+    <!-------- TRANSITION -------->
+    <script>
+      if (sessionStorage.getItem("pageTransitionPending") === "true") {
+        const storedColor = sessionStorage.getItem("pageTransitionColor")
+        const color = storedColor === "dark" ? "dark" : "cream"
+
+        const transition = document.createElement("div")
+
+        transition.classList.add("page-transition", `page-transition--${color}`)
+
+        transition.setAttribute("aria-hidden", "true")
+        document.body.prepend(transition)
+      }
+    </script>
+
+    <header class="site-header">
+      <a
+        class="site-header__logo fonlio-header-brand"
+        href="/"
+        target="_top"
+        aria-label="Về trang chủ"
+      >
+        <img
+          src="/waitlist-clone/brand/logoland4.png"
+          alt="fonlio:"
+          class="fonlio-header-wordmark"
+        />
+      </a>
+      <nav class="site-header__nav" aria-label="Điều hướng chính">
+        <a class="site-header__link site-header__link--secondary" href="#parcours">hành trình</a>
+        <a class="site-header__link site-header__link--secondary" href="#toolkit">công cụ</a>
+        <a class="site-header__link" href="#projects">đặc quyền</a>
+        <a class="site-header__link" href="#contact">liên hệ</a>
+      </nav>
+    </header>
+
+    <nav
+      class="scroll-indicator"
+      aria-label="Điều hướng giữa các phần"
+      data-i18n-attr="aria-label:home.sectionNavigationLabel"
+    >
+      <a
+        class="scroll-indicator__item is-active"
+        href="index.html#hero"
+        aria-label="Hero"
+        aria-current="location"
+      >
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+
+      <a class="scroll-indicator__item is-neighbor" href="index.html#manifesto" aria-label="Manifesto">
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+
+      <a
+        class="scroll-indicator__item"
+        href="index.html#parcours"
+        aria-label="Quy trình"
+        data-i18n-attr="aria-label:home.navigationJourney"
+      >
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+
+      <a class="scroll-indicator__item" href="index.html#toolkit" aria-label="Toolkit">
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+
+      <a
+        class="scroll-indicator__item"
+        href="index.html#projects"
+        aria-label="Dự án"
+        data-i18n-attr="aria-label:home.navigationProjects"
+      >
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+
+      <a
+        class="scroll-indicator__item"
+        href="index.html#contact"
+        aria-label="Liên hệ và chân trang"
+        data-i18n-attr="aria-label:home.navigationNext"
+      >
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+    </nav>
+
+    <!-------- SOUND TOGGLE (REMOVED) -------->
+    <script src="assets/ximitech-sound.js" defer></script>
+
+    <main>
+      <!-------- HERO SECTION -------->
+      <section class="hero-three" id="hero">
+        <div class="hero-three__frame">
+          <canvas class="webgl" aria-hidden="true"></canvas>
+        </div>
+
+        <div class="hero-content">
+          <h1 class="visually-hidden" data-i18n="home.heading">
+            FONLIO — Living Portfolio cho Sinh viên
+          </h1>
+
+          <!-- Nhãn demo đã loại bỏ theo yêu cầu -->
+        </div>
+      </section>
+
+      <!-------- MANIFESTO SECTION -------->
+      <section class="manifesto" id="manifesto">
+        <div class="container">
+          <p class="text" data-i18n="home.manifesto">
+            Đẹp thôi chưa đủ. Chúng tôi tạo ra Living Proof khiến nhà tuyển dụng tin, ở lại và trao cơ hội.
+          </p>
+        </div>
+      </section>
+
+      <!-------- TRAJECTOIRY SECTION -------->
+      <section class="trajectory" id="parcours">
+        <section class="entry">
+          <div class="container">
+            <h2 class="title" data-i18n="home.trajectoryTitle">Cách <span class="fonlio-heading-wordmark">FONLIO</span> vận hành</h2>
+          </div>
+        </section>
+
+        <section class="trajectory-sentences">
+          <div class="trajectory-sentences__pin-height">
+            <div class="trajectory-sentences__container">
+              <div class="trajectory-sentences__visuals" aria-hidden="true">
+                <div class="trajectory-sentences__visual trajectory-sentences__visual--left"></div>
+                <div class="trajectory-sentences__visual trajectory-sentences__visual--right"></div>
+                <canvas class="trajectory-sentences__canvas" aria-hidden="true"></canvas>
+              </div>
+
+              <div class="trajectory-sentences__center">
+                <div class="trajectory-sentences__sentence" data-i18n="home.trajectorySentence1">
+                  Hàng triệu
+                </div>
+
+                <div class="trajectory-sentences__sentence is-two-lines">
+                  <span data-i18n="home.trajectorySentence2Line1">bản CV gửi đi</span><br />
+                  <span data-i18n="home.trajectorySentence2Line2">mỗi năm.</span>
+                </div>
+
+                <div class="trajectory-sentences__sentence" data-i18n="home.trajectorySentence3">
+                  Chỉ 6 giây
+                </div>
+
+                <div class="trajectory-sentences__sentence is-two-lines">
+                  <span data-i18n="home.trajectorySentence4Line1">để bị lãng quên</span><br />
+                  <span data-i18n="home.trajectorySentence4Line2">trong hộp thư.</span>
+                </div>
+
+                <div
+                  class="trajectory-sentences__sentence is-today"
+                  data-i18n="home.trajectorySentence5"
+                >
+                  Hôm nay
+                </div>
+
+                <div
+                  class="trajectory-sentences__sentence is-dialogue"
+                  data-i18n="home.trajectorySentence6"
+                >
+                  FONLIO
+                </div>
+
+                <div class="trajectory-sentences__sentence is-both is-two-lines">
+                  <span data-i18n="home.trajectorySentence7Line1">bảo chứng</span><br />
+                  <span data-i18n="home.trajectorySentence7Line2">cùng bạn.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-------- TOOLKIT SECTION -------->
+      <section class="toolkit" id="toolkit">
+        <div class="toolkit__pin-height">
+          <div class="toolkit__container">
+            <div class="toolkit__header">
+              <h2 class="toolkit__title" data-i18n="home.toolkitTitle">Công cụ</h2>
+
+              <div class="toolkit__subtitle-wrap">
+                <h3 class="toolkit__subtitle toolkit__subtitle--front" data-i18n="home.toolkitFront">Kỹ thuật &amp; Code</h3>
+                <h3 class="toolkit__subtitle toolkit__subtitle--art" data-i18n="home.toolkitArt">Sáng tạo &amp; Dự án</h3>
+              </div>
+            </div>
+
+            <!-- Frontend Deck -->
+            <div class="toolkit__wheel toolkit__wheel--frontend">
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--javascript">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/javascript.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.javascript"
+                    alt="JavaScript"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--react">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/react.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.react"
+                    alt="React"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--nextjs">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/nextjs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.nextjs"
+                    alt="Next.js"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--vuejs">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/vuejs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.vuejs"
+                    alt="Vue.js"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--threejs">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/threejs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.threejs"
+                    alt="Three.js"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--gsap">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/gsap.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.gsap"
+                    alt="GSAP"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--glsl">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/glsl.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.glsl"
+                    alt="GLSL"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--webflow">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/webflow.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.webflow"
+                    alt="Webflow"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot toolkit__slot--transition">
+                <div class="toolkit-card toolkit-card--flip toolkit-card--shopify">
+                  <div class="toolkit-card__flipper toolkit-card__motion">
+                    <div class="toolkit-card__face toolkit-card--front">
+                      <img
+                        src="home/toolkit/frontend/vi/shopify.svg"
+                        alt="Shopify"
+                        data-i18n-attr="src:home.toolkitAssets.frontend.shopify"
+                      />
+                    </div>
+
+                    <div class="toolkit-card__face toolkit-card__face--back">
+                      <img
+                        src="home/toolkit/art-direction/vi/figma.svg"
+                        alt="Figma"
+                        data-i18n-attr="src:home.toolkitAssets.artDirection.figma"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Art direction deck -->
+            <div class="toolkit__wheel toolkit__wheel--art-direction">
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--figma">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/figma.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.figma"
+                    alt="Figma"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--photoshop">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/photoshop.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.photoshop"
+                    alt="Photoshop"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--illustrator">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/illustrator.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.illustrator"
+                    alt="Illustrator"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--indesign">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/indesign.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.indesign"
+                    alt="InDesign"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--after-effects">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/aftereffects.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.afterEffects"
+                    alt="After Effects"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--capcut">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/capcut.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.capcut"
+                    alt="CapCut"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--lightroom">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/lightroom.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.lightroom"
+                    alt="Lightroom"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--transition">
+                  <canvas
+                    class="toolkit-card__cream-reveal toolkit-card__reveal-canvas toolkit-card__motion"
+                    aria-hidden="true"
+                  ></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-------- PROJECTS SECTION -------->
+      <section class="projects" id="projects">
+        <div class="projects__pin-height">
+          <div class="projects__container">
+            <h2 class="projects__title" data-i18n="home.projectsTitle">Quy trình Fonlio</h2>
+
+            <nav class="projects__list" aria-label="Quy trình Fonlio" data-i18n-attr="aria-label:home.navigationProjects">
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                dựng living portfolio
+              </a>
+
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                nhận quest thực chiến
+              </a>
+
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                xác thực năng lực thật
+              </a>
+
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                tích luỹ reputation score
+              </a>
+
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                bảo chứng living proof
+              </a>
+
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                kết nối nhà tuyển dụng
+              </a>
+
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                top ưu tiên tuyển dụng
+              </a>
+            </nav>
+          </div>
+        </div>
+      </section>
+
+      <!-------- NEXT SECTION -------->
+      <section class="next-section">
+        <div class="next-section__pin-height">
+          <div class="next-section__container">
+            <div class="next-section__intro">
+              <p data-i18n="home.nextIntro">Sẵn sàng bứt phá?</p>
+              <!-- Playground link removed -->
+            </div>
+
+            <svg
+              class="next-section__svg"
+              fill="none"
+              width="3898"
+              height="891"
+              viewBox="0 0 3898 891"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="nextTextGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="80%" stop-color="#f6c177" />
+                  <stop offset="85%" stop-color="#9b7cff" />
+                  <stop offset="100%" stop-color="#ff6b4a" />
+                </linearGradient>
+              </defs>
+
+              <path
+                id="nextPath"
+                d="M0.398438 611.016C175.398 377.517 857.398 -285.484 1461.4 139.638C1911.53 456.46 2114.4 805.516 2679.4 611.016C3088.4 470.219 3704.54 -33.3124 4354.9 781.516C4700.9 1215.02 5305.6 1466.52 6108.4 328.516"
+              />
+
+              <text class="next-section__text">
+                <textPath id="nextTextPath" href="#nextPath" text-anchor="start">
+                  <tspan id="nextTextCream" data-i18n="home.nextTextCream">
+                    Hồ sơ của bạn xứng đáng
+                  </tspan>
+                  <tspan
+                    id="nextTextGradientPart"
+                    fill="url(#nextTextGradient)"
+                    data-i18n="home.nextTextGradient"
+                  >
+                    được công nhận bằng sản phẩm thật
+                  </tspan>
+                </textPath>
+              </text>
+
+              <circle id="nextOrb" class="next-section__orb" cx="0" cy="0" r="14" fill="#ff6b4a" />
+            </svg>
+
+            <!-------- FOOTER REVEAL -------->
+            <footer
+              id="contact"
+              class="next-footer"
+              aria-label="Chân trang"
+              data-i18n-attr="aria-label:home.footerLabel"
+            >
+              <div class="next-footer__background" aria-hidden="true"></div>
+
+              <div class="next-footer__content">
+                <div class="next-footer__inner">
+                  <div class="next-footer__main">
+                    <p class="next-footer__headline">
+                      <span data-i18n="home.footerLine1">Khởi tạo vị thế</span><br />
+                      <span data-i18n="home.footerLine2">sẵn sàng bứt phá</span><br />
+                      <span data-i18n="home.footerLine3">Gia nhập FONLIO ngay</span>
+                    </p>
+
+                    <div class="next-footer__meta">
+                      <p data-i18n="home.footerCopyright">© 2026 Công ty TNHH Giải pháp số FONLIO</p>
+                    </div>
+                  </div>
+
+                  
+                  <div class="fonlio-waitlist-card">
+                    <div id="fonlioFormView">
+                      <h3 class="fonlio-card-title">Bắt đầu câu chuyện nghề nghiệp của bạn</h3>
+                      <p class="fonlio-card-subtitle">Đăng ký danh sách chờ để nhận thông tin và cơ hội trải nghiệm FONLIO MVP sớm nhất.</p>
+                      
+                      <form id="fnlForm" onsubmit="window.__handleFonlioSubmit(event)">
+                        <!-- Row 1: Họ tên & Email -->
+                        <div class="fonlio-form-row">
+                          <div class="fonlio-field">
+                            <label for="fnlName">Họ và tên *</label>
+                            <input class="fonlio-input" type="text" id="fnlName" required placeholder="Ví dụ: Nguyễn Minh Anh" autocomplete="name" />
+                          </div>
+                          <div class="fonlio-field">
+                            <label for="fnlEmail">Email *</label>
+                            <input class="fonlio-input" type="email" id="fnlEmail" required placeholder="ban@example.com" autocomplete="email" />
+                          </div>
+                        </div>
+
+                        <!-- Row 2: Giai đoạn nghề nghiệp -->
+                        <div class="fonlio-field">
+                          <label>Bạn đang ở giai đoạn nào? *</label>
+                          <div class="fonlio-pills">
+                            <button type="button" class="fonlio-pill is-active" onclick="window.__selectStage(this, 'Sinh viên')">Sinh viên</button>
+                            <button type="button" class="fonlio-pill" onclick="window.__selectStage(this, 'Thực tập sinh / người mới đi làm')">Thực tập sinh / người mới đi làm</button>
+                            <button type="button" class="fonlio-pill" onclick="window.__selectStage(this, 'Freelancer / cộng tác viên')">Freelancer / cộng tác viên</button>
+                            <button type="button" class="fonlio-pill" onclick="window.__selectStage(this, 'Đã có kinh nghiệm chuyên môn')">Đã có kinh nghiệm chuyên môn</button>
+                          </div>
+                        </div>
+
+                        <!-- Row 3: Lĩnh vực chuyên môn & Số lượng dự án -->
+                        <div class="fonlio-form-row">
+                          <div class="fonlio-field">
+                            <label for="fnlSpec">Lĩnh vực chuyên môn</label>
+                            <select id="fnlSpec" class="fonlio-select">
+                              <option value="">Chọn lĩnh vực</option>
+                              <option value="Marketing / Truyền thông">Marketing / Truyền thông</option>
+                              <option value="Content / Copywriting">Content / Copywriting</option>
+                              <option value="Design / Creative / Video">Design / Creative / Video</option>
+                              <option value="Event / Activation">Event / Activation</option>
+                              <option value="Công nghệ / IT">Công nghệ / IT</option>
+                              <option value="Kinh doanh / Tài chính">Kinh doanh / Tài chính</option>
+                              <option value="Giáo dục / Nghiên cứu">Giáo dục / Nghiên cứu</option>
+                              <option value="Khác / đang khám phá">Khác / đang khám phá</option>
+                            </select>
+                          </div>
+                          <div class="fonlio-field">
+                            <label for="fnlProjCount">Số lượng dự án / trải nghiệm</label>
+                            <select id="fnlProjCount" class="fonlio-select">
+                              <option value="">Chọn số lượng</option>
+                              <option value="Chưa có">Chưa có</option>
+                              <option value="1–3 dự án">1–3 dự án</option>
+                              <option value="4–10 dự án">4–10 dự án</option>
+                              <option value="Trên 10 dự án">Trên 10 dự án</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <!-- Row 4: Khó khăn lớn nhất & Thử nghiệm MVP -->
+                        <div class="fonlio-form-row">
+                          <div class="fonlio-field">
+                            <label for="fnlChallenge">Khó khăn lớn nhất hiện nay</label>
+                            <select id="fnlChallenge" class="fonlio-select">
+                              <option value="">Chọn khó khăn</option>
+                              <option value="Kinh nghiệm và sản phẩm nằm rải rác">Kinh nghiệm &amp; sản phẩm nằm rải rác</option>
+                              <option value="Không biết cách trình bày portfolio">Không biết cách trình bày portfolio</option>
+                              <option value="Khó chứng minh vai trò và đóng góp cá nhân">Khó chứng minh vai trò &amp; đóng góp</option>
+                              <option value="Chưa có nhiều kinh nghiệm để bắt đầu">Chưa có nhiều kinh nghiệm để bắt đầu</option>
+                            </select>
+                          </div>
+                          <div class="fonlio-field">
+                            <label for="fnlBeta">Mức độ tham gia thử nghiệm</label>
+                            <select id="fnlBeta" class="fonlio-select">
+                              <option value="">Chọn mức độ</option>
+                              <option value="Muốn tham gia thử nghiệm MVP">Muốn tham gia thử nghiệm MVP</option>
+                              <option value="Có thể tham gia, tùy thời gian">Có thể tham gia, tùy thời gian</option>
+                              <option value="Chỉ muốn nhận cập nhật">Chỉ muốn nhận cập nhật</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <!-- Row 5: Consent Checkbox -->
+                        <div class="fonlio-field" style="margin-bottom: 14px;">
+                          <label class="fonlio-consent" for="fnlConsent">
+                            <input type="checkbox" id="fnlConsent" required checked />
+                            <span>Mình đồng ý nhận email liên quan đến Early Access và cập nhật về FONLIO. *</span>
+                          </label>
+                        </div>
+
+                        <button type="submit" id="fnlSubmitBtn" class="fonlio-submit-btn">
+                          <span>ĐĂNG KÝ EARLY ACCESS · NHẬN VIP PASS ↗</span>
+                        </button>
+                      </form>
+                    </div>
+
+                    <div id="fonlioSuccessView" class="fonlio-vip-result" style="display: none;">
+                      <div class="fonlio-card-badge" style="background: rgba(255, 255, 255, 0.6);">✓ ĐÃ BẢO LƯU THỨ HẠNG THÀNH CÔNG</div>
+                      <div class="fonlio-vip-ticket">
+                        <div style="font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(18, 14, 32, 0.65);">FONLIO GENESIS VIP TICKET</div>
+                        <div class="fonlio-ticket-number" id="fnlTicketCode">#FNL-01482</div>
+                        <div class="fonlio-ticket-name" id="fnlTicketHolder">Nguyễn Minh Anh · Sinh viên</div>
+                        <div class="fonlio-ticket-perks">
+                          <div>✦ <b>Thứ hạng bảo lưu:</b> Ưu tiên kích hoạt đợt 1 (Top Early Access)</div>
+                          <div>✦ <b>Đặc quyền:</b> Tạo portfolio chuyên nghiệp bản VIP nhất của FONLIO</div>
+                          <div>✦ <b>Quà tặng:</b> Nhận trọn bộ phần quà từ các đối tác liên kết của FONLIO</div>
+                        </div>
+                        <button type="button" class="fonlio-copy-btn" onclick="window.__copyTicket()" id="fnlCopyBtn">Sao chép mã thẻ &amp; Chia sẻ</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="next-footer__nav np-footer-contact-bar"
+                    aria-label="Liên hệ và mạng xã hội FONLIO"
+                  >
+                    <div class="np-footer-contact-info">
+                      <a class="np-footer-contact-item" href="mailto:fonlioofficial@gmail.com" title="Email FONLIO">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+                        <span>fonlioofficial@gmail.com</span>
+                      </a>
+                      <span class="np-footer-contact-sep">•</span>
+                      <a class="np-footer-contact-item" href="tel:0981362340" title="Hotline FONLIO">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                        <span>0981 362 340</span>
+                      </a>
+                    </div>
+
+                    <div class="np-footer-socials" aria-label="Mạng xã hội FONLIO">
+                      <a
+                        class="np-footer-social-btn"
+                        href="https://www.facebook.com/profile.php?id=61594934129474"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Facebook"
+                        aria-label="Facebook"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0;"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                      </a>
+                      <a
+                        class="np-footer-social-btn"
+                        href="https://www.instagram.com/fonlioofficial/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Instagram"
+                        aria-label="Instagram"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>
+                      </a>
+                      <a
+                        class="np-footer-social-btn"
+                        href="https://www.tiktok.com/@fonlio.official"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="TikTok"
+                        aria-label="TikTok"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0;"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.5 6.27 6.27 0 0 0 1.95-4.5V8.69a8.18 8.18 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-.95-.12z" /></svg>
+                      </a>
+                      <a
+                        class="np-footer-social-btn"
+                        href="https://www.threads.com/@fonlioofficial/post/Dd87ob7j87A?xmt=AQG0sQna5phj3eo0gGFAz7fhAtyjYHfc5dwHr1LkXJ14a9E"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Threads"
+                        aria-label="Threads"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 192 192" fill="currentColor" style="flex-shrink: 0;"><path d="M141.537 88.9883C140.71 88.5919 139.87 88.2104 139.019 87.8451C137.537 60.5382 122.616 44.905 97.5619 44.745C97.4484 44.7443 97.3355 44.7443 97.222 44.7443C82.2364 44.7443 69.7731 51.1409 62.102 62.7807L75.881 72.2328C81.6116 63.5383 90.6052 61.6848 97.2286 61.6848C97.3051 61.6848 97.3819 61.6848 97.4576 61.6855C105.707 61.7381 111.932 64.1366 115.961 68.814C118.893 72.2193 120.854 76.925 121.825 82.8638C114.511 81.6207 106.601 81.2385 98.145 81.7233C74.3247 83.0954 59.0111 96.9879 60.0396 116.292C60.5615 126.084 65.4397 134.508 73.775 140.011C80.8224 144.663 89.899 146.938 99.3323 146.423C111.79 145.74 121.563 140.987 128.381 132.296C133.559 125.696 136.834 117.143 138.28 106.366C144.217 109.949 148.617 114.664 151.047 120.332C155.179 129.967 155.42 145.8 142.501 158.708C131.182 170.016 117.576 174.908 97.0135 175.059C74.2042 174.89 56.9538 167.575 45.7381 153.317C35.2355 139.966 29.8077 120.682 29.6052 96C29.8077 71.3178 35.2355 52.0336 45.7381 38.6827C56.9538 24.4249 74.2039 17.11 97.0132 16.9405C119.988 17.1113 137.539 24.4614 149.184 38.788C154.894 45.8136 159.199 54.6488 162.037 64.9503L178.184 60.6422C174.744 47.9622 169.331 37.0357 161.965 27.974C147.036 9.60668 125.202 0.195148 97.0695 0H96.9569C68.8816 0.19447 47.2921 9.6418 32.7883 28.0793C19.8819 44.4864 13.2244 67.3157 13.0007 95.9325L13 96L13.0007 96.0675C13.2244 124.684 19.8819 147.514 32.7883 163.921C47.2921 182.358 68.8816 191.806 96.9569 192H97.0695C122.03 191.827 139.624 185.292 154.118 170.811C173.081 151.866 172.51 128.119 166.26 113.541C161.776 103.087 153.227 94.5962 141.537 88.9883ZM98.4405 129.507C88.0005 130.095 77.1544 125.409 76.6196 115.372C76.2232 107.93 81.9158 99.626 99.0812 98.6368C101.047 98.5234 102.976 98.468 104.871 98.468C111.106 98.468 116.939 99.0737 122.242 100.233C120.264 124.935 108.662 128.946 98.4405 129.507Z" /></svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </footer>
+          </div>
+        </div>
+      </section>
+    </main>
+  
+<script>
+window.__selectedStage = 'Sinh viên';
+window.__selectStage = function(btn, stage) {
+  document.querySelectorAll('.fonlio-pill').forEach(b => b.classList.remove('is-active'));
+  btn.classList.add('is-active');
+  window.__selectedStage = stage;
+};
+
+window.__handleFonlioSubmit = async function(e) {
+  e.preventDefault();
+  const name = document.getElementById('fnlName').value.trim();
+  const email = document.getElementById('fnlEmail').value.trim();
+  const stage = window.__selectedStage || 'Sinh viên';
+  const spec = document.getElementById('fnlSpec') ? document.getElementById('fnlSpec').value : '';
+  const projCount = document.getElementById('fnlProjCount') ? document.getElementById('fnlProjCount').value : '';
+  const challenge = document.getElementById('fnlChallenge') ? document.getElementById('fnlChallenge').value : '';
+  const beta = document.getElementById('fnlBeta') ? document.getElementById('fnlBeta').value : '';
+  const submitBtn = document.getElementById('fnlSubmitBtn');
+
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span>Đang ghi nhận...</span>';
+
+  const ticketCode = '#FNL-' + String(Math.floor(1000 + Math.random() * 9000));
+
+  try {
+    await fetch('/api/v1/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: name,
+        email: email,
+        careerStage: stage,
+        specialization: spec,
+        projectCount: projCount,
+        mainChallenge: challenge,
+        betaInterest: beta,
+        notes: ticketCode
+      })
+    });
+  } catch (err) {
+    console.log('Local pass generated (backend offline or mocked)');
+  }
+
+  // Show ticket
+  document.getElementById('fnlTicketCode').textContent = ticketCode;
+  document.getElementById('fnlTicketHolder').textContent = name + ' · ' + stage + (spec ? ' (' + spec + ')' : '');
+  document.getElementById('fonlioFormView').style.display = 'none';
+  document.getElementById('fonlioSuccessView').style.display = 'block';
+};
+
+window.__copyTicket = function() {
+  const code = document.getElementById('fnlTicketCode').textContent;
+  const text = 'Tôi vừa đăng ký Early Access tại FONLIO — Foundation Of Your Next Journey với mã VIP ' + code + '! Đăng ký tại: https://fonlio-waitlist.netlify.app';
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('fnlCopyBtn');
+    btn.textContent = '✓ Đã sao chép vào bộ nhớ tạm!';
+    setTimeout(() => { btn.textContent = 'Sao chép mã thẻ & Chia sẻ'; }, 2500);
+  });
+};
+</script>
+
+</body>
+</html>
