@@ -1,20 +1,36 @@
 /**
  * Giao diện của trang portfolio công khai.
  *
- * Sản phẩm từng có năm giao diện (Classic Default, Luxury Gold, Cyberpunk
- * Neon, Emerald Executive và Fomlio). Giờ chỉ còn MỘT: giữ năm bộ mặt cho
- * cùng một dữ liệu nghĩa là năm lần phải sửa mỗi khi trang đổi, mà bốn bộ
- * kia không ai chăm.
+ * Mỗi giao diện ở đây CHỈ là một bảng màu: cùng một bố cục, cùng một
+ * component (FomlioPassport), khác nhau ở các biến CSS mà `data-fom-theme`
+ * trên `.fom-page` chọn ra. Cố ý giữ như vậy — sản phẩm từng có năm giao
+ * diện dựng riêng và hệ quả là mỗi lần đổi trang phải sửa năm chỗ, bốn chỗ
+ * không ai chăm. Thêm màu thì rẻ, thêm bố cục thì đắt.
  *
- * Mã `FOMLIO` giữ nguyên vì nó đã nằm trong cột `profiles.selected_theme`
- * của những hồ sơ đã lưu; chỉ tên hiển thị là đổi. Những hồ sơ cũ còn ghi mã
- * khác vẫn hiện bằng giao diện này — VerifiedPassport không còn rẽ nhánh.
+ * `id` được ghi thẳng vào cột `profiles.selected_theme`, nên đổi chuỗi là
+ * làm hỏng những hồ sơ đã lưu. Hồ sơ nào còn ghi mã cũ (DEFAULT, DARK_GOLD,
+ * CYBERPUNK, EMERALD_CLASSIC) sẽ rơi về giao diện mặc định.
  */
-export const PORTFOLIO_THEME = {
-  id: 'FOMLIO',
-  name: 'Cốm Neon',
-  colorBox: ['#cbf748', '#7b3aec'],
-};
+export const PORTFOLIO_THEMES = [
+  {
+    id: 'FOMLIO',
+    name: 'Cốm Neon',
+    hint: 'Nền đen, quầng cốm',
+    colorBox: ['#cbf748', '#7b3aec'],
+  },
+  {
+    id: 'NHO_NEON',
+    name: 'Nho Neon',
+    hint: 'Nền tím, điểm cốm',
+    colorBox: ['#7b3aec', '#cbf748'],
+  },
+];
 
-/** Giữ dạng mảng cho nơi nào còn duyệt danh sách. */
-export const PORTFOLIO_THEMES = [PORTFOLIO_THEME];
+/** Giao diện dùng khi hồ sơ chưa chọn, hoặc ghi một mã không còn tồn tại. */
+export const PORTFOLIO_THEME = PORTFOLIO_THEMES[0];
+
+/** Đổi mã trong DB thành một giao diện có thật. Không bao giờ trả về null:
+ *  một mã lạ không được phép làm trắng cả trang hồ sơ. */
+export function resolveTheme(id) {
+  return PORTFOLIO_THEMES.find((t) => t.id === id) || PORTFOLIO_THEME;
+}

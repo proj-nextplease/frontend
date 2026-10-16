@@ -22,7 +22,10 @@
   --fomb-brand: #cbf748;
   --fomb-secondary: #7b3aec;
   --fomb-text: #f4f8ec;
-  --fomb-muted: rgba(244, 248, 236, 0.62);
+  /* 0.72 chứ không 0.62: ở cỡ chữ 12px của các dòng ghi chú, 0.62 cho tỉ lệ
+     tương phản 4.44 — hụt ngưỡng 4.5 của WCAG AA. Đo bằng cách trộn alpha
+     xuống nền thật, không phải ước lượng. */
+  --fomb-muted: rgba(244, 248, 236, 0.72);
 
   /* Token toàn cục phải định nghĩa lại trong phạm vi trang: nhiều component
      con tô màu bằng biến toàn cục qua inline style nên CSS không đè được. */
@@ -47,6 +50,15 @@
   --field-bg: var(--fomb-field);
   --primary: var(--fomb-brand);
   --accent: var(--fomb-brand);
+
+  /* Vài inline style trong CandidatePortfolioPage dùng `var(--c-line, #ece6e2)`,
+     `var(--c-muted, #8a7f78)`, `var(--c-red, #e5533f)`. Các biến đó không được
+     định nghĩa trong phạm vi trang này nên rơi về màu DỰ PHÒNG — toàn màu của
+     bộ da sáng cũ: viền be, chữ xám nâu, đỏ gạch. Inline style thì CSS không
+     đè được, nên phải định nghĩa biến ở đây để chúng phân giải ra đúng tông. */
+  --c-line: var(--fomb-line);
+  --c-muted: var(--fomb-muted);
+  --c-red: #ff8b7d;
 
   background: var(--fomb-ink);
   color: var(--fomb-text);
@@ -450,6 +462,14 @@
   box-shadow: none;
 }
 
+/* Số thứ tự thẻ kinh nghiệm (01, 02…). index.css tô nó bằng --accent là màu
+   CAM của bộ da sáng cũ, lọt qua đây thành chữ trắng trên nền cam mờ: lạc
+   tông, và tương phản chỉ 2.6 — dưới ngưỡng đọc được. */
+.portfolio-page.fomlio-builder .edit-card-index span {
+  background: rgba(203, 247, 72, 0.14);
+  color: var(--fomb-brand);
+}
+
 .portfolio-page.fomlio-builder .edit-card-remove {
   background: var(--fomb-panel);
   border: 1px solid var(--fomb-line);
@@ -760,18 +780,38 @@
 .pf-dock .pf-social-inputs > * { min-width: 0; }
 .pf-dock .portfolio-form-panel { overflow-x: hidden; }
 
-/* Nhãn giao diện trong thanh công cụ — không phải nút bấm được. */
-.pf-live-theme-label {
+/* Bộ chọn giao diện trong thanh công cụ. */
+.pf-live-themes { display: inline-flex; gap: 6px; flex: none; }
+
+.pf-live-theme {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  flex: none;
   padding: 7px 14px 7px 9px;
+  border: 1px solid transparent;
   border-radius: 999px;
-  color: rgba(244, 248, 236, 0.82);
+  background: transparent;
+  color: rgba(244, 248, 236, 0.62);
+  font: inherit;
   font-size: 0.78rem;
   white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
+
+.pf-live-theme:hover { color: rgba(244, 248, 236, 0.92); background: rgba(255, 255, 255, 0.06); }
+
+/* Trạng thái đang chọn phải đọc được KHÔNG CẦN màu: người mù màu nhìn hai
+   nút chỉ khác nhau ở sắc độ chữ thì không thấy nút nào đang bật. Viền
+   cộng nền đặc làm việc đó. */
+.pf-live-theme.is-active {
+  color: var(--fomb-ink);
+  background: var(--fomb-brand);
+  border-color: var(--fomb-brand);
+  font-weight: 600;
+}
+
+.pf-live-theme:focus-visible { outline: 2px solid var(--fomb-brand); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   .pf-dock,
@@ -781,4 +821,74 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pf-dock-toggle { transition: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Hộp thoại xác nhận trước khi gửi
+   ══════════════════════════════════════════════════════════════════════════
+   index.css dựng hộp thoại này cho bộ da SÁNG: nền trắng đặc, chữ mực đen.
+   Bộ da tối của trình dựng đổi màu chữ sang trắng ngà nhưng KHÔNG đổi nền —
+   nên thành trắng trên trắng, mọi dòng chữ có tương phản ~1.0 và cả hộp
+   thoại nhìn như trống trơn.
+
+   Đây là màn cuối cùng người dùng đọc trước khi gửi hồ sơ đi, tức là chỗ
+   không được phép mù. Đổi nền thay vì đổi chữ: giữ chữ sáng cho khớp phần
+   còn lại của trình dựng.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.portfolio-page.fomlio-builder ~ .confirm-overlay,
+.portfolio-page.fomlio-builder .confirm-overlay {
+  background: rgba(3, 5, 4, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.portfolio-page.fomlio-builder .confirm-modal {
+  background: var(--fomb-panel);
+  border: 1px solid var(--fomb-line);
+  color: var(--fomb-text);
+}
+
+.portfolio-page.fomlio-builder .confirm-modal-header,
+.portfolio-page.fomlio-builder .confirm-modal-footer {
+  border-color: var(--fomb-line);
+}
+.portfolio-page.fomlio-builder .confirm-modal-header h2 { color: var(--fomb-text); }
+
+/* Nút đóng: 22px nằm dưới ngưỡng vùng chạm 24px của WCAG 2.2. */
+.portfolio-page.fomlio-builder .confirm-modal .close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  color: var(--fomb-text) !important;
+}
+.portfolio-page.fomlio-builder .confirm-modal .close-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.portfolio-page.fomlio-builder .confirm-avatar-box,
+.portfolio-page.fomlio-builder .confirm-section,
+.portfolio-page.fomlio-builder .confirm-list-item {
+  background: var(--fomb-field);
+  border-color: var(--fomb-line);
+}
+
+.portfolio-page.fomlio-builder .confirm-label { color: var(--fomb-muted); }
+.portfolio-page.fomlio-builder .confirm-field { color: var(--fomb-text); }
+
+/* Chip kỹ năng: nền kem #fbf7ef của bộ da cũ, chữ sáng đè lên là mất hút. */
+.portfolio-page.fomlio-builder .confirm-tag {
+  background: rgba(203, 247, 72, 0.14);
+  border: 1px solid rgba(203, 247, 72, 0.3);
+  color: var(--fomb-brand);
+}
+
+/* Tiêu đề nhóm trong hộp thoại là một viên LIME đặc (index.css:17831). Cùng
+   quy tắc với tiêu đề khối bên ngoài: nền lime thì chữ phải là mực đen. Để
+   thừa kế chữ sáng của bộ da tối là trắng trên lime, tương phản 1.2. */
+.portfolio-page.fomlio-builder .confirm-modal .confirm-section h3 {
+  color: var(--fomb-ink);
+  border-color: var(--fomb-ink);
 }

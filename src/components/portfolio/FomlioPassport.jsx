@@ -1,13 +1,11 @@
 import { useState } from 'react';
-import { BadgeCheck, Eye, ExternalLink, Award, GraduationCap, MapPin } from 'lucide-react';
+import { BadgeCheck, Clock3, Eye, ExternalLink, Award, GraduationCap, MapPin } from 'lucide-react';
+import { resolveTheme } from '../../constants/portfolioThemes.js';
 import { PortfolioMascot } from '../PortfolioMascot.jsx';
 import { FilePreviewModal } from '../FilePreviewModal.jsx';
 import '../../styles/fomlioTheme.css';
 
 import starUrl from '../../assets/fomlio/star.svg';
-import dlOuterUrl from '../../assets/fomlio/dl-ring-outer.svg';
-import dlInnerUrl from '../../assets/fomlio/dl-ring-inner.svg';
-import dlIconUrl from '../../assets/fomlio/icon-download.svg';
 import iconUxui from '../../assets/fomlio/icon-uxui.svg';
 import iconTech from '../../assets/fomlio/icon-tech.svg';
 import iconMarketing from '../../assets/fomlio/icon-marketing.svg';
@@ -60,23 +58,6 @@ function yearsOfExperience(experiences) {
   return Math.max(1, new Date().getFullYear() - Math.min(...years));
 }
 
-/** Nút tròn "DOWNLOAD CV": chữ chạy vòng quanh viền, bấm để in / lưu PDF. */
-function DownloadDial({ onClick }) {
-  return (
-    <button type="button" className="fom-download" onClick={onClick} title="Tải hồ sơ dạng PDF">
-      <svg className="fom-download-spin" viewBox="0 0 199 199" aria-hidden="true">
-        <defs>
-          <path id="fom-dial" d="M99.5,12 a87.5,87.5 0 1,1 -0.1,0" fill="none" />
-        </defs>
-        <text><textPath href="#fom-dial">DOWNLOAD CV - DOWNLOAD CV - </textPath></text>
-      </svg>
-      <img className="fom-download-outer" src={dlOuterUrl} alt="" />
-      <img className="fom-download-inner" src={dlInnerUrl} alt="" />
-      <img className="fom-download-icon" src={dlIconUrl} alt="" />
-    </button>
-  );
-}
-
 /** Dải kỹ năng chạy ngang, lặp hai lần để vòng lặp khép kín không hở mối. */
 function RoleMarquee({ items }) {
   if (!items.length) return null;
@@ -122,13 +103,25 @@ export function FomlioPassport({ profile, isDraft = false }) {
   const projects = experiences.slice(0, 6);
   const hasContent = profile.bio || skills.length || experiences.length || credentials.length;
 
+  /* Thanh điều hướng phải bám theo những khối THẬT SỰ được vẽ. Portfolio và
+     Services chỉ xuất hiện khi có dữ liệu (hoặc khi đang xem bản nháp, lúc đó
+     chúng hiện dưới dạng gợi ý); viết cứng đủ bốn liên kết thì trên một hồ sơ
+     chưa có kinh nghiệm được duyệt, bấm "Portfolio" là không có gì xảy ra —
+     người xem tưởng trang hỏng chứ không hiểu là mục đó chưa có. */
+  const navItems = [
+    { id: 'fom-top', label: 'Home' },
+    (projects.length || isDraft) && { id: 'fom-portfolio', label: 'Portfolio' },
+    (skills.length || isDraft) && { id: 'fom-services', label: 'Services' },
+    { id: 'fom-about', label: 'About' },
+  ].filter(Boolean);
+
   const email = profile.socialLinks?.email;
   const contactHref = email
     ? (email.startsWith('mailto:') ? email : `mailto:${email}`)
     : (profile.socialLinks?.linkedin ? `https://linkedin.com/in/${profile.socialLinks.linkedin}` : null);
 
   return (
-    <div className="fom-page">
+    <div className="fom-page" data-fom-theme={resolveTheme(profile.selectedTheme).id}>
       <div className="fom-shell">
         <header className="fom-header">
           {/* Đây là trang của ỨNG VIÊN, không phải trang sản phẩm — chỗ này
@@ -136,10 +129,9 @@ export function FomlioPassport({ profile, isDraft = false }) {
               portfolio cá nhân của chính designer. */}
           <span className="fom-logo">{name}</span>
           <nav className="fom-nav">
-            <a className="active" href="#fom-top">Home</a>
-            <a href="#fom-portfolio">Portfolio</a>
-            <a href="#fom-services">Services</a>
-            <a href="#fom-about">About</a>
+            {navItems.map((item, i) => (
+              <a key={item.id} className={i === 0 ? 'active' : undefined} href={`#${item.id}`}>{item.label}</a>
+            ))}
           </nav>
           {contactHref
             ? <a className="fom-btn" href={contactHref}>Hire Me</a>
@@ -174,7 +166,6 @@ export function FomlioPassport({ profile, isDraft = false }) {
                 ? <img className="fom-portrait-photo" src={avatar.portraitUrl} alt={`Ảnh chân dung của ${name}`} />
                 : <PortfolioMascot avatar={avatar} size={260} />}
             </div>
-            <DownloadDial onClick={() => window.print()} />
           </div>
 
           <div className="fom-hero-copy">
@@ -198,7 +189,11 @@ export function FomlioPassport({ profile, isDraft = false }) {
             )}
             <div className="fom-hero-actions">
               {contactHref && <a className="fom-btn" href={contactHref}>Let’s Talk!</a>}
-              <a className="fom-btn ghost" href="#fom-portfolio">My Works</a>
+              {/* Cùng lý do với thanh điều hướng: không có khối dự án thì
+                  đây là một cái nút dẫn đi đâu không ai biết. */}
+              {(projects.length > 0 || isDraft) && (
+                <a className="fom-btn ghost" href="#fom-portfolio">My Works</a>
+              )}
             </div>
           </div>
         </section>
@@ -212,7 +207,6 @@ export function FomlioPassport({ profile, isDraft = false }) {
             <span className="fom-pill fom-eyebrow">About me</span>
             {profile.headline && <h2 className="fom-display">{profile.headline}</h2>}
             {profile.bio && <p className="fom-lede">{profile.bio}</p>}
-            <button type="button" className="fom-btn lg" onClick={() => window.print()}>Download CV</button>
           </div>
           {/* Kim cương chỉ là trang trí. Khi chưa có phần giới thiệu thì nó
               là thứ DUY NHẤT trong nửa khối — một mảng hình to đứng cạnh một
@@ -301,7 +295,11 @@ export function FomlioPassport({ profile, isDraft = false }) {
                           {exp.organization || 'Tổ chức'}
                           {exp.startDate && ` · ${exp.startDate}${exp.endDate ? ` - ${exp.endDate}` : ' - nay'}`}
                         </span>
-                        {exp.verified && <span className="fom-project-verified"><BadgeCheck size={13} /> Xác thực</span>}
+                        {/* Luôn nói rõ một trong hai, không bao giờ im lặng: một thẻ
+                            không nhãn thì người xem tự mặc định là đã được bảo chứng. */}
+                        {exp.verified
+                          ? <span className="fom-project-verified"><BadgeCheck size={13} /> Xác thực</span>
+                          : <span className="fom-project-pending"><Clock3 size={13} /> Chờ xác thực</span>}
                         {exp.proofLink && (
                           <a
                             href={/^https?:/.test(exp.proofLink) ? exp.proofLink : `https://${exp.proofLink}`}

@@ -5,6 +5,7 @@ import { ONBOARDING_TAB_FLAG, announcePortfolioSaved } from '../lib/onboardingTa
 import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
 import { LivePortfolioPreview } from '../components/portfolio/LivePortfolioPreview.jsx';
 import { toPassportProfile } from '../lib/portfolioDraft.js';
+import { PORTFOLIO_THEME, resolveTheme } from '../constants/portfolioThemes.js';
 import '../styles/fomlioBuilder.css';
 import { MASCOTS, mascotSheets, resolveMascot } from '../lib/mascots.js';
 import {
@@ -187,6 +188,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     socialLinks: { github: '', linkedin: '', website: '', email: '' },
     coverBannerUrl: '',
     coverBannerPos: '50% 50%',
+    selectedTheme: PORTFOLIO_THEME.id,
   });
   const [experiences, setExperiences] = useState(defaultExperiences);
   const [credentials, setCredentials] = useState(defaultCredentials);
@@ -355,6 +357,10 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               socialLinks: { github: '', linkedin: '', website: '', email: '', ...(data.socialLinks || {}) },
               coverBannerUrl: data.coverBannerUrl || '',
               coverBannerPos: data.coverBannerPos || '50% 50%',
+              /* Hồ sơ cũ còn ghi mã đã bỏ (DARK_GOLD, CYBERPUNK...) thì
+                 resolveTheme đưa về giao diện mặc định, nên bộ chọn không
+                 bao giờ rơi vào trạng thái "không nút nào sáng". */
+              selectedTheme: resolveTheme(data.selectedTheme).id,
             });
             if (data.experiences && data.experiences.length > 0) {
               setExperiences(data.experiences);
@@ -426,6 +432,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         socialLinks: profile.socialLinks || {},
         coverBannerUrl: profile.coverBannerUrl || '',
         coverBannerPos: profile.coverBannerPos || '50% 50%',
+        selectedTheme: profile.selectedTheme || PORTFOLIO_THEME.id,
       };
       
       await updateMyPortfolio(payload);
@@ -1086,6 +1093,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             onOpenInNewTab={openPortfolioPreview}
             scrollToSection={activeSection}
             onScroll={handlePreviewScroll}
+            onSelectTheme={(id) => setProfile((current) => ({ ...current, selectedTheme: id }))}
           />
         </div>
 
@@ -1404,6 +1412,15 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               <BriefcaseBusiness size={22} />
               <div>
                 <h2>Kinh nghiệm</h2>
+                {/* Trang công khai CHỈ hiện kinh nghiệm đã được duyệt — xem
+                    ProfileService.java, truy vấn hồ sơ công khai lọc theo
+                    verification_status. Không nói trước ở đây thì người dùng
+                    điền xong, xuất bản, mở link và thấy trang trống mà không
+                    hiểu vì sao. */}
+                <p>
+                  Mục nào chưa được Admin duyệt sẽ <strong>chưa hiện trên trang công khai</strong>,
+                  nhưng vẫn được lưu và sẽ tự hiện ngay khi duyệt xong.
+                </p>
               </div>
             </div>
 
@@ -1560,7 +1577,9 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                         <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         <button type="button" onClick={() => removeExperienceProof(experience.id, i)}
                           aria-label="Xoá ảnh"
-                          style={{ position: 'absolute', top: '4px', right: '4px', width: '22px', height: '22px', borderRadius: '50%', border: 'none', background: 'rgba(220,38,38,0.92)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, fontSize: '0.78rem', fontWeight: 800 }}>×</button>
+                          /* 30px chứ không 22: 22 nằm dưới ngưỡng vùng chạm tối thiểu 24px của
+                             WCAG 2.2, bấm hụt trên điện thoại là chuyện thường. */
+                          style={{ position: 'absolute', top: '4px', right: '4px', width: '30px', height: '30px', borderRadius: '50%', border: 'none', background: 'rgba(220,38,38,0.92)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, fontSize: '0.95rem', fontWeight: 800 }}>×</button>
                       </div>
                     ))}
                     {(experience.proofImages || []).length < 6 && (

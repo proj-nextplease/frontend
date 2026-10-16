@@ -30,6 +30,9 @@ export function toPassportProfile({ profile = {}, avatar, experiences, credentia
     ),
     credentials: (credentials || []).filter((cred) => cred && cred.name?.trim()),
     openToWork: !!profile.openToWork,
+    /* Phải đi kèm, nếu không khung xem trước luôn vẽ bằng giao diện mặc
+       định và người dùng đổi theme mà không thấy gì đổi. */
+    selectedTheme: profile.selectedTheme,
     socialLinks: profile.socialLinks || {},
     coverBannerUrl: profile.coverBannerUrl,
     coverBannerPos: profile.coverBannerPos,

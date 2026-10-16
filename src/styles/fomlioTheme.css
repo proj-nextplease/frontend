@@ -317,58 +317,24 @@
   height: auto;
 }
 
-.fom-portrait-stage.has-photo { place-items: stretch; padding-bottom: 0; }
+/* Có ảnh thì CANH GIỮA, không phải stretch.
+   `place-items: stretch` cộng với kích thước tường minh là một mâu thuẫn:
+   trình duyệt bỏ stretch và rơi về `start`, tức dồn ảnh lên góc trên-trái
+   trong khi đĩa lime vẫn chiếm trọn khung — ảnh lệch hẳn khỏi tâm đĩa. */
+.fom-portrait-stage.has-photo { place-items: center; padding: 0; }
 
 .fom-portrait-photo {
-  width: 100%;
-  height: 100%;
+  /* 86% để vành lime phía sau lộ đều một vòng quanh ảnh. Dùng aspect-ratio
+     chứ không đặt width/height lệch nhau: 86%/94% cộng `border-radius: 50%`
+     cho ra hình BẦU DỤC, không khớp với đĩa tròn phía sau. */
+  width: 86%;
+  aspect-ratio: 1;
+  height: auto;
   object-fit: cover;
   object-position: top center;
   border-radius: 50%;
 }
 
-/* Nút tròn "DOWNLOAD CV": đè lên mép dưới-phải của đĩa, không đè lên mặt
-   nhân vật. Kích thước theo đĩa để không vỡ bố cục khi khung co lại. */
-.fom-download {
-  position: absolute;
-  /* Tâm nút rơi vào khoảng (81%, 81%) của khung vuông — đúng điểm mép
-     dưới-phải của đường tròn nội tiếp, nên nó cưỡi lên viền đĩa thay vì nằm
-     lọt bên trong và đè lên nhân vật. */
-  left: 64%;
-  top: 64%;
-  width: 36%;
-  max-width: 160px;
-  aspect-ratio: 1;
-  height: auto;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  color: var(--fom-white);
-  z-index: 2;
-}
-
-.fom-download:hover .fom-download-spin { animation-duration: 6s; }
-.fom-download img { position: absolute; inset: 0; margin: auto; }
-.fom-download-outer { width: 76%; height: 76%; }
-.fom-download-inner { width: 40%; height: 40%; }
-.fom-download-icon { width: 18%; height: 18%; }
-
-.fom-download-spin {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  animation: fom-spin 18s linear infinite;
-}
-
-.fom-download-spin text {
-  font-family: 'Inter', sans-serif;
-  font-size: 15px;
-  fill: currentColor;
-  letter-spacing: 1.4px;
-}
-
-@keyframes fom-spin { to { transform: rotate(360deg); } }
 
 /* ── Dải Role chạy ngang ──────────────────────────────────────────────── */
 
@@ -429,9 +395,7 @@
 
 @keyframes fom-marquee { to { transform: rotate(-1deg) translateX(-50%); } }
 
-@media (prefers-reduced-motion: reduce) {
-  .fom-marquee-track, .fom-download-spin { animation: none; }
-}
+@media (prefers-reduced-motion: reduce) {}
 
 /* ── About ────────────────────────────────────────────────────────────── */
 
@@ -632,6 +596,20 @@
   font-size: 13px;
 }
 
+/* Nhãn trung tính, cố ý nhạt hơn huy hiệu xác thực: đây là trạng thái
+   chờ, không phải một thành tích. */
+.fom-project-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 700;
+  font-size: 13px;
+}
+
 /* ── Ngôi sao trang trí ───────────────────────────────────────────────── */
 
 .fom-star {
@@ -713,7 +691,6 @@
 @media (max-width: 560px) {
   .fom-shell { width: calc(100% - 32px); }
   .fom-portrait { width: min(260px, 74vw); }
-  .fom-download-spin text { font-size: 13px; }
   .fom-stats { grid-template-columns: minmax(0, 1fr); }
   .fom-specialities { grid-template-columns: minmax(0, 1fr); }
   .fom-projects { grid-template-columns: minmax(0, 1fr); }
@@ -727,9 +704,7 @@
 
 /* ── Bản in ───────────────────────────────────────────────────────────── */
 
-@media print {
-  .fom-page::before, .fom-star, .fom-download, .fom-nav, .fom-marquee { display: none !important; }
-  .fom-page { background: #fff !important; color: #111 !important; padding: 0 24px !important; }
+@media print {.fom-page { background: #fff !important; color: #111 !important; padding: 0 24px !important; }
   .fom-display, .fom-section-title, .fom-lede, .fom-stat-value, .fom-stat-label, .fom-project h3 { color: #111 !important; }
   .fom-stat, .fom-speciality, .fom-project {
     background: #fff !important;
@@ -739,35 +714,6 @@
   }
   .fom-speciality { color: #111 !important; }
 }
-
-/* ── Chân dung thật ───────────────────────────────────────────────────────
-   Khi có ảnh, ảnh lấp đầy vòng tròn đúng như bản thiết kế. Khi không, linh
-   vật đứng ở đáy vòng tròn như một nhân vật đứng trong khung — không phóng
-   to một bức tranh nhỏ cho vừa, vì phóng lên là vỡ. */
-
-.fom-portrait-stage.has-photo { align-items: stretch; }
-
-.fom-portrait-photo {
-  /* Hẹp hơn khung một nhịp để vành lime phía sau còn lộ ra — ảnh phủ kín
-     100% thì vòng tròn biến mất và hero chỉ còn là một khối ảnh chữ nhật. */
-  width: 86%;
-  height: 94%;
-  align-self: flex-end;
-  object-fit: cover;
-  object-position: top center;
-  /* Bo theo vòng tròn phía sau, chừa một vành lime mỏng lộ ra. */
-  border-radius: 50% 50% 46% 46% / 54% 54% 42% 42%;
-}
-
-.fom-hero-meta {
-  margin: 0;
-  font-size: clamp(14px, 1.1vw, 18px);
-  color: rgba(255, 255, 255, 0.68);
-}
-
-/* Nút CV: neo vào mép phải của khung chân dung và nằm trọn bên trong. Bản
-   trước đặt `right: 4%; bottom: -6%` nên nó thò ra ngoài và bị cắt. */
-.fom-download { right: 0; bottom: 4%; }
 
 /* ── Gợi ý ở bản nháp ────────────────────────────────────────────────────- */
 
@@ -820,3 +766,203 @@
 
 .fom-page-state p { margin: 0; font-size: 1.05rem; }
 .fom-page-state svg { color: var(--fom-brand); }
+
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Giao diện "Nho Neon".
+
+   Nguồn: Figma file agCrKhG2mWK3pbwdVkkJvN, node 10:129 ("Portfolio Landing
+   Page 2", khung 1728×5893). Đây KHÔNG phải bản đổi màu của Landing Page 1:
+   hero xếp dọc và canh giữa, khối About đảo bên, thẻ dự án đổ nền đặc. Nên
+   khối này ghi đè cả bố cục, không chỉ biến màu — nhưng vẫn chỉ là ghi đè,
+   mọi quy tắc nền vẫn nằm ở phần chung phía trên.
+
+   HAI CHỖ CỐ Ý LÀM KHÁC BẢN THIẾT KẾ, cả hai đều vì bản mock không gặp dữ
+   liệu thật:
+
+   1. Nền. Figma cho nền chuyển dần tới #e7d5ef ở đáy trang — gần như trắng.
+      Chữ trắng trên nền đó chỉ còn tương phản 1.39:1 (AA cần 4.5:1), tức
+      không đọc được. Mock không lộ ra vì nửa dưới của nó gần như trống;
+      portfolio thật có chữ tới tận chân trang. Gradient ở đây dừng tại
+      #9b4dde (4.66:1) rồi giữ nguyên.
+
+   2. Chữ vẫn canh TRÁI ở khối About, không canh phải như Figma. Lý do y hệt
+      ghi chú ở hero bản gốc: tiếng Việt dấu nhiều, tên trường và địa chỉ
+      dài, canh phải cho ra mép trái răng cưa rất khó đọc. Chỉ đảo BÊN của
+      ảnh và chữ cho đúng thiết kế, không đảo cách canh dòng.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.fom-page[data-fom-theme='NHO_NEON'] {
+  --fom-brand: #cbf748;        /* Primary Brand */
+  --fom-secondary: #7b3aec;    /* Secondary */
+  --fom-support: #6accc3;      /* Supporting */
+  --fom-mark: #c31dff;         /* Mark */
+  --fom-ink: #2a0a55;
+  --fom-white: #ffffff;
+
+  /* Nền tím đã sáng sẵn; giữ nguyên 0.08/0.12 của bản nền đen thì các thẻ
+     chìm mất, nên lớp kính ở đây đậm hơn. */
+  --fom-glass: rgba(255, 255, 255, 0.18);
+  --fom-panel: rgba(42, 10, 85, 0.34);
+  --fom-panel-line: rgba(255, 255, 255, 0.24);
+}
+
+.fom-page[data-fom-theme='NHO_NEON']::before {
+  background:
+    radial-gradient(68% 40% at 50% 46%, rgba(154, 77, 222, 0.92) 0%, rgba(123, 58, 236, 0.5) 48%, rgba(123, 58, 236, 0) 80%),
+    linear-gradient(180deg,
+      #000000 0%, #000000 10%, #1a0236 22%, #451078 34%,
+      #772fb7 46%, #9b4dde 58%, #9b4dde 100%),
+    #9b4dde;
+}
+
+/* ── Thanh điều hướng: viên đang chọn và nút Hire Me đổ cốm, chữ tím ──── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-nav a.active,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-btn {
+  background: var(--fom-brand);
+  color: var(--fom-secondary);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-btn.ghost {
+  background-color: transparent;
+  color: var(--fom-white);
+}
+
+/* ── Hero: một cột, canh giữa, chân dung nằm DƯỚI phần chữ ────────────── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: clamp(28px, 4vw, 56px);
+}
+
+/* Phần chữ lên trước bằng `order` chứ không đổi thứ tự trong JSX: hai giao
+   diện dùng chung một component, đổi DOM là bản Cốm Neon cũng đổi theo. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-copy {
+  order: -1;
+  align-items: center;
+  text-align: center;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-copy .fom-display { max-width: 24ch; }
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-portrait {
+  width: min(520px, 82vw);
+}
+
+/* Ba vành trăng khuyết hai bên chân dung (Ellipse 6–11 của Figma). Dựng
+   bằng một SVG nội tuyến thay vì sáu thẻ trang trí trong JSX: chúng thuần
+   trang trí, không đáng để bản Cốm Neon phải gánh thêm sáu node rỗng. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero::before,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero::after {
+  content: '';
+  position: absolute;
+  bottom: 4%;
+  width: clamp(120px, 21vw, 360px);
+  aspect-ratio: 360 / 410;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 410'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='1' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%237b3aec'/%3E%3Cstop offset='1' stop-color='%23ffffff'/%3E%3C/linearGradient%3E%3Cmask id='a'%3E%3Ccircle cx='170' cy='240' r='168' fill='%23fff'/%3E%3Ccircle cx='298' cy='196' r='168' fill='%23000'/%3E%3C/mask%3E%3Cmask id='b'%3E%3Ccircle cx='150' cy='196' r='124' fill='%23fff'/%3E%3Ccircle cx='245' cy='163' r='124' fill='%23000'/%3E%3C/mask%3E%3Cmask id='c'%3E%3Ccircle cx='128' cy='150' r='80' fill='%23fff'/%3E%3Ccircle cx='189' cy='129' r='80' fill='%23000'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='360' height='410' fill='url(%23g)' mask='url(%23a)'/%3E%3Crect width='360' height='410' fill='url(%23g)' mask='url(%23b)'/%3E%3Crect width='360' height='410' fill='url(%23g)' mask='url(%23c)'/%3E%3C/svg%3E");
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero::before { left: 0; }
+/* Bên phải là ảnh LẬT, đúng như Figma đặt hai cụm đối xứng qua chân dung. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero::after { right: 0; transform: scaleX(-1); }
+
+/* Dưới 900px chân dung đã chiếm gần hết bề ngang; để nguyên thì hai vành
+   trăng nằm đè lên mặt người. */
+@media (max-width: 900px) {
+  .fom-page[data-fom-theme='NHO_NEON'] .fom-hero::before,
+  .fom-page[data-fom-theme='NHO_NEON'] .fom-hero::after { display: none; }
+}
+
+/* ── Chân dung: đĩa tím thay đĩa cốm ─────────────────────────────────── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-portrait-ring {
+  background:
+    radial-gradient(circle at 50% 44%,
+      #a86bf5 0%, #8b4ae8 52%,
+      rgba(139, 74, 232, 0.55) 68%,
+      rgba(139, 74, 232, 0.18) 80%,
+      rgba(139, 74, 232, 0) 92%);
+}
+
+/* ── Dải kỹ năng: ngoài ngọc, dải nghiêng tím, chữ trắng (5.74:1) ─────── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee { background: var(--fom-support); }
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-band { background: var(--fom-secondary); }
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-item { color: var(--fom-white); }
+
+/* ── About: ảnh bên TRÁI, chữ bên phải ───────────────────────────────── */
+/* Phải kẹp trong `min-width` và `:not(.is-bare)`, nếu không nó đè mất hai
+   quy tắc chung mà nó chỉ định biến tấu:
+
+   - `.fom-about.is-bare` (0,2,0) gom về MỘT cột khi hồ sơ chưa có phần giới
+     thiệu — lúc đó khối kim cương không được vẽ. Quy tắc dưới đây có
+     (0,2,1) nên thắng, và cột duy nhất còn lại bị nhét vào ô 598px bên
+     trái: viên "About me" lệch hẳn sang trái thay vì nằm giữa.
+   - Media query ở 1024px cũng gom về một cột, nhưng độ ưu tiên không phụ
+     thuộc media query, nên nếu không kẹp thì máy tính bảng vẫn hai cột. */
+@media (min-width: 1025px) {
+  .fom-page[data-fom-theme='NHO_NEON'] .fom-about:not(.is-bare) {
+    grid-template-columns: minmax(0, 598px) minmax(0, 462px);
+  }
+
+  .fom-page[data-fom-theme='NHO_NEON'] .fom-about:not(.is-bare) .fom-about-copy { order: 2; }
+  .fom-page[data-fom-theme='NHO_NEON'] .fom-about:not(.is-bare) .fom-about-gem { order: 1; }
+}
+
+/* Khối trang trí đổi sang tím cho khớp nền; mảng cốm to ở đây sẽ tranh mất
+   vai trò điểm nhấn của hàng thẻ số liệu ngay bên dưới. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-about-gem::before {
+  background-image: linear-gradient(45.13deg, rgb(168, 107, 245) 6.18%, rgba(217, 217, 217, 0) 73.1%);
+}
+
+/* ── Mọi viên tiêu đề (ABOUT ME, SERVICES, PORTFOLIO, CREDENTIALS): nền
+      tím, chữ cốm — 4.63:1. Nhắm `.fom-eyebrow` chứ không nhắm riêng
+      `.fom-heading-block`, vì viên ABOUT ME nằm trong khối About. ────── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-eyebrow {
+  background: var(--fom-secondary);
+  border-color: transparent;
+  color: var(--fom-brand);
+}
+
+/* ── Thẻ số liệu và thẻ chuyên môn: nền CỐM ĐẶC ──────────────────────── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-stat,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-speciality {
+  background: var(--fom-brand);
+  border-color: transparent;
+  backdrop-filter: none;
+  color: var(--fom-ink);
+}
+
+/* Dấu "+" và "%" lấy màu Mark của Figma. 3.43:1 trên nền cốm — dưới ngưỡng
+   4.5 nhưng đây là chữ 44–70px, ngưỡng chữ lớn là 3.0, nên đạt. Chỉ dùng
+   cho đúng ký tự đó; phần số vẫn là tím đậm 13.3:1. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-stat-value span { color: var(--fom-mark); }
+.fom-page[data-fom-theme='NHO_NEON'] .fom-speciality p { color: rgba(42, 10, 85, 0.82); }
+
+/* ── Thẻ dự án: khung cốm đặc bọc ảnh chụp ───────────────────────────── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project {
+  background: var(--fom-brand);
+  border-color: transparent;
+  color: var(--fom-ink);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project-shot {
+  border-color: rgba(42, 10, 85, 0.25);
+  background: rgba(42, 10, 85, 0.12);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project-shot.placeholder { color: var(--fom-secondary); }
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project-meta { color: rgba(42, 10, 85, 0.78); }
+
+/* Hai nhãn trạng thái phải đổi theo thẻ: nền cốm nên huy hiệu cốm sẽ biến
+   mất, còn nhãn chờ dùng trắng-mờ thì gần như vô hình. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project-verified {
+  background: var(--fom-secondary);
+  color: var(--fom-white);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project-pending {
+  background: rgba(42, 10, 85, 0.14);
+  color: rgba(42, 10, 85, 0.86);
+}
