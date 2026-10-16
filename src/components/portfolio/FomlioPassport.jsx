@@ -5,9 +5,6 @@ import { FilePreviewModal } from '../FilePreviewModal.jsx';
 import '../../styles/fomlioTheme.css';
 
 import starUrl from '../../assets/fomlio/star.svg';
-import dlOuterUrl from '../../assets/fomlio/dl-ring-outer.svg';
-import dlInnerUrl from '../../assets/fomlio/dl-ring-inner.svg';
-import dlIconUrl from '../../assets/fomlio/icon-download.svg';
 import iconUxui from '../../assets/fomlio/icon-uxui.svg';
 import iconTech from '../../assets/fomlio/icon-tech.svg';
 import iconMarketing from '../../assets/fomlio/icon-marketing.svg';
@@ -58,23 +55,6 @@ function yearsOfExperience(experiences) {
     .filter((y) => Number.isFinite(y) && y > 1950);
   if (!years.length) return null;
   return Math.max(1, new Date().getFullYear() - Math.min(...years));
-}
-
-/** Nút tròn "DOWNLOAD CV": chữ chạy vòng quanh viền, bấm để in / lưu PDF. */
-function DownloadDial({ onClick }) {
-  return (
-    <button type="button" className="fom-download" onClick={onClick} title="Tải hồ sơ dạng PDF">
-      <svg className="fom-download-spin" viewBox="0 0 199 199" aria-hidden="true">
-        <defs>
-          <path id="fom-dial" d="M99.5,12 a87.5,87.5 0 1,1 -0.1,0" fill="none" />
-        </defs>
-        <text><textPath href="#fom-dial">DOWNLOAD CV - DOWNLOAD CV - </textPath></text>
-      </svg>
-      <img className="fom-download-outer" src={dlOuterUrl} alt="" />
-      <img className="fom-download-inner" src={dlInnerUrl} alt="" />
-      <img className="fom-download-icon" src={dlIconUrl} alt="" />
-    </button>
-  );
 }
 
 /** Dải kỹ năng chạy ngang, lặp hai lần để vòng lặp khép kín không hở mối. */
@@ -174,7 +154,6 @@ export function FomlioPassport({ profile, isDraft = false }) {
                 ? <img className="fom-portrait-photo" src={avatar.portraitUrl} alt={`Ảnh chân dung của ${name}`} />
                 : <PortfolioMascot avatar={avatar} size={260} />}
             </div>
-            <DownloadDial onClick={() => window.print()} />
           </div>
 
           <div className="fom-hero-copy">
@@ -212,7 +191,6 @@ export function FomlioPassport({ profile, isDraft = false }) {
             <span className="fom-pill fom-eyebrow">About me</span>
             {profile.headline && <h2 className="fom-display">{profile.headline}</h2>}
             {profile.bio && <p className="fom-lede">{profile.bio}</p>}
-            <button type="button" className="fom-btn lg" onClick={() => window.print()}>Download CV</button>
           </div>
           {/* Kim cương chỉ là trang trí. Khi chưa có phần giới thiệu thì nó
               là thứ DUY NHẤT trong nửa khối — một mảng hình to đứng cạnh một
