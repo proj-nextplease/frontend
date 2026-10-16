@@ -1404,6 +1404,15 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               <BriefcaseBusiness size={22} />
               <div>
                 <h2>Kinh nghiệm</h2>
+                {/* Trang công khai CHỈ hiện kinh nghiệm đã được duyệt — xem
+                    ProfileService.java, truy vấn hồ sơ công khai lọc theo
+                    verification_status. Không nói trước ở đây thì người dùng
+                    điền xong, xuất bản, mở link và thấy trang trống mà không
+                    hiểu vì sao. */}
+                <p>
+                  Mục nào chưa được Admin duyệt sẽ <strong>chưa hiện trên trang công khai</strong>,
+                  nhưng vẫn được lưu và sẽ tự hiện ngay khi duyệt xong.
+                </p>
               </div>
             </div>
 
@@ -1560,7 +1569,9 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                         <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         <button type="button" onClick={() => removeExperienceProof(experience.id, i)}
                           aria-label="Xoá ảnh"
-                          style={{ position: 'absolute', top: '4px', right: '4px', width: '22px', height: '22px', borderRadius: '50%', border: 'none', background: 'rgba(220,38,38,0.92)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, fontSize: '0.78rem', fontWeight: 800 }}>×</button>
+                          /* 30px chứ không 22: 22 nằm dưới ngưỡng vùng chạm tối thiểu 24px của
+                             WCAG 2.2, bấm hụt trên điện thoại là chuyện thường. */
+                          style={{ position: 'absolute', top: '4px', right: '4px', width: '30px', height: '30px', borderRadius: '50%', border: 'none', background: 'rgba(220,38,38,0.92)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, fontSize: '0.95rem', fontWeight: 800 }}>×</button>
                       </div>
                     ))}
                     {(experience.proofImages || []).length < 6 && (
