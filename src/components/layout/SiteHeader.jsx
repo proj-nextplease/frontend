@@ -46,12 +46,10 @@ import {
  */
 
 const EMERALD = '#10b981';
-const TEAL = '#0d9488';
+/* Hai màu còn lại chỉ phục vụ thanh header lúc đã cuộn. Menu tài khoản và
+   ngăn ☰ KHÔNG dùng chúng nữa — chúng lấy token từ styles/neonPalette.js. */
 const INK = '#0b0f0e';
 const ON_LIGHT = '#252630';   // màu chữ khi thanh đã đặc
-const LINE = '#e2efe9';
-const MINT = '#e7f7f0';
-const MUTED = '#5b7772';
 
 /* Bề ngang thanh sau khi co lại — Handshake dùng đúng 64rem. */
 const CONDENSED_WIDTH = 1024;
@@ -283,7 +281,11 @@ export function SiteHeader({ overlay = false, pinned = true }) {
           .nph-shell[data-mode="onlight"] .nph-navlink:hover { background-color: rgba(11,15,14,0.06); }
           .nph-navlink.active { font-weight: 700; }
           .nph-shell[data-mode="ondark"] .nph-navlink.active { background-color: rgba(255,255,255,0.16); }
-          .nph-shell[data-mode="onlight"] .nph-navlink.active { background-color: ${MINT}; color: ${TEAL}; }
+          /* Không khai trạng thái "đang chọn" cho thanh nền sáng ở đây nữa:
+             mọi trang dựng SiteHeader đều bọc trong .np-neon, nên quy tắc
+             neon của NeonBloom luôn thắng và dòng cũ (nền mint, chữ teal)
+             chưa bao giờ hiện ra. Giữ lại chỉ tổ làm người đọc sau tưởng
+             sản phẩm còn một tông màu thứ hai. */
 
           .nph-actions { display: flex; align-items: center; gap: 8px; flex: none; }
           /* Vạch ngăn dùng currentColor nên tự đổi theo trạng thái sáng/tối
@@ -354,18 +356,29 @@ export function SiteHeader({ overlay = false, pinned = true }) {
           .nph-shell[data-mode="onlight"] .nph-burger:hover { background-color: rgba(11,15,14,0.06); }
           @media (min-width: 1140px) { .nph-burger { display: none; } }
 
+          /* Ngăn ☰ dùng chung bảng neon với menu tài khoản. Hai thứ này mở
+             ra từ cùng một thanh và thường đứng cạnh nhau trên điện thoại;
+             để một tấm trắng cạnh một tấm tối thì nhìn như hai ứng dụng. */
           .nph-sheet {
             pointer-events: auto; width: 100%; margin-top: 10px; padding: 10px;
-            background: #fff; color: ${ON_LIGHT}; border: 1px solid ${LINE}; border-radius: 16px;
-            box-shadow: 0 22px 50px rgba(11,15,14,0.18);
+            background: ${N_SURFACE}; color: ${N_ON_DARK}; border: 1px solid ${N_LINE}; border-radius: 16px;
+            box-shadow: 0 22px 50px rgba(0,0,0,0.55);
             animation: nphSheetIn 0.26s cubic-bezier(0.22,1,0.36,1) both;
           }
           @keyframes nphSheetIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
           .nph-sheet-inner { display: grid; gap: 2px; }
           .nph-sheet-link { display: flex; align-items: center; gap: 11px; padding: 13px 14px; border-radius: 12px; font-size: 1rem; font-weight: 600; color: inherit; text-decoration: none; }
-          .nph-sheet-link:hover, .nph-sheet-link.active { background: ${MINT}; color: ${TEAL}; }
-          .nph-sheet-sep { height: 1px; margin: 8px 6px; background: ${LINE}; }
-          .nph-sheet-cta { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; padding: 14px; border-radius: 12px; border: none; background: ${ON_LIGHT}; color: #fff; font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; }
+          .nph-sheet-link:hover { background: ${N_SURFACE_HI}; color: ${N_LIME}; }
+          /* Mục đang mở phải phân biệt được KHÔNG CHỈ bằng màu chữ: nền lime
+             mờ cộng chữ lime, để người mù màu vẫn thấy ô nào đang sáng. */
+          .nph-sheet-link.active { background: rgba(${N_RGB}, 0.12); color: ${N_LIME}; }
+          .nph-sheet-link:focus-visible { outline: 2px solid ${N_LIME}; outline-offset: -2px; }
+          .nph-sheet-sep { height: 1px; margin: 8px 6px; background: ${N_LINE}; }
+          /* Nút chính: trước là nền #252630 chữ trắng — đặt trên tấm tối mới
+             thì gần như tàng hình (1.3:1 so với nền ngăn). Đổi sang lime đặc
+             chữ ink, đúng kiểu nút chính ở mọi nơi khác trong sản phẩm. */
+          .nph-sheet-cta { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; padding: 14px; border-radius: 12px; border: none; background: ${N_LIME}; color: #070a0f; font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; }
+          .nph-sheet-cta:hover { background: #d2ff4d; }
           @media (min-width: 1140px) { .nph-sheet { display: none; } }
 
           /* Chỗ trống thay cho thanh trên các trang không dùng chế độ đè. */
