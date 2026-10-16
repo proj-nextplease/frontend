@@ -479,64 +479,64 @@
 .fonlio-submit-btn:active {
   transform: translateY(1px) !important;
 }
-.fonlio-vip-result {
+.fonlio-success-view {
   text-align: center;
-  padding: 10px;
+  padding: 36px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
-.fonlio-vip-ticket {
-  background: rgba(255, 255, 255, 0.45);
-  border: 1.5px solid rgba(18, 14, 32, 0.2);
-  border-radius: 16px;
-  padding: 24px;
-  margin: 16px 0;
-  box-shadow: 0 12px 30px rgba(35, 12, 55, 0.12);
-  position: relative;
-  overflow: hidden;
+.fonlio-success-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1.5px solid rgba(16, 185, 129, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.2);
+  animation: fonlio-success-pop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes fonlio-success-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.fonlio-success-title {
+  font-family: "Be Vietnam Pro", sans-serif !important;
+  font-size: 22px;
+  font-weight: 700;
   color: #120e20;
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.01em;
 }
-.fonlio-ticket-number {
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-size: 32px;
-  font-weight: 900;
-  color: #120e20;
-  letter-spacing: 0.08em;
-  margin-bottom: 8px;
-}
-.fonlio-ticket-name {
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-size: 16px;
-  font-weight: 600;
-  color: #120e20;
-  margin-bottom: 14px;
-}
-.fonlio-ticket-perks {
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-size: 13px;
-  color: rgba(18, 14, 32, 0.85);
+.fonlio-success-desc {
+  font-family: "Be Vietnam Pro", sans-serif !important;
+  font-size: 14px;
   line-height: 1.6;
-  text-align: left;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 10px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
+  color: rgba(18, 14, 32, 0.75);
+  max-width: 400px;
+  margin: 0;
 }
-.fonlio-copy-btn {
-  background: #120e20;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+.fonlio-reset-btn {
+  background: rgba(18, 14, 32, 0.08);
+  border: 1px solid rgba(18, 14, 32, 0.15);
+  color: #120e20;
+  font-family: "Be Vietnam Pro", sans-serif !important;
   font-size: 13px;
   font-weight: 600;
-  padding: 10px 20px;
+  padding: 9px 20px;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.fonlio-copy-btn:hover {
-  background: linear-gradient(135deg, #ff6b4a 0%, #9b7cff 100%);
+.fonlio-reset-btn:hover {
+  background: #120e20;
+  color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(255, 107, 74, 0.35);
 }
 @media (max-width: 960px) {
   .next-footer {
@@ -862,7 +862,7 @@ html:lang(vi) .toolkit__subtitle,
         <a class="site-header__link site-header__link--secondary" href="#parcours">hành trình</a>
         <a class="site-header__link site-header__link--secondary" href="#toolkit">công cụ</a>
         <a class="site-header__link" href="#projects">đặc quyền</a>
-        <a class="site-header__link" href="#contact">liên hệ</a>
+        <a class="site-header__link" href="#contact">tham gia waitlist</a>
       </nav>
     </header>
 
@@ -1443,24 +1443,22 @@ html:lang(vi) .toolkit__subtitle,
                         </div>
 
                         <button type="submit" id="fnlSubmitBtn" class="fonlio-submit-btn">
-                          <span>ĐĂNG KÝ EARLY ACCESS · NHẬN VIP PASS ↗</span>
+                          <span>ĐĂNG KÝ EARLY ACCESS ↗</span>
                         </button>
                       </form>
                     </div>
 
-                    <div id="fonlioSuccessView" class="fonlio-vip-result" style="display: none;">
-                      <div class="fonlio-card-badge" style="background: rgba(255, 255, 255, 0.6);">✓ ĐÃ BẢO LƯU THỨ HẠNG THÀNH CÔNG</div>
-                      <div class="fonlio-vip-ticket">
-                        <div style="font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(18, 14, 32, 0.65);">FONLIO GENESIS VIP TICKET</div>
-                        <div class="fonlio-ticket-number" id="fnlTicketCode">#FNL-01482</div>
-                        <div class="fonlio-ticket-name" id="fnlTicketHolder">Nguyễn Minh Anh · Sinh viên</div>
-                        <div class="fonlio-ticket-perks">
-                          <div>✦ <b>Thứ hạng bảo lưu:</b> Ưu tiên kích hoạt đợt 1 (Top Early Access)</div>
-                          <div>✦ <b>Đặc quyền:</b> Tạo portfolio chuyên nghiệp bản VIP nhất của FONLIO</div>
-                          <div>✦ <b>Quà tặng:</b> Nhận trọn bộ phần quà từ các đối tác liên kết của FONLIO</div>
-                        </div>
-                        <button type="button" class="fonlio-copy-btn" onclick="window.__copyTicket()" id="fnlCopyBtn">Sao chép mã thẻ &amp; Chia sẻ</button>
+                    <div id="fonlioSuccessView" class="fonlio-success-view" style="display: none;">
+                      <div class="fonlio-success-icon-wrap">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
                       </div>
+                      <h3 class="fonlio-success-title">Đăng ký thành công!</h3>
+                      <p class="fonlio-success-desc">
+                        Cảm ơn bạn đã tham gia Waitlist của <b>FONLIO</b>. Chúng mình đã ghi nhận thông tin và sẽ gửi cập nhật sớm nhất qua email của bạn.
+                      </p>
                     </div>
                   </div>
 
@@ -1553,8 +1551,6 @@ window.__handleFonlioSubmit = async function(e) {
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<span>Đang ghi nhận...</span>';
 
-  const ticketCode = '#FNL-' + String(Math.floor(1000 + Math.random() * 9000));
-
   try {
     await fetch('/api/v1/waitlist', {
       method: 'POST',
@@ -1566,29 +1562,28 @@ window.__handleFonlioSubmit = async function(e) {
         specialization: spec,
         projectCount: projCount,
         mainChallenge: challenge,
-        betaInterest: beta,
-        notes: ticketCode
+        betaInterest: beta
       })
     });
   } catch (err) {
-    console.log('Local pass generated (backend offline or mocked)');
+    console.log('Submission recorded locally or backend offline');
   }
 
-  // Show ticket
-  document.getElementById('fnlTicketCode').textContent = ticketCode;
-  document.getElementById('fnlTicketHolder').textContent = name + ' · ' + stage + (spec ? ' (' + spec + ')' : '');
+  // Show simple success view
   document.getElementById('fonlioFormView').style.display = 'none';
-  document.getElementById('fonlioSuccessView').style.display = 'block';
+  const successView = document.getElementById('fonlioSuccessView');
+  successView.style.display = 'flex';
 };
 
-window.__copyTicket = function() {
-  const code = document.getElementById('fnlTicketCode').textContent;
-  const text = 'Tôi vừa đăng ký Early Access tại FONLIO — Foundation Of Your Next Journey với mã VIP ' + code + '! Đăng ký tại: https://fonlio-waitlist.netlify.app';
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('fnlCopyBtn');
-    btn.textContent = '✓ Đã sao chép vào bộ nhớ tạm!';
-    setTimeout(() => { btn.textContent = 'Sao chép mã thẻ & Chia sẻ'; }, 2500);
-  });
+window.__resetFonlioForm = function() {
+  document.getElementById('fonlioSuccessView').style.display = 'none';
+  const form = document.getElementById('fonlioFormView');
+  form.style.display = 'block';
+  const submitBtn = document.getElementById('fnlSubmitBtn');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<span>ĐĂNG KÝ EARLY ACCESS ↗</span>';
+  }
 };
 </script>
 
