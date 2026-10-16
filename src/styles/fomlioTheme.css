@@ -767,31 +767,41 @@
 .fom-page-state p { margin: 0; font-size: 1.05rem; }
 .fom-page-state svg { color: var(--fom-brand); }
 
+
 /* ──────────────────────────────────────────────────────────────────────────
-   Giao diện "Nho Neon" — biến thể tím.
+   Giao diện "Nho Neon".
 
-   Nguồn: Figma file agCrKhG2mWK3pbwdVkkJvN, node 10:129. Cùng bố cục với
-   Cốm Neon, chỉ đảo vai hai màu thương hiệu: tím #7b3aec lên làm nền, cốm
-   #cbf748 lùi về làm điểm nhấn. Vì thế ở đây CHỈ ghi đè biến màu và lớp
-   quầng nền — không một quy tắc bố cục nào bị lặp lại.
+   Nguồn: Figma file agCrKhG2mWK3pbwdVkkJvN, node 10:129 ("Portfolio Landing
+   Page 2", khung 1728×5893). Đây KHÔNG phải bản đổi màu của Landing Page 1:
+   hero xếp dọc và canh giữa, khối About đảo bên, thẻ dự án đổ nền đặc. Nên
+   khối này ghi đè cả bố cục, không chỉ biến màu — nhưng vẫn chỉ là ghi đè,
+   mọi quy tắc nền vẫn nằm ở phần chung phía trên.
 
-   MỘT CHỖ CỐ Ý LÀM KHÁC BẢN THIẾT KẾ: bản Figma cho nền chuyển dần tới
-   #e7d5ef ở đáy trang — gần như trắng. Đo thì chữ trắng trên nền đó chỉ còn
-   tương phản 1.39:1 (ngưỡng WCAG AA là 4.5:1), tức không đọc được. Bản mock
-   không lộ ra điều này vì nửa dưới của nó gần như trống; một portfolio thật
-   thì có chữ chạy tới tận chân trang — dự án, chứng chỉ, FAQ, footer.
-   Nên gradient ở đây dừng lại ở #9b4dde (tương phản 4.66:1, vừa đạt AA) và
-   giữ nguyên tới đáy. Vẫn là "đen trên xuống tím" như thiết kế muốn, chỉ là
-   không đi tiếp tới chỗ chữ biến mất.
+   HAI CHỖ CỐ Ý LÀM KHÁC BẢN THIẾT KẾ, cả hai đều vì bản mock không gặp dữ
+   liệu thật:
+
+   1. Nền. Figma cho nền chuyển dần tới #e7d5ef ở đáy trang — gần như trắng.
+      Chữ trắng trên nền đó chỉ còn tương phản 1.39:1 (AA cần 4.5:1), tức
+      không đọc được. Mock không lộ ra vì nửa dưới của nó gần như trống;
+      portfolio thật có chữ tới tận chân trang. Gradient ở đây dừng tại
+      #9b4dde (4.66:1) rồi giữ nguyên.
+
+   2. Chữ vẫn canh TRÁI ở khối About, không canh phải như Figma. Lý do y hệt
+      ghi chú ở hero bản gốc: tiếng Việt dấu nhiều, tên trường và địa chỉ
+      dài, canh phải cho ra mép trái răng cưa rất khó đọc. Chỉ đảo BÊN của
+      ảnh và chữ cho đúng thiết kế, không đảo cách canh dòng.
    ────────────────────────────────────────────────────────────────────────── */
+
 .fom-page[data-fom-theme='NHO_NEON'] {
-  --fom-brand: #cbf748;
-  --fom-secondary: #7b3aec;
+  --fom-brand: #cbf748;        /* Primary Brand */
+  --fom-secondary: #7b3aec;    /* Secondary */
+  --fom-support: #6accc3;      /* Supporting */
+  --fom-mark: #c31dff;         /* Mark */
   --fom-ink: #2a0a55;
   --fom-white: #ffffff;
 
-  /* Nền tím đã sáng sẵn, nên lớp kính phải đậm hơn bản nền đen mới tách ra
-     được khỏi nền; dùng y hệt 0.08/0.12 thì các thẻ chìm mất. */
+  /* Nền tím đã sáng sẵn; giữ nguyên 0.08/0.12 của bản nền đen thì các thẻ
+     chìm mất, nên lớp kính ở đây đậm hơn. */
   --fom-glass: rgba(255, 255, 255, 0.18);
   --fom-panel: rgba(42, 10, 85, 0.34);
   --fom-panel-line: rgba(255, 255, 255, 0.24);
@@ -799,45 +809,112 @@
 
 .fom-page[data-fom-theme='NHO_NEON']::before {
   background:
-    /* Quầng tím, cùng vị trí và cùng độ loang với quầng cốm của bản gốc. */
     radial-gradient(68% 40% at 50% 46%, rgba(154, 77, 222, 0.92) 0%, rgba(123, 58, 236, 0.5) 48%, rgba(123, 58, 236, 0) 80%),
     linear-gradient(180deg,
-      #000000 0%,
-      #000000 10%,
-      #1a0236 22%,
-      #451078 34%,
-      #772fb7 46%,
-      #9b4dde 58%,
-      #9b4dde 100%),
+      #000000 0%, #000000 10%, #1a0236 22%, #451078 34%,
+      #772fb7 46%, #9b4dde 58%, #9b4dde 100%),
     #9b4dde;
 }
 
-/* Đĩa sau chân dung: bản thiết kế đổi quầng cốm thành quầng tím, cùng một
-   công thức loang. Màu ở đây viết thẳng chứ không qua --fom-brand vì cốm
-   vẫn là màu nhấn của theme này (nút, thẻ chuyên môn, số liệu). */
+/* ── Thanh điều hướng: viên đang chọn và nút Hire Me đổ cốm, chữ tím ──── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-nav a.active,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-btn {
+  background: var(--fom-brand);
+  color: var(--fom-secondary);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-btn.ghost {
+  background-color: transparent;
+  color: var(--fom-white);
+}
+
+/* ── Hero: một cột, canh giữa, chân dung nằm DƯỚI phần chữ ────────────── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: clamp(28px, 4vw, 56px);
+}
+
+/* Phần chữ lên trước bằng `order` chứ không đổi thứ tự trong JSX: hai giao
+   diện dùng chung một component, đổi DOM là bản Cốm Neon cũng đổi theo. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-copy {
+  order: -1;
+  align-items: center;
+  text-align: center;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-copy .fom-display { max-width: 24ch; }
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-portrait {
+  width: min(520px, 82vw);
+}
+
+/* Ba vành trăng khuyết hai bên chân dung (Ellipse 6–11 của Figma). Dựng
+   bằng một SVG nội tuyến thay vì sáu thẻ trang trí trong JSX: chúng thuần
+   trang trí, không đáng để bản Cốm Neon phải gánh thêm sáu node rỗng. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero::before,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero::after {
+  content: '';
+  position: absolute;
+  bottom: 4%;
+  width: clamp(120px, 21vw, 360px);
+  aspect-ratio: 360 / 410;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 410'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='1' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%237b3aec'/%3E%3Cstop offset='1' stop-color='%23ffffff'/%3E%3C/linearGradient%3E%3Cmask id='a'%3E%3Ccircle cx='170' cy='240' r='168' fill='%23fff'/%3E%3Ccircle cx='298' cy='196' r='168' fill='%23000'/%3E%3C/mask%3E%3Cmask id='b'%3E%3Ccircle cx='150' cy='196' r='124' fill='%23fff'/%3E%3Ccircle cx='245' cy='163' r='124' fill='%23000'/%3E%3C/mask%3E%3Cmask id='c'%3E%3Ccircle cx='128' cy='150' r='80' fill='%23fff'/%3E%3Ccircle cx='189' cy='129' r='80' fill='%23000'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='360' height='410' fill='url(%23g)' mask='url(%23a)'/%3E%3Crect width='360' height='410' fill='url(%23g)' mask='url(%23b)'/%3E%3Crect width='360' height='410' fill='url(%23g)' mask='url(%23c)'/%3E%3C/svg%3E");
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero::before { left: 0; }
+/* Bên phải là ảnh LẬT, đúng như Figma đặt hai cụm đối xứng qua chân dung. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero::after { right: 0; transform: scaleX(-1); }
+
+/* Dưới 900px chân dung đã chiếm gần hết bề ngang; để nguyên thì hai vành
+   trăng nằm đè lên mặt người. */
+@media (max-width: 900px) {
+  .fom-page[data-fom-theme='NHO_NEON'] .fom-hero::before,
+  .fom-page[data-fom-theme='NHO_NEON'] .fom-hero::after { display: none; }
+}
+
+/* ── Chân dung: đĩa tím thay đĩa cốm ─────────────────────────────────── */
 .fom-page[data-fom-theme='NHO_NEON'] .fom-portrait-ring {
   background:
     radial-gradient(circle at 50% 44%,
-      #a86bf5 0%,
-      #8b4ae8 52%,
+      #a86bf5 0%, #8b4ae8 52%,
       rgba(139, 74, 232, 0.55) 68%,
       rgba(139, 74, 232, 0.18) 80%,
       rgba(139, 74, 232, 0) 92%);
 }
 
-/* Dải kỹ năng gồm ba lớp: nền ngoài, dải nghiêng, và chữ. Bản thiết kế đảo
-   cả ba — ngoài thành ngọc #6accc3 ("Supporting" của Figma), dải nghiêng
-   thành tím, chữ thành trắng (tương phản 5.74:1, đạt AA). */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee { background: #6accc3; }
+/* ── Dải kỹ năng: ngoài ngọc, dải nghiêng tím, chữ trắng (5.74:1) ─────── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee { background: var(--fom-support); }
 .fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-band { background: var(--fom-secondary); }
 .fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-item { color: var(--fom-white); }
 
-/* Thẻ số liệu và thẻ chuyên môn: bản thiết kế đổ nền CỐM ĐẶC thay cho lớp
-   kính mờ. Trên nền tím đó là nét đặc trưng của bộ này — và cũng đọc tốt
-   hơn: chữ tím đậm #2a0a55 trên cốm đạt 12.4:1, so với lớp kính 0.18 vốn
-   đổi độ tương phản theo đúng chỗ nó nằm trên dải gradient.
-   Dấu "+" của số liệu phải đổi theo: nó đang là --fom-brand, tức cốm trên
-   cốm — biến mất hoàn toàn. */
+/* ── About: ảnh bên TRÁI, chữ bên phải ───────────────────────────────── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-about {
+  grid-template-columns: minmax(0, 598px) minmax(0, 462px);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-about-copy { order: 2; }
+.fom-page[data-fom-theme='NHO_NEON'] .fom-about-gem { order: 1; }
+
+/* Khối trang trí đổi sang tím cho khớp nền; mảng cốm to ở đây sẽ tranh mất
+   vai trò điểm nhấn của hàng thẻ số liệu ngay bên dưới. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-about-gem::before {
+  background-image: linear-gradient(45.13deg, rgb(168, 107, 245) 6.18%, rgba(217, 217, 217, 0) 73.1%);
+}
+
+/* ── Mọi viên tiêu đề (ABOUT ME, SERVICES, PORTFOLIO, CREDENTIALS): nền
+      tím, chữ cốm — 4.63:1. Nhắm `.fom-eyebrow` chứ không nhắm riêng
+      `.fom-heading-block`, vì viên ABOUT ME nằm trong khối About. ────── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-eyebrow {
+  background: var(--fom-secondary);
+  border-color: transparent;
+  color: var(--fom-brand);
+}
+
+/* ── Thẻ số liệu và thẻ chuyên môn: nền CỐM ĐẶC ──────────────────────── */
 .fom-page[data-fom-theme='NHO_NEON'] .fom-stat,
 .fom-page[data-fom-theme='NHO_NEON'] .fom-speciality {
   background: var(--fom-brand);
@@ -846,5 +923,35 @@
   color: var(--fom-ink);
 }
 
-.fom-page[data-fom-theme='NHO_NEON'] .fom-stat-value span { color: var(--fom-secondary); }
+/* Dấu "+" và "%" lấy màu Mark của Figma. 3.43:1 trên nền cốm — dưới ngưỡng
+   4.5 nhưng đây là chữ 44–70px, ngưỡng chữ lớn là 3.0, nên đạt. Chỉ dùng
+   cho đúng ký tự đó; phần số vẫn là tím đậm 13.3:1. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-stat-value span { color: var(--fom-mark); }
 .fom-page[data-fom-theme='NHO_NEON'] .fom-speciality p { color: rgba(42, 10, 85, 0.82); }
+
+/* ── Thẻ dự án: khung cốm đặc bọc ảnh chụp ───────────────────────────── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project {
+  background: var(--fom-brand);
+  border-color: transparent;
+  color: var(--fom-ink);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project-shot {
+  border-color: rgba(42, 10, 85, 0.25);
+  background: rgba(42, 10, 85, 0.12);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project-shot.placeholder { color: var(--fom-secondary); }
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project-meta { color: rgba(42, 10, 85, 0.78); }
+
+/* Hai nhãn trạng thái phải đổi theo thẻ: nền cốm nên huy hiệu cốm sẽ biến
+   mất, còn nhãn chờ dùng trắng-mờ thì gần như vô hình. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project-verified {
+  background: var(--fom-secondary);
+  color: var(--fom-white);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project-pending {
+  background: rgba(42, 10, 85, 0.14);
+  color: rgba(42, 10, 85, 0.86);
+}
