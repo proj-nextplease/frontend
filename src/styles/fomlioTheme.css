@@ -892,12 +892,23 @@
 .fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-item { color: var(--fom-white); }
 
 /* ── About: ảnh bên TRÁI, chữ bên phải ───────────────────────────────── */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-about {
-  grid-template-columns: minmax(0, 598px) minmax(0, 462px);
-}
+/* Phải kẹp trong `min-width` và `:not(.is-bare)`, nếu không nó đè mất hai
+   quy tắc chung mà nó chỉ định biến tấu:
 
-.fom-page[data-fom-theme='NHO_NEON'] .fom-about-copy { order: 2; }
-.fom-page[data-fom-theme='NHO_NEON'] .fom-about-gem { order: 1; }
+   - `.fom-about.is-bare` (0,2,0) gom về MỘT cột khi hồ sơ chưa có phần giới
+     thiệu — lúc đó khối kim cương không được vẽ. Quy tắc dưới đây có
+     (0,2,1) nên thắng, và cột duy nhất còn lại bị nhét vào ô 598px bên
+     trái: viên "About me" lệch hẳn sang trái thay vì nằm giữa.
+   - Media query ở 1024px cũng gom về một cột, nhưng độ ưu tiên không phụ
+     thuộc media query, nên nếu không kẹp thì máy tính bảng vẫn hai cột. */
+@media (min-width: 1025px) {
+  .fom-page[data-fom-theme='NHO_NEON'] .fom-about:not(.is-bare) {
+    grid-template-columns: minmax(0, 598px) minmax(0, 462px);
+  }
+
+  .fom-page[data-fom-theme='NHO_NEON'] .fom-about:not(.is-bare) .fom-about-copy { order: 2; }
+  .fom-page[data-fom-theme='NHO_NEON'] .fom-about:not(.is-bare) .fom-about-gem { order: 1; }
+}
 
 /* Khối trang trí đổi sang tím cho khớp nền; mảng cốm to ở đây sẽ tranh mất
    vai trò điểm nhấn của hàng thẻ số liệu ngay bên dưới. */
