@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { joinWaitlist } from '../api/waitlistApi.js';
 
 /**
  * WaitlistPage
@@ -7,16 +8,41 @@ import { useEffect, useState } from 'react';
  */
 export function WaitlistPage() {
   const [loaded, setLoaded] = useState(false);
+  const iframeRef = useRef(null);
 
   useEffect(() => {
     document.title = 'FONLIO — Living Portfolio & Bảo chứng năng lực sinh viên';
     // Lock outer body scroll to allow iframe's Lenis scroll engine to handle scrolling seamlessly
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+
+    // Bridge message from waitlist iframe to backend API client
+    const handleMessage = async (event) => {
+      if (event.data?.type === 'FONLIO_WAITLIST_SUBMIT') {
+        try {
+          const res = await joinWaitlist(event.data.payload);
+          iframeRef.current?.contentWindow?.postMessage(
+            { type: 'FONLIO_WAITLIST_SUCCESS', data: res },
+            '*'
+          );
+        } catch (err) {
+          iframeRef.current?.contentWindow?.postMessage(
+            { type: 'FONLIO_WAITLIST_ERROR', error: err.message || 'Không thể lưu đăng ký. Vui lòng thử lại.' },
+            '*'
+          );
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
     return () => {
       document.body.style.overflow = originalOverflow;
+      window.removeEventListener('message', handleMessage);
     };
   }, []);
+
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
 
   return (
     <div
@@ -31,8 +57,9 @@ export function WaitlistPage() {
       }}
     >
       <iframe
+        ref={iframeRef}
         id="fonlioWaitlistFrame"
-        src="/waitlist-clone/index.html?v=18"
+        src={`/waitlist-clone/index.html?v=19&apiUrl=${encodeURIComponent(apiBaseUrl)}`}
         title="FONLIO — Living Portfolio & Bảo chứng năng lực sinh viên"
         onLoad={() => setLoaded(true)}
         style={{
