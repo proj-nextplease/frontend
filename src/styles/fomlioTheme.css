@@ -317,11 +317,19 @@
   height: auto;
 }
 
-.fom-portrait-stage.has-photo { place-items: stretch; padding-bottom: 0; }
+/* Có ảnh thì CANH GIỮA, không phải stretch.
+   `place-items: stretch` cộng với kích thước tường minh là một mâu thuẫn:
+   trình duyệt bỏ stretch và rơi về `start`, tức dồn ảnh lên góc trên-trái
+   trong khi đĩa lime vẫn chiếm trọn khung — ảnh lệch hẳn khỏi tâm đĩa. */
+.fom-portrait-stage.has-photo { place-items: center; padding: 0; }
 
 .fom-portrait-photo {
-  width: 100%;
-  height: 100%;
+  /* 86% để vành lime phía sau lộ đều một vòng quanh ảnh. Dùng aspect-ratio
+     chứ không đặt width/height lệch nhau: 86%/94% cộng `border-radius: 50%`
+     cho ra hình BẦU DỤC, không khớp với đĩa tròn phía sau. */
+  width: 86%;
+  aspect-ratio: 1;
+  height: auto;
   object-fit: cover;
   object-position: top center;
   border-radius: 50%;
@@ -739,35 +747,6 @@
   }
   .fom-speciality { color: #111 !important; }
 }
-
-/* ── Chân dung thật ───────────────────────────────────────────────────────
-   Khi có ảnh, ảnh lấp đầy vòng tròn đúng như bản thiết kế. Khi không, linh
-   vật đứng ở đáy vòng tròn như một nhân vật đứng trong khung — không phóng
-   to một bức tranh nhỏ cho vừa, vì phóng lên là vỡ. */
-
-.fom-portrait-stage.has-photo { align-items: stretch; }
-
-.fom-portrait-photo {
-  /* Hẹp hơn khung một nhịp để vành lime phía sau còn lộ ra — ảnh phủ kín
-     100% thì vòng tròn biến mất và hero chỉ còn là một khối ảnh chữ nhật. */
-  width: 86%;
-  height: 94%;
-  align-self: flex-end;
-  object-fit: cover;
-  object-position: top center;
-  /* Bo theo vòng tròn phía sau, chừa một vành lime mỏng lộ ra. */
-  border-radius: 50% 50% 46% 46% / 54% 54% 42% 42%;
-}
-
-.fom-hero-meta {
-  margin: 0;
-  font-size: clamp(14px, 1.1vw, 18px);
-  color: rgba(255, 255, 255, 0.68);
-}
-
-/* Nút CV: neo vào mép phải của khung chân dung và nằm trọn bên trong. Bản
-   trước đặt `right: 4%; bottom: -6%` nên nó thò ra ngoài và bị cắt. */
-.fom-download { right: 0; bottom: 4%; }
 
 /* ── Gợi ý ở bản nháp ────────────────────────────────────────────────────- */
 
