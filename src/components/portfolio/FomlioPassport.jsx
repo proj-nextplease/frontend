@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BadgeCheck, Eye, ExternalLink, Award, GraduationCap, MapPin } from 'lucide-react';
+import { BadgeCheck, Clock3, Eye, ExternalLink, Award, GraduationCap, MapPin } from 'lucide-react';
 import { PortfolioMascot } from '../PortfolioMascot.jsx';
 import { FilePreviewModal } from '../FilePreviewModal.jsx';
 import '../../styles/fomlioTheme.css';
@@ -294,7 +294,11 @@ export function FomlioPassport({ profile, isDraft = false }) {
                           {exp.organization || 'Tổ chức'}
                           {exp.startDate && ` · ${exp.startDate}${exp.endDate ? ` - ${exp.endDate}` : ' - nay'}`}
                         </span>
-                        {exp.verified && <span className="fom-project-verified"><BadgeCheck size={13} /> Xác thực</span>}
+                        {/* Luôn nói rõ một trong hai, không bao giờ im lặng: một thẻ
+                            không nhãn thì người xem tự mặc định là đã được bảo chứng. */}
+                        {exp.verified
+                          ? <span className="fom-project-verified"><BadgeCheck size={13} /> Xác thực</span>
+                          : <span className="fom-project-pending"><Clock3 size={13} /> Chờ xác thực</span>}
                         {exp.proofLink && (
                           <a
                             href={/^https?:/.test(exp.proofLink) ? exp.proofLink : `https://${exp.proofLink}`}

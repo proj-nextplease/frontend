@@ -596,6 +596,20 @@
   font-size: 13px;
 }
 
+/* Nhãn trung tính, cố ý nhạt hơn huy hiệu xác thực: đây là trạng thái
+   chờ, không phải một thành tích. */
+.fom-project-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 700;
+  font-size: 13px;
+}
+
 /* ── Ngôi sao trang trí ───────────────────────────────────────────────── */
 
 .fom-star {
