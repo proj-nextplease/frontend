@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowRight, House, BriefcaseBusiness, MessagesSquare, FileText, Menu, X, Building2,
-  Compass, WalletCards, ChevronDown, LogOut,
+  Compass, WalletCards, ChevronDown, LogOut, ExternalLink,
 } from 'lucide-react';
 import { useAuthModal } from '../../context/AuthModalContext.jsx';
 import { logout } from '../../api/httpClient.js';
@@ -12,6 +12,13 @@ import { resetSavedJobs } from '../../lib/savedJobs.js';
 import { supabase } from '../../services/supabaseClient.js';
 import { BrandWordmark } from '../BrandWordmark.jsx';
 import logoapp1 from '../../assets/logoapp1.png';
+/* Menu tài khoản mặc bảng màu neon của sản phẩm, không mặc bảng emerald cũ
+   còn sót trong file này. Nhập dưới bí danh vì thanh header vẫn cần bộ màu
+   sáng riêng cho trạng thái đã cuộn. */
+import {
+  SURFACE as N_SURFACE, SURFACE_HI as N_SURFACE_HI, EMERALD as N_LIME,
+  HAIRLINE as N_LINE, MUTED as N_MUTED, ON_DARK as N_ON_DARK, NEON_RGB as N_RGB,
+} from '../../styles/neonPalette.js';
 
 /**
  * Thanh điều hướng dùng chung (nextplease) — thanh nổi kiểu Handshake.
@@ -171,6 +178,10 @@ export function SiteHeader({ overlay = false, pinned = true }) {
   const jobsActive = pathname === '/jobs';
   const discussionActive = pathname === '/thao-luan';
   const portfolioActive = pathname === '/tao-portfolio';
+  /* Trình dựng là một đường dẫn khác hẳn trang mời tạo, nên phải có cờ
+     riêng — dùng chung `portfolioActive` thì mục Portfolio không bao giờ
+     sáng lên lúc người dùng đang ở trong trình dựng. */
+  const builderActive = pathname === '/portfolio' || pathname === '/portfolio/edit';
   const myAreaActive = pathname.startsWith('/candidates/dashboard');
 
   /* Ba trạng thái dẫn xuất — tất cả hiệu ứng đều treo vào hai biến này. */
@@ -315,17 +326,27 @@ export function SiteHeader({ overlay = false, pinned = true }) {
           .nph-acct-caret { transition: transform 0.22s ease; opacity: 0.7; }
           .nph-acct-btn[aria-expanded="true"] .nph-acct-caret { transform: rotate(180deg); }
 
-          .nph-menu { position: absolute; top: calc(100% + 12px); right: 0; min-width: 260px; padding: 8px; background: #fff; color: ${ON_LIGHT}; border: 1px solid ${LINE}; border-radius: 16px; box-shadow: 0 18px 44px rgba(15,46,43,0.18); animation: nphMenuIn 0.18s cubic-bezier(0.22,1,0.36,1); }
+          /* Menu tài khoản mặc bảng neon của sản phẩm (#0f1318 + lime
+             #b9ff00), không phải bộ trắng/emerald còn sót trong file này.
+             Nó là một tấm nổi trên mọi nền, nên giữ MỘT bộ màu cho cả hai
+             trạng thái của thanh — đổi màu theo thanh thì cùng một menu có
+             hai bộ mặt, mà người dùng mở nó ở đâu cũng là cùng một thứ. */
+          .nph-menu { position: absolute; top: calc(100% + 12px); right: 0; min-width: 268px; padding: 8px; background: ${N_SURFACE}; color: ${N_ON_DARK}; border: 1px solid ${N_LINE}; border-radius: 16px; box-shadow: 0 18px 44px rgba(0,0,0,0.55); animation: nphMenuIn 0.18s cubic-bezier(0.22,1,0.36,1); }
           @keyframes nphMenuIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
           .nph-menu-head { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px 12px; }
           .nph-menu-name { font-size: 0.95rem; font-weight: 800; }
-          .nph-menu-sub { font-size: 0.8rem; color: ${MUTED}; }
-          .nph-menu-np { display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; padding: 3px 9px; border-radius: 999px; background: ${MINT}; color: ${TEAL}; font-size: 0.78rem; font-weight: 800; width: fit-content; }
-          .nph-menu-sep { height: 1px; margin: 4px 6px; background: ${LINE}; }
+          .nph-menu-sub { font-size: 0.8rem; color: ${N_MUTED}; }
+          /* Viên NP: lime trên một lớp lime rất mờ. Dùng lime ĐẶC làm nền thì
+             nó thành thứ sáng nhất trong menu và át cả tên tài khoản. */
+          .nph-menu-np { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; padding: 3px 9px; border-radius: 999px; background: rgba(${N_RGB}, 0.12); color: ${N_LIME}; font-size: 0.78rem; font-weight: 800; width: fit-content; }
+          .nph-menu-sep { height: 1px; margin: 4px 6px; background: ${N_LINE}; }
           .nph-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: none; border-radius: 10px; background: transparent; color: inherit; font-family: inherit; font-size: 0.9rem; font-weight: 600; text-align: left; text-decoration: none; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
-          .nph-menu-item:hover { background: ${MINT}; color: ${TEAL}; }
-          .nph-menu-item.danger { color: #b91c1c; }
-          .nph-menu-item.danger:hover { background: #fef2f2; color: #b91c1c; }
+          .nph-menu-item:hover { background: ${N_SURFACE_HI}; color: ${N_LIME}; }
+          .nph-menu-item:focus-visible { outline: 2px solid ${N_LIME}; outline-offset: -2px; }
+          /* #b91c1c là màu của bản nền trắng; trên #0f1318 nó chỉ còn tương
+             phản 2.88:1, tức gần như không đọc được. Bản sáng này đạt 6.72:1. */
+          .nph-menu-item.danger { color: #ff6b6b; }
+          .nph-menu-item.danger:hover { background: rgba(255,107,107,0.12); color: #ff8787; }
 
           /* ── Nút ☰ và ngăn di động ── */
           .nph-burger { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; border-radius: 8px; border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer; transition: background-color 0.2s ease; }
@@ -409,9 +430,16 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                   vào khu vực của mình. KHÔNG thêm mục thứ năm — dưới 1140px cả
                   thanh nav đã bị ẩn, thêm nữa sẽ đẩy ngưỡng đó lên cao hơn. */}
               {signedIn ? (
-                <Link to="/candidates/dashboard/overview" className={`nph-navlink${myAreaActive ? ' active' : ''}`}>
-                  Khu vực của tôi
-                </Link>
+                <>
+                  <Link to="/candidates/dashboard/overview" className={`nph-navlink${myAreaActive ? ' active' : ''}`}>
+                    Khu vực của tôi
+                  </Link>
+                  {/* Lối tắt tới trình dựng portfolio — thứ người dùng quay lại
+                      nhiều nhất và hiện đang nằm sâu trong khu vực cá nhân. */}
+                  <Link to="/portfolio/edit" className={`nph-navlink${builderActive ? ' active' : ''}`}>
+                    Portfolio
+                  </Link>
+                </>
               ) : (
                 <Link to="/tao-portfolio" className={`nph-navlink${portfolioActive ? ' active' : ''}`}>
                   Tạo portfolio
@@ -463,6 +491,29 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                         </span>
                       </div>
                       <div className="nph-menu-sep" />
+                      <Link
+                        to="/portfolio/edit"
+                        role="menuitem"
+                        className="nph-menu-item"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <FileText size={16} /> Sửa portfolio
+                      </Link>
+                      {/* Chỉ hiện khi hồ sơ ĐÃ có đường dẫn công khai. Thiếu
+                          slug mà vẫn vẽ thì mục này dẫn tới /p/undefined. */}
+                      {portfolio?.publicSlug && (
+                        <a
+                          href={`/p/${portfolio.publicSlug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          role="menuitem"
+                          className="nph-menu-item"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          <ExternalLink size={16} /> Xem trang công khai
+                        </a>
+                      )}
+                      <div className="nph-menu-sep" />
                       <button type="button" role="menuitem" className="nph-menu-item danger" onClick={handleLogout}>
                         <LogOut size={16} /> Đăng xuất
                       </button>
@@ -490,9 +541,14 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                   <MessagesSquare size={19} /> Thảo luận
                 </Link>
                 {signedIn ? (
-                  <Link to="/candidates/dashboard/overview" onClick={closeMobile} className={`nph-sheet-link${myAreaActive ? ' active' : ''}`}>
-                    <Compass size={19} /> Khu vực của tôi
-                  </Link>
+                  <>
+                    <Link to="/candidates/dashboard/overview" onClick={closeMobile} className={`nph-sheet-link${myAreaActive ? ' active' : ''}`}>
+                      <Compass size={19} /> Khu vực của tôi
+                    </Link>
+                    <Link to="/portfolio/edit" onClick={closeMobile} className={`nph-sheet-link${builderActive ? ' active' : ''}`}>
+                      <FileText size={19} /> Portfolio
+                    </Link>
+                  </>
                 ) : (
                   <Link to="/tao-portfolio" onClick={closeMobile} className={`nph-sheet-link${portfolioActive ? ' active' : ''}`}>
                     <FileText size={19} /> Tạo portfolio
