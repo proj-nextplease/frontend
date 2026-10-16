@@ -5,6 +5,7 @@ import { ONBOARDING_TAB_FLAG, announcePortfolioSaved } from '../lib/onboardingTa
 import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
 import { LivePortfolioPreview } from '../components/portfolio/LivePortfolioPreview.jsx';
 import { toPassportProfile } from '../lib/portfolioDraft.js';
+import { PORTFOLIO_THEME, resolveTheme } from '../constants/portfolioThemes.js';
 import '../styles/fomlioBuilder.css';
 import { MASCOTS, mascotSheets, resolveMascot } from '../lib/mascots.js';
 import {
@@ -187,6 +188,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     socialLinks: { github: '', linkedin: '', website: '', email: '' },
     coverBannerUrl: '',
     coverBannerPos: '50% 50%',
+    selectedTheme: PORTFOLIO_THEME.id,
   });
   const [experiences, setExperiences] = useState(defaultExperiences);
   const [credentials, setCredentials] = useState(defaultCredentials);
@@ -355,6 +357,10 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               socialLinks: { github: '', linkedin: '', website: '', email: '', ...(data.socialLinks || {}) },
               coverBannerUrl: data.coverBannerUrl || '',
               coverBannerPos: data.coverBannerPos || '50% 50%',
+              /* Hồ sơ cũ còn ghi mã đã bỏ (DARK_GOLD, CYBERPUNK...) thì
+                 resolveTheme đưa về giao diện mặc định, nên bộ chọn không
+                 bao giờ rơi vào trạng thái "không nút nào sáng". */
+              selectedTheme: resolveTheme(data.selectedTheme).id,
             });
             if (data.experiences && data.experiences.length > 0) {
               setExperiences(data.experiences);
@@ -426,6 +432,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         socialLinks: profile.socialLinks || {},
         coverBannerUrl: profile.coverBannerUrl || '',
         coverBannerPos: profile.coverBannerPos || '50% 50%',
+        selectedTheme: profile.selectedTheme || PORTFOLIO_THEME.id,
       };
       
       await updateMyPortfolio(payload);
@@ -1086,6 +1093,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             onOpenInNewTab={openPortfolioPreview}
             scrollToSection={activeSection}
             onScroll={handlePreviewScroll}
+            onSelectTheme={(id) => setProfile((current) => ({ ...current, selectedTheme: id }))}
           />
         </div>
 

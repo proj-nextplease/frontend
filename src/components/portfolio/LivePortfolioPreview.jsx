@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { VerifiedPassport } from '../../pages/CandidatePortfolioViewPage.jsx';
-import { PORTFOLIO_THEME } from '../../constants/portfolioThemes.js';
+import { PORTFOLIO_THEMES, resolveTheme } from '../../constants/portfolioThemes.js';
 import { PreviewFrame } from './PreviewFrame.jsx';
 
 /**
@@ -16,7 +16,7 @@ import { PreviewFrame } from './PreviewFrame.jsx';
  * `scrollToSection` là id khối đang sửa bên bảng soạn; mỗi lần đổi, trang cuộn
  * tới đó và khối được rọi một vành sáng.
  */
-export function LivePortfolioPreview({ profile, onOpenInNewTab, scrollToSection, onScroll }) {
+export function LivePortfolioPreview({ profile, onOpenInNewTab, scrollToSection, onScroll, onSelectTheme }) {
   const stageRef = useRef(null);
   const onScrollRef = useRef(onScroll);
   useEffect(() => { onScrollRef.current = onScroll; }, [onScroll]);
@@ -29,6 +29,8 @@ export function LivePortfolioPreview({ profile, onOpenInNewTab, scrollToSection,
      Dùng cửa sổ thời gian vì `behavior: 'smooth'` không báo lúc nào xong;
      1200ms dư cho một cú cuộn mượt dài nhất trong khung này. */
   const programmaticUntil = useRef(0);
+
+  const current = resolveTheme(profile?.selectedTheme);
 
   /* Gắn listener vào cửa sổ CON, không phải cửa sổ cha: trang portfolio cuộn
      bên trong iframe nên cửa sổ cha không hề nhúc nhích. Đi qua một ref để
@@ -62,14 +64,30 @@ export function LivePortfolioPreview({ profile, onOpenInNewTab, scrollToSection,
       {/* Thanh công cụ nổi, không phải một dải chiếm chỗ: nó là điều khiển của
           trình dựng, không phải một phần của trang portfolio. */}
       <div className="pf-live-bar">
-        {/* Một giao diện thì không còn gì để chọn — đây là nhãn cho biết
-            trang đang mặc bộ nào, không phải một bộ nút giả vờ có lựa chọn. */}
-        <span className="pf-live-theme-label">
-          <span className="pf-live-swatches" aria-hidden="true">
-            {PORTFOLIO_THEME.colorBox.map((col, i) => <span key={i} style={{ background: col }} />)}
-          </span>
-          Giao diện {PORTFOLIO_THEME.name}
-        </span>
+        {/* Mỗi giao diện là một nút mang đúng hai màu của chính nó, nên
+            không cần xem trước mới biết mình sắp chọn gì. Đổi là thấy ngay
+            trong khung bên dưới, không phải lưu rồi mới biết. */}
+        <div className="pf-live-themes" role="radiogroup" aria-label="Giao diện portfolio">
+          {PORTFOLIO_THEMES.map((theme) => {
+            const active = theme.id === current.id;
+            return (
+              <button
+                key={theme.id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                className={`pf-live-theme${active ? ' is-active' : ''}`}
+                onClick={() => onSelectTheme?.(theme.id)}
+                title={theme.hint}
+              >
+                <span className="pf-live-swatches" aria-hidden="true">
+                  {theme.colorBox.map((col, i) => <span key={i} style={{ background: col }} />)}
+                </span>
+                {theme.name}
+              </button>
+            );
+          })}
+        </div>
 
         <button type="button" className="pf-live-open" onClick={onOpenInNewTab}>
           Mở tab mới <ExternalLink size={13} />

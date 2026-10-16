@@ -766,3 +766,85 @@
 
 .fom-page-state p { margin: 0; font-size: 1.05rem; }
 .fom-page-state svg { color: var(--fom-brand); }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Giao diện "Nho Neon" — biến thể tím.
+
+   Nguồn: Figma file agCrKhG2mWK3pbwdVkkJvN, node 10:129. Cùng bố cục với
+   Cốm Neon, chỉ đảo vai hai màu thương hiệu: tím #7b3aec lên làm nền, cốm
+   #cbf748 lùi về làm điểm nhấn. Vì thế ở đây CHỈ ghi đè biến màu và lớp
+   quầng nền — không một quy tắc bố cục nào bị lặp lại.
+
+   MỘT CHỖ CỐ Ý LÀM KHÁC BẢN THIẾT KẾ: bản Figma cho nền chuyển dần tới
+   #e7d5ef ở đáy trang — gần như trắng. Đo thì chữ trắng trên nền đó chỉ còn
+   tương phản 1.39:1 (ngưỡng WCAG AA là 4.5:1), tức không đọc được. Bản mock
+   không lộ ra điều này vì nửa dưới của nó gần như trống; một portfolio thật
+   thì có chữ chạy tới tận chân trang — dự án, chứng chỉ, FAQ, footer.
+   Nên gradient ở đây dừng lại ở #9b4dde (tương phản 4.66:1, vừa đạt AA) và
+   giữ nguyên tới đáy. Vẫn là "đen trên xuống tím" như thiết kế muốn, chỉ là
+   không đi tiếp tới chỗ chữ biến mất.
+   ────────────────────────────────────────────────────────────────────────── */
+.fom-page[data-fom-theme='NHO_NEON'] {
+  --fom-brand: #cbf748;
+  --fom-secondary: #7b3aec;
+  --fom-ink: #2a0a55;
+  --fom-white: #ffffff;
+
+  /* Nền tím đã sáng sẵn, nên lớp kính phải đậm hơn bản nền đen mới tách ra
+     được khỏi nền; dùng y hệt 0.08/0.12 thì các thẻ chìm mất. */
+  --fom-glass: rgba(255, 255, 255, 0.18);
+  --fom-panel: rgba(42, 10, 85, 0.34);
+  --fom-panel-line: rgba(255, 255, 255, 0.24);
+}
+
+.fom-page[data-fom-theme='NHO_NEON']::before {
+  background:
+    /* Quầng tím, cùng vị trí và cùng độ loang với quầng cốm của bản gốc. */
+    radial-gradient(68% 40% at 50% 46%, rgba(154, 77, 222, 0.92) 0%, rgba(123, 58, 236, 0.5) 48%, rgba(123, 58, 236, 0) 80%),
+    linear-gradient(180deg,
+      #000000 0%,
+      #000000 10%,
+      #1a0236 22%,
+      #451078 34%,
+      #772fb7 46%,
+      #9b4dde 58%,
+      #9b4dde 100%),
+    #9b4dde;
+}
+
+/* Đĩa sau chân dung: bản thiết kế đổi quầng cốm thành quầng tím, cùng một
+   công thức loang. Màu ở đây viết thẳng chứ không qua --fom-brand vì cốm
+   vẫn là màu nhấn của theme này (nút, thẻ chuyên môn, số liệu). */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-portrait-ring {
+  background:
+    radial-gradient(circle at 50% 44%,
+      #a86bf5 0%,
+      #8b4ae8 52%,
+      rgba(139, 74, 232, 0.55) 68%,
+      rgba(139, 74, 232, 0.18) 80%,
+      rgba(139, 74, 232, 0) 92%);
+}
+
+/* Dải kỹ năng gồm ba lớp: nền ngoài, dải nghiêng, và chữ. Bản thiết kế đảo
+   cả ba — ngoài thành ngọc #6accc3 ("Supporting" của Figma), dải nghiêng
+   thành tím, chữ thành trắng (tương phản 5.74:1, đạt AA). */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee { background: #6accc3; }
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-band { background: var(--fom-secondary); }
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-item { color: var(--fom-white); }
+
+/* Thẻ số liệu và thẻ chuyên môn: bản thiết kế đổ nền CỐM ĐẶC thay cho lớp
+   kính mờ. Trên nền tím đó là nét đặc trưng của bộ này — và cũng đọc tốt
+   hơn: chữ tím đậm #2a0a55 trên cốm đạt 12.4:1, so với lớp kính 0.18 vốn
+   đổi độ tương phản theo đúng chỗ nó nằm trên dải gradient.
+   Dấu "+" của số liệu phải đổi theo: nó đang là --fom-brand, tức cốm trên
+   cốm — biến mất hoàn toàn. */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-stat,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-speciality {
+  background: var(--fom-brand);
+  border-color: transparent;
+  backdrop-filter: none;
+  color: var(--fom-ink);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-stat-value span { color: var(--fom-secondary); }
+.fom-page[data-fom-theme='NHO_NEON'] .fom-speciality p { color: rgba(42, 10, 85, 0.82); }

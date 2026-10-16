@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BadgeCheck, Clock3, Eye, ExternalLink, Award, GraduationCap, MapPin } from 'lucide-react';
+import { resolveTheme } from '../../constants/portfolioThemes.js';
 import { PortfolioMascot } from '../PortfolioMascot.jsx';
 import { FilePreviewModal } from '../FilePreviewModal.jsx';
 import '../../styles/fomlioTheme.css';
@@ -120,7 +121,7 @@ export function FomlioPassport({ profile, isDraft = false }) {
     : (profile.socialLinks?.linkedin ? `https://linkedin.com/in/${profile.socialLinks.linkedin}` : null);
 
   return (
-    <div className="fom-page">
+    <div className="fom-page" data-fom-theme={resolveTheme(profile.selectedTheme).id}>
       <div className="fom-shell">
         <header className="fom-header">
           {/* Đây là trang của ỨNG VIÊN, không phải trang sản phẩm — chỗ này

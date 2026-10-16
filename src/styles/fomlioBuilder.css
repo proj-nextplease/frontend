@@ -780,18 +780,38 @@
 .pf-dock .pf-social-inputs > * { min-width: 0; }
 .pf-dock .portfolio-form-panel { overflow-x: hidden; }
 
-/* Nhãn giao diện trong thanh công cụ — không phải nút bấm được. */
-.pf-live-theme-label {
+/* Bộ chọn giao diện trong thanh công cụ. */
+.pf-live-themes { display: inline-flex; gap: 6px; flex: none; }
+
+.pf-live-theme {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  flex: none;
   padding: 7px 14px 7px 9px;
+  border: 1px solid transparent;
   border-radius: 999px;
-  color: rgba(244, 248, 236, 0.82);
+  background: transparent;
+  color: rgba(244, 248, 236, 0.62);
+  font: inherit;
   font-size: 0.78rem;
   white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
+
+.pf-live-theme:hover { color: rgba(244, 248, 236, 0.92); background: rgba(255, 255, 255, 0.06); }
+
+/* Trạng thái đang chọn phải đọc được KHÔNG CẦN màu: người mù màu nhìn hai
+   nút chỉ khác nhau ở sắc độ chữ thì không thấy nút nào đang bật. Viền
+   cộng nền đặc làm việc đó. */
+.pf-live-theme.is-active {
+  color: var(--fomb-ink);
+  background: var(--fomb-brand);
+  border-color: var(--fomb-brand);
+  font-weight: 600;
+}
+
+.pf-live-theme:focus-visible { outline: 2px solid var(--fomb-brand); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   .pf-dock,
