@@ -102,6 +102,18 @@ export function FomlioPassport({ profile, isDraft = false }) {
   const projects = experiences.slice(0, 6);
   const hasContent = profile.bio || skills.length || experiences.length || credentials.length;
 
+  /* Thanh điều hướng phải bám theo những khối THẬT SỰ được vẽ. Portfolio và
+     Services chỉ xuất hiện khi có dữ liệu (hoặc khi đang xem bản nháp, lúc đó
+     chúng hiện dưới dạng gợi ý); viết cứng đủ bốn liên kết thì trên một hồ sơ
+     chưa có kinh nghiệm được duyệt, bấm "Portfolio" là không có gì xảy ra —
+     người xem tưởng trang hỏng chứ không hiểu là mục đó chưa có. */
+  const navItems = [
+    { id: 'fom-top', label: 'Home' },
+    (projects.length || isDraft) && { id: 'fom-portfolio', label: 'Portfolio' },
+    (skills.length || isDraft) && { id: 'fom-services', label: 'Services' },
+    { id: 'fom-about', label: 'About' },
+  ].filter(Boolean);
+
   const email = profile.socialLinks?.email;
   const contactHref = email
     ? (email.startsWith('mailto:') ? email : `mailto:${email}`)
@@ -116,10 +128,9 @@ export function FomlioPassport({ profile, isDraft = false }) {
               portfolio cá nhân của chính designer. */}
           <span className="fom-logo">{name}</span>
           <nav className="fom-nav">
-            <a className="active" href="#fom-top">Home</a>
-            <a href="#fom-portfolio">Portfolio</a>
-            <a href="#fom-services">Services</a>
-            <a href="#fom-about">About</a>
+            {navItems.map((item, i) => (
+              <a key={item.id} className={i === 0 ? 'active' : undefined} href={`#${item.id}`}>{item.label}</a>
+            ))}
           </nav>
           {contactHref
             ? <a className="fom-btn" href={contactHref}>Hire Me</a>
@@ -177,7 +188,11 @@ export function FomlioPassport({ profile, isDraft = false }) {
             )}
             <div className="fom-hero-actions">
               {contactHref && <a className="fom-btn" href={contactHref}>Let’s Talk!</a>}
-              <a className="fom-btn ghost" href="#fom-portfolio">My Works</a>
+              {/* Cùng lý do với thanh điều hướng: không có khối dự án thì
+                  đây là một cái nút dẫn đi đâu không ai biết. */}
+              {(projects.length > 0 || isDraft) && (
+                <a className="fom-btn ghost" href="#fom-portfolio">My Works</a>
+              )}
             </div>
           </div>
         </section>
