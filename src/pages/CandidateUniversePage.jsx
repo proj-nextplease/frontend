@@ -151,21 +151,24 @@ export function CandidateUniversePage() {
     user?.username ||
     'Tài Phát';
   const realExperiences = portfolio?.experiences || [];
-  const displayExperiences = useMemo(() => {
-    if (realExperiences.length === 0) return SAMPLE_MEMORIES;
-    return realExperiences;
-  }, [realExperiences]);
+  const displayExperiences = realExperiences;
 
   const totalExp = useMemo(() => {
+    if (portfolio?.totalExp !== undefined && portfolio?.totalExp !== null) {
+      return portfolio.totalExp;
+    }
     return displayExperiences.reduce((acc, curr) => acc + (curr.expReward || 300), 0);
-  }, [displayExperiences]);
+  }, [portfolio?.totalExp, displayExperiences]);
 
   const totalRs = useMemo(() => {
+    if (portfolio?.reputationScore !== undefined && portfolio?.reputationScore !== null) {
+      return portfolio.reputationScore;
+    }
     return displayExperiences.reduce((acc, curr) => acc + (curr.rsReward || 5), 0);
-  }, [displayExperiences]);
+  }, [portfolio?.reputationScore, displayExperiences]);
 
   const verifiedCount = useMemo(() => {
-    return displayExperiences.filter((e) => e.verified).length;
+    return displayExperiences.filter((e) => e.status === 'APPROVED' || e.verified).length;
   }, [displayExperiences]);
 
   // When portfolio finishes loading, update iframe dynamically
@@ -192,7 +195,7 @@ export function CandidateUniversePage() {
 
   const iframeSrc = useMemo(() => {
     const params = new URLSearchParams({
-      v: '27',
+      v: '29',
       name: displayName,
       exp: String(totalExp),
       rs: String(totalRs),
