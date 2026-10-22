@@ -505,6 +505,14 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                       </div>
                       <div className="nph-menu-sep" />
                       <Link
+                        to="/candidates/universe"
+                        role="menuitem"
+                        className="nph-menu-item"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <Compass size={16} color="#6ee7b7" /> Vũ trụ ký ức
+                      </Link>
+                      <Link
                         to="/portfolio/edit"
                         role="menuitem"
                         className="nph-menu-item"

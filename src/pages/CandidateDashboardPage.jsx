@@ -39,8 +39,7 @@ import {
   MessagesSquare,
   LogOut,
   Copy,
-  Bookmark,
-  BookmarkCheck, Link2, Heart, AlertCircle,
+  BookmarkCheck, Link2, Heart, AlertCircle, Compass,
 } from 'lucide-react';
 import { getMyPortfolio, updateMySlug } from '../api/portfolioApi.js';
 import { UserAvatar } from '../components/UserAvatar.jsx';
@@ -538,6 +537,7 @@ function QuestList({ daily, weekly, onClaim, claiming, streak = 0, longestStreak
    đang làm, và để song song hai nơi tìm việc thì người dùng phải học cả hai. */
 const AREA_TABS = [
   { view: 'OVERVIEW', slug: 'overview', label: 'Tổng quan', icon: LayoutDashboard },
+  { view: 'MEMORY_UNIVERSE', slug: 'universe', label: 'Vũ trụ ký ức', icon: Compass },
   { view: 'SAVED', slug: 'saved', label: 'Việc đã lưu', icon: Heart },
   { view: 'MY_APPLICATIONS', slug: 'my_applications', label: 'Ứng tuyển', icon: ClipboardCheck },
   { view: 'CREDENTIALS', slug: 'credentials', label: 'Minh chứng', icon: ShieldCheck },
@@ -1196,6 +1196,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   useEffect(() => {
     if (!tabSlug) {
       navigate('/candidates/dashboard/overview', { replace: true });
+      return;
+    }
+    if (tabSlug === 'universe') {
+      navigate('/candidates/universe');
       return;
     }
     const upperTab = tabSlug.toUpperCase();
@@ -2407,6 +2411,105 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 </div>
               </div>
             </section>
+
+            {/* Vũ trụ Ký ức — Universe Hero Card (Fonlio Waitlist Aesthetic) */}
+            <div
+              className="np-universe-hero-banner"
+              style={{
+                position: 'relative',
+                borderRadius: '24px',
+                padding: '24px 28px',
+                background: 'radial-gradient(ellipse at 85% 25%, rgba(185, 255, 0, 0.18) 0%, rgba(19, 78, 67, 0.95) 55%, #061f1a 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.18)',
+                boxShadow: '0 16px 45px rgba(0, 0, 0, 0.6), 0 0 25px rgba(185, 255, 0, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '18px',
+                overflow: 'hidden',
+                marginTop: '18px',
+                marginBottom: '18px',
+                fontFamily: "'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif",
+              }}
+            >
+              <div style={{ position: 'relative', zIndex: 2, maxWidth: '580px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <span
+                    style={{
+                      position: 'relative',
+                      width: '7px',
+                      height: '7px',
+                      borderRadius: '50%',
+                      backgroundColor: '#b9ff00',
+                      display: 'inline-block',
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: '0.74rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: '#b9ff00',
+                    }}
+                  >
+                    FONLIO VŨ TRỤ
+                  </span>
+                  <span style={{ fontSize: '0.78rem', color: '#78716c' }}>•</span>
+                  <span style={{ fontSize: '0.8rem', color: '#a8a29e', fontWeight: 600 }}>
+                    Triển lãm 3D cá nhân
+                  </span>
+                </div>
+                <h3
+                  style={{
+                    fontFamily: "'Be Vietnam Pro', 'Plus Jakarta Sans', sans-serif",
+                    fontSize: '1.45rem',
+                    fontWeight: 900,
+                    color: '#ffffff',
+                    margin: '0 0 6px 0',
+                    lineHeight: 1.25,
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  Vũ trụ Ký ức & Cuốn phim Hành trình
+                </h3>
+                <p style={{ fontSize: '0.88rem', color: '#d6d3d1', lineHeight: 1.65, margin: 0 }}>
+                  Toàn bộ dự án, minh chứng và dấu mốc của bạn đang hội tụ thành một dải ngân hà 3D sống động. Khám phá ngay theo phong cách Spotify Wrapped độc bản!
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 2 }}>
+                <Link
+                  to="/candidates/universe"
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '999px',
+                    background: '#b9ff00',
+                    color: '#141313',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: '0 0 20px rgba(185, 255, 0, 0.4)',
+                    transition: 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 0 30px rgba(185, 255, 0, 0.65)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 0 20px rgba(185, 255, 0, 0.4)';
+                  }}
+                >
+                  <Compass size={17} />
+                  <span>Khám phá Vũ trụ ngay</span>
+                </Link>
+              </div>
+            </div>
 
             {gamification && (
               <QuestList

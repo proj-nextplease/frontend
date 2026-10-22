@@ -1,0 +1,2016 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-------- LANGUAGE --------->
+    <script>
+      // Mặc định luôn là tiếng Việt (vi)
+      try {
+        localStorage.setItem("ximitech.language", "vi");
+      } catch (error) {}
+      document.documentElement.lang = "vi";
+    </script>
+
+    <!-------- SCROLL INTENT + LOADER STATE --------->
+    <script>
+      {
+        // Capture scroll and hash before native restoration.
+        const navigationType = performance.getEntriesByType("navigation")[0]?.type
+        const isReload = navigationType === "reload"
+
+        history.scrollRestoration = isReload ? "manual" : "auto"
+
+        const supportedHashes = [
+          "#hero",
+          "#manifesto",
+          "#parcours",
+          "#toolkit",
+          "#projects",
+          "#contact",
+        ]
+
+        const initialHash = supportedHashes.includes(location.hash) ? location.hash : null
+
+        // Strip the fragment before any element carries that id.
+        if (initialHash) {
+          history.replaceState(null, "", location.pathname + location.search)
+        }
+
+        let homeLoaderShown = false
+        let storedScroll = 0
+        let storedTheme = "cream"
+        let hasIncomingTransition = false
+
+        try {
+          homeLoaderShown = sessionStorage.getItem("homeLoaderShown") === "true"
+          storedScroll = Math.max(0, Number(sessionStorage.getItem("homeScrollOffset")) || 0)
+          storedTheme = sessionStorage.getItem("homeScrollTheme") === "dark" ? "dark" : "cream"
+          hasIncomingTransition = sessionStorage.getItem("pageTransitionPending") === "true"
+        } catch (error) {
+          // Without sessionStorage the default flow still works
+        }
+
+        const initialScroll = isReload && !initialHash ? storedScroll : 0
+
+        window.__homeScrollIntent = {
+          hash: initialHash,
+          offset: initialScroll,
+        }
+
+        const shouldShowHomeLoader = !homeLoaderShown
+        const hasScrollToRestore = initialHash !== null || initialScroll > 0
+
+        // Avoid stacking the restore cover with an incoming transition.
+        const shouldCoverRestore =
+          !shouldShowHomeLoader && hasScrollToRestore && !hasIncomingTransition
+
+        document.documentElement.dataset.homeLoaderState = shouldShowHomeLoader
+          ? "pending"
+          : shouldCoverRestore
+            ? "restoring"
+            : "skipped"
+
+        if (shouldCoverRestore) {
+          document.documentElement.dataset.homeLoaderTheme = storedTheme
+        }
+
+        if (shouldShowHomeLoader) {
+          try {
+            sessionStorage.setItem("homeLoaderShown", "true")
+          } catch (error) {
+            // The loader will simply show again
+          }
+        }
+      }
+    </script>
+
+    <!-------- LINKS --------->
+    <!-- CSS -->
+
+    <!-- JS -->
+
+    <!-- FAV -->
+    <link rel="icon" href="brand/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="brand/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="author" content="FONLIO Team" />
+    <meta
+      name="description"
+      content="FONLIO — Nền tảng Portfolio sống và bảo chứng năng lực thực chiến dành cho sinh viên. Đăng ký sớm nhận thẻ VIP Genesis."
+      data-i18n-attr="content:home.description"
+    />
+
+    <title data-i18n="home.title">FONLIO — Living Portfolio &amp; Cơ hội việc làm cho sinh viên</title>
+    <link rel="canonical" href="https://lab1.ximitech.vn/" />
+    <meta
+      property="og:title"
+      content="FONLIO — Living Portfolio cho Sinh viên"
+    />
+    <meta
+      property="og:description"
+      content="FONLIO — Nền tảng Portfolio sống và bảo chứng năng lực thực chiến dành cho sinh viên. Đăng ký sớm nhận thẻ VIP Genesis."
+      data-i18n-attr="content:home.description"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://lab1.ximitech.vn/" />
+    <meta property="og:image" content="/waitlist-clone/brand/logoland4.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Logo 3D FONLIO cùng bảo chứng Living Proof"
+      data-i18n-attr="content:home.imageAlt"
+    />
+    <script type="module" crossorigin src="assets/home-xt2.js?v=20"></script>
+    <link rel="modulepreload" crossorigin href="assets/chunk-Deb1DmFP.js">
+    <link rel="modulepreload" crossorigin href="assets/setupCrossPageTransitions-xt2.js">
+    <link rel="modulepreload" crossorigin href="assets/Observer-C5OqvjuH.js">
+    <link rel="modulepreload" crossorigin href="assets/ScrollTrigger-Or8JzwiZ.js">
+    <link rel="modulepreload" crossorigin href="assets/setupHeaderVisibility-D-FHk4jp.js">
+    <link rel="modulepreload" crossorigin href="assets/three.module-fBMLdKIM.js">
+    <link rel="stylesheet" crossorigin href="assets/setupCrossPageTransitions-D60GSfRM.css">
+    <link rel="stylesheet" crossorigin href="assets/setupHeaderVisibility-fOJvfYOR.css">
+    <link rel="stylesheet" crossorigin href="assets/home-xt2.css?v=14">
+    <link rel="stylesheet" href="assets/fonts-vi.css">
+    <link rel="stylesheet" href="assets/ximitech.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Fredoka:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+<style>
+/* FONLIO BRAND HEADER LOGO */
+.site-header__logo.fonlio-header-brand {
+  width: auto !important;
+  height: clamp(38px, 4.2vw, 48px) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  text-decoration: none !important;
+}
+.fonlio-header-wordmark {
+  height: clamp(36px, 3.8vw, 44px) !important;
+  width: auto !important;
+  max-width: 220px !important;
+  object-fit: contain !important;
+  display: block !important;
+  user-select: none !important;
+  filter: drop-shadow(0 0 16px rgba(185, 255, 0, 0.45)) drop-shadow(0 0 36px rgba(45, 212, 191, 0.25)) !important;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease !important;
+}
+.site-header__logo.fonlio-header-brand:hover .fonlio-header-wordmark {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 22px rgba(185, 255, 0, 0.7)) drop-shadow(0 0 44px rgba(45, 212, 191, 0.45)) !important;
+}
+
+/* FONLIO LUXURY WAITLIST EMBED IN FOOTER */
+.next-footer {
+  height: auto !important;
+  min-height: calc(88vh - 18px) !important;
+  max-height: none !important;
+  z-index: 10 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+.next-section__svg {
+  z-index: 1 !important;
+}
+.next-footer__content {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: clamp(24px, 3vw, 44px) clamp(24px, 3.8vw, 64px) !important;
+  align-items: center !important;
+  display: flex !important;
+}
+.next-footer__inner {
+  width: 100% !important;
+  max-width: 1260px !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(360px, 1fr) minmax(460px, 580px) !important;
+  grid-template-rows: auto auto !important;
+  grid-template-areas:
+    "main card"
+    "nav  card" !important;
+  column-gap: clamp(36px, 4.5vw, 68px) !important;
+  row-gap: 28px !important;
+  align-items: center !important;
+}
+.next-footer__main {
+  grid-area: main !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+}
+.next-footer__headline {
+  font-size: clamp(26px, 2.5vw, 42px) !important;
+  line-height: 1.18 !important;
+  letter-spacing: -0.02em !important;
+  margin: 0 !important;
+  color: #120e20 !important;
+}
+.next-footer__headline span {
+  display: inline !important;
+  white-space: normal !important;
+}
+.next-footer__meta {
+  font-size: 13px !important;
+  gap: 16px !important;
+  flex-wrap: wrap !important;
+  color: rgba(18, 14, 32, 0.7) !important;
+}
+.next-footer__nav {
+  grid-area: nav !important;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: clamp(32px, 4vw, 56px) !important;
+  align-items: flex-start !important;
+  padding-top: 14px !important;
+  border-top: 1px solid rgba(18, 14, 32, 0.1) !important;
+}
+.next-footer__proof {
+  font-family: Satoshi-Variable, sans-serif;
+  font-size: clamp(14px, 1.1vw, 18px);
+  color: #34d399;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}
+.fonlio-waitlist-card {
+  grid-area: card !important;
+  width: 100% !important;
+  max-width: 580px !important;
+  box-sizing: border-box !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+  box-shadow: 0 24px 50px -12px rgba(35, 12, 55, 0.16), 
+              0 0 0 1px rgba(255, 255, 255, 0.4) inset,
+              0 8px 24px rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(36px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
+  border-radius: 20px !important;
+  padding: 22px 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+  color: #120e20 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  max-height: calc(88vh - 40px) !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(18, 14, 32, 0.25) transparent !important;
+  margin: 0 !important;
+}
+.fonlio-waitlist-card::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -80px !important;
+  right: -80px !important;
+  width: 200px !important;
+  height: 200px !important;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%) !important;
+  pointer-events: none !important;
+}
+.fonlio-card-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  color: #120e20 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  margin-bottom: 8px !important;
+  width: fit-content !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+.fonlio-card-title {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 21px !important;
+  font-weight: 800 !important;
+  margin: 0 0 4px 0 !important;
+  line-height: 1.25 !important;
+  color: #120e20 !important;
+  letter-spacing: -0.02em !important;
+}
+.fonlio-card-subtitle {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 12.5px !important;
+  color: rgba(18, 14, 32, 0.75) !important;
+  margin: 0 0 12px 0 !important;
+  line-height: 1.45 !important;
+}
+.fonlio-form-row {
+  display: flex !important;
+  gap: 12px !important;
+  margin-bottom: 9px !important;
+}
+.fonlio-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  margin-bottom: 9px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+.fonlio-field label {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: rgba(18, 14, 32, 0.85) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.fonlio-input {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: 10px !important;
+  height: 38px !important;
+  padding: 8px 12px !important;
+  color: #120e20 !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  outline: none !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.7) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s !important;
+}
+.fonlio-input::placeholder {
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  color: rgba(18, 14, 32, 0.45) !important;
+}
+.fonlio-input:focus {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: #120e20 !important;
+  box-shadow: 0 0 0 3px rgba(18, 14, 32, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+.fonlio-select {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: 10px !important;
+  height: 38px !important;
+  padding: 8px 32px 8px 12px !important;
+  color: #120e20 !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  outline: none !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.7) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23120e20' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  cursor: pointer !important;
+}
+.fonlio-select:focus {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: #120e20 !important;
+  box-shadow: 0 0 0 3px rgba(18, 14, 32, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+.fonlio-select option {
+  background: #ffffff !important;
+  color: #120e20 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 14px !important;
+}
+.fonlio-pills {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+.fonlio-pill {
+  cursor: pointer !important;
+  background: rgba(255, 255, 255, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+  color: rgba(18, 14, 32, 0.85) !important;
+  padding: 6px 10px !important;
+  border-radius: 999px !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  user-select: none !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+.fonlio-pill:hover {
+  background: rgba(255, 255, 255, 0.75) !important;
+  color: #120e20 !important;
+  transform: translateY(-1px) !important;
+}
+.fonlio-pill.is-active {
+  background: #120e20 !important;
+  border-color: #120e20 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(18, 14, 32, 0.22) !important;
+}
+.fonlio-consent {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  color: rgba(18, 14, 32, 0.85) !important;
+  cursor: pointer !important;
+  line-height: 1.35 !important;
+  user-select: none !important;
+  margin-bottom: 10px !important;
+}
+.fonlio-consent input[type="checkbox"] {
+  width: 15px !important;
+  height: 15px !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  accent-color: #120e20 !important;
+  flex-shrink: 0 !important;
+}
+.fonlio-submit-btn {
+  cursor: pointer !important;
+  width: 100% !important;
+  margin-top: 4px !important;
+  height: 44px !important;
+  padding: 11px 18px !important;
+  background: #120e20 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 11px !important;
+  color: #ffffff !important;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.03em !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: 0 10px 24px rgba(18, 14, 32, 0.25) !important;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+.fonlio-submit-btn:hover {
+  transform: translateY(-2px) !important;
+  background: linear-gradient(135deg, #ff6b4a 0%, #9b7cff 100%) !important;
+  box-shadow: 0 14px 30px rgba(255, 107, 74, 0.38) !important;
+}
+.fonlio-submit-btn:active {
+  transform: translateY(1px) !important;
+}
+.fonlio-success-view {
+  text-align: center;
+  padding: 36px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+.fonlio-success-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1.5px solid rgba(16, 185, 129, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.2);
+  animation: fonlio-success-pop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes fonlio-success-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.fonlio-success-title {
+  font-family: "Be Vietnam Pro", sans-serif !important;
+  font-size: 22px;
+  font-weight: 700;
+  color: #120e20;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.01em;
+}
+.fonlio-success-desc {
+  font-family: "Be Vietnam Pro", sans-serif !important;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(18, 14, 32, 0.75);
+  max-width: 400px;
+  margin: 0;
+}
+.fonlio-reset-btn {
+  background: rgba(18, 14, 32, 0.08);
+  border: 1px solid rgba(18, 14, 32, 0.15);
+  color: #120e20;
+  font-family: "Be Vietnam Pro", sans-serif !important;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.fonlio-reset-btn:hover {
+  background: #120e20;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+@media (max-width: 960px) {
+  .next-footer {
+    height: auto !important;
+    min-height: 90vh !important;
+    position: relative !important;
+  }
+  .next-footer__inner {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 32px !important;
+  }
+  .fonlio-waitlist-card {
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+    padding: 20px 18px !important;
+  }
+  .fonlio-form-row {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+  .fonlio-pills {
+    grid-template-columns: 1fr !important;
+  }
+  .next-footer__nav {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+}
+
+/* ==========================================================================
+   FONLIO DARK THEME & USER CUSTOMIZATIONS
+   ========================================================================== */
+:root {
+  --color-dark: #070a0f !important;
+  --color-cream: #070a0f !important;
+  --color-accent: #b9ff00 !important;
+  --color-accent-soft: #0e141d !important;
+  --lab-bg: #070a0f !important;
+}
+
+body {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+
+/* 1. HIDE IMAGE 1 ELEMENTS */
+.lab-badge,
+.sound-toggle {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+/* 2. HIDE IMAGE 5 ELEMENT */
+.next-section__playground-link,
+.playground-link {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+/* 3. HARD REFRESH INTRO FONLIO LOGO */
+.ximi-intro {
+  background: #070a0f !important;
+}
+.ximi-intro__glow {
+  background: radial-gradient(circle, rgba(185, 255, 0, 0.28) 0%, rgba(45, 212, 191, 0.12) 40%, rgba(7, 10, 15, 0) 70%) !important;
+}
+.ximi-intro__logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+}
+.ximi-intro__brand-logo {
+  width: clamp(180px, 24vw, 300px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 24px rgba(185, 255, 0, 0.85)) drop-shadow(0 0 55px rgba(45, 212, 191, 0.45));
+  animation: fonlio-intro-pulse 1.4s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+}
+@keyframes fonlio-intro-pulse {
+  0% { transform: scale(0.96); filter: drop-shadow(0 0 18px rgba(185, 255, 0, 0.6)) drop-shadow(0 0 35px rgba(45, 212, 191, 0.3)); }
+  100% { transform: scale(1.04); filter: drop-shadow(0 0 30px rgba(185, 255, 0, 0.95)) drop-shadow(0 0 65px rgba(45, 212, 191, 0.6)); }
+}
+.ximi-intro__word {
+  color: #ffffff !important;
+  letter-spacing: 0.2em !important;
+  font-family: CabinetGrotesk-Variable, sans-serif !important;
+  font-weight: 800 !important;
+}
+.ximi-intro__tagline {
+  color: #34d399 !important;
+  letter-spacing: 0.12em !important;
+  font-size: 13px !important;
+  text-transform: uppercase !important;
+}
+
+/* 4. IMAGE 2: HEADING WORDMARK & BRAND LETTERS STYLING */
+.fonlio-heading-wordmark,
+.fonlio-brand-letter,
+.trajectory .title .fonlio-brand-letter,
+.trajectory .title x-w.fonlio-brand-word .letter,
+x-w.fonlio-brand-word .letter {
+  font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em !important;
+  text-transform: uppercase !important;
+  color: #b9ff00 !important;
+  text-shadow: 0 0 24px rgba(185, 255, 0, 0.7), 0 0 45px rgba(45, 212, 191, 0.4) !important;
+  display: inline-block !important;
+}
+
+/* 5. IMAGE 3: TRAJECTORY DIALOGUE LOGO */
+.fonlio-dialogue-logo {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.fonlio-trajectory-logo-img {
+  height: clamp(54px, 7.5vw, 96px) !important;
+  width: auto !important;
+  max-width: 85vw !important;
+  object-fit: contain !important;
+  vertical-align: middle !important;
+  filter: drop-shadow(0 0 22px rgba(185, 255, 0, 0.8)) drop-shadow(0 0 48px rgba(45, 212, 191, 0.4)) !important;
+}
+
+/* 6. DARK THEME SECTIONS */
+.manifesto {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.manifesto .text {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+.trajectory {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.trajectory {
+  margin-top: clamp(-500px, -55svh, -450px) !important;
+  position: relative !important;
+  z-index: 2 !important;
+  border-radius: 32px 32px 0 0 !important;
+}
+.trajectory .entry .title {
+  color: #ffffff !important;
+}
+/* Editorial 2-Tier Typography for Trajectory */
+.trajectory .title.trajectory-editorial {
+  font-size: unset !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+.trajectory-editorial .trajectory-title__motion {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: clamp(14px, 2.5vw, 32px) !important;
+  width: 100% !important;
+}
+.trajectory-editorial__sub {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif !important;
+  font-size: clamp(16px, 2.4vw, 32px) !important;
+  font-weight: 600 !important;
+  letter-spacing: clamp(0.12em, 0.22vw, 0.24em) !important;
+  text-transform: uppercase !important;
+  color: rgba(245, 231, 223, 0.72) !important;
+  display: inline-block !important;
+  white-space: nowrap !important;
+  text-shadow: 0 0 20px rgba(245, 231, 223, 0.25) !important;
+}
+.trajectory-editorial__sub .letter,
+.trajectory-editorial__sub x-w .letter {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif !important;
+  font-weight: 600 !important;
+  color: rgba(245, 231, 223, 0.75) !important;
+  display: inline-block !important;
+  letter-spacing: inherit !important;
+}
+.trajectory-editorial__main {
+  font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif !important;
+  font-size: clamp(48px, 8.8vw, 118px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.015em !important;
+  text-transform: uppercase !important;
+  line-height: 0.95 !important;
+  display: inline-block !important;
+  white-space: nowrap !important;
+  color: #b9ff00 !important;
+  text-shadow: 0 0 28px rgba(185, 255, 0, 0.75), 0 0 60px rgba(45, 212, 191, 0.45) !important;
+}
+.trajectory-editorial__main .letter,
+.trajectory-editorial__main x-w .letter {
+  font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif !important;
+  font-weight: 800 !important;
+  color: #b9ff00 !important;
+  text-shadow: 0 0 28px rgba(185, 255, 0, 0.75), 0 0 60px rgba(45, 212, 191, 0.45) !important;
+  display: inline-block !important;
+}
+.trajectory-sentences__pin-height {
+  height: 380vh !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .trajectory-sentences__pin-height {
+    height: 360vh !important;
+  }
+}
+.trajectory-sentences__container {
+  background-color: #070a0f !important;
+}
+.trajectory-sentences__sentence {
+  color: #ffffff !important;
+}
+/* TOOLKIT SECTION - DARK THEME & HIGH CONTRAST */
+.toolkit,
+.toolkit__container {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.toolkit__header {
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+html:lang(vi) .toolkit__title,
+.toolkit__title {
+  color: #ffffff !important;
+  font-family: 'Be Vietnam Pro', Arial, sans-serif !important;
+  font-size: max(48px, 6vw) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.toolkit__subtitle-wrap {
+  height: 3.2em !important;
+  margin-top: 1.5vh !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+html:lang(vi) .toolkit__subtitle,
+.toolkit__subtitle,
+.toolkit__subtitle--front,
+.toolkit__subtitle--art {
+  color: #b9ff00 !important;
+  font-family: 'Be Vietnam Pro', Arial, sans-serif !important;
+  font-size: max(20px, 2vw) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+}
+.projects {
+  background-color: #070a0f !important;
+}
+.projects__container {
+  background-color: #0a0e16 !important;
+  color: #ffffff !important;
+  border-top: 1px solid rgba(185, 255, 0, 0.12) !important;
+  border-bottom: 1px solid rgba(185, 255, 0, 0.12) !important;
+}
+.projects__title {
+  color: #ffffff !important;
+}
+.projects__link {
+  color: rgba(255, 255, 255, 0.76) !important;
+  transition: color 0.3s ease, text-shadow 0.3s ease !important;
+}
+.projects__link:hover {
+  color: #b9ff00 !important;
+  text-shadow: 0 0 20px rgba(185, 255, 0, 0.6) !important;
+}
+.next-section {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.next-section__container {
+  background-color: #070a0f !important;
+}
+.next-section__intro {
+  color: #ffffff !important;
+}
+.next-section__text {
+  fill: #ffffff !important;
+  font-family: 'Be Vietnam Pro', CabinetGrotesk-Variable, sans-serif !important;
+}
+#nextTextCream {
+  fill: #ffffff !important;
+}
+#nextTextGradientPart {
+  fill: url(#nextTextGradient) !important;
+}
+
+/* ==========================================================================
+   UNIVERSE CUSTOMIZATIONS: VŨ TRỤ KÝ ỨC & BẢO CHỨNG SỐ
+   ========================================================================== */
+.universe-back-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #f5e7df;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+.universe-back-btn:hover {
+  background: rgba(185, 255, 0, 0.2);
+  border-color: #b9ff00;
+  color: #b9ff00;
+  transform: translateX(-3px);
+}
+
+.universe-header-tag {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b9ff00;
+  background: rgba(185, 255, 0, 0.12);
+  border: 1px solid rgba(185, 255, 0, 0.3);
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.universe-header-cta {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #b9ff00;
+  border: none;
+  color: #0b1e19;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(185, 255, 0, 0.4);
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  white-space: nowrap;
+}
+.universe-header-cta:hover {
+  background: #ffffff;
+  color: #000000;
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
+}
+
+/* HERO CENTERPIECE OVERLAY */
+.universe-hero-centerpiece {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  width: 90%;
+  max-width: 980px;
+  text-align: center;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.universe-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: rgba(185, 255, 0, 0.1);
+  border: 1px solid rgba(185, 255, 0, 0.35);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #b9ff00;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 0 24px rgba(185, 255, 0, 0.25);
+  pointer-events: auto;
+}
+.universe-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #b9ff00;
+  box-shadow: 0 0 10px #b9ff00;
+  animation: universeDotPulse 1.8s ease-in-out infinite;
+}
+@keyframes universeDotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+.universe-hero-title {
+  font-family: 'Be Vietnam Pro', 'CabinetGrotesk-Variable', sans-serif;
+  font-size: clamp(30px, 4.8vw, 64px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 10px 40px rgba(0, 0, 0, 0.85);
+  pointer-events: auto;
+}
+
+.universe-hero-subtitle {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: clamp(14px, 1.35vw, 17px);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 660px;
+  margin: 0;
+  pointer-events: auto;
+}
+
+.universe-hero-pills {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  pointer-events: auto;
+}
+.universe-hero-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #ffffff;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+.universe-hero-pill--active {
+  background: rgba(52, 211, 153, 0.14);
+  border-color: rgba(52, 211, 153, 0.45);
+  color: #34d399;
+}
+.universe-pill-val {
+  font-weight: 800;
+  font-size: 14px;
+  color: #b9ff00;
+}
+.universe-hero-pill--active .universe-pill-val {
+  color: #34d399;
+}
+.universe-pill-lbl {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
+}
+
+/* FOOTER DOSSIER SPECIMEN CARD STYLES */
+.universe-dossier-card {
+  max-width: 580px !important;
+  background: rgba(10, 18, 16, 0.88) !important;
+  border: 1px solid rgba(185, 255, 0, 0.25) !important;
+  box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.9),
+              0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+              0 16px 40px rgba(185, 255, 0, 0.15) !important;
+  backdrop-filter: blur(36px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
+}
+
+.universe-dossier {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.universe-dossier-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 14px;
+}
+.universe-dossier-id {
+  font-family: monospace;
+  font-size: 11px;
+  color: #b9ff00;
+  letter-spacing: 0.1em;
+  background: rgba(185, 255, 0, 0.1);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.universe-candidate-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.universe-candidate-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #b9ff00 0%, #10b981 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: #051a15;
+  box-shadow: 0 0 20px rgba(185, 255, 0, 0.4);
+  flex-shrink: 0;
+}
+.universe-candidate-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.universe-candidate-name {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+.universe-candidate-role {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 12.5px;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.universe-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.universe-metric-tile {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.25s ease;
+}
+.universe-metric-tile:hover {
+  background: rgba(185, 255, 0, 0.08);
+  border-color: rgba(185, 255, 0, 0.3);
+  transform: translateY(-2px);
+}
+.universe-metric-num {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+.universe-metric-num span {
+  color: #b9ff00;
+}
+.universe-metric-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.universe-proof-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 12px;
+}
+.universe-proof-check-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 500;
+}
+.universe-proof-check-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #041a15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+/* BUTTONS IN DOSSIER */
+.universe-btn-primary {
+  width: 100%;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #b9ff00 0%, #34d399 100%);
+  border: none;
+  color: #051a15;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(185, 255, 0, 0.35);
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  text-transform: uppercase;
+}
+.universe-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(185, 255, 0, 0.55);
+  background: linear-gradient(135deg, #ffffff 0%, #b9ff00 100%);
+}
+
+.universe-btn-secondary {
+  width: 100%;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.universe-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.universe-cta-btn {
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+.universe-cta-btn--lime {
+  background: #b9ff00;
+  border: none;
+  color: #051a15;
+  box-shadow: 0 6px 20px rgba(185, 255, 0, 0.35);
+}
+.universe-cta-btn--lime:hover {
+  background: #ffffff;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(255, 255, 255, 0.5);
+}
+.universe-cta-btn--outline {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+.universe-cta-btn--outline:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+</style>
+
+</head>
+  <body>
+    <!-------- HOME LOADER -------->
+    <div
+      class="home-loader"
+      role="status"
+      aria-label="Đang tải trang"
+      data-i18n-attr="aria-label:home.loaderLabel"
+    >
+      <canvas class="home-loader__canvas" aria-hidden="true"></canvas>
+    </div>
+
+    <!-------- INTRO XIMITECH (chỉ lần mở đầu tiên trong phiên) -------->
+    <div class="ximi-intro" aria-hidden="true" hidden>
+      <div class="ximi-intro__glow"></div>
+      <div class="ximi-intro__center">
+        <div class="ximi-intro__logo-wrap">
+          <img src="/waitlist-clone/brand/logoland4.png" alt="FONLIO" class="ximi-intro__brand-logo" />
+        </div>
+      </div>
+      <div class="ximi-intro__meta">
+        <span class="ximi-intro__count">000</span>
+        <span class="ximi-intro__line"><span></span></span>
+        <span>fonlio.vn</span>
+      </div>
+    </div>
+    <script>
+      {
+        // Intro chạy trước loader gốc. Bundle chờ window.__ximiIntro rồi mới
+        // lộ logo và hero, nên hai hiệu ứng nối tiếp chứ không chồng nhau.
+        const intro = document.querySelector(".ximi-intro")
+        const firstVisit = document.documentElement.dataset.homeLoaderState === "pending"
+        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+        if (intro && firstVisit && !reduce) {
+          intro.hidden = false
+          const count = intro.querySelector(".ximi-intro__count")
+          const total = 2300
+          const start = performance.now()
+
+          window.__ximiIntro = new Promise((resolve) => {
+            const tick = (now) => {
+              const t = Math.min((now - start) / total, 1)
+              const eased = 1 - Math.pow(1 - t, 3)
+              count.textContent = String(Math.round(eased * 100)).padStart(3, "0")
+              if (t < 1) return requestAnimationFrame(tick)
+
+              intro.classList.add("is-leaving")
+              setTimeout(() => {
+                intro.remove()
+                resolve()
+              }, 950)
+            }
+            requestAnimationFrame(tick)
+          })
+        } else if (intro) {
+          intro.remove()
+        }
+      }
+    </script>
+
+    <!-------- TRANSITION -------->
+    <script>
+      if (sessionStorage.getItem("pageTransitionPending") === "true") {
+        const storedColor = sessionStorage.getItem("pageTransitionColor")
+        const color = storedColor === "dark" ? "dark" : "cream"
+
+        const transition = document.createElement("div")
+
+        transition.classList.add("page-transition", `page-transition--${color}`)
+
+        transition.setAttribute("aria-hidden", "true")
+        document.body.prepend(transition)
+      }
+    </script>
+
+    <header class="site-header">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button
+          type="button"
+          class="universe-back-btn"
+          onclick="window.parent.postMessage({ type: 'NAVIGATE_DASHBOARD' }, '*')"
+          title="Về bảng điều khiển"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <a
+          class="site-header__logo fonlio-header-brand"
+          href="#hero"
+          aria-label="Về đầu trang"
+        >
+          <img
+            src="/waitlist-clone/brand/logoland4.png"
+            alt="fonlio:"
+            class="fonlio-header-wordmark"
+          />
+        </a>
+        <span class="universe-header-tag">VŨ TRỤ KÝ ỨC</span>
+      </div>
+
+      <nav class="site-header__nav" aria-label="Điều hướng chính">
+        <a class="site-header__link site-header__link--secondary" href="#parcours">hành trình</a>
+        <a class="site-header__link site-header__link--secondary" href="#toolkit">triển lãm ký ức</a>
+        <a class="site-header__link" href="#projects">cột mốc</a>
+        <a class="site-header__link" href="#contact">hồ sơ bảo chứng</a>
+      </nav>
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 6px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 999px; backdrop-filter: blur(16px);">
+          <div style="width: 26px; height: 26px; border-radius: 50%; background: #b9ff00; color: #041612; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">
+            <span id="headerUserInitial">P</span>
+          </div>
+          <span class="js-candidate-name" style="font-size: 12px; font-weight: 700; color: #ffffff;">Tài Phát</span>
+          <span style="font-size: 11px; color: #34d399; font-weight: 600;">• <span class="js-candidate-exp">2,250</span> EXP</span>
+        </div>
+
+        <button
+          type="button"
+          class="universe-header-cta"
+          onclick="window.parent.postMessage({ type: 'OPEN_WRAPPED' }, '*')"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Cuốn phim Wrapped</span>
+        </button>
+      </div>
+    </header>
+
+    <nav
+      class="scroll-indicator"
+      aria-label="Điều hướng giữa các phần"
+      data-i18n-attr="aria-label:home.sectionNavigationLabel"
+    >
+      <a
+        class="scroll-indicator__item is-active"
+        href="index.html#hero"
+        aria-label="Hero"
+        aria-current="location"
+      >
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+
+      <a
+        class="scroll-indicator__item"
+        href="index.html#parcours"
+        aria-label="Quy trình"
+        data-i18n-attr="aria-label:home.navigationJourney"
+      >
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+
+      <a class="scroll-indicator__item" href="index.html#toolkit" aria-label="Toolkit">
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+
+      <a
+        class="scroll-indicator__item"
+        href="index.html#projects"
+        aria-label="Dự án"
+        data-i18n-attr="aria-label:home.navigationProjects"
+      >
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+
+      <a
+        class="scroll-indicator__item"
+        href="index.html#contact"
+        aria-label="Liên hệ và chân trang"
+        data-i18n-attr="aria-label:home.navigationNext"
+      >
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+    </nav>
+
+    <!-------- SOUND TOGGLE (REMOVED) -------->
+    <script src="assets/ximitech-sound.js" defer></script>
+
+    <main>
+      <!-------- HERO SECTION -------->
+      <section class="hero-three" id="hero">
+        <div class="hero-three__frame">
+          <canvas class="webgl" aria-hidden="true"></canvas>
+        </div>
+
+        <div class="hero-content">
+          <h1 class="visually-hidden">
+            FONLIO — Living Portfolio cho Sinh viên
+          </h1>
+
+          <div style="position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 10; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0.75;">
+            <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); backdrop-filter: blur(16px); color: #f5e7df; font-family: 'Be Vietnam Pro', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: #b9ff00; display: inline-block;"></span>
+              <span>Cuộn để khám phá hành trình</span>
+            </div>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b9ff00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation: universeBounce 1.8s infinite;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <style>@keyframes universeBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }</style>
+          </div>
+        </div>
+      </section>
+
+      <!-------- TRAJECTOIRY SECTION -------->
+      <section class="trajectory" id="parcours">
+        <section class="entry">
+          <div class="container">
+            <h2 class="title trajectory-editorial">
+              <span class="trajectory-editorial__sub">Nơi Ký Ức Hóa</span>
+              <span class="trajectory-editorial__main">Minh Chứng Sống</span>
+            </h2>
+          </div>
+        </section>
+
+        <section class="trajectory-sentences">
+          <div class="trajectory-sentences__pin-height">
+            <div class="trajectory-sentences__container">
+              <div class="trajectory-sentences__visuals" aria-hidden="true">
+                <div class="trajectory-sentences__visual trajectory-sentences__visual--left"></div>
+                <div class="trajectory-sentences__visual trajectory-sentences__visual--right"></div>
+                <canvas class="trajectory-sentences__canvas" aria-hidden="true"></canvas>
+              </div>
+
+              <div class="trajectory-sentences__center">
+
+                <div
+                  class="trajectory-sentences__sentence is-dialogue"
+                >
+                  FONLIO
+                </div>
+
+                <div class="trajectory-sentences__sentence is-both is-two-lines">
+                  <span>tôn vinh</span><br />
+                  <span>cùng bạn.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-------- TOOLKIT SECTION -------->
+      <section class="toolkit" id="toolkit">
+        <div class="toolkit__pin-height">
+          <div class="toolkit__container">
+            <div class="toolkit__header">
+              <h2 class="toolkit__title">Triển Lãm Ký Ức</h2>
+
+              <div class="toolkit__subtitle-wrap">
+                <h3 class="toolkit__subtitle toolkit__subtitle--front">Kỹ thuật &amp; Công nghệ</h3>
+                <h3 class="toolkit__subtitle toolkit__subtitle--art">Sáng tạo &amp; Lãnh đạo</h3>
+              </div>
+            </div>
+
+            <!-- Frontend Deck -->
+            <div class="toolkit__wheel toolkit__wheel--frontend">
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--javascript">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/javascript.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.javascript"
+                    alt="JavaScript"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--react">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/react.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.react"
+                    alt="React"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--nextjs">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/nextjs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.nextjs"
+                    alt="Next.js"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--vuejs">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/vuejs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.vuejs"
+                    alt="Vue.js"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--threejs">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/threejs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.threejs"
+                    alt="Three.js"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--gsap">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/gsap.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.gsap"
+                    alt="GSAP"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--glsl">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/glsl.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.glsl"
+                    alt="GLSL"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--webflow">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/webflow.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.webflow"
+                    alt="Webflow"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot toolkit__slot--transition">
+                <div class="toolkit-card toolkit-card--flip toolkit-card--shopify">
+                  <div class="toolkit-card__flipper toolkit-card__motion">
+                    <div class="toolkit-card__face toolkit-card--front">
+                      <img
+                        src="home/toolkit/frontend/vi/shopify.svg"
+                        alt="Shopify"
+                        data-i18n-attr="src:home.toolkitAssets.frontend.shopify"
+                      />
+                    </div>
+
+                    <div class="toolkit-card__face toolkit-card__face--back">
+                      <img
+                        src="home/toolkit/art-direction/vi/figma.svg"
+                        alt="Figma"
+                        data-i18n-attr="src:home.toolkitAssets.artDirection.figma"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Art direction deck -->
+            <div class="toolkit__wheel toolkit__wheel--art-direction">
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--figma">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/figma.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.figma"
+                    alt="Figma"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--photoshop">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/photoshop.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.photoshop"
+                    alt="Photoshop"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--illustrator">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/illustrator.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.illustrator"
+                    alt="Illustrator"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--indesign">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/indesign.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.indesign"
+                    alt="InDesign"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--after-effects">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/aftereffects.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.afterEffects"
+                    alt="After Effects"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--capcut">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/capcut.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.capcut"
+                    alt="CapCut"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--lightroom">
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/lightroom.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.lightroom"
+                    alt="Lightroom"
+                  />
+                </div>
+              </div>
+
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--transition">
+                  <canvas
+                    class="toolkit-card__cream-reveal toolkit-card__reveal-canvas toolkit-card__motion"
+                    aria-hidden="true"
+                  ></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-------- PROJECTS SECTION -------->
+      <section class="projects" id="projects">
+        <div class="projects__pin-height">
+          <div class="projects__container">
+            <h2 class="projects__title">Cột Mốc Thực Chiến Được Bảo Chứng</h2>
+
+            <nav class="projects__list" aria-label="Cột mốc thực chiến của ứng viên">
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                01 / Tuần lễ Xanh trường ĐH FPT — 1,200 SV tham gia
+              </a>
+
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                02 / 60s Sài Gòn — Viral Video 850,000 Views
+              </a>
+
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                03 / NextGen Tech Hackathon — Giải Nhất Toàn Quốc
+              </a>
+
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                04 / Hệ thống Quản lý Điểm danh QR — CLB Phần mềm
+              </a>
+
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                05 / Bộ Nhận diện Thương hiệu Sinh viên — 3 Startup
+              </a>
+
+              <a
+                class="projects__link"
+                href="#contact"
+              >
+                06 / Báo Cáo Bảo Chứng Living Proof — Đạt Chuẩn 100%
+              </a>
+            </nav>
+          </div>
+        </div>
+      </section>
+
+      <!-------- NEXT SECTION -------->
+      <section class="next-section">
+        <div class="next-section__pin-height">
+          <div class="next-section__container">
+            <div class="next-section__intro">
+              <p data-i18n="home.nextIntro">Sẵn sàng bứt phá?</p>
+              <!-- Playground link removed -->
+            </div>
+
+            <svg
+              class="next-section__svg"
+              fill="none"
+              width="3898"
+              height="891"
+              viewBox="0 0 3898 891"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="nextTextGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="80%" stop-color="#f6c177" />
+                  <stop offset="85%" stop-color="#9b7cff" />
+                  <stop offset="100%" stop-color="#ff6b4a" />
+                </linearGradient>
+              </defs>
+
+              <path
+                id="nextPath"
+                d="M0.398438 611.016C175.398 377.517 857.398 -285.484 1461.4 139.638C1911.53 456.46 2114.4 805.516 2679.4 611.016C3088.4 470.219 3704.54 -33.3124 4354.9 781.516C4700.9 1215.02 5305.6 1466.52 6108.4 328.516"
+              />
+
+              <text class="next-section__text">
+                <textPath id="nextTextPath" href="#nextPath" text-anchor="start">
+                  <tspan id="nextTextCream" data-i18n="home.nextTextCream">
+                    Hồ sơ của bạn xứng đáng
+                  </tspan>
+                  <tspan
+                    id="nextTextGradientPart"
+                    fill="url(#nextTextGradient)"
+                    data-i18n="home.nextTextGradient"
+                  >
+                    được công nhận bằng sản phẩm thật
+                  </tspan>
+                </textPath>
+              </text>
+
+              <circle id="nextOrb" class="next-section__orb" cx="0" cy="0" r="14" fill="#ff6b4a" />
+            </svg>
+
+            <!-------- FOOTER REVEAL -------->
+            <footer
+              id="contact"
+              class="next-footer"
+              aria-label="Chân trang"
+              data-i18n-attr="aria-label:home.footerLabel"
+            >
+              <div class="next-footer__background" aria-hidden="true"></div>
+
+              <div class="next-footer__content">
+                <div class="next-footer__inner">
+                  <div class="next-footer__main">
+                    <p class="next-footer__headline">
+                      <span>Tỏa sáng cùng</span><br />
+                      <span>Minh chứng sống</span><br />
+                      <span style="color: #b9ff00;">Vũ Trụ Fonlio</span>
+                    </p>
+
+                    <p style="color: rgba(255, 255, 255, 0.72); font-size: 15px; line-height: 1.6; margin: 0; max-width: 480px;">
+                      Mọi ký ức của bạn từ dự án sinh viên, hoạt động ngoại khóa đến giải thưởng công nghệ đều trở thành minh chứng sống (Living Proof) thuyết phục nhất với nhà tuyển dụng.
+                    </p>
+
+                    <div style="display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap;">
+                      <button
+                        type="button"
+                        class="universe-cta-btn universe-cta-btn--lime"
+                        onclick="window.parent.postMessage({ type: 'OPEN_WRAPPED' }, '*')"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span>Xem Story Wrapped</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="universe-cta-btn universe-cta-btn--outline"
+                        onclick="window.parent.postMessage({ type: 'NAVIGATE_DASHBOARD' }, '*')"
+                      >
+                        <span>← Về Dashboard</span>
+                      </button>
+                    </div>
+
+                    <div class="next-footer__meta" style="margin-top: 24px;">
+                      <p>© 2026 FONLIO — Living Portfolio &amp; Bảo Chứng Năng Lực Sinh Viên</p>
+                    </div>
+                  </div>
+
+                  <div class="fonlio-waitlist-card universe-dossier-card">
+                    <div class="universe-dossier">
+                      <div class="universe-dossier-header">
+                        <div class="fonlio-card-badge" style="margin: 0;">
+                          <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                          <span>BẢO CHỨNG SỐ • LIVING PROOF</span>
+                        </div>
+                        <span class="universe-dossier-id">FNL-2026-GENESIS</span>
+                      </div>
+
+                      <div class="universe-candidate-profile">
+                        <div class="universe-candidate-avatar">
+                          <span id="cardAvatarInitial">P</span>
+                        </div>
+                        <div class="universe-candidate-meta">
+                          <div class="universe-candidate-name js-candidate-name">Tài Phát</div>
+                          <div class="universe-candidate-role">Frontend &amp; Creative Media Contributor</div>
+                        </div>
+                      </div>
+
+                      <div class="universe-metrics-grid">
+                        <div class="universe-metric-tile">
+                          <div class="universe-metric-num"><span class="js-candidate-exp">2,250</span></div>
+                          <div class="universe-metric-label">EXP Tích Luỹ</div>
+                        </div>
+                        <div class="universe-metric-tile">
+                          <div class="universe-metric-num"><span class="js-candidate-rs">43</span> <span style="font-size: 14px; color: #34d399;">RS</span></div>
+                          <div class="universe-metric-label">Điểm Tín Nhiệm (Top 3%)</div>
+                        </div>
+                        <div class="universe-metric-tile">
+                          <div class="universe-metric-num"><span>6 / 6</span></div>
+                          <div class="universe-metric-label">Ký Ức Đã Khởi Tạo</div>
+                        </div>
+                        <div class="universe-metric-tile">
+                          <div class="universe-metric-num"><span style="color: #34d399;">100%</span></div>
+                          <div class="universe-metric-label">Living Proof Chuẩn Hoá</div>
+                        </div>
+                      </div>
+
+                      <div class="universe-proof-checks">
+                        <div class="universe-proof-check-item">
+                          <span class="universe-proof-check-icon">✓</span>
+                          <span>Báo cáo minh chứng sống &amp; link sản phẩm thực thi</span>
+                        </div>
+                        <div class="universe-proof-check-item">
+                          <span class="universe-proof-check-icon">✓</span>
+                          <span>Xác thực bởi Ban chủ nhiệm CLB &amp; Mentor doanh nghiệp</span>
+                        </div>
+                        <div class="universe-proof-check-item">
+                          <span class="universe-proof-check-icon">✓</span>
+                          <span>Sẵn sàng kết nối trực tiếp với 50+ đối tác tuyển dụng Fonlio</span>
+                        </div>
+                      </div>
+
+                      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 4px;">
+                        <button
+                          type="button"
+                          class="universe-btn-primary"
+                          onclick="window.parent.postMessage({ type: 'OPEN_WRAPPED' }, '*')"
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                          <span>Khởi Chiếu Cuốn Phim Wrapped</span>
+                        </button>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                          <button
+                            type="button"
+                            class="universe-btn-secondary"
+                            onclick="window.parent.postMessage({ type: 'NAVIGATE_PORTFOLIO_EDIT' }, '*')"
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>Thêm Ký Ức</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            class="universe-btn-secondary"
+                            onclick="window.parent.postMessage({ type: 'NAVIGATE_DASHBOARD' }, '*')"
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            <span>Về Dashboard</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="next-footer__nav np-footer-contact-bar"
+                    aria-label="Liên hệ và mạng xã hội FONLIO"
+                  >
+                    <div class="np-footer-contact-info">
+                      <a class="np-footer-contact-item" href="mailto:fonlioofficial@gmail.com" title="Email FONLIO">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+                        <span>fonlioofficial@gmail.com</span>
+                      </a>
+                      <span class="np-footer-contact-sep">•</span>
+                      <a class="np-footer-contact-item" href="tel:0981362340" title="Hotline FONLIO">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                        <span>0981 362 340</span>
+                      </a>
+                    </div>
+
+                    <div class="np-footer-socials" aria-label="Mạng xã hội FONLIO">
+                      <a class="np-footer-social-btn" href="https://www.facebook.com/profile.php?id=61594934129474" target="_blank" rel="noopener noreferrer" title="Facebook">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                      </a>
+                      <a class="np-footer-social-btn" href="https://www.instagram.com/fonlioofficial/" target="_blank" rel="noopener noreferrer" title="Instagram">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>
+                      </a>
+                      <a class="np-footer-social-btn" href="https://www.tiktok.com/@fonlio.official" target="_blank" rel="noopener noreferrer" title="TikTok">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.5 6.27 6.27 0 0 0 1.95-4.5V8.69a8.18 8.18 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-.95-.12z" /></svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </footer>
+          </div>
+        </div>
+      </section>
+    </main>
+  
+<script>
+(function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const name = urlParams.get('name');
+  const exp = urlParams.get('exp');
+  const rs = urlParams.get('rs');
+
+  if (name) {
+    document.querySelectorAll('.js-candidate-name').forEach(el => el.textContent = name);
+    const avatar = document.getElementById('cardAvatarInitial');
+    if (avatar) avatar.textContent = name.trim().charAt(0).toUpperCase();
+    const headAvatar = document.getElementById('headerUserInitial');
+    if (headAvatar) headAvatar.textContent = name.trim().charAt(0).toUpperCase();
+  }
+  if (exp) {
+    const formattedExp = Number(exp).toLocaleString('vi-VN');
+    document.querySelectorAll('.js-candidate-exp').forEach(el => el.textContent = formattedExp);
+  }
+  if (rs) {
+    document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = rs);
+  }
+
+  // Listen for data updates posted from parent React app
+  window.addEventListener('message', (evt) => {
+    if (evt.data?.type === 'UPDATE_UNIVERSE_DATA') {
+      const data = evt.data.payload;
+      if (data?.name) {
+        document.querySelectorAll('.js-candidate-name').forEach(el => el.textContent = data.name);
+        const avatar = document.getElementById('cardAvatarInitial');
+        if (avatar) avatar.textContent = data.name.trim().charAt(0).toUpperCase();
+        const headAvatar = document.getElementById('headerUserInitial');
+        if (headAvatar) headAvatar.textContent = data.name.trim().charAt(0).toUpperCase();
+      }
+      if (data?.exp !== undefined) {
+        const formatted = Number(data.exp).toLocaleString('vi-VN');
+        document.querySelectorAll('.js-candidate-exp').forEach(el => el.textContent = formatted);
+      }
+      if (data?.rs !== undefined) {
+        document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = String(data.rs));
+      }
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
