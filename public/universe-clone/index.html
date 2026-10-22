@@ -136,7 +136,7 @@
     <link rel="stylesheet" href="assets/ximitech.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Fredoka:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Fredoka:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   
 <style>
 /* FONLIO BRAND HEADER LOGO */
@@ -1632,21 +1632,65 @@ html:lang(vi) .toolkit__subtitle,
             </div>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b9ff00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation: universeBounce 1.8s infinite;"><polyline points="6 9 12 15 18 9"></polyline></svg>
             <style>@keyframes universeBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
-/* NATIVE SPOTLIGHT MODAL FOR TOOLKIT CARDS */
+
+/* HIDE THE UNNECESSARY "CỦA BẠN" BADGE COMPLETELY */
+.toolkit-card-user-badge {
+  display: none !important;
+}
+
+/* CRISP INLINE SVG / DOM CARD FACE */
+.toolkit-card-vector-face {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 295 / 417;
+  border-radius: 22.6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.5);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+.toolkit-card-vector-face .card-center-text {
+  text-align: center;
+  font-weight: 900;
+  font-size: 38px;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  padding: 0 20px;
+}
+.toolkit-card-vector-face .card-bottom-pill {
+  position: absolute;
+  bottom: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 18px;
+  border-radius: 17.3px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ULTRA-PREMIUM SPOTLIGHT MODAL (IMAGE 2) */
 .toolkit-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 9999999;
-  background: rgba(5, 10, 18, 0.88);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  background: rgba(4, 8, 14, 0.88);
+  backdrop-filter: blur(36px) saturate(190%);
+  -webkit-backdrop-filter: blur(36px) saturate(190%);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .toolkit-modal-backdrop.is-open {
   opacity: 1;
@@ -1654,66 +1698,88 @@ html:lang(vi) .toolkit__subtitle,
 }
 .toolkit-modal-content {
   position: relative;
-  max-width: 820px;
+  max-width: 860px;
   width: 100%;
-  background: #0B131E;
+  background: radial-gradient(120% 120% at 50% 0%, #111A28 0%, #080D15 100%);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 28px;
-  padding: 36px;
+  border-radius: 32px;
+  padding: 40px;
   display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 36px;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
-  transform: scale(0.92) translateY(24px);
-  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  grid-template-columns: 260px 1fr;
+  gap: 40px;
+  box-shadow: 0 40px 100px -10px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transform: scale(0.92) translateY(28px);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
 }
 .toolkit-modal-backdrop.is-open .toolkit-modal-content {
   transform: scale(1) translateY(0);
 }
-@media (max-width: 768px) {
+.toolkit-modal-content::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  left: 20%;
+  width: 320px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(40px);
+}
+@media (max-width: 820px) {
   .toolkit-modal-content {
     grid-template-columns: 1fr;
     max-height: 90vh;
     overflow-y: auto;
-    padding: 24px;
-    gap: 20px;
+    padding: 28px;
+    gap: 24px;
   }
 }
 .toolkit-modal-close {
   position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 36px;
-  height: 36px;
+  top: 20px;
+  right: 20px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #fff;
-  font-size: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 10;
 }
 .toolkit-modal-close:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.08);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  transform: rotate(90deg) scale(1.08);
 }
-.modal-card-preview {
-  width: 100%;
-  max-width: 240px;
-  aspect-ratio: 295 / 417;
-  border-radius: 22px;
-  overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+.toolkit-modal-left {
   display: flex;
   align-items: center;
   justify-content: center;
+  perspective: 900px;
+}
+.modal-card-preview {
+  width: 100%;
+  max-width: 260px;
+  aspect-ratio: 295 / 417;
+  border-radius: 22.6px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+  position: relative;
 }
 .modal-card-preview img,
-.modal-card-preview svg {
+.modal-card-preview svg,
+.modal-card-preview .toolkit-card-vector-face {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1723,123 +1789,129 @@ html:lang(vi) .toolkit__subtitle,
   display: flex;
   flex-direction: column;
   justify-content: center;
+  z-index: 2;
 }
 .modal-badge-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
 }
 .modal-tag {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: rgba(56, 189, 248, 0.14);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.25);
-}
-.modal-verified {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 11px;
   font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: rgba(16, 185, 129, 0.14);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.24);
+}
+.modal-verified {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.12);
   color: #34d399;
   border: 1px solid rgba(16, 185, 129, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 .modal-title {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  font-size: 32px;
+  font-size: 38px;
   font-weight: 900;
   color: #F8FAFC;
-  margin: 0 0 8px 0;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  margin: 0 0 10px 0;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
 }
 .modal-meta-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.65);
-  margin-bottom: 18px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 20px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 .modal-dot {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.25);
 }
 .modal-desc {
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 14.5px;
-  line-height: 1.65;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0 0 20px 0;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.78);
+  margin: 0 0 24px 0;
 }
-.modal-project-box {
-  background: rgba(255, 255, 255, 0.04);
+/* LUXURY STAT TILES */
+.modal-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 26px;
+}
+@media (max-width: 540px) {
+  .modal-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.modal-stat-tile {
+  background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  padding: 14px 16px;
-  margin-bottom: 22px;
-}
-.modal-project-header {
+  padding: 12px 14px;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
+  flex-direction: column;
+  gap: 4px;
+}
+.modal-stat-value {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
   font-weight: 800;
+  color: #38bdf8;
+}
+.modal-stat-label {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
-  color: #34d399;
-  letter-spacing: 0.05em;
-  margin-bottom: 4px;
-}
-.modal-project-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 2px;
-}
-.modal-project-meta {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.04em;
 }
 .modal-action-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: flex-end;
+  gap: 14px;
   margin-top: auto;
-  flex-wrap: wrap;
-}
-.modal-ownership-tag {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #F5DF4D;
-  background: rgba(245, 223, 77, 0.1);
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(245, 223, 77, 0.2);
 }
 .modal-btn-action {
-  padding: 10px 22px;
-  border-radius: 10px;
+  padding: 12px 28px;
+  border-radius: 12px;
   background: #b9ff00;
-  color: #000;
-  font-size: 13.5px;
+  color: #0A0F18;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
   font-weight: 800;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.22s ease;
+  box-shadow: 0 8px 24px rgba(185, 255, 0, 0.28);
 }
 .modal-btn-action:hover {
-  background: #d4ff4d;
+  background: #cbfd2b;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(185, 255, 0, 0.3);
+  box-shadow: 0 12px 28px rgba(185, 255, 0, 0.4);
 }
+
 
 </style>
           </div>
@@ -2448,48 +2520,51 @@ html:lang(vi) .toolkit__subtitle,
         </div>
       </section>
 
-      <!-- NATIVE SPOTLIGHT MODAL FOR SKILLS & PROOF CARDS -->
+            <!-- NATIVE SPOTLIGHT MODAL FOR SKILLS & PROOF CARDS -->
       <div id="fonlioSkillModal" class="toolkit-modal-backdrop" onclick="if(event.target===this) window.closeSkillModal()">
         <div class="toolkit-modal-content" onclick="event.stopPropagation()">
           <button class="toolkit-modal-close" onclick="window.closeSkillModal()" aria-label="Đóng modal">✕</button>
           
           <div class="toolkit-modal-left">
             <div id="modalCardPreview" class="modal-card-preview">
-              <!-- Dynamically cloned card or SVG rendered here -->
+              <!-- Rendered preview card with 3D glow -->
             </div>
           </div>
 
           <div class="toolkit-modal-right">
             <div class="modal-badge-row">
-              <span id="modalSkillTag" class="modal-tag">KỸ NĂNG CHUẨN</span>
-              <span id="modalVerifiedBadge" class="modal-verified">✓ CHUẨN HÓA FONLIO</span>
+              <span id="modalSkillTag" class="modal-tag">CHUYÊN MÔN</span>
+              <span id="modalVerifiedBadge" class="modal-verified">✓ NĂNG LỰC BẢO CHỨNG</span>
             </div>
 
-            <h3 id="modalSkillTitle" class="modal-title">JavaScript</h3>
+            <h3 id="modalSkillTitle" class="modal-title">UI/UX Design</h3>
             
             <div class="modal-meta-row">
-              <span id="modalSkillLevel" class="modal-level">Trình độ: Thành thạo</span>
+              <span id="modalSkillLevel" class="modal-level">Trình độ: Thành thạo (Advanced)</span>
               <span class="modal-dot">•</span>
-              <span id="modalSkillCategory" class="modal-cat">Ngôn ngữ web</span>
+              <span id="modalSkillCategory" class="modal-cat">Thiết kế trải nghiệm</span>
             </div>
 
             <p id="modalSkillDesc" class="modal-desc">
-              Kỹ năng cốt lõi được định danh trong hệ thống Living Portfolio của Fonlio. Được nhà tuyển dụng công nghệ đánh giá cao trong thang điểm tín nhiệm Reputation Score.
+              Kỹ năng cốt lõi được định danh và bảo chứng trong Living Portfolio của ứng viên. Đáp ứng tiêu chuẩn đánh giá khắt khe từ mạng lưới đối tác doanh nghiệp Fonlio.
             </p>
 
-            <div id="modalProjectSection" class="modal-project-box" style="display: none;">
-              <div class="modal-project-header">
-                <span class="modal-project-icon">🏆</span>
-                <span class="modal-project-heading">Minh Chứng Áp Dụng Thực Chiến</span>
+            <div class="modal-stats-grid">
+              <div class="modal-stat-tile">
+                <span id="modalStatExp" class="modal-stat-value">+450 EXP</span>
+                <span class="modal-stat-label">Điểm Bảo Chứng</span>
               </div>
-              <div id="modalProjectTitle" class="modal-project-name">Dự án thực tế</div>
-              <div id="modalProjectMeta" class="modal-project-meta">Cột mốc được bảo chứng trên Fonlio</div>
+              <div class="modal-stat-tile">
+                <span id="modalStatDemand" class="modal-stat-value" style="color: #34d399;">Top 5% Cao</span>
+                <span class="modal-stat-label">Nhu Cầu Tuyển Dụng</span>
+              </div>
+              <div class="modal-stat-tile">
+                <span id="modalStatRs" class="modal-stat-value" style="color: #F5DF4D;">Chuẩn RS</span>
+                <span class="modal-stat-label">Độ Tín Nhiệm</span>
+              </div>
             </div>
 
             <div class="modal-action-row">
-              <div id="modalOwnershipBadge" class="modal-ownership-tag">
-                <span>⭐ Kỹ năng đã có trong hồ sơ của bạn</span>
-              </div>
               <button type="button" class="modal-btn-action" onclick="window.closeSkillModal()">
                 <span>Đã hiểu</span>
               </button>
@@ -2497,6 +2572,7 @@ html:lang(vi) .toolkit__subtitle,
           </div>
         </div>
       </div>
+
 <!-------- PROJECTS SECTION -------->
       <section class="projects" id="projects">
         <div class="projects__pin-height">
@@ -2788,112 +2864,261 @@ html:lang(vi) .toolkit__subtitle,
     document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = rsParam);
   }
 
-  // Pre-configured themes for custom candidate skills that don't have static SVGs
-  const CUSTOM_SKILL_THEMES = {
-    'java': { bg: '#E03131', text: '#FFFFFF', pillBg: '#2B2B2B', pillText: '#FF8787', cat: 'BACKEND ENTERPRISE', desc: 'Lập trình hướng đối tượng, kiến trúc đa luồng, xử lý dữ liệu và hệ thống doanh nghiệp cấp cao.' },
-    'spring': { bg: '#2B8A3E', text: '#FFFFFF', pillBg: '#1B4722', pillText: '#A9E34B', cat: 'SPRING FRAMEWORK', desc: 'Hệ sinh thái Java backend với Dependency Injection, Spring Security, JPA/Hibernate và Microservices.' },
-    'spring boot': { bg: '#2B8A3E', text: '#FFFFFF', pillBg: '#1B4722', pillText: '#A9E34B', cat: 'SPRING BOOT BACKEND', desc: 'Xây dựng RESTful API hiệu năng cao, tích hợp cơ sở dữ liệu PostgreSQL và bảo mật JWT.' },
-    'python': { bg: '#2B5B84', text: '#FFD43B', pillBg: '#1E3F5C', pillText: '#FFD43B', cat: 'DATA & AI / BACKEND', desc: 'Phát triển backend Django/FastAPI, xử lý dữ liệu với Pandas/NumPy và triển khai mô hình Machine Learning.' },
-    'sql': { bg: '#336791', text: '#FFFFFF', pillBg: '#1F3E57', pillText: '#93C5FD', cat: 'CƠ SỞ DỮ LIỆU SQL', desc: 'Thiết kế cơ sở dữ liệu quan hệ, tối ưu truy vấn Index, Transaction và đảm bảo toàn vẹn dữ liệu ACID.' },
-    'postgresql': { bg: '#336791', text: '#FFFFFF', pillBg: '#1F3E57', pillText: '#93C5FD', cat: 'POSTGRESQL DATABASE', desc: 'Cơ sở dữ liệu mã nguồn mở mạnh mẽ, xử lý JSONB, full-text search và kết nối an toàn với Supabase.' },
-    'docker': { bg: '#2496ED', text: '#FFFFFF', pillBg: '#115C96', pillText: '#E0F2FE', cat: 'DEVOPS CONTAINER', desc: 'Đóng gói ứng dụng thành container độc lập, triển khai nhất quán giữa môi trường phát triển và production.' },
-    'git': { bg: '#F05032', text: '#FFFFFF', pillBg: '#3E2723', pillText: '#FFCCBC', cat: 'QUẢN LÝ MÃ NGUỒN', desc: 'Quản lý phiên bản mã nguồn phân tán, branching strategy, code review và cộng tác nhóm trên GitHub.' },
-    'ui/ux': { bg: '#7952DE', text: '#FFFFFF', pillBg: '#391085', pillText: '#E9D5FF', cat: 'THIẾT KẾ TRẢI NGHIỆM', desc: 'Nghiên cứu hành vi người dùng, vẽ luồng người dùng (user flow) và tối ưu trải nghiệm giao diện sản phẩm số.' },
-    'marketing': { bg: '#FF922B', text: '#111111', pillBg: '#111111', pillText: '#FFD8A8', cat: 'TIẾP THỊ & TRUYỀN THÔNG', desc: 'Lên chiến dịch tiếp thị số, quản trị kênh truyền thông mạng xã hội và tối ưu chuyển đổi khách hàng mục tiêu.' },
-    'project management': { bg: '#0CA678', text: '#FFFFFF', pillBg: '#084C37', pillText: '#C3FAE8', cat: 'QUẢN LÝ DỰ ÁN', desc: 'Áp dụng phương pháp Agile/Scrum, điều phối tiến độ công việc, quản trị rủi ro và gắn kết đội ngũ.' }
+  // Curated styles and definitions for all skills
+  const SKILL_CATALOG = {
+    'javascript': {
+      name: 'JavaScript',
+      cat: 'NGÔN NGỮ LẬP TRÌNH',
+      pillText: 'Ngôn ngữ lập trình',
+      bg: '#F5DF4D',
+      textColor: '#1F1D1D',
+      pillBg: '#1F1D1D',
+      pillColor: '#F5DF4D',
+      svg: 'home/toolkit/frontend/vi/javascript.svg',
+      desc: 'Ngôn ngữ nền tảng của web hiện đại, xử lý logic tương tác động, cấu trúc dữ liệu và thuật toán client-side.',
+      exp: 420
+    },
+    'react': {
+      name: 'React',
+      cat: 'THƯ VIỆN GIAO DIỆN',
+      pillText: 'Thư viện giao diện',
+      bg: '#1E293B',
+      textColor: '#00D8FF',
+      pillBg: '#00D8FF',
+      pillColor: '#0F172A',
+      svg: 'home/toolkit/frontend/vi/react.svg',
+      desc: 'Thư viện xây dựng Single Page Application (SPA), kiến trúc component tái sử dụng và quản lý Virtual DOM hiệu năng cao.',
+      exp: 450
+    },
+    'reactjs': {
+      name: 'React',
+      cat: 'THƯ VIỆN GIAO DIỆN',
+      pillText: 'Thư viện giao diện',
+      bg: '#1E293B',
+      textColor: '#00D8FF',
+      pillBg: '#00D8FF',
+      pillColor: '#0F172A',
+      svg: 'home/toolkit/frontend/vi/react.svg',
+      desc: 'Thư viện xây dựng Single Page Application (SPA), kiến trúc component tái sử dụng và quản lý Virtual DOM hiệu năng cao.',
+      exp: 450
+    },
+    'nextjs': {
+      name: 'Next.js',
+      cat: 'FRAMEWORK FULLSTACK',
+      pillText: 'Framework web',
+      bg: '#000000',
+      textColor: '#FFFFFF',
+      pillBg: '#FFFFFF',
+      pillColor: '#000000',
+      svg: 'home/toolkit/frontend/vi/nextjs.svg',
+      desc: 'Framework React hỗ trợ Server-Side Rendering (SSR), Static Site Generation (SSG) và tối ưu SEO vượt trội cho sản phẩm.',
+      exp: 430
+    },
+    'next.js': {
+      name: 'Next.js',
+      cat: 'FRAMEWORK FULLSTACK',
+      pillText: 'Framework web',
+      bg: '#000000',
+      textColor: '#FFFFFF',
+      pillBg: '#FFFFFF',
+      pillColor: '#000000',
+      svg: 'home/toolkit/frontend/vi/nextjs.svg',
+      desc: 'Framework React hỗ trợ Server-Side Rendering (SSR), Static Site Generation (SSG) và tối ưu SEO vượt trội cho sản phẩm.',
+      exp: 430
+    },
+    'ui/ux': {
+      name: 'UI/UX Design',
+      cat: 'THIẾT KẾ TRẢI NGHIỆM',
+      pillText: 'Thiết kế giao diện',
+      bg: '#6366F1',
+      textColor: '#FFFFFF',
+      pillBg: '#1E1B4B',
+      pillColor: '#C7D2FE',
+      desc: 'Nghiên cứu hành vi người dùng, vẽ luồng người dùng (user flow), wireframing và thiết kế giao diện sản phẩm số trực quan.',
+      exp: 440
+    },
+    'ui/ux design': {
+      name: 'UI/UX Design',
+      cat: 'THIẾT KẾ TRẢI NGHIỆM',
+      pillText: 'Thiết kế giao diện',
+      bg: '#6366F1',
+      textColor: '#FFFFFF',
+      pillBg: '#1E1B4B',
+      pillColor: '#C7D2FE',
+      desc: 'Nghiên cứu hành vi người dùng, vẽ luồng người dùng (user flow), wireframing và thiết kế giao diện sản phẩm số trực quan.',
+      exp: 440
+    },
+    'sql': {
+      name: 'SQL Database',
+      cat: 'CƠ SỞ DỮ LIỆU',
+      pillText: 'Cơ sở dữ liệu SQL',
+      bg: '#0369A1',
+      textColor: '#FFFFFF',
+      pillBg: '#082F49',
+      pillColor: '#BAE6FD',
+      desc: 'Thiết kế hệ cơ sở dữ liệu quan hệ, tối ưu truy vấn Index, Transaction và đảm bảo toàn vẹn dữ liệu cho hệ thống quy mô lớn.',
+      exp: 410
+    },
+    'figma': {
+      name: 'Figma',
+      cat: 'THIẾT KẾ UI/UX',
+      pillText: 'Công cụ thiết kế',
+      bg: '#8B5CF6',
+      textColor: '#FFFFFF',
+      pillBg: '#2E1065',
+      pillColor: '#DDD6FE',
+      svg: 'home/toolkit/art-direction/vi/figma.svg',
+      desc: 'Công cụ thiết kế UI/UX hàng đầu, quản lý Design System, tạo prototype tương tác và phối hợp thời gian thực với đội ngũ kỹ thuật.',
+      exp: 400
+    },
+    'python': {
+      name: 'Python',
+      cat: 'LẬP TRÌNH & DATA',
+      pillText: 'Ngôn ngữ Python',
+      bg: '#1E3A5F',
+      textColor: '#FFD43B',
+      pillBg: '#0F1E33',
+      pillColor: '#FFD43B',
+      desc: 'Phát triển backend, xử lý dữ liệu với Pandas/NumPy, tự động hóa tác vụ và triển khai mô hình học máy ứng dụng.',
+      exp: 430
+    },
+    'java': {
+      name: 'Java',
+      cat: 'ENTERPRISE BACKEND',
+      pillText: 'Nền tảng Java',
+      bg: '#DC2626',
+      textColor: '#FFFFFF',
+      pillBg: '#1F2937',
+      pillColor: '#FECACA',
+      desc: 'Lập trình hướng đối tượng vững chắc, xây dựng hệ thống phân tán, xử lý đa luồng và dịch vụ microservices chịu tải cao.',
+      exp: 440
+    },
+    'spring boot': {
+      name: 'Spring Boot',
+      cat: 'BACKEND FRAMEWORK',
+      pillText: 'Spring Boot',
+      bg: '#16A34A',
+      textColor: '#FFFFFF',
+      pillBg: '#052E16',
+      pillColor: '#BBF7D0',
+      desc: 'Xây dựng API RESTful chuẩn bảo mật, kết nối PostgreSQL, phân quyền JWT và triển khai giải pháp backend chuẩn doanh nghiệp.',
+      exp: 460
+    },
+    'docker': {
+      name: 'Docker',
+      cat: 'DEVOPS CONTAINER',
+      pillText: 'DevOps & Container',
+      bg: '#0284C7',
+      textColor: '#FFFFFF',
+      pillBg: '#082F49',
+      pillColor: '#E0F2FE',
+      desc: 'Đóng gói ứng dụng thành container độc lập, đồng nhất môi trường phát triển và cấu hình CI/CD tự động hóa.',
+      exp: 420
+    },
+    'git': {
+      name: 'Git & GitHub',
+      cat: 'QUẢN LÝ MÃ NGUỒN',
+      pillText: 'Version Control',
+      bg: '#EA580C',
+      textColor: '#FFFFFF',
+      pillBg: '#431407',
+      pillColor: '#FFEDD5',
+      desc: 'Quản trị phiên bản mã nguồn phân tán, chiến lược branching GitFlow, code review và giải quyết xung đột mã nguồn.',
+      exp: 390
+    },
+    'photoshop': {
+      name: 'Photoshop',
+      cat: 'XỬ LÝ HÌNH ẢNH',
+      pillText: 'Đồ họa hình ảnh',
+      bg: '#001E36',
+      textColor: '#31A8FF',
+      pillBg: '#31A8FF',
+      pillColor: '#001E36',
+      svg: 'home/toolkit/art-direction/vi/photoshop.svg',
+      desc: 'Chỉnh sửa hình ảnh bitmap chuyên nghiệp, cắt ghép kỹ thuật số, tạo key visual và thiết kế banner truyền thông.',
+      exp: 370
+    },
+    'illustrator': {
+      name: 'Illustrator',
+      cat: 'ĐỒ HỌA VECTOR',
+      pillText: 'Đồ họa vector',
+      bg: '#330000',
+      textColor: '#FF9A00',
+      pillBg: '#FF9A00',
+      pillColor: '#330000',
+      svg: 'home/toolkit/art-direction/vi/illustrator.svg',
+      desc: 'Sáng tạo bộ nhận diện thương hiệu, thiết kế logo, typography ấn phẩm và đồ họa vector độ phân giải vô hạn.',
+      exp: 380
+    }
   };
 
-  function generateSkillSvg(skillName, theme) {
-    const bg = theme.bg || '#2563EB';
-    const text = theme.text || '#FFFFFF';
-    const pillBg = theme.pillBg || '#111827';
-    const pillText = theme.pillText || '#FFFFFF';
-    const cat = (theme.cat || 'KỸ NĂNG XÁC THỰC').toUpperCase();
-    
-    let fontSize = 38;
-    if (skillName.length > 14) fontSize = 26;
-    else if (skillName.length > 10) fontSize = 32;
+  // Helper to build DOM-based card face with real Google Fonts
+  function createCardFaceElement(skillInfo) {
+    const container = document.createElement('div');
+    container.className = 'toolkit-card-vector-face toolkit-card__motion';
+    container.style.backgroundColor = skillInfo.bg || '#1E293B';
 
-    const pillWidth = Math.min(230, Math.max(140, cat.length * 8.5 + 24));
-    const pillX = (295 - pillWidth) / 2;
+    const words = skillInfo.name.split(' ');
+    let titleHtml = '';
+    if (words.length <= 1) {
+      titleHtml = `<div style="font-size: 38px; color: ${skillInfo.textColor};">${words[0]}</div>`;
+    } else {
+      titleHtml = `<div style="font-size: 34px; color: ${skillInfo.textColor};">${words[0]}</div><div style="font-size: 34px; color: ${skillInfo.textColor}; margin-top: 4px;">${words.slice(1).join(' ')}</div>`;
+    }
 
-    const svgContent = `<svg width="295" height="417" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="295" height="417" rx="22.618" fill="${bg}"/>
-  <text x="147.5" y="195" text-anchor="middle" dominant-baseline="central" fill="${text}" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="${fontSize}" letter-spacing="-0.03em">${skillName}</text>
-  <rect x="${pillX}" y="261.5" width="${pillWidth}" height="34.618" rx="17.309" fill="${pillBg}"/>
-  <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="${pillText}" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="9.5" letter-spacing="0.08em">${cat}</text>
-</svg>`;
+    container.innerHTML = `
+      <div class="card-center-text">
+        ${titleHtml}
+      </div>
+      <div class="card-bottom-pill" style="background-color: ${skillInfo.pillBg}; color: ${skillInfo.pillColor};">
+        ${skillInfo.pillText || skillInfo.cat}
+      </div>
+    `;
 
-    return `data:image/svg+xml;utf8,${encodeURIComponent(svgContent)}`;
+    return container;
   }
 
   // SPOTLIGHT MODAL CONTROLLER
   const modal = document.getElementById('fonlioSkillModal');
   const modalCardPreview = document.getElementById('modalCardPreview');
   const modalSkillTag = document.getElementById('modalSkillTag');
-  const modalVerifiedBadge = document.getElementById('modalVerifiedBadge');
   const modalSkillTitle = document.getElementById('modalSkillTitle');
   const modalSkillLevel = document.getElementById('modalSkillLevel');
   const modalSkillCategory = document.getElementById('modalSkillCategory');
   const modalSkillDesc = document.getElementById('modalSkillDesc');
-  const modalProjectSection = document.getElementById('modalProjectSection');
-  const modalProjectTitle = document.getElementById('modalProjectTitle');
-  const modalProjectMeta = document.getElementById('modalProjectMeta');
-  const modalOwnershipBadge = document.getElementById('modalOwnershipBadge');
+  const modalStatExp = document.getElementById('modalStatExp');
 
-  window.openSkillModal = function(data) {
+  window.openSkillModal = function(skillInfo) {
     if (!modal) return;
     
-    modalSkillTitle.textContent = data.name || 'Kỹ Năng';
-    modalSkillTag.textContent = data.category || 'KỸ NĂNG';
-    modalSkillLevel.textContent = `Trình độ: ${data.level || 'Thành thạo (Advanced)'}`;
-    modalSkillCategory.textContent = data.category || 'Chuyên môn';
-    modalSkillDesc.textContent = data.desc || 'Kỹ năng cốt lõi được bảo chứng trong hồ sơ năng lực của sinh viên trên Fonlio.';
+    modalSkillTitle.textContent = skillInfo.name;
+    modalSkillTag.textContent = skillInfo.cat || 'CHUYÊN MÔN';
+    modalSkillLevel.textContent = `Trình độ: ${skillInfo.level || 'Thành thạo (Advanced)'}`;
+    modalSkillCategory.textContent = skillInfo.cat || 'Chuyên môn xác thực';
+    modalSkillDesc.textContent = skillInfo.desc || `Kỹ năng ${skillInfo.name} đã được xác thực trong Living Portfolio của ứng viên. Đáp ứng tốt tiêu chuẩn đánh giá từ đối tác tuyển dụng Fonlio.`;
+    if (modalStatExp) modalStatExp.textContent = `+${skillInfo.exp || 420} EXP`;
 
-    if (data.isUserSkill) {
-      modalVerifiedBadge.textContent = '✓ ĐÃ CÓ TRONG HỒ SƠ';
-      modalVerifiedBadge.style.display = 'inline-block';
-      modalOwnershipBadge.innerHTML = '<span>⭐ Kỹ năng đã xác thực của bạn</span>';
-      modalOwnershipBadge.style.display = 'block';
-    } else {
-      modalVerifiedBadge.textContent = '✓ CHUẨN KỸ NĂNG FONLIO';
-      modalVerifiedBadge.style.display = 'inline-block';
-      modalOwnershipBadge.innerHTML = '<span>💡 Kỹ năng gợi ý cho ngành của bạn</span>';
-      modalOwnershipBadge.style.display = 'block';
-    }
-
-    if (data.matchedProject) {
-      modalProjectSection.style.display = 'block';
-      modalProjectTitle.textContent = data.matchedProject.title || data.matchedProject.projectName || 'Dự án thực tế';
-      const org = data.matchedProject.organization || 'Minh chứng sống';
-      const role = data.matchedProject.roleLevel || data.matchedProject.position || 'Thành viên';
-      modalProjectMeta.textContent = `${role} • ${org}`;
-    } else {
-      modalProjectSection.style.display = 'none';
-    }
-
-    // Render Preview
+    // Render Preview Card
     modalCardPreview.innerHTML = '';
-    if (data.imgSrc) {
+    if (skillInfo.svg) {
       const img = document.createElement('img');
-      img.src = data.imgSrc;
-      img.alt = data.name;
+      img.src = skillInfo.svg;
+      img.alt = skillInfo.name;
       modalCardPreview.appendChild(img);
-    } else if (data.svgHtml) {
-      modalCardPreview.innerHTML = data.svgHtml;
+    } else {
+      modalCardPreview.appendChild(createCardFaceElement(skillInfo));
     }
 
     modal.classList.add('is-open');
 
-    // Also notify parent React app if embedded in iframe
+    // Notify React app if in iframe
     try {
       window.parent.postMessage({
         type: 'OPEN_SKILL_SPOTLIGHT',
         payload: {
-          skillName: data.name,
-          category: data.category,
-          level: data.level,
-          isUserSkill: data.isUserSkill
+          skillName: skillInfo.name,
+          category: skillInfo.cat,
+          level: skillInfo.level
         }
       }, '*');
     } catch(e) {}
@@ -2907,162 +3132,96 @@ html:lang(vi) .toolkit__subtitle,
     if (e.key === 'Escape') window.closeSkillModal();
   });
 
-  // Attach click listener to all cards
-  function attachCardClickListeners(candidateSkillsSet, candidateExperiences) {
-    document.querySelectorAll('.toolkit-card:not(.toolkit-card--transition)').forEach((card) => {
-      const slot = card.closest('.toolkit__slot');
-      const img = card.querySelector('img.toolkit-card__motion, img');
-      const svg = card.querySelector('svg.toolkit-card__motion');
-      const skillName = card.getAttribute('data-skill-name') || card.querySelector('.hud-title')?.textContent || 'Kỹ năng';
-      const skillCat = card.getAttribute('data-skill-cat') || card.querySelector('.hud-tag')?.textContent || 'CHUYÊN MÔN';
-      const skillDesc = card.getAttribute('data-skill-desc') || card.querySelector('.hud-cat-text')?.textContent || '';
-      const skillLevel = card.getAttribute('data-skill-level') || 'Thành thạo (Advanced)';
+  // CORE FUNCTION: Renders ONLY what the candidate actually has!
+  window.renderCandidateSkillsOnly = function(skillsList, skillDetails) {
+    if (!Array.isArray(skillsList) || skillsList.length === 0) return;
 
-      const lower = skillName.toLowerCase().trim();
-      const isUserSkill = candidateSkillsSet ? candidateSkillsSet.has(lower) : false;
-
-      // Find any matched experience
-      let matchedExp = null;
-      if (Array.isArray(candidateExperiences)) {
-        matchedExp = candidateExperiences.find(exp => {
-          const t = (exp.title || exp.projectName || '').toLowerCase();
-          const d = (exp.detail || exp.description || '').toLowerCase();
-          return t.includes(lower) || d.includes(lower);
-        });
-      }
-
-      card.style.cursor = 'pointer';
-      card.onclick = function(e) {
-        e.stopPropagation();
-        window.openSkillModal({
-          name: skillName,
-          category: skillCat,
-          desc: skillDesc,
-          level: skillLevel,
-          isUserSkill: isUserSkill,
-          imgSrc: img ? img.src : null,
-          svgHtml: svg ? svg.outerHTML : null,
-          matchedProject: matchedExp
-        });
-      };
-    });
-  }
-
-  // Initial attach
-  attachCardClickListeners(null, null);
-
-  // Sync with candidate data
-  window.syncCandidateSkills = function(userSkillsList, userSkillDetails, userExperiences) {
-    const candidateSkillsSet = new Set();
+    // Build ordered list of skill items
+    const userSkills = [];
     const detailsMap = {};
-
-    if (Array.isArray(userSkillsList)) {
-      userSkillsList.forEach(s => {
-        if (typeof s === 'string') candidateSkillsSet.add(s.toLowerCase().trim());
+    if (Array.isArray(skillDetails)) {
+      skillDetails.forEach(sd => {
+        if (sd && sd.name) detailsMap[sd.name.toLowerCase().trim()] = sd;
       });
     }
 
-    if (Array.isArray(userSkillDetails)) {
-      userSkillDetails.forEach(sd => {
-        if (sd && sd.name) {
-          const k = sd.name.toLowerCase().trim();
-          candidateSkillsSet.add(k);
-          detailsMap[k] = sd;
-        }
+    skillsList.forEach(rawName => {
+      if (!rawName) return;
+      const clean = String(rawName).trim();
+      const lower = clean.toLowerCase();
+      const detail = detailsMap[lower] || {};
+      const catalogItem = SKILL_CATALOG[lower] || {
+        name: clean,
+        cat: (detail.category || 'KỸ NĂNG XÁC THỰC').toUpperCase(),
+        pillText: clean,
+        bg: '#1E293B',
+        textColor: '#38BDF8',
+        pillBg: '#38BDF8',
+        pillColor: '#0F172A',
+        desc: `Kỹ năng ${clean} đã được ứng viên xác thực trong hồ sơ năng lực.`,
+        exp: 400
+      };
+
+      const lvl = detail.proficiencyLevel;
+      const levelText = lvl === 'EXPERT' ? 'Chuyên gia (Expert)' : lvl === 'ADVANCED' ? 'Thành thạo (Advanced)' : 'Nâng cao (Intermediate)';
+
+      userSkills.push({
+        ...catalogItem,
+        level: levelText
       });
-    }
+    });
 
-    const experiencesList = Array.isArray(userExperiences) ? userExperiences : [];
+    if (userSkills.length === 0) return;
 
-    // 1. Highlight matching default cards
-    document.querySelectorAll('.toolkit-card:not(.toolkit-card--transition)').forEach((card) => {
-      const skillName = card.getAttribute('data-skill-name') || '';
-      const lower = skillName.toLowerCase().trim();
-      const userBadge = card.querySelector('.toolkit-card-user-badge');
-      const hud = card.querySelector('.toolkit-card-hud');
+    // Get all slots in Wheel 1 (frontend)
+    const frontendSlots = Array.from(document.querySelectorAll('.toolkit__wheel--frontend .toolkit__slot:not(.toolkit__slot--transition)'));
+    
+    // Hide Wheel 2 completely if user's skills fit in Wheel 1, or distribute
+    const artWheel = document.querySelector('.toolkit__wheel--art-direction');
+    const artSubtitle = document.querySelector('.toolkit__subtitle--art');
+    if (artWheel) artWheel.style.display = 'none';
+    if (artSubtitle) artSubtitle.style.display = 'none';
 
-      if (candidateSkillsSet.has(lower)) {
-        if (userBadge) {
-          userBadge.style.display = 'inline-flex';
-          userBadge.textContent = '⭐ CỦA BẠN';
+    // Populate each slot with user's actual skill
+    frontendSlots.forEach((slot, index) => {
+      if (index < userSkills.length) {
+        slot.style.display = '';
+        const card = slot.querySelector('.toolkit-card');
+        if (!card) return;
+
+        const skillInfo = userSkills[index];
+
+        // Remove old contents, replace with crisp element
+        card.innerHTML = '';
+        card.style.cursor = 'pointer';
+
+        if (skillInfo.svg) {
+          const img = document.createElement('img');
+          img.className = 'toolkit-card__motion';
+          img.src = skillInfo.svg;
+          img.alt = skillInfo.name;
+          card.appendChild(img);
+        } else {
+          card.appendChild(createCardFaceElement(skillInfo));
         }
-        if (hud) {
-          const verified = hud.querySelector('.hud-verified');
-          if (verified) verified.textContent = '✓ ĐÃ XÁC THỰC';
-          const levelEl = hud.querySelector('.hud-level-text');
-          const detail = detailsMap[lower];
-          if (detail && levelEl) {
-            const lvl = detail.proficiencyLevel;
-            levelEl.textContent = `Trình độ: ${lvl === 'EXPERT' ? 'Chuyên gia' : lvl === 'ADVANCED' ? 'Thành thạo' : 'Nâng cao'}`;
-          }
-        }
+
+        // Click handler to open luxury modal
+        card.onclick = function(e) {
+          e.stopPropagation();
+          window.openSkillModal(skillInfo);
+        };
       } else {
-        if (userBadge) userBadge.style.display = 'none';
+        // HIDE ALL UNUSED TEMPLATE SLOTS!
+        slot.style.display = 'none';
       }
     });
 
-    // 2. If candidate has custom skills not in the default 16, dynamically adapt extra slots
-    const defaultSkills = ['javascript', 'react', 'next.js', 'nextjs', 'vue.js', 'vue', 'three.js', 'threejs', 'gsap', 'glsl', 'webflow', 'shopify', 'figma', 'photoshop', 'illustrator', 'indesign', 'after effects', 'aftereffects', 'capcut', 'lightroom'];
-    const customUserSkills = [];
-    candidateSkillsSet.forEach(s => {
-      if (!defaultSkills.includes(s)) {
-        customUserSkills.push(s);
-      }
-    });
-
-    if (customUserSkills.length > 0) {
-      const frontendSlots = document.querySelectorAll('.toolkit__wheel--frontend .toolkit__slot:not(.toolkit__slot--transition)');
-      customUserSkills.forEach((custSkill, idx) => {
-        // Replace from slot 6 or 7
-        const slotIdx = frontendSlots.length - 1 - idx;
-        if (slotIdx >= 4 && slotIdx < frontendSlots.length) {
-          const slot = frontendSlots[slotIdx];
-          const card = slot.querySelector('.toolkit-card');
-          const img = slot.querySelector('img.toolkit-card__motion');
-          const userBadge = slot.querySelector('.toolkit-card-user-badge');
-          const hud = slot.querySelector('.toolkit-card-hud');
-          if (!card || !img) return;
-
-          const theme = CUSTOM_SKILL_THEMES[custSkill] || {
-            bg: '#1E293B',
-            text: '#38BDF8',
-            pillBg: '#38BDF8',
-            pillText: '#0F172A',
-            cat: 'KỸ NĂNG XÁC THỰC',
-            desc: `Kỹ năng ${custSkill.toUpperCase()} đã được ứng viên xác thực trong hồ sơ năng lực.`
-          };
-
-          const capitalized = custSkill.charAt(0).toUpperCase() + custSkill.slice(1);
-          img.src = generateSkillSvg(capitalized, theme);
-          img.alt = capitalized;
-
-          card.setAttribute('data-skill-name', capitalized);
-          card.setAttribute('data-skill-cat', theme.cat);
-          card.setAttribute('data-skill-desc', theme.desc);
-          card.setAttribute('data-skill-level', 'Thành thạo (Advanced)');
-
-          if (userBadge) {
-            userBadge.style.display = 'inline-flex';
-            userBadge.textContent = '⭐ CỦA BẠN';
-          }
-
-          if (hud) {
-            const titleEl = hud.querySelector('.hud-title');
-            const catEl = hud.querySelector('.hud-cat-text');
-            const tagEl = hud.querySelector('.hud-tag');
-            if (titleEl) titleEl.textContent = capitalized;
-            if (catEl) catEl.textContent = theme.cat;
-            if (tagEl) tagEl.textContent = theme.cat;
-          }
-        }
-      });
-    }
-
-    // Re-attach listeners with active candidate skills set
-    attachCardClickListeners(candidateSkillsSet, experiencesList);
+    // Hide transition flip slot if candidate has fewer cards than wheel length
+    const flipSlot = document.querySelector('.toolkit__slot--transition');
+    if (flipSlot) flipSlot.style.display = 'none';
   };
 
-  // Auto-fetch profile from API if candidate is logged in (using stored token)
+  // Auto-fetch profile from API if token exists
   try {
     const token = localStorage.getItem('nextplease:access_token') || sessionStorage.getItem('nextplease:access_token');
     if (token) {
@@ -3092,7 +3251,7 @@ html:lang(vi) .toolkit__subtitle,
             document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = String(profile.reputationScore));
           }
           if (Array.isArray(profile.skills) && profile.skills.length > 0) {
-            window.syncCandidateSkills(profile.skills, profile.skillDetails, profile.experiences);
+            window.renderCandidateSkillsOnly(profile.skills, profile.skillDetails);
           }
         }
       })
@@ -3123,9 +3282,9 @@ html:lang(vi) .toolkit__subtitle,
         document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = String(data.rs));
       }
 
-      // Synchronize candidate's actual validated skills
+      // RENDER ONLY WHAT CANDIDATE ACTUALLY HAS!
       if (Array.isArray(data?.skills) && data.skills.length > 0) {
-        window.syncCandidateSkills(data.skills, data.skillDetails, data.experiences);
+        window.renderCandidateSkillsOnly(data.skills, data.skillDetails);
       }
     }
   });
