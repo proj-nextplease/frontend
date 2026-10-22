@@ -1241,6 +1241,330 @@ html:lang(vi) .toolkit__subtitle,
   transform: translateY(-2px);
 }
 
+/* ==========================================================================
+   LIVING PROOF MEMORY CARDS IN TOOLKIT SECTION
+   ========================================================================== */
+.toolkit-card {
+  perspective: 1200px;
+  position: relative;
+}
+.fonlio-memory-card {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 22px !important;
+  background: linear-gradient(155deg, rgba(20, 26, 36, 0.96) 0%, rgba(9, 13, 20, 0.98) 100%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  padding: clamp(14px, 1.6vw, 22px) clamp(12px, 1.4vw, 18px) !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  user-select: none !important;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease, border-color 0.28s ease !important;
+  font-family: 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+/* Card Glow Elements */
+.fonlio-card-glow-bg {
+  position: absolute;
+  top: -20%;
+  left: -20%;
+  width: 140%;
+  height: 140%;
+  background: radial-gradient(circle at 50% 25%, var(--card-glow, rgba(185, 255, 0, 0.18)) 0%, transparent 60%);
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+  border-radius: 22px;
+}
+
+.fonlio-card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+/* Accent Themes */
+.fonlio-memory-card[data-accent="lime"] {
+  --card-glow: rgba(185, 255, 0, 0.3);
+  --card-border-hover: #b9ff00;
+  --card-accent-color: #b9ff00;
+}
+.fonlio-memory-card[data-accent="cyan"] {
+  --card-glow: rgba(56, 189, 248, 0.3);
+  --card-border-hover: #38bdf8;
+  --card-accent-color: #38bdf8;
+}
+.fonlio-memory-card[data-accent="amber"] {
+  --card-glow: rgba(245, 158, 11, 0.3);
+  --card-border-hover: #f59e0b;
+  --card-accent-color: #f59e0b;
+}
+.fonlio-memory-card[data-accent="purple"] {
+  --card-glow: rgba(168, 85, 247, 0.3);
+  --card-border-hover: #c084fc;
+  --card-accent-color: #c084fc;
+}
+.fonlio-memory-card[data-accent="emerald"] {
+  --card-glow: rgba(16, 185, 129, 0.3);
+  --card-border-hover: #34d399;
+  --card-accent-color: #34d399;
+}
+.fonlio-memory-card[data-accent="rose"] {
+  --card-glow: rgba(244, 63, 94, 0.3);
+  --card-border-hover: #fb7185;
+  --card-accent-color: #fb7185;
+}
+
+/* Card Header */
+.fonlio-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.fonlio-card-category {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--card-accent-color, #b9ff00);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 3px 8px;
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fonlio-card-badge-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  border-radius: 999px;
+  padding: 2px 7px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Card Center Visual Icon */
+.fonlio-card-center-icon {
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+.fonlio-card-icon-bubble {
+  width: clamp(50px, 5.2vw, 64px);
+  height: clamp(50px, 5.2vw, 64px);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--card-accent-color, #b9ff00);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 0 20px var(--card-glow);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+}
+.fonlio-card-icon-bubble svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* Card Bottom Text */
+.fonlio-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+.fonlio-card-title {
+  font-size: clamp(14px, 1.25vw, 17px);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.fonlio-card-role {
+  font-size: clamp(11.5px, 1vw, 13px);
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fonlio-card-org {
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Card Bottom Stats */
+.fonlio-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.fonlio-card-exp-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #b9ff00;
+}
+.fonlio-card-exp-tag .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #b9ff00;
+  box-shadow: 0 0 8px #b9ff00;
+}
+.fonlio-card-hint {
+  font-size: 9.5px;
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 600;
+}
+
+/* Hover State on Toolkit Card */
+.toolkit-card:hover .fonlio-memory-card {
+  border-color: var(--card-border-hover, #b9ff00) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 35px var(--card-glow) !important;
+  transform: translateY(-8px) scale(1.03) !important;
+}
+.toolkit-card:hover .fonlio-card-glow-bg {
+  opacity: 1;
+}
+.toolkit-card:hover .fonlio-card-icon-bubble {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 30px var(--card-glow);
+}
+
+/* HOVER HOLOGRAM DETAIL HUD POPOVER */
+.fonlio-card-hud {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%) translateY(14px);
+  width: clamp(260px, 24vw, 320px);
+  background: rgba(8, 14, 22, 0.96);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(185, 255, 0, 0.45);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(185, 255, 0, 0.25);
+  z-index: 99999;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.22, 1, 0.36, 1), transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.25s;
+  color: #ffffff;
+  text-align: left;
+}
+.fonlio-card-hud::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 12px;
+  height: 12px;
+  background: rgba(8, 14, 22, 0.96);
+  border-right: 1px solid rgba(185, 255, 0, 0.45);
+  border-bottom: 1px solid rgba(185, 255, 0, 0.45);
+}
+.toolkit-card:hover .fonlio-card-hud {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.fonlio-hud-date {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.fonlio-hud-detail {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #e2e8f0;
+  margin: 0 0 12px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.fonlio-hud-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.fonlio-hud-action-btn {
+  background: #b9ff00;
+  color: #051a15;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 14px rgba(185, 255, 0, 0.35);
+  font-family: inherit;
+}
+.fonlio-hud-action-btn:hover {
+  background: #ffffff;
+  transform: scale(1.04);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.5);
+}
+
 </style>
 
 </head>
@@ -1488,200 +1812,813 @@ html:lang(vi) .toolkit__subtitle,
               <h2 class="toolkit__title">Triển Lãm Ký Ức</h2>
 
               <div class="toolkit__subtitle-wrap">
-                <h3 class="toolkit__subtitle toolkit__subtitle--front">Kỹ thuật &amp; Công nghệ</h3>
-                <h3 class="toolkit__subtitle toolkit__subtitle--art">Sáng tạo &amp; Lãnh đạo</h3>
+                <h3 class="toolkit__subtitle toolkit__subtitle--front">Dự Án Kỹ Thuật &amp; Sản Phẩm Thực Chiến</h3>
+                <h3 class="toolkit__subtitle toolkit__subtitle--art">Dự Án Sáng Tạo &amp; Lãnh Đạo Đột Phá</h3>
               </div>
             </div>
 
-            <!-- Frontend Deck -->
+            <!-- Frontend Deck: Technical & Digital Products -->
             <div class="toolkit__wheel toolkit__wheel--frontend">
+              <!-- Slot 0: NextGen Tech Hackathon -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--javascript">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/frontend/vi/javascript.svg"
-                    data-i18n-attr="src:home.toolkitAssets.frontend.javascript"
-                    alt="JavaScript"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="0" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 0 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="cyan">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">HACKATHON</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">NextGen Tech Hackathon</h4>
+                        <div class="fonlio-card-role">Lead Frontend Developer</div>
+                        <div class="fonlio-card-org">Khoa Công nghệ Thông tin</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+500 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 9/2025 - Tháng 10/2025</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Dẫn dắt đội ngũ 4 thành viên phát triển ứng dụng AI, xuất sắc giành Giải Nhất chung cuộc sau 48h thi liên tục. Kiến trúc WebGL mượt mà.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 0 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 1: Hệ Thống Điểm Danh QR -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--react">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/frontend/vi/react.svg"
-                    data-i18n-attr="src:home.toolkitAssets.frontend.react"
-                    alt="React"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="1" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 1 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="lime">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">SẢN PHẨM SỐ</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">Hệ Thống Điểm Danh QR</h4>
+                        <div class="fonlio-card-role">Fullstack Contributor</div>
+                        <div class="fonlio-card-org">CLB Lập trình Phần mềm</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+450 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 1/2026 - Tháng 3/2026</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Xây dựng module quét mã QR và tích hợp xác thực khuôn mặt, giảm 80% thời gian điểm danh tại các hội thảo 500 người.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 1 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 2: FONLIO — Living Portfolio & 3D Universe -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--nextjs">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/frontend/vi/nextjs.svg"
-                    data-i18n-attr="src:home.toolkitAssets.frontend.nextjs"
-                    alt="Next.js"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="2" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 2 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="amber">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">STARTUP</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">FONLIO — 3D Universe</h4>
+                        <div class="fonlio-card-role">Lead Web &amp; 3D Engineer</div>
+                        <div class="fonlio-card-org">Fonlio Engineering Team</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+550 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 6/2025 - Hiện tại</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Xây dựng hệ thống bảo chứng Living Proof &amp; vũ trụ 3D tương tác đa giác quan, hỗ trợ sinh viên khẳng định năng lực thật với nhà tuyển dụng.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 2 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 3: AI Chatbot Trợ Lý Học Tập -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--vuejs">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/frontend/vi/vuejs.svg"
-                    data-i18n-attr="src:home.toolkitAssets.frontend.vuejs"
-                    alt="Vue.js"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="3" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 3 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="purple">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">TRÍ TUỆ NHÂN TẠO</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">AI Chatbot Học Tập Gen Z</h4>
+                        <div class="fonlio-card-role">NLP &amp; Frontend Specialist</div>
+                        <div class="fonlio-card-org">AI Research Lab</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+420 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 4/2025 - Tháng 6/2025</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Tích hợp mô hình ngôn ngữ lớn LLM để giải đáp thắc mắc học tập theo đề cương đại học, thu hút 3,000 lượt tương tác mỗi tuần.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 3 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 4: Smart Campus Map 3D -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--threejs">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/frontend/vi/threejs.svg"
-                    data-i18n-attr="src:home.toolkitAssets.frontend.threejs"
-                    alt="Three.js"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="4" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 4 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="cyan">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">ĐỒ HỌA 3D</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">Smart Campus Map 3D</h4>
+                        <div class="fonlio-card-role">Interactive 3D Developer</div>
+                        <div class="fonlio-card-org">Đại học FPT</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+380 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 2/2025 - Tháng 4/2025</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Xây dựng bản đồ khuôn viên trường dạng 3D tương tác thời gian thực, giúp tân sinh viên tìm giảng đường chỉ trong 5 giây.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 4 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 5: Nền Tảng Đăng Ký Tín Chỉ -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--gsap">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/frontend/vi/gsap.svg"
-                    data-i18n-attr="src:home.toolkitAssets.frontend.gsap"
-                    alt="GSAP"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="5" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 5 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="emerald">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">DỰ ÁN CỘNG ĐỒNG</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">Đăng Ký Tín Chỉ Siêu Tốc</h4>
+                        <div class="fonlio-card-role">Performance Engineer</div>
+                        <div class="fonlio-card-org">FPT Developer Guild</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+400 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 10/2025 - Tháng 12/2025</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Tối ưu hóa luồng tải trang và bộ đệm Redis, xử lý 10,000 lượt truy cập đồng thời vào giờ vàng đăng ký môn học mà không sập web.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 5 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 6: Cloud Data Pipeline & Analytics -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--glsl">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/frontend/vi/glsl.svg"
-                    data-i18n-attr="src:home.toolkitAssets.frontend.glsl"
-                    alt="GLSL"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="6" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 6 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="cyan">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">DATA PIPELINE</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">Cloud Data Pipeline</h4>
+                        <div class="fonlio-card-role">Backend &amp; Data Architect</div>
+                        <div class="fonlio-card-org">CLB Khoa học Dữ liệu</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+410 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 7/2025 - Tháng 9/2025</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Thiết kế đường ống dữ liệu tự động tổng hợp kết quả học tập và đề xuất lộ trình môn học phù hợp theo năng lực cá nhân hóa.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 6 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 7: Automated Component Reviewer -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--webflow">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/frontend/vi/webflow.svg"
-                    data-i18n-attr="src:home.toolkitAssets.frontend.webflow"
-                    alt="Webflow"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="7" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 7 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="rose">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">DEVTOOL OPENSOURCE</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">Automated Code Reviewer</h4>
+                        <div class="fonlio-card-role">Open Source Creator</div>
+                        <div class="fonlio-card-org">Cộng đồng Open Source VN</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+390 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 3/2025 - Tháng 5/2025</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Xây dựng extension VS Code tự động rà soát accessibility và semantic HTML chuẩn quốc tế, đạt hơn 1,500 lượt cài đặt.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 7 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 8: Transition Flip Card -->
               <div class="toolkit__slot toolkit__slot--transition">
                 <div class="toolkit-card toolkit-card--flip toolkit-card--shopify">
                   <div class="toolkit-card__flipper toolkit-card__motion">
                     <div class="toolkit-card__face toolkit-card--front">
-                      <img
-                        src="home/toolkit/frontend/vi/shopify.svg"
-                        alt="Shopify"
-                        data-i18n-attr="src:home.toolkitAssets.frontend.shopify"
-                      />
+                      <div class="fonlio-memory-card" data-accent="amber" style="width: 100%; height: 100%;">
+                        <div class="fonlio-card-glow-bg"></div>
+                        <div class="fonlio-card-content">
+                          <div class="fonlio-card-top">
+                            <span class="fonlio-card-category">CHIỀU KHÔNG GIAN KẾ</span>
+                            <span class="fonlio-card-badge-verified">LẬT THẺ</span>
+                          </div>
+                          <div class="fonlio-card-center-icon">
+                            <div class="fonlio-card-icon-bubble">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V9"/></svg>
+                            </div>
+                          </div>
+                          <div class="fonlio-card-info">
+                            <h4 class="fonlio-card-title">Khám Phá Sáng Tạo &amp; Lãnh Đạo</h4>
+                            <div class="fonlio-card-role">Bộ Thẻ Cột Mốc Tiếp Theo</div>
+                            <div class="fonlio-card-org">Cuộn tiếp để mở quạt bài thứ 2</div>
+                          </div>
+                          <div class="fonlio-card-meta">
+                            <div class="fonlio-card-exp-tag">
+                              <span class="dot"></span>
+                              <span>+7 Cột Mốc</span>
+                            </div>
+                            <span class="fonlio-card-hint">Cuộn để lật thẻ ↻</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <div class="toolkit-card__face toolkit-card__face--back">
-                      <img
-                        src="home/toolkit/art-direction/vi/figma.svg"
-                        alt="Figma"
-                        data-i18n-attr="src:home.toolkitAssets.artDirection.figma"
-                      />
+                      <div class="fonlio-memory-card" data-accent="purple" style="width: 100%; height: 100%;">
+                        <div class="fonlio-card-glow-bg"></div>
+                        <div class="fonlio-card-content">
+                          <div class="fonlio-card-top">
+                            <span class="fonlio-card-category">BỘ THẺ LÃNH ĐẠO</span>
+                            <span class="fonlio-card-badge-verified">BƯỚC VÀO</span>
+                          </div>
+                          <div class="fonlio-card-center-icon">
+                            <div class="fonlio-card-icon-bubble">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            </div>
+                          </div>
+                          <div class="fonlio-card-info">
+                            <h4 class="fonlio-card-title">Cột Mốc Lãnh Đạo &amp; Xã Hội</h4>
+                            <div class="fonlio-card-role">Hành Trình Cống Hiến</div>
+                            <div class="fonlio-card-org">Minh chứng bản lĩnh thật</div>
+                          </div>
+                          <div class="fonlio-card-meta">
+                            <div class="fonlio-card-exp-tag">
+                              <span class="dot"></span>
+                              <span>Khám phá ngay</span>
+                            </div>
+                            <span class="fonlio-card-hint">Tiếp tục cuộn ↓</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Art direction deck -->
+            <!-- Art direction deck: Creative, Leadership & Community -->
             <div class="toolkit__wheel toolkit__wheel--art-direction">
+              <!-- Slot 0: Tuần Lễ Xanh ĐH FPT -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--figma">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/art-direction/vi/figma.svg"
-                    data-i18n-attr="src:home.toolkitAssets.artDirection.figma"
-                    alt="Figma"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="8" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 8 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="emerald">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">CLB &amp; XÃ HỘI</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">Tuần Lễ Xanh ĐH FPT</h4>
+                        <div class="fonlio-card-role">Trưởng Ban Điều Phối</div>
+                        <div class="fonlio-card-org">CLB Môi Trường ĐH FPT</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+350 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 3/2025 - Tháng 5/2025</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Chỉ huy chiến dịch thu gom 1.5 tấn rác thải nhựa, thu hút hơn 1,200 sinh viên tham gia và quyên góp 30 triệu đồng cho quỹ cây xanh.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 8 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 1: 60 Giây Sài Gòn — Viral Video -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--photoshop">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/art-direction/vi/photoshop.svg"
-                    data-i18n-attr="src:home.toolkitAssets.artDirection.photoshop"
-                    alt="Photoshop"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="9" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 9 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="rose">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">SÁNG TẠO &amp; MEDIA</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 8 7 4-7 4Z"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">60 Giây Sài Gòn (Viral)</h4>
+                        <div class="fonlio-card-role">Director &amp; Video Editor</div>
+                        <div class="fonlio-card-org">Dự Án Sáng Tạo Độc Lập</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+400 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 6/2025 - Tháng 7/2025</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Sản xuất chuỗi thước phim ngắn về nhịp sống Sài Gòn trên TikTok, đạt hơn 850,000 lượt xem và được chọn triển lãm Ngày hội Sáng tạo trẻ.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 9 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 2: Bộ Nhận Diện Thương Hiệu Sinh Viên -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--illustrator">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/art-direction/vi/illustrator.svg"
-                    data-i18n-attr="src:home.toolkitAssets.artDirection.illustrator"
-                    alt="Illustrator"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="10" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 10 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="purple">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">THIẾT KẾ BRAND</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">Nhận Diện Thương Hiệu</h4>
+                        <div class="fonlio-card-role">Brand Identity Designer</div>
+                        <div class="fonlio-card-org">Cộng đồng Sáng tạo Gen Z</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+300 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 4/2026 - Tháng 5/2026</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Dựng bộ nhận diện thương hiệu cho 3 dự án khởi nghiệp sinh viên với phong cách tối giản, chuyển hóa triết lý trừu tượng thành hệ thống hình khối.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 10 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 3: Chiến Dịch Tuyển Sinh Gen Z -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--indesign">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/art-direction/vi/indesign.svg"
-                    data-i18n-attr="src:home.toolkitAssets.artDirection.indesign"
-                    alt="InDesign"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="11" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 11 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="amber">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">TRUYỀN THÔNG</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">Chiến Dịch Tuyển Sinh Gen Z</h4>
+                        <div class="fonlio-card-role">Content Creator Lead</div>
+                        <div class="fonlio-card-org">Phòng Tuyển sinh &amp; TT</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+320 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 11/2025 - Tháng 12/2025</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Chắp bút chuỗi bài viết định hướng nghề nghiệp, tiếp cận hơn 45,000 học sinh THPT trên toàn quốc với giọng văn đồng cảm sâu sắc.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 11 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 4: Chuyến Đi Mùa Hè Xanh Vùng Cao -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--after-effects">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/art-direction/vi/aftereffects.svg"
-                    data-i18n-attr="src:home.toolkitAssets.artDirection.afterEffects"
-                    alt="After Effects"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="12" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 12 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="lime">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">TÌNH NGUYỆN</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">Mùa Hè Xanh Vùng Cao</h4>
+                        <div class="fonlio-card-role">Đội Phó Thường Trực</div>
+                        <div class="fonlio-card-org">Đoàn Thanh Niên &amp; HSV</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+360 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 7/2025 - Tháng 8/2025</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Tổ chức lớp học tin học cộng đồng và sơn sửa 2 điểm trường tiểu học tại huyện miền núi khó khăn cho 180 em nhỏ.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 12 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 5: Diễn Đàn Khởi Nghiệp Trẻ -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--capcut">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/art-direction/vi/capcut.svg"
-                    data-i18n-attr="src:home.toolkitAssets.artDirection.capcut"
-                    alt="CapCut"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="13" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 13 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="cyan">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">LÃNH ĐẠO</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">Diễn Đàn Khởi Nghiệp Trẻ</h4>
+                        <div class="fonlio-card-role">Trưởng Ban Nội Dung &amp; Diễn Giả</div>
+                        <div class="fonlio-card-org">FPT Startup Incubator</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+340 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 5/2025 - Tháng 6/2025</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Kết nối 8 CEO công nghệ thành công chia sẻ thực chiến cho hơn 800 sinh viên đam mê khởi nghiệp và lập nghiệp trẻ.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 13 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Slot 6: Cuộc Thi Sáng Tạo Bền Vững -->
               <div class="toolkit__slot">
-                <div class="toolkit-card toolkit-card--lightroom">
-                  <img
-                    class="toolkit-card__motion"
-                    src="home/toolkit/art-direction/vi/lightroom.svg"
-                    data-i18n-attr="src:home.toolkitAssets.artDirection.lightroom"
-                    alt="Lightroom"
-                  />
+                <div class="toolkit-card fonlio-interactive-card" data-memory-index="14" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 14 } }, '*')">
+                  <div class="toolkit-card__motion fonlio-memory-card" data-accent="amber">
+                    <div class="fonlio-card-glow-bg"></div>
+                    <div class="fonlio-card-content">
+                      <div class="fonlio-card-top">
+                        <span class="fonlio-card-category">GIẢI THƯỞNG</span>
+                        <span class="fonlio-card-badge-verified">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>VERIFIED</span>
+                        </span>
+                      </div>
+                      <div class="fonlio-card-center-icon">
+                        <div class="fonlio-card-icon-bubble">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        </div>
+                      </div>
+                      <div class="fonlio-card-info">
+                        <h4 class="fonlio-card-title">Sáng Tạo Bền Vững</h4>
+                        <div class="fonlio-card-role">Team Leader — Giải Nhì</div>
+                        <div class="fonlio-card-org">Sáng Kiến Xanh Việt Nam</div>
+                      </div>
+                      <div class="fonlio-card-meta">
+                        <div class="fonlio-card-exp-tag">
+                          <span class="dot"></span>
+                          <span>+370 EXP</span>
+                        </div>
+                        <span class="fonlio-card-hint">Minh chứng ↗</span>
+                      </div>
+                    </div>
+                    <div class="fonlio-card-hud">
+                      <div class="fonlio-hud-date">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        <span>Tháng 8/2025 - Tháng 10/2025</span>
+                      </div>
+                      <p class="fonlio-hud-detail">Nghiên cứu bao bì tự phân hủy sinh học từ bã mía, đạt Giải Nhì toàn quốc trong số 120 đội thi tham dự.</p>
+                      <div class="fonlio-hud-footer">
+                        <span style="font-size: 11px; font-weight: 700; color: #34d399;">✓ Living Proof Verified</span>
+                        <button type="button" class="fonlio-hud-action-btn" onclick="event.stopPropagation(); window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 14 } }, '*');">
+                          <span>Xem chi tiết</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1989,6 +2926,32 @@ html:lang(vi) .toolkit__subtitle,
     document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = rs);
   }
 
+  window.updateMemoryCards = function(experiences) {
+    if (!Array.isArray(experiences) || experiences.length === 0) return;
+    const cards = document.querySelectorAll('.fonlio-interactive-card');
+    experiences.forEach((exp, idx) => {
+      if (idx >= cards.length) return;
+      const card = cards[idx];
+      const titleEl = card.querySelector('.fonlio-card-title');
+      const roleEl = card.querySelector('.fonlio-card-role');
+      const orgEl = card.querySelector('.fonlio-card-org');
+      const categoryEl = card.querySelector('.fonlio-card-category');
+      const expTagEl = card.querySelector('.fonlio-card-exp-tag span:last-child');
+      const hudDateEl = card.querySelector('.fonlio-hud-date span');
+      const hudDescEl = card.querySelector('.fonlio-hud-detail');
+
+      if (titleEl && exp.title) titleEl.textContent = exp.title;
+      if (roleEl && exp.roleLevel) roleEl.textContent = exp.roleLevel;
+      if (orgEl && exp.organization) orgEl.textContent = exp.organization;
+      if (categoryEl && exp.category) categoryEl.textContent = exp.category;
+      if (expTagEl && exp.expReward) expTagEl.textContent = `+${exp.expReward} EXP`;
+      if (hudDateEl && (exp.startDate || exp.endDate)) {
+        hudDateEl.textContent = `${exp.startDate || ''} ${exp.endDate ? '- ' + exp.endDate : ''}`.trim();
+      }
+      if (hudDescEl && exp.detail) hudDescEl.textContent = exp.detail;
+    });
+  };
+
   // Listen for data updates posted from parent React app
   window.addEventListener('message', (evt) => {
     if (evt.data?.type === 'UPDATE_UNIVERSE_DATA') {
@@ -2006,6 +2969,9 @@ html:lang(vi) .toolkit__subtitle,
       }
       if (data?.rs !== undefined) {
         document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = String(data.rs));
+      }
+      if (Array.isArray(data?.experiences) && data.experiences.length > 0) {
+        window.updateMemoryCards(data.experiences);
       }
     }
   });

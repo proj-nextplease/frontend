@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { getStoredUser } from '../lib/authStorage.js';
 import { FonlioWrappedStory } from '../components/universe/FonlioWrappedStory.jsx';
+import { MemorySpotlightModal } from '../components/universe/MemorySpotlightModal.jsx';
 
 const SAMPLE_MEMORIES = [
   {
@@ -97,6 +98,8 @@ export function CandidateUniversePage() {
   const [loaded, setLoaded] = useState(false);
   const [portfolio, setPortfolio] = useState(null);
   const [isWrappedOpen, setIsWrappedOpen] = useState(false);
+  const [selectedMemoryIndex, setSelectedMemoryIndex] = useState(0);
+  const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
 
   useEffect(() => {
     document.title = 'FONLIO — Vũ Trụ Ký Ức & Triển Lãm Minh Chứng Sống';
@@ -107,6 +110,10 @@ export function CandidateUniversePage() {
     const handleMessage = (event) => {
       if (event.data?.type === 'OPEN_WRAPPED') {
         setIsWrappedOpen(true);
+      } else if (event.data?.type === 'OPEN_MEMORY_SPOTLIGHT') {
+        const idx = typeof event.data?.payload?.memoryIndex === 'number' ? event.data.payload.memoryIndex : 0;
+        setSelectedMemoryIndex(idx);
+        setIsSpotlightOpen(true);
       } else if (event.data?.type === 'NAVIGATE_DASHBOARD') {
         navigate('/candidates/dashboard/overview');
       } else if (event.data?.type === 'NAVIGATE_PORTFOLIO_EDIT') {
@@ -172,16 +179,17 @@ export function CandidateUniversePage() {
             exp: totalExp,
             rs: totalRs,
             verified: verifiedCount,
+            experiences: displayExperiences,
           },
         },
         '*'
       );
     }
-  }, [loaded, displayName, totalExp, totalRs, verifiedCount]);
+  }, [loaded, displayName, totalExp, totalRs, verifiedCount, displayExperiences]);
 
   const iframeSrc = useMemo(() => {
     const params = new URLSearchParams({
-      v: '25',
+      v: '26',
       name: displayName,
       exp: String(totalExp),
       rs: String(totalRs),
@@ -271,6 +279,28 @@ export function CandidateUniversePage() {
             candidate={{ name: displayName, avatar: portfolio?.avatar }}
             experiences={displayExperiences}
             onClose={() => setIsWrappedOpen(false)}
+          />
+        </div>
+      )}
+
+      {/* 3D Living Proof Memory Spotlight Modal */}
+      {isSpotlightOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100001,
+          }}
+        >
+          <MemorySpotlightModal
+            experience={displayExperiences[selectedMemoryIndex] || displayExperiences[0]}
+            currentIndex={selectedMemoryIndex}
+            totalCount={displayExperiences.length}
+            onClose={() => setIsSpotlightOpen(false)}
+            onPrev={() => setSelectedMemoryIndex((prev) => Math.max(0, prev - 1))}
+            onNext={() => setSelectedMemoryIndex((prev) => Math.min(displayExperiences.length - 1, prev + 1))}
+            hasPrev={selectedMemoryIndex > 0}
+            hasNext={selectedMemoryIndex < displayExperiences.length - 1}
           />
         </div>
       )}
