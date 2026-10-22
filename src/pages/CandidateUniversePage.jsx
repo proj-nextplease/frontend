@@ -180,16 +180,19 @@ export function CandidateUniversePage() {
             rs: totalRs,
             verified: verifiedCount,
             experiences: displayExperiences,
+            skills: portfolio?.skills || [],
+            skillDetails: portfolio?.skillDetails || [],
+            credentials: portfolio?.credentials || [],
           },
         },
         '*'
       );
     }
-  }, [loaded, displayName, totalExp, totalRs, verifiedCount, displayExperiences]);
+  }, [loaded, displayName, totalExp, totalRs, verifiedCount, displayExperiences, portfolio]);
 
   const iframeSrc = useMemo(() => {
     const params = new URLSearchParams({
-      v: '26',
+      v: '27',
       name: displayName,
       exp: String(totalExp),
       rs: String(totalRs),
