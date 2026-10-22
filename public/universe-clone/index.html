@@ -1682,8 +1682,8 @@ html:lang(vi) .toolkit__subtitle,
   inset: 0;
   z-index: 9999999;
   background: rgba(4, 8, 14, 0.88);
-  backdrop-filter: blur(36px) saturate(190%);
-  -webkit-backdrop-filter: blur(36px) saturate(190%);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1698,18 +1698,18 @@ html:lang(vi) .toolkit__subtitle,
 }
 .toolkit-modal-content {
   position: relative;
-  max-width: 860px;
+  max-width: 880px;
   width: 100%;
-  background: radial-gradient(120% 120% at 50% 0%, #111A28 0%, #080D15 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: radial-gradient(130% 120% at 50% 0%, #111A29 0%, #060B12 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 32px;
   padding: 40px;
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 270px 1fr;
   gap: 40px;
-  box-shadow: 0 40px 100px -10px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  box-shadow: 0 40px 100px -10px rgba(0, 0, 0, 0.95), 0 0 45px var(--modal-glow-color, rgba(185, 255, 0, 0.15));
   transform: scale(0.92) translateY(28px);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
   overflow: hidden;
 }
 .toolkit-modal-backdrop.is-open .toolkit-modal-content {
@@ -1718,15 +1718,15 @@ html:lang(vi) .toolkit__subtitle,
 .toolkit-modal-content::before {
   content: '';
   position: absolute;
-  top: -80px;
+  top: -90px;
   left: 20%;
-  width: 320px;
-  height: 200px;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.18) 0%, transparent 70%);
+  width: 360px;
+  height: 220px;
+  background: radial-gradient(circle, var(--modal-glow-color, rgba(56, 189, 248, 0.25)) 0%, transparent 70%);
   pointer-events: none;
-  filter: blur(40px);
+  filter: blur(50px);
 }
-@media (max-width: 820px) {
+@media (max-width: 840px) {
   .toolkit-modal-content {
     grid-template-columns: 1fr;
     max-height: 90vh;
@@ -1754,7 +1754,7 @@ html:lang(vi) .toolkit__subtitle,
   z-index: 10;
 }
 .toolkit-modal-close:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.18);
   color: #fff;
   transform: rotate(90deg) scale(1.08);
 }
@@ -1762,20 +1762,32 @@ html:lang(vi) .toolkit__subtitle,
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 900px;
+  perspective: 1000px;
 }
 .modal-card-preview {
   width: 100%;
-  max-width: 260px;
+  max-width: 270px;
   aspect-ratio: 295 / 417;
   border-radius: 22.6px;
   overflow: hidden;
-  box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.15);
+  box-shadow: 0 30px 80px -10px rgba(0, 0, 0, 0.9), 0 0 35px var(--modal-glow-color, rgba(99, 102, 241, 0.3));
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
   position: relative;
+  transform: perspective(1000px) rotateY(-8deg) rotateX(4deg);
+}
+.modal-card-preview:hover {
+  transform: perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1.03);
+}
+.modal-card-preview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 60%);
+  pointer-events: none;
+  border-radius: 22.6px;
 }
 .modal-card-preview img,
 .modal-card-preview svg,
@@ -1795,7 +1807,7 @@ html:lang(vi) .toolkit__subtitle,
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
 }
 .modal-tag {
@@ -1813,32 +1825,34 @@ html:lang(vi) .toolkit__subtitle,
 .modal-verified {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   padding: 5px 12px;
   border-radius: 8px;
-  background: rgba(16, 185, 129, 0.12);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(185, 255, 0, 0.12);
+  color: #b9ff00;
+  border: 1px solid rgba(185, 255, 0, 0.32);
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  box-shadow: 0 0 16px rgba(185, 255, 0, 0.15);
 }
 .modal-title {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  font-size: 38px;
+  font-size: 40px;
   font-weight: 900;
   color: #F8FAFC;
-  margin: 0 0 10px 0;
-  line-height: 1.12;
+  margin: 0 0 8px 0;
+  line-height: 1.1;
   letter-spacing: -0.025em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 .modal-meta-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 13.5px;
   color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 .modal-dot {
@@ -1846,17 +1860,54 @@ html:lang(vi) .toolkit__subtitle,
 }
 .modal-desc {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14.5px;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.78);
-  margin: 0 0 24px 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.76);
+  margin: 0 0 18px 0;
+}
+/* CORE COMPETENCIES LIST */
+.modal-competencies-section {
+  margin-bottom: 22px;
+}
+.modal-section-label {
+  display: block;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.modal-competencies-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.modal-competency-pill {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #E2E8F0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 5px 12px;
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s ease;
+}
+.modal-competency-pill:hover {
+  background: rgba(185, 255, 0, 0.12);
+  border-color: rgba(185, 255, 0, 0.35);
+  color: #B9FF00;
+  transform: translateY(-1px);
 }
 /* LUXURY STAT TILES */
 .modal-stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-bottom: 26px;
+  margin-bottom: 24px;
 }
 @media (max-width: 540px) {
   .modal-stats-grid {
@@ -1871,6 +1922,11 @@ html:lang(vi) .toolkit__subtitle,
   display: flex;
   flex-direction: column;
   gap: 4px;
+  transition: all 0.2s ease;
+}
+.modal-stat-tile:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.16);
 }
 .modal-stat-value {
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -1894,12 +1950,12 @@ html:lang(vi) .toolkit__subtitle,
   margin-top: auto;
 }
 .modal-btn-action {
-  padding: 12px 28px;
+  padding: 13px 32px;
   border-radius: 12px;
   background: #b9ff00;
   color: #0A0F18;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 800;
   border: none;
   cursor: pointer;
@@ -1909,10 +1965,8 @@ html:lang(vi) .toolkit__subtitle,
 .modal-btn-action:hover {
   background: #cbfd2b;
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(185, 255, 0, 0.4);
+  box-shadow: 0 12px 30px rgba(185, 255, 0, 0.45);
 }
-
-
 </style>
           </div>
         </div>
@@ -1964,7 +2018,7 @@ html:lang(vi) .toolkit__subtitle,
               <h2 class="toolkit__title">Triển Lãm Ký Ức</h2>
 
               <div class="toolkit__subtitle-wrap">
-                <h3 class="toolkit__subtitle toolkit__subtitle--front">Kỹ thuật &amp; Công nghệ</h3>
+                <h3 class="toolkit__subtitle toolkit__subtitle--front">Kĩ năng của bạn</h3>
                 <h3 class="toolkit__subtitle toolkit__subtitle--art">Sáng tạo &amp; Lãnh đạo</h3>
               </div>
             </div>
@@ -2549,6 +2603,13 @@ html:lang(vi) .toolkit__subtitle,
               Kỹ năng cốt lõi được định danh và bảo chứng trong Living Portfolio của ứng viên. Đáp ứng tiêu chuẩn đánh giá khắt khe từ mạng lưới đối tác doanh nghiệp Fonlio.
             </p>
 
+            <div class="modal-competencies-section">
+              <span class="modal-section-label">Năng lực thực chiến được bảo chứng</span>
+              <div id="modalSkillCompetencies" class="modal-competencies-row">
+                <!-- Dynamically populated tags -->
+              </div>
+            </div>
+
             <div class="modal-stats-grid">
               <div class="modal-stat-tile">
                 <span id="modalStatExp" class="modal-stat-value">+450 EXP</span>
@@ -2865,7 +2926,7 @@ html:lang(vi) .toolkit__subtitle,
   }
 
   // Curated styles and definitions for all skills
-  const SKILL_CATALOG = {
+    const SKILL_CATALOG = {
     'javascript': {
       name: 'JavaScript',
       cat: 'NGÔN NGỮ LẬP TRÌNH',
@@ -2876,7 +2937,8 @@ html:lang(vi) .toolkit__subtitle,
       pillColor: '#F5DF4D',
       svg: 'home/toolkit/frontend/vi/javascript.svg',
       desc: 'Ngôn ngữ nền tảng của web hiện đại, xử lý logic tương tác động, cấu trúc dữ liệu và thuật toán client-side.',
-      exp: 420
+      exp: 420,
+      competencies: ['ES6+ Modern Syntax', 'Async/Await & Promises', 'DOM Manipulation', 'REST API Integration', 'Data Structures']
     },
     'react': {
       name: 'React',
@@ -2888,7 +2950,8 @@ html:lang(vi) .toolkit__subtitle,
       pillColor: '#0F172A',
       svg: 'home/toolkit/frontend/vi/react.svg',
       desc: 'Thư viện xây dựng Single Page Application (SPA), kiến trúc component tái sử dụng và quản lý Virtual DOM hiệu năng cao.',
-      exp: 450
+      exp: 450,
+      competencies: ['Functional Components & Hooks', 'Custom Hooks & State', 'Context & Memoization', 'Performance Optimization']
     },
     'reactjs': {
       name: 'React',
@@ -2900,7 +2963,8 @@ html:lang(vi) .toolkit__subtitle,
       pillColor: '#0F172A',
       svg: 'home/toolkit/frontend/vi/react.svg',
       desc: 'Thư viện xây dựng Single Page Application (SPA), kiến trúc component tái sử dụng và quản lý Virtual DOM hiệu năng cao.',
-      exp: 450
+      exp: 450,
+      competencies: ['Functional Components & Hooks', 'Custom Hooks & State', 'Context & Memoization', 'Performance Optimization']
     },
     'nextjs': {
       name: 'Next.js',
@@ -2912,7 +2976,8 @@ html:lang(vi) .toolkit__subtitle,
       pillColor: '#000000',
       svg: 'home/toolkit/frontend/vi/nextjs.svg',
       desc: 'Framework React hỗ trợ Server-Side Rendering (SSR), Static Site Generation (SSG) và tối ưu SEO vượt trội cho sản phẩm.',
-      exp: 430
+      exp: 430,
+      competencies: ['App Router & SSR', 'Server Components', 'API Routes & Middleware', 'Image & SEO Optimization']
     },
     'next.js': {
       name: 'Next.js',
@@ -2924,7 +2989,8 @@ html:lang(vi) .toolkit__subtitle,
       pillColor: '#000000',
       svg: 'home/toolkit/frontend/vi/nextjs.svg',
       desc: 'Framework React hỗ trợ Server-Side Rendering (SSR), Static Site Generation (SSG) và tối ưu SEO vượt trội cho sản phẩm.',
-      exp: 430
+      exp: 430,
+      competencies: ['App Router & SSR', 'Server Components', 'API Routes & Middleware', 'Image & SEO Optimization']
     },
     'ui/ux': {
       name: 'UI/UX Design',
@@ -2935,7 +3001,8 @@ html:lang(vi) .toolkit__subtitle,
       pillBg: '#1E1B4B',
       pillColor: '#C7D2FE',
       desc: 'Nghiên cứu hành vi người dùng, vẽ luồng người dùng (user flow), wireframing và thiết kế giao diện sản phẩm số trực quan.',
-      exp: 440
+      exp: 440,
+      competencies: ['Figma Design System', 'User Flow & Wireframe', 'Interactive Prototype', 'Usability Testing', 'Design Tokens']
     },
     'ui/ux design': {
       name: 'UI/UX Design',
@@ -2946,7 +3013,8 @@ html:lang(vi) .toolkit__subtitle,
       pillBg: '#1E1B4B',
       pillColor: '#C7D2FE',
       desc: 'Nghiên cứu hành vi người dùng, vẽ luồng người dùng (user flow), wireframing và thiết kế giao diện sản phẩm số trực quan.',
-      exp: 440
+      exp: 440,
+      competencies: ['Figma Design System', 'User Flow & Wireframe', 'Interactive Prototype', 'Usability Testing', 'Design Tokens']
     },
     'sql': {
       name: 'SQL Database',
@@ -2957,7 +3025,8 @@ html:lang(vi) .toolkit__subtitle,
       pillBg: '#082F49',
       pillColor: '#BAE6FD',
       desc: 'Thiết kế hệ cơ sở dữ liệu quan hệ, tối ưu truy vấn Index, Transaction và đảm bảo toàn vẹn dữ liệu cho hệ thống quy mô lớn.',
-      exp: 410
+      exp: 410,
+      competencies: ['Relational Modeling', 'Index Optimization', 'ACID Transactions', 'PostgreSQL / MySQL', 'Complex Queries']
     },
     'figma': {
       name: 'Figma',
@@ -2969,7 +3038,8 @@ html:lang(vi) .toolkit__subtitle,
       pillColor: '#DDD6FE',
       svg: 'home/toolkit/art-direction/vi/figma.svg',
       desc: 'Công cụ thiết kế UI/UX hàng đầu, quản lý Design System, tạo prototype tương tác và phối hợp thời gian thực với đội ngũ kỹ thuật.',
-      exp: 400
+      exp: 400,
+      competencies: ['Auto Layout & Tokens', 'Component Library', 'Design System Architecture', 'Interactive Prototype', 'Dev Handoff']
     },
     'python': {
       name: 'Python',
@@ -2980,7 +3050,8 @@ html:lang(vi) .toolkit__subtitle,
       pillBg: '#0F1E33',
       pillColor: '#FFD43B',
       desc: 'Phát triển backend, xử lý dữ liệu với Pandas/NumPy, tự động hóa tác vụ và triển khai mô hình học máy ứng dụng.',
-      exp: 430
+      exp: 430,
+      competencies: ['Data Structures & Algorithms', 'Pandas & NumPy', 'Backend FastAPI/Django', 'Automation Scripting']
     },
     'java': {
       name: 'Java',
@@ -2991,7 +3062,8 @@ html:lang(vi) .toolkit__subtitle,
       pillBg: '#1F2937',
       pillColor: '#FECACA',
       desc: 'Lập trình hướng đối tượng vững chắc, xây dựng hệ thống phân tán, xử lý đa luồng và dịch vụ microservices chịu tải cao.',
-      exp: 440
+      exp: 440,
+      competencies: ['OOP Architecture', 'Multithreading & Concurrency', 'Spring Boot API', 'Clean Architecture', 'Unit Testing']
     },
     'spring boot': {
       name: 'Spring Boot',
@@ -3002,7 +3074,8 @@ html:lang(vi) .toolkit__subtitle,
       pillBg: '#052E16',
       pillColor: '#BBF7D0',
       desc: 'Xây dựng API RESTful chuẩn bảo mật, kết nối PostgreSQL, phân quyền JWT và triển khai giải pháp backend chuẩn doanh nghiệp.',
-      exp: 460
+      exp: 460,
+      competencies: ['RESTful Web Services', 'Spring Security & JWT', 'Spring Data JPA', 'Microservices Architecture']
     },
     'docker': {
       name: 'Docker',
@@ -3013,7 +3086,8 @@ html:lang(vi) .toolkit__subtitle,
       pillBg: '#082F49',
       pillColor: '#E0F2FE',
       desc: 'Đóng gói ứng dụng thành container độc lập, đồng nhất môi trường phát triển và cấu hình CI/CD tự động hóa.',
-      exp: 420
+      exp: 420,
+      competencies: ['Docker Compose', 'Containerization', 'CI/CD Pipelines', 'Environment Isolation']
     },
     'git': {
       name: 'Git & GitHub',
@@ -3024,7 +3098,8 @@ html:lang(vi) .toolkit__subtitle,
       pillBg: '#431407',
       pillColor: '#FFEDD5',
       desc: 'Quản trị phiên bản mã nguồn phân tán, chiến lược branching GitFlow, code review và giải quyết xung đột mã nguồn.',
-      exp: 390
+      exp: 390,
+      competencies: ['GitFlow Strategy', 'Branching & Merging', 'Code Review & Pull Requests', 'Submodules & Rebasing']
     },
     'photoshop': {
       name: 'Photoshop',
@@ -3036,7 +3111,8 @@ html:lang(vi) .toolkit__subtitle,
       pillColor: '#001E36',
       svg: 'home/toolkit/art-direction/vi/photoshop.svg',
       desc: 'Chỉnh sửa hình ảnh bitmap chuyên nghiệp, cắt ghép kỹ thuật số, tạo key visual và thiết kế banner truyền thông.',
-      exp: 370
+      exp: 370,
+      competencies: ['Bitmap Retouching', 'Key Visual Composition', 'Digital Compositing', 'Marketing Assets']
     },
     'illustrator': {
       name: 'Illustrator',
@@ -3048,7 +3124,8 @@ html:lang(vi) .toolkit__subtitle,
       pillColor: '#330000',
       svg: 'home/toolkit/art-direction/vi/illustrator.svg',
       desc: 'Sáng tạo bộ nhận diện thương hiệu, thiết kế logo, typography ấn phẩm và đồ họa vector độ phân giải vô hạn.',
-      exp: 380
+      exp: 380,
+      competencies: ['Vector Illustration', 'Brand Identity & Logo', 'Typography Design', 'SVG Asset Export']
     }
   };
 
@@ -3098,6 +3175,23 @@ html:lang(vi) .toolkit__subtitle,
     modalSkillDesc.textContent = skillInfo.desc || `Kỹ năng ${skillInfo.name} đã được xác thực trong Living Portfolio của ứng viên. Đáp ứng tốt tiêu chuẩn đánh giá từ đối tác tuyển dụng Fonlio.`;
     if (modalStatExp) modalStatExp.textContent = `+${skillInfo.exp || 420} EXP`;
 
+    // Set ambient glow matching the skill color
+    const glowColor = skillInfo.bg || '#38BDF8';
+    modal.style.setProperty('--modal-glow-color', glowColor + '55');
+
+    // Populate competencies
+    const compContainer = document.getElementById('modalSkillCompetencies');
+    if (compContainer) {
+      compContainer.innerHTML = '';
+      const list = skillInfo.competencies || [skillInfo.name, 'Kỹ năng thực chiến', 'Chuẩn hóa Fonlio'];
+      list.forEach(tag => {
+        const pill = document.createElement('span');
+        pill.className = 'modal-competency-pill';
+        pill.textContent = tag;
+        compContainer.appendChild(pill);
+      });
+    }
+
     // Render Preview Card
     modalCardPreview.innerHTML = '';
     if (skillInfo.svg) {
@@ -3136,6 +3230,14 @@ html:lang(vi) .toolkit__subtitle,
   window.renderCandidateSkillsOnly = function(skillsList, skillDetails) {
     if (!Array.isArray(skillsList) || skillsList.length === 0) return;
 
+    // Update subtitle text to "Kĩ năng của bạn"
+    const frontSub = document.querySelector('.toolkit__subtitle--front');
+    if (frontSub) frontSub.textContent = 'Kĩ năng của bạn';
+
+    // Optimize pin-height for candidate skills so it doesn't scroll endlessly
+    const pinH = document.querySelector('.toolkit__pin-height');
+    if (pinH) pinH.style.height = '180vh';
+
     // Build ordered list of skill items
     const userSkills = [];
     const detailsMap = {};
@@ -3159,7 +3261,8 @@ html:lang(vi) .toolkit__subtitle,
         pillBg: '#38BDF8',
         pillColor: '#0F172A',
         desc: `Kỹ năng ${clean} đã được ứng viên xác thực trong hồ sơ năng lực.`,
-        exp: 400
+        exp: 400,
+        competencies: [clean, 'Kỹ năng xác thực', 'Chuẩn Fonlio']
       };
 
       const lvl = detail.proficiencyLevel;
@@ -3176,7 +3279,7 @@ html:lang(vi) .toolkit__subtitle,
     // Get all slots in Wheel 1 (frontend)
     const frontendSlots = Array.from(document.querySelectorAll('.toolkit__wheel--frontend .toolkit__slot:not(.toolkit__slot--transition)'));
     
-    // Hide Wheel 2 completely if user's skills fit in Wheel 1, or distribute
+    // Hide Wheel 2 completely
     const artWheel = document.querySelector('.toolkit__wheel--art-direction');
     const artSubtitle = document.querySelector('.toolkit__subtitle--art');
     if (artWheel) artWheel.style.display = 'none';
@@ -3191,10 +3294,30 @@ html:lang(vi) .toolkit__subtitle,
 
         const skillInfo = userSkills[index];
 
-        // Remove old contents, replace with crisp element
+        // Clean card and add contents
         card.innerHTML = '';
         card.style.cursor = 'pointer';
 
+        // Add HUD tooltip for sleek hover feedback
+        const hud = document.createElement('div');
+        hud.className = 'toolkit-card-hud';
+        hud.innerHTML = `
+          <div class="hud-top">
+            <span class="hud-tag">${skillInfo.cat}</span>
+            <span class="hud-verified" style="color: #b9ff00;">✓ BẢO CHỨNG</span>
+          </div>
+          <div class="hud-title">${skillInfo.name}</div>
+          <div class="hud-meta">
+            <span class="hud-level-text">Trình độ: ${skillInfo.level}</span>
+          </div>
+          <div class="hud-footer">
+            <span style="color: #b9ff00;">Nhấp thẻ để xem phân tích chi tiết</span>
+            <span style="color: #b9ff00;">↗</span>
+          </div>
+        `;
+        card.appendChild(hud);
+
+        // Add card face
         if (skillInfo.svg) {
           const img = document.createElement('img');
           img.className = 'toolkit-card__motion';
