@@ -1631,7 +1631,217 @@ html:lang(vi) .toolkit__subtitle,
               <span>Cuộn để khám phá hành trình</span>
             </div>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b9ff00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation: universeBounce 1.8s infinite;"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            <style>@keyframes universeBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }</style>
+            <style>@keyframes universeBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+/* NATIVE SPOTLIGHT MODAL FOR TOOLKIT CARDS */
+.toolkit-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999999;
+  background: rgba(5, 10, 18, 0.88);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.toolkit-modal-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.toolkit-modal-content {
+  position: relative;
+  max-width: 820px;
+  width: 100%;
+  background: #0B131E;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  padding: 36px;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 36px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transform: scale(0.92) translateY(24px);
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.toolkit-modal-backdrop.is-open .toolkit-modal-content {
+  transform: scale(1) translateY(0);
+}
+@media (max-width: 768px) {
+  .toolkit-modal-content {
+    grid-template-columns: 1fr;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+    gap: 20px;
+  }
+}
+.toolkit-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+.toolkit-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.08);
+}
+.modal-card-preview {
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 295 / 417;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-card-preview img,
+.modal-card-preview svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.toolkit-modal-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.modal-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.modal-tag {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+.modal-verified {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.modal-title {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-size: 32px;
+  font-weight: 900;
+  color: #F8FAFC;
+  margin: 0 0 8px 0;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.modal-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 18px;
+}
+.modal-dot {
+  color: rgba(255, 255, 255, 0.3);
+}
+.modal-desc {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 20px 0;
+}
+.modal-project-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 22px;
+}
+.modal-project-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #34d399;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.modal-project-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 2px;
+}
+.modal-project-meta {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+.modal-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+.modal-ownership-tag {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #F5DF4D;
+  background: rgba(245, 223, 77, 0.1);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 223, 77, 0.2);
+}
+.modal-btn-action {
+  padding: 10px 22px;
+  border-radius: 10px;
+  background: #b9ff00;
+  color: #000;
+  font-size: 13.5px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.modal-btn-action:hover {
+  background: #d4ff4d;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(185, 255, 0, 0.3);
+}
+
+</style>
           </div>
         </div>
       </section>
@@ -1687,579 +1897,540 @@ html:lang(vi) .toolkit__subtitle,
               </div>
             </div>
 
-                                    <!-- Frontend Deck: Technical & Digital Products -->
+                                                <!-- Frontend Deck: Technical & Digital Skills -->
             <div class="toolkit__wheel toolkit__wheel--frontend">
-              <!-- Slot 0: NextGen Tech Hackathon -->
+              <!-- Slot 0: JavaScript -->
               <div class="toolkit__slot" data-slot-index="0" data-wheel="frontend">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="0" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 0 } }, '*')">
+                <div class="toolkit-card toolkit-card--javascript" data-skill-name="JavaScript" data-skill-cat="NGÔN NGỮ LẬP TRÌNH" data-skill-desc="Ngôn ngữ cốt lõi của web hiện đại, xử lý logic tương tác động và thuật toán client-side." data-skill-level="Thành thạo (Advanced)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
                   <div class="toolkit-card-hud">
                     <div class="hud-top">
-                      <span class="hud-tag">HACKATHON</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
+                      <span class="hud-tag">NGÔN NGỮ LẬP TRÌNH</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
                     </div>
-                    <div class="hud-title">NextGen Tech Hackathon</div>
+                    <div class="hud-title">JavaScript</div>
                     <div class="hud-meta">
-                      <span class="hud-level-text">Lead Frontend Developer</span>
+                      <span class="hud-level-text">Trình độ: Thành thạo</span>
                       <span>•</span>
-                      <span class="hud-cat-text">Khoa Công nghệ Thông tin</span>
+                      <span class="hud-cat-text">Ngôn ngữ web cốt lõi</span>
                     </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 9/2025 - Tháng 10/2025</span>
-                      <span class="hud-exp-badge">+500 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
-                      <span>↗</span>
-                    </div>
-                  </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#F5DF4D"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#1F1D1D" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">Tech</tspan>
-                      <tspan x="147.5" dy="44">Hackathon</tspan>
-                    </text>
-                    <rect x="42" y="261.5" width="211" height="34.618" rx="17.309" fill="#1F1D1D"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#F5DF4D" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">HACKATHON TOÀN QUỐC</text>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Slot 1: Hệ Thống Điểm Danh QR -->
-              <div class="toolkit__slot" data-slot-index="1" data-wheel="frontend">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="1" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 1 } }, '*')">
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">SẢN PHẨM SỐ</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
-                    </div>
-                    <div class="hud-title">Hệ Thống Điểm Danh QR</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Fullstack Contributor</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">CLB Lập trình Phần mềm</span>
-                    </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 1/2026 - Tháng 3/2026</span>
-                      <span class="hud-exp-badge">+450 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
-                      <span>↗</span>
-                    </div>
-                  </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#1E293B"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#38BDF8" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">Điểm Danh</tspan>
-                      <tspan x="147.5" dy="44">QR Code</tspan>
-                    </text>
-                    <rect x="52" y="261.5" width="191" height="34.618" rx="17.309" fill="#38BDF8"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#0F172A" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10.5" letter-spacing="0.08em">SẢN PHẨM SỐ</text>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Slot 2: FONLIO – 3D Universe -->
-              <div class="toolkit__slot" data-slot-index="2" data-wheel="frontend">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="2" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 2 } }, '*')">
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">STARTUP</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
-                    </div>
-                    <div class="hud-title">FONLIO – 3D Universe</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Lead Web &amp; 3D Engineer</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Fonlio Engineering Team</span>
-                    </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 2/2026 - Hiện tại</span>
-                      <span class="hud-exp-badge">+550 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
-                      <span>↗</span>
-                    </div>
-                  </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#0A0A0A"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">FONLIO</tspan>
-                      <tspan x="147.5" dy="44">Universe</tspan>
-                    </text>
-                    <rect x="47" y="261.5" width="201" height="34.618" rx="17.309" fill="#FFFFFF"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#0A0A0A" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">STARTUP &amp; WEB 3D</text>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Slot 3: AI Chatbot Học Tập GenAI -->
-              <div class="toolkit__slot" data-slot-index="3" data-wheel="frontend">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="3" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 3 } }, '*')">
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">TRÍ TUỆ NHÂN TẠO</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
-                    </div>
-                    <div class="hud-title">AI Chatbot Học Tập GenAI</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">NLP &amp; Frontend Specialist</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">AI Research Lab</span>
-                    </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 10/2025 - Tháng 12/2025</span>
-                      <span class="hud-exp-badge">+420 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
-                      <span>↗</span>
-                    </div>
-                  </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#10B981"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#064E3B" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">AI GenAI</tspan>
-                      <tspan x="147.5" dy="44">Chatbot</tspan>
-                    </text>
-                    <rect x="42" y="261.5" width="211" height="34.618" rx="17.309" fill="#064E3B"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#D1FAE5" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">TRÍ TUỆ NHÂN TẠO</text>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Slot 4: Smart Campus Map 3D -->
-              <div class="toolkit__slot" data-slot-index="4" data-wheel="frontend">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="4" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 4 } }, '*')">
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">ĐỒ HỌA 3D</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
-                    </div>
-                    <div class="hud-title">Smart Campus Map 3D</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Interactive 3D Developer</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Đại học FPT</span>
-                    </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 8/2025 - Tháng 9/2025</span>
-                      <span class="hud-exp-badge">+380 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
-                      <span>↗</span>
-                    </div>
-                  </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#F8FAFC"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#0F172A" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">Campus</tspan>
-                      <tspan x="147.5" dy="44">Map 3D</tspan>
-                    </text>
-                    <rect x="47" y="261.5" width="201" height="34.618" rx="17.309" fill="#0F172A"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">ĐỒ HỌA THREE.JS</text>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Slot 5: Đăng Ký Tín Chỉ Siêu Tốc -->
-              <div class="toolkit__slot" data-slot-index="5" data-wheel="frontend">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="5" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 5 } }, '*')">
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">DỰ ÁN CỘNG ĐỒNG</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
-                    </div>
-                    <div class="hud-title">Đăng Ký Tín Chỉ Siêu Tốc</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Performance Engineer</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">FPT Developer Guild</span>
-                    </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 5/2025 - Tháng 6/2025</span>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
                       <span class="hud-exp-badge">+400 EXP</span>
                     </div>
                     <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
                       <span>↗</span>
                     </div>
                   </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#84CC16"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#14532D" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">ĐK Tín Chỉ</tspan>
-                      <tspan x="147.5" dy="44">Siêu Tốc</tspan>
-                    </text>
-                    <rect x="42" y="261.5" width="211" height="34.618" rx="17.309" fill="#14532D"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#ECFCCB" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">DỰ ÁN CỘNG ĐỒNG</text>
-                  </svg>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/javascript.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.javascript"
+                    alt="JavaScript"
+                  />
                 </div>
               </div>
 
-              <!-- Slot 6: Cloud Data Pipeline -->
+              <!-- Slot 1: React -->
+              <div class="toolkit__slot" data-slot-index="1" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--react" data-skill-name="React" data-skill-cat="THƯ VIỆN GIAO DIỆN" data-skill-desc="Thư viện xây dựng Single Page Application (SPA), kiến trúc component tái sử dụng và quản lý Virtual DOM hiệu năng cao." data-skill-level="Thành thạo (Advanced)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
+                  <div class="toolkit-card-hud">
+                    <div class="hud-top">
+                      <span class="hud-tag">THƯ VIỆN GIAO DIỆN</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
+                    </div>
+                    <div class="hud-title">React</div>
+                    <div class="hud-meta">
+                      <span class="hud-level-text">Trình độ: Thành thạo</span>
+                      <span>•</span>
+                      <span class="hud-cat-text">Single Page App & State</span>
+                    </div>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
+                      <span class="hud-exp-badge">+450 EXP</span>
+                    </div>
+                    <div class="hud-footer">
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
+                      <span>↗</span>
+                    </div>
+                  </div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/react.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.react"
+                    alt="React"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 2: Next.js -->
+              <div class="toolkit__slot" data-slot-index="2" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--nextjs" data-skill-name="Next.js" data-skill-cat="FRAMEWORK FULLSTACK" data-skill-desc="Framework React hỗ trợ Server-Side Rendering (SSR), Static Site Generation (SSG) và tối ưu SEO vượt trội cho sản phẩm." data-skill-level="Nâng cao (Intermediate)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
+                  <div class="toolkit-card-hud">
+                    <div class="hud-top">
+                      <span class="hud-tag">FRAMEWORK FULLSTACK</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
+                    </div>
+                    <div class="hud-title">Next.js</div>
+                    <div class="hud-meta">
+                      <span class="hud-level-text">Trình độ: Nâng cao</span>
+                      <span>•</span>
+                      <span class="hud-cat-text">SSR &amp; Tối ưu SEO</span>
+                    </div>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
+                      <span class="hud-exp-badge">+420 EXP</span>
+                    </div>
+                    <div class="hud-footer">
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
+                      <span>↗</span>
+                    </div>
+                  </div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/nextjs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.nextjs"
+                    alt="Next.js"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 3: Vue.js -->
+              <div class="toolkit__slot" data-slot-index="3" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--vue" data-skill-name="Vue.js" data-skill-cat="FRAMEWORK GIAO DIỆN" data-skill-desc="Framework giao diện với cú pháp dễ tiếp cận, hệ thống reactivity mạnh mẽ và công cụ Composition API hiện đại." data-skill-level="Nâng cao (Intermediate)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
+                  <div class="toolkit-card-hud">
+                    <div class="hud-top">
+                      <span class="hud-tag">FRAMEWORK GIAO DIỆN</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
+                    </div>
+                    <div class="hud-title">Vue.js</div>
+                    <div class="hud-meta">
+                      <span class="hud-level-text">Trình độ: Nâng cao</span>
+                      <span>•</span>
+                      <span class="hud-cat-text">Reactive UI &amp; State</span>
+                    </div>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
+                      <span class="hud-exp-badge">+380 EXP</span>
+                    </div>
+                    <div class="hud-footer">
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
+                      <span>↗</span>
+                    </div>
+                  </div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/vuejs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.vue"
+                    alt="Vue.js"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 4: three.js -->
+              <div class="toolkit__slot" data-slot-index="4" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--threejs" data-skill-name="three.js" data-skill-cat="ĐỒ HỌA 3D WEB" data-skill-desc="Thư viện dựng hình 3D trên nền tảng WebGL, kết xuất mô hình khối, vật lý không gian và hiệu ứng thị giác tương tác mượt mà." data-skill-level="Nâng cao (Intermediate)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
+                  <div class="toolkit-card-hud">
+                    <div class="hud-top">
+                      <span class="hud-tag">ĐỒ HỌA 3D WEB</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
+                    </div>
+                    <div class="hud-title">three.js</div>
+                    <div class="hud-meta">
+                      <span class="hud-level-text">Trình độ: Nâng cao</span>
+                      <span>•</span>
+                      <span class="hud-cat-text">WebGL &amp; Không gian 3D</span>
+                    </div>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
+                      <span class="hud-exp-badge">+400 EXP</span>
+                    </div>
+                    <div class="hud-footer">
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
+                      <span>↗</span>
+                    </div>
+                  </div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/threejs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.three"
+                    alt="three.js"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 5: GSAP -->
+              <div class="toolkit__slot" data-slot-index="5" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--gsap" data-skill-name="GSAP" data-skill-cat="THƯ VIỆN CHUYỂN ĐỘNG" data-skill-desc="Tiêu chuẩn công nghiệp cho chuyển động web cao cấp, điều khiển Timeline, ScrollTrigger và vật lý đàn hồi." data-skill-level="Thành thạo (Advanced)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
+                  <div class="toolkit-card-hud">
+                    <div class="hud-top">
+                      <span class="hud-tag">THƯ VIỆN CHUYỂN ĐỘNG</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
+                    </div>
+                    <div class="hud-title">GSAP</div>
+                    <div class="hud-meta">
+                      <span class="hud-level-text">Trình độ: Thành thạo</span>
+                      <span>•</span>
+                      <span class="hud-cat-text">Timeline &amp; ScrollTrigger</span>
+                    </div>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
+                      <span class="hud-exp-badge">+380 EXP</span>
+                    </div>
+                    <div class="hud-footer">
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
+                      <span>↗</span>
+                    </div>
+                  </div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/gsap.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.gsap"
+                    alt="GSAP"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 6: GLSL -->
               <div class="toolkit__slot" data-slot-index="6" data-wheel="frontend">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="6" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 6 } }, '*')">
+                <div class="toolkit-card toolkit-card--glsl" data-skill-name="GLSL" data-skill-cat="NGÔN NGỮ SHADER" data-skill-desc="Lập trình shader tính toán trên chip GPU, xử lý ánh sáng pixel, vertex biến dạng và hiệu ứng sóng nước trực quan." data-skill-level="Cơ bản (Intermediate)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
                   <div class="toolkit-card-hud">
                     <div class="hud-top">
-                      <span class="hud-tag">DATA PIPELINE</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
+                      <span class="hud-tag">NGÔN NGỮ SHADER</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
                     </div>
-                    <div class="hud-title">Cloud Data Pipeline</div>
+                    <div class="hud-title">GLSL</div>
                     <div class="hud-meta">
-                      <span class="hud-level-text">Backend &amp; Data Architect</span>
+                      <span class="hud-level-text">Trình độ: Cơ bản</span>
                       <span>•</span>
-                      <span class="hud-cat-text">CLB Khoa học Dữ liệu</span>
+                      <span class="hud-cat-text">Shader GPU &amp; Pixel</span>
                     </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 11/2025 - Tháng 1/2026</span>
-                      <span class="hud-exp-badge">+410 EXP</span>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
+                      <span class="hud-exp-badge">+350 EXP</span>
                     </div>
                     <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
                       <span>↗</span>
                     </div>
                   </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#1E1B4B"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#C084FC" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">Cloud Data</tspan>
-                      <tspan x="147.5" dy="44">Pipeline</tspan>
-                    </text>
-                    <rect x="47" y="261.5" width="201" height="34.618" rx="17.309" fill="#C084FC"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#1E1B4B" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">DATA &amp; KAFKA</text>
-                  </svg>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/glsl.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.glsl"
+                    alt="GLSL"
+                  />
                 </div>
               </div>
 
-              <!-- Slot 7: Automated Code Reviewer -->
+              <!-- Slot 7: Webflow -->
               <div class="toolkit__slot" data-slot-index="7" data-wheel="frontend">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="7" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 7 } }, '*')">
+                <div class="toolkit-card toolkit-card--webflow" data-skill-name="Webflow" data-skill-cat="NỀN TẢNG DỰNG WEB" data-skill-desc="Nền tảng No-Code trực quan cho phép biến bản thiết kế thành trang web chuẩn semantic HTML5/CSS3 với tốc độ nhanh chóng." data-skill-level="Thành thạo (Advanced)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
                   <div class="toolkit-card-hud">
                     <div class="hud-top">
-                      <span class="hud-tag">DEVTOOL OPENSOURCE</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
+                      <span class="hud-tag">NỀN TẢNG DỰNG WEB</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
                     </div>
-                    <div class="hud-title">Automated Code Review</div>
+                    <div class="hud-title">Webflow</div>
                     <div class="hud-meta">
-                      <span class="hud-level-text">Open Source Creator</span>
+                      <span class="hud-level-text">Trình độ: Thành thạo</span>
                       <span>•</span>
-                      <span class="hud-cat-text">Cộng đồng Open Source VN</span>
+                      <span class="hud-cat-text">No-Code &amp; Dựng nhanh</span>
                     </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 7/2025 - Tháng 9/2025</span>
-                      <span class="hud-exp-badge">+390 EXP</span>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
+                      <span class="hud-exp-badge">+320 EXP</span>
                     </div>
                     <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
                       <span>↗</span>
                     </div>
                   </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#2563EB"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">DevTool</tspan>
-                      <tspan x="147.5" dy="44">Reviewer</tspan>
-                    </text>
-                    <rect x="42" y="261.5" width="211" height="34.618" rx="17.309" fill="#1D4ED8"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#DBEAFE" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">OPEN SOURCE CLI</text>
-                  </svg>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/webflow.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.webflow"
+                    alt="Webflow"
+                  />
                 </div>
               </div>
 
-              <!-- Slot 8: Transition Flipper Card -->
+              <!-- Slot 8: Shopify / Flip -->
               <div class="toolkit__slot toolkit__slot--transition">
-                <div class="toolkit-card toolkit-card--flip">
+                <div class="toolkit-card toolkit-card--flip toolkit-card--shopify" data-skill-name="Shopify" data-skill-cat="THƯƠNG MẠI ĐIỆN TỬ" data-skill-desc="Nền tảng vận hành gian hàng trực tuyến toàn cầu, tùy biến Liquid template và tích hợp cổng thanh toán." data-skill-level="Thành thạo (Advanced)">
                   <div class="toolkit-card__flipper toolkit-card__motion">
                     <div class="toolkit-card__face toolkit-card--front">
-                      <svg width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="295" height="417" rx="22.618" fill="#84CC16"/>
-                        <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#14532D" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" letter-spacing="-0.03em">
-                          <tspan x="147.5" dy="-18">Khám Phá</tspan>
-                          <tspan x="147.5" dy="42">Sáng Tạo</tspan>
-                        </text>
-                        <rect x="42" y="261.5" width="211" height="34.618" rx="17.309" fill="#14532D"/>
-                        <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#ECFCCB" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">CUỘN ĐỂ LẬT THẺ ↻</text>
-                      </svg>
+                      <img
+                        src="home/toolkit/frontend/vi/shopify.svg"
+                        alt="Shopify"
+                        data-i18n-attr="src:home.toolkitAssets.frontend.shopify"
+                      />
                     </div>
-
                     <div class="toolkit-card__face toolkit-card__face--back">
-                      <svg width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="295" height="417" rx="22.618" fill="#9333EA"/>
-                        <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" letter-spacing="-0.03em">
-                          <tspan x="147.5" dy="-18">Lãnh Đạo</tspan>
-                          <tspan x="147.5" dy="42">&amp; Xã Hội</tspan>
-                        </text>
-                        <rect x="47" y="261.5" width="201" height="34.618" rx="17.309" fill="#581C87"/>
-                        <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#F3E8FF" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">TIẾP TỤC CUỘN ↓</text>
-                      </svg>
+                      <img
+                        src="home/toolkit/art-direction/vi/figma.svg"
+                        alt="Figma"
+                        data-i18n-attr="src:home.toolkitAssets.artDirection.figma"
+                      />
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Art direction deck: Creative, Leadership & Community -->
+            <!-- Art direction deck: Creative, Leadership & Design -->
             <div class="toolkit__wheel toolkit__wheel--art-direction">
-              <!-- Slot 0: Tuần Lễ Xanh ĐH FPT -->
+              <!-- Slot 0: Figma -->
               <div class="toolkit__slot" data-slot-index="0" data-wheel="art">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="8" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 8 } }, '*')">
+                <div class="toolkit-card toolkit-card--figma" data-skill-name="Figma" data-skill-cat="THIẾT KẾ GIAO DIỆN" data-skill-desc="Công cụ thiết kế UI/UX hàng đầu, quản lý Design System, tương tác prototype và phối hợp thời gian thực với lập trình viên." data-skill-level="Thành thạo (Advanced)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
                   <div class="toolkit-card-hud">
                     <div class="hud-top">
-                      <span class="hud-tag">CLB &amp; XÃ HỘI</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
+                      <span class="hud-tag">UI/UX &amp; PRODUCT DESIGN</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
                     </div>
-                    <div class="hud-title">Tuần Lễ Xanh ĐH FPT</div>
+                    <div class="hud-title">Figma</div>
                     <div class="hud-meta">
-                      <span class="hud-level-text">Trưởng Ban Điều Phối</span>
+                      <span class="hud-level-text">Trình độ: Thành thạo</span>
                       <span>•</span>
-                      <span class="hud-cat-text">CLB Môi Trường ĐH FPT</span>
+                      <span class="hud-cat-text">Design System &amp; Prototype</span>
                     </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 3/2025 - Tháng 5/2025</span>
-                      <span class="hud-exp-badge">+350 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
-                      <span>↗</span>
-                    </div>
-                  </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#9333EA"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">Tuần Lễ</tspan>
-                      <tspan x="147.5" dy="44">Xanh FPT</tspan>
-                    </text>
-                    <rect x="52" y="261.5" width="191" height="34.618" rx="17.309" fill="#581C87"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#F3E8FF" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10.5" letter-spacing="0.08em">CLB &amp; XÃ HỘI</text>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Slot 1: 60 Giây Sài Gòn — Viral Video -->
-              <div class="toolkit__slot" data-slot-index="1" data-wheel="art">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="9" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 9 } }, '*')">
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">SÁNG TẠO &amp; MEDIA</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
-                    </div>
-                    <div class="hud-title">60 Giây Sài Gòn (Viral)</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Director &amp; Video Editor</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Dự Án Sáng Tạo Độc Lập</span>
-                    </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 6/2025 - Tháng 7/2025</span>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
                       <span class="hud-exp-badge">+400 EXP</span>
                     </div>
                     <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
                       <span>↗</span>
                     </div>
                   </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#0F172A"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#38BDF8" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">60 Giây</tspan>
-                      <tspan x="147.5" dy="44">Sài Gòn</tspan>
-                    </text>
-                    <rect x="42" y="261.5" width="211" height="34.618" rx="17.309" fill="#38BDF8"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#0F172A" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">VIRAL 850K VIEWS</text>
-                  </svg>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/figma.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.figma"
+                    alt="Figma"
+                  />
                 </div>
               </div>
 
-              <!-- Slot 2: Bộ Nhận Diện Thương Hiệu -->
+              <!-- Slot 1: Photoshop -->
+              <div class="toolkit__slot" data-slot-index="1" data-wheel="art">
+                <div class="toolkit-card toolkit-card--photoshop" data-skill-name="Photoshop" data-skill-cat="XỬ LÝ HÌNH ẢNH" data-skill-desc="Phần mềm xử lý đồ họa raster chuyên sâu, cắt ghép hình ảnh, tạo key visual và thiết kế banner quảng cáo sắc nét." data-skill-level="Thành thạo (Advanced)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
+                  <div class="toolkit-card-hud">
+                    <div class="hud-top">
+                      <span class="hud-tag">DIGITAL IMAGING</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
+                    </div>
+                    <div class="hud-title">Photoshop</div>
+                    <div class="hud-meta">
+                      <span class="hud-level-text">Trình độ: Thành thạo</span>
+                      <span>•</span>
+                      <span class="hud-cat-text">Key Visual &amp; Hậu kỳ</span>
+                    </div>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
+                      <span class="hud-exp-badge">+350 EXP</span>
+                    </div>
+                    <div class="hud-footer">
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
+                      <span>↗</span>
+                    </div>
+                  </div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/photoshop.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.photoshop"
+                    alt="Photoshop"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 2: Illustrator -->
               <div class="toolkit__slot" data-slot-index="2" data-wheel="art">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="10" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 10 } }, '*')">
+                <div class="toolkit-card toolkit-card--illustrator" data-skill-name="Illustrator" data-skill-cat="ĐỒ HỌA VECTOR" data-skill-desc="Vẽ đồ họa vector vô hạn độ phân giải, tạo hình logo nhận diện thương hiệu, icon pack và hình minh họa chuyên nghiệp." data-skill-level="Thành thạo (Advanced)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
                   <div class="toolkit-card-hud">
                     <div class="hud-top">
-                      <span class="hud-tag">THIẾT KẾ BRAND</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
+                      <span class="hud-tag">VECTOR &amp; BRANDING</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
                     </div>
-                    <div class="hud-title">Nhận Diện Thương Hiệu</div>
+                    <div class="hud-title">Illustrator</div>
                     <div class="hud-meta">
-                      <span class="hud-level-text">Brand Identity Designer</span>
+                      <span class="hud-level-text">Trình độ: Thành thạo</span>
                       <span>•</span>
-                      <span class="hud-cat-text">Cộng đồng Sáng tạo Gen Z</span>
+                      <span class="hud-cat-text">Logo &amp; Brand Identity</span>
                     </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 4/2026 - Tháng 5/2026</span>
-                      <span class="hud-exp-badge">+300 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
-                      <span>↗</span>
-                    </div>
-                  </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#EA580C"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">Brand</tspan>
-                      <tspan x="147.5" dy="44">Identity</tspan>
-                    </text>
-                    <rect x="47" y="261.5" width="201" height="34.618" rx="17.309" fill="#7C2D12"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#FFEDD5" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">THIẾT KẾ BRAND</text>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Slot 3: Chiến Dịch Tuyển Sinh Gen Z -->
-              <div class="toolkit__slot" data-slot-index="3" data-wheel="art">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="11" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 11 } }, '*')">
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">TRUYỀN THÔNG</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
-                    </div>
-                    <div class="hud-title">Chiến Dịch Tuyển Sinh Gen Z</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Content Creator Lead</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Phòng Tuyển sinh &amp; TT</span>
-                    </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 11/2025 - Tháng 12/2025</span>
-                      <span class="hud-exp-badge">+320 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
-                      <span>↗</span>
-                    </div>
-                  </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#E11D48"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">Tuyển Sinh</tspan>
-                      <tspan x="147.5" dy="44">Gen Z</tspan>
-                    </text>
-                    <rect x="42" y="261.5" width="211" height="34.618" rx="17.309" fill="#881337"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#FFE4E6" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">TRUYỀN THÔNG 45K</text>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Slot 4: Mùa Hè Xanh Vùng Cao -->
-              <div class="toolkit__slot" data-slot-index="4" data-wheel="art">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="12" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 12 } }, '*')">
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">TÌNH NGUYỆN</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
-                    </div>
-                    <div class="hud-title">Mùa Hè Xanh Vùng Cao</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Đội Phó Thường Trực</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Đoàn Thanh Niên &amp; HSV</span>
-                    </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 7/2025 - Tháng 8/2025</span>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
                       <span class="hud-exp-badge">+360 EXP</span>
                     </div>
                     <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
                       <span>↗</span>
                     </div>
                   </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#3730A3"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#E0E7FF" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">Mùa Hè</tspan>
-                      <tspan x="147.5" dy="44">Xanh Cao</tspan>
-                    </text>
-                    <rect x="42" y="261.5" width="211" height="34.618" rx="17.309" fill="#E0E7FF"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#312E81" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">TÌNH NGUYỆN 180 EM</text>
-                  </svg>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/illustrator.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.illustrator"
+                    alt="Illustrator"
+                  />
                 </div>
               </div>
 
-              <!-- Slot 5: Diễn Đàn Khởi Nghiệp Trẻ -->
-              <div class="toolkit__slot" data-slot-index="5" data-wheel="art">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="13" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 13 } }, '*')">
+              <!-- Slot 3: InDesign -->
+              <div class="toolkit__slot" data-slot-index="3" data-wheel="art">
+                <div class="toolkit-card toolkit-card--indesign" data-skill-name="InDesign" data-skill-cat="DÀN TRANG ẤN PHẨM" data-skill-desc="Dàn trang xuất bản đa trang, thiết kế tài liệu hội thảo, brochure doanh nghiệp và sách điện tử chuẩn in ấn." data-skill-level="Cơ bản (Intermediate)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
                   <div class="toolkit-card-hud">
                     <div class="hud-top">
-                      <span class="hud-tag">LÃNH ĐẠO</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
+                      <span class="hud-tag">EDITORIAL &amp; LAYOUT</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
                     </div>
-                    <div class="hud-title">Diễn Đàn Khởi Nghiệp Trẻ</div>
+                    <div class="hud-title">InDesign</div>
                     <div class="hud-meta">
-                      <span class="hud-level-text">Trưởng Ban Nội Dung &amp; Diễn Giả</span>
+                      <span class="hud-level-text">Trình độ: Cơ bản</span>
                       <span>•</span>
-                      <span class="hud-cat-text">FPT Startup Incubator</span>
+                      <span class="hud-cat-text">Ấn phẩm truyền thông</span>
                     </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 5/2025 - Tháng 6/2025</span>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
+                      <span class="hud-exp-badge">+320 EXP</span>
+                    </div>
+                    <div class="hud-footer">
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
+                      <span>↗</span>
+                    </div>
+                  </div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/indesign.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.indesign"
+                    alt="InDesign"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 4: After Effects -->
+              <div class="toolkit__slot" data-slot-index="4" data-wheel="art">
+                <div class="toolkit-card toolkit-card--after-effects" data-skill-name="After Effects" data-skill-cat="MOTION GRAPHICS" data-skill-desc="Biên tập chuyển động logo, tạo hiệu ứng kỹ xảo video (VFX) và hoạt họa 2D sinh động cho các chiến dịch truyền thông." data-skill-level="Thành thạo (Advanced)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
+                  <div class="toolkit-card-hud">
+                    <div class="hud-top">
+                      <span class="hud-tag">MOTION GRAPHICS</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
+                    </div>
+                    <div class="hud-title">After Effects</div>
+                    <div class="hud-meta">
+                      <span class="hud-level-text">Trình độ: Thành thạo</span>
+                      <span>•</span>
+                      <span class="hud-cat-text">VFX &amp; Hoạt họa 2D</span>
+                    </div>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
+                      <span class="hud-exp-badge">+400 EXP</span>
+                    </div>
+                    <div class="hud-footer">
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
+                      <span>↗</span>
+                    </div>
+                  </div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/aftereffects.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.afterEffects"
+                    alt="After Effects"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 5: CapCut -->
+              <div class="toolkit__slot" data-slot-index="5" data-wheel="art">
+                <div class="toolkit-card toolkit-card--capcut" data-skill-name="CapCut" data-skill-cat="VIDEO NGẮN VIRAL" data-skill-desc="Biên tập video ngắn theo nhịp điệu âm nhạc, bắt trend TikTok / Reels, tạo phụ đề tự động và hook thu hút người xem." data-skill-level="Thành thạo (Advanced)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
+                  <div class="toolkit-card-hud">
+                    <div class="hud-top">
+                      <span class="hud-tag">SHORT-FORM VIDEO</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
+                    </div>
+                    <div class="hud-title">CapCut</div>
+                    <div class="hud-meta">
+                      <span class="hud-level-text">Trình độ: Thành thạo</span>
+                      <span>•</span>
+                      <span class="hud-cat-text">Sản xuất video viral</span>
+                    </div>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
+                      <span class="hud-exp-badge">+380 EXP</span>
+                    </div>
+                    <div class="hud-footer">
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
+                      <span>↗</span>
+                    </div>
+                  </div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/capcut.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.capcut"
+                    alt="CapCut"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 6: Lightroom -->
+              <div class="toolkit__slot" data-slot-index="6" data-wheel="art">
+                <div class="toolkit-card toolkit-card--lightroom" data-skill-name="Lightroom" data-skill-cat="CHỈNH MÀU ÁNH SÁNG" data-skill-desc="Xử lý màu ảnh số hàng loạt, cân chỉnh ánh sáng, phân bổ sắc thái tone màu nghệ thuật và tối ưu chất lượng ảnh." data-skill-level="Thành thạo (Advanced)">
+                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
+                  <div class="toolkit-card-hud">
+                    <div class="hud-top">
+                      <span class="hud-tag">COLOR GRADING</span>
+                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
+                    </div>
+                    <div class="hud-title">Lightroom</div>
+                    <div class="hud-meta">
+                      <span class="hud-level-text">Trình độ: Thành thạo</span>
+                      <span>•</span>
+                      <span class="hud-cat-text">Tone màu nghệ thuật</span>
+                    </div>
+                    <div class="hud-project-box" style="display: none;">
+                      <span class="hud-project-label">Dự án ứng dụng</span>
+                      <span class="hud-project-name">Dự án thực tế</span>
                       <span class="hud-exp-badge">+340 EXP</span>
                     </div>
                     <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
+                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
                       <span>↗</span>
                     </div>
                   </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#18181B"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#FB7185" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">Diễn Đàn</tspan>
-                      <tspan x="147.5" dy="44">Startup</tspan>
-                    </text>
-                    <rect x="47" y="261.5" width="201" height="34.618" rx="17.309" fill="#FB7185"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#18181B" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">LÃNH ĐẠO 800 SV</text>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Slot 6: Cuộc Thi Sáng Tạo Bền Vững -->
-              <div class="toolkit__slot" data-slot-index="6" data-wheel="art">
-                <div class="toolkit-card fonlio-interactive-card" data-memory-index="14" onclick="window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: 14 } }, '*')">
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">GIẢI THƯỞNG</span>
-                      <span class="hud-verified">✓ MINH CHỨNG SỐNG</span>
-                    </div>
-                    <div class="hud-title">Sáng Tạo Bền Vững</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Team Leader — Giải Nhì</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Sáng Kiến Xanh Việt Nam</span>
-                    </div>
-                    <div class="hud-project-box">
-                      <span class="hud-project-label">Cột mốc thực chiến</span>
-                      <span class="hud-project-name">Tháng 8/2025 - Tháng 10/2025</span>
-                      <span class="hud-exp-badge">+370 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem minh chứng bản lĩnh</span>
-                      <span>↗</span>
-                    </div>
-                  </div>
-                  <svg class="toolkit-card__motion" width="100%" height="100%" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="295" height="417" rx="22.618" fill="#0284C7"/>
-                    <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="38" letter-spacing="-0.03em">
-                      <tspan x="147.5" dy="-18">Sáng Tạo</tspan>
-                      <tspan x="147.5" dy="44">Bền Vững</tspan>
-                    </text>
-                    <rect x="42" y="261.5" width="211" height="34.618" rx="17.309" fill="#075985"/>
-                    <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="#E0F2FE" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">GIẢI NHÌ TOÀN QUỐC</text>
-                  </svg>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/lightroom.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.lightroom"
+                    alt="Lightroom"
+                  />
                 </div>
               </div>
 
@@ -2277,7 +2448,56 @@ html:lang(vi) .toolkit__subtitle,
         </div>
       </section>
 
-      <!-------- PROJECTS SECTION -------->
+      <!-- NATIVE SPOTLIGHT MODAL FOR SKILLS & PROOF CARDS -->
+      <div id="fonlioSkillModal" class="toolkit-modal-backdrop" onclick="if(event.target===this) window.closeSkillModal()">
+        <div class="toolkit-modal-content" onclick="event.stopPropagation()">
+          <button class="toolkit-modal-close" onclick="window.closeSkillModal()" aria-label="Đóng modal">✕</button>
+          
+          <div class="toolkit-modal-left">
+            <div id="modalCardPreview" class="modal-card-preview">
+              <!-- Dynamically cloned card or SVG rendered here -->
+            </div>
+          </div>
+
+          <div class="toolkit-modal-right">
+            <div class="modal-badge-row">
+              <span id="modalSkillTag" class="modal-tag">KỸ NĂNG CHUẨN</span>
+              <span id="modalVerifiedBadge" class="modal-verified">✓ CHUẨN HÓA FONLIO</span>
+            </div>
+
+            <h3 id="modalSkillTitle" class="modal-title">JavaScript</h3>
+            
+            <div class="modal-meta-row">
+              <span id="modalSkillLevel" class="modal-level">Trình độ: Thành thạo</span>
+              <span class="modal-dot">•</span>
+              <span id="modalSkillCategory" class="modal-cat">Ngôn ngữ web</span>
+            </div>
+
+            <p id="modalSkillDesc" class="modal-desc">
+              Kỹ năng cốt lõi được định danh trong hệ thống Living Portfolio của Fonlio. Được nhà tuyển dụng công nghệ đánh giá cao trong thang điểm tín nhiệm Reputation Score.
+            </p>
+
+            <div id="modalProjectSection" class="modal-project-box" style="display: none;">
+              <div class="modal-project-header">
+                <span class="modal-project-icon">🏆</span>
+                <span class="modal-project-heading">Minh Chứng Áp Dụng Thực Chiến</span>
+              </div>
+              <div id="modalProjectTitle" class="modal-project-name">Dự án thực tế</div>
+              <div id="modalProjectMeta" class="modal-project-meta">Cột mốc được bảo chứng trên Fonlio</div>
+            </div>
+
+            <div class="modal-action-row">
+              <div id="modalOwnershipBadge" class="modal-ownership-tag">
+                <span>⭐ Kỹ năng đã có trong hồ sơ của bạn</span>
+              </div>
+              <button type="button" class="modal-btn-action" onclick="window.closeSkillModal()">
+                <span>Đã hiểu</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+<!-------- PROJECTS SECTION -------->
       <section class="projects" id="projects">
         <div class="projects__pin-height">
           <div class="projects__container">
@@ -2568,142 +2788,283 @@ html:lang(vi) .toolkit__subtitle,
     document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = rsParam);
   }
 
-  // Curated color themes for candidate vector cards
-  const CARD_PALETTES = [
-    { bg: '#F5DF4D', text: '#1F1D1D', pillBg: '#1F1D1D', pillText: '#F5DF4D' }, // Gold Yellow
-    { bg: '#1E293B', text: '#38BDF8', pillBg: '#38BDF8', pillText: '#0F172A' }, // Deep Charcoal & Cyan
-    { bg: '#0A0A0A', text: '#FFFFFF', pillBg: '#FFFFFF', pillText: '#0A0A0A' }, // Monolith Pitch Black
-    { bg: '#10B981', text: '#064E3B', pillBg: '#064E3B', pillText: '#D1FAE5' }, // Emerald Mint
-    { bg: '#F8FAFC', text: '#0F172A', pillBg: '#0F172A', pillText: '#FFFFFF' }, // Clean White
-    { bg: '#84CC16', text: '#14532D', pillBg: '#14532D', pillText: '#ECFCCB' }, // Lime Neon
-    { bg: '#1E1B4B', text: '#C084FC', pillBg: '#C084FC', pillText: '#1E1B4B' }, // Violet Night
-    { bg: '#2563EB', text: '#FFFFFF', pillBg: '#1D4ED8', pillText: '#DBEAFE' }, // Electric Blue
-    { bg: '#9333EA', text: '#FFFFFF', pillBg: '#581C87', pillText: '#F3E8FF' }, // Electric Purple
-    { bg: '#0F172A', text: '#38BDF8', pillBg: '#38BDF8', pillText: '#0F172A' }, // Navy Cyan
-    { bg: '#EA580C', text: '#FFFFFF', pillBg: '#7C2D12', pillText: '#FFEDD5' }, // Warm Orange
-    { bg: '#E11D48', text: '#FFFFFF', pillBg: '#881337', pillText: '#FFE4E6' }, // Crimson Rose
-    { bg: '#3730A3', text: '#E0E7FF', pillBg: '#E0E7FF', pillText: '#312E81' }, // Indigo Deep
-    { bg: '#18181B', text: '#FB7185', pillBg: '#FB7185', pillText: '#18181B' }, // Zinc Dark & Rose
-    { bg: '#0284C7', text: '#FFFFFF', pillBg: '#075985', pillText: '#E0F2FE' }  // Ocean Sky
-  ];
+  // Pre-configured themes for custom candidate skills that don't have static SVGs
+  const CUSTOM_SKILL_THEMES = {
+    'java': { bg: '#E03131', text: '#FFFFFF', pillBg: '#2B2B2B', pillText: '#FF8787', cat: 'BACKEND ENTERPRISE', desc: 'Lập trình hướng đối tượng, kiến trúc đa luồng, xử lý dữ liệu và hệ thống doanh nghiệp cấp cao.' },
+    'spring': { bg: '#2B8A3E', text: '#FFFFFF', pillBg: '#1B4722', pillText: '#A9E34B', cat: 'SPRING FRAMEWORK', desc: 'Hệ sinh thái Java backend với Dependency Injection, Spring Security, JPA/Hibernate và Microservices.' },
+    'spring boot': { bg: '#2B8A3E', text: '#FFFFFF', pillBg: '#1B4722', pillText: '#A9E34B', cat: 'SPRING BOOT BACKEND', desc: 'Xây dựng RESTful API hiệu năng cao, tích hợp cơ sở dữ liệu PostgreSQL và bảo mật JWT.' },
+    'python': { bg: '#2B5B84', text: '#FFD43B', pillBg: '#1E3F5C', pillText: '#FFD43B', cat: 'DATA & AI / BACKEND', desc: 'Phát triển backend Django/FastAPI, xử lý dữ liệu với Pandas/NumPy và triển khai mô hình Machine Learning.' },
+    'sql': { bg: '#336791', text: '#FFFFFF', pillBg: '#1F3E57', pillText: '#93C5FD', cat: 'CƠ SỞ DỮ LIỆU SQL', desc: 'Thiết kế cơ sở dữ liệu quan hệ, tối ưu truy vấn Index, Transaction và đảm bảo toàn vẹn dữ liệu ACID.' },
+    'postgresql': { bg: '#336791', text: '#FFFFFF', pillBg: '#1F3E57', pillText: '#93C5FD', cat: 'POSTGRESQL DATABASE', desc: 'Cơ sở dữ liệu mã nguồn mở mạnh mẽ, xử lý JSONB, full-text search và kết nối an toàn với Supabase.' },
+    'docker': { bg: '#2496ED', text: '#FFFFFF', pillBg: '#115C96', pillText: '#E0F2FE', cat: 'DEVOPS CONTAINER', desc: 'Đóng gói ứng dụng thành container độc lập, triển khai nhất quán giữa môi trường phát triển và production.' },
+    'git': { bg: '#F05032', text: '#FFFFFF', pillBg: '#3E2723', pillText: '#FFCCBC', cat: 'QUẢN LÝ MÃ NGUỒN', desc: 'Quản lý phiên bản mã nguồn phân tán, branching strategy, code review và cộng tác nhóm trên GitHub.' },
+    'ui/ux': { bg: '#7952DE', text: '#FFFFFF', pillBg: '#391085', pillText: '#E9D5FF', cat: 'THIẾT KẾ TRẢI NGHIỆM', desc: 'Nghiên cứu hành vi người dùng, vẽ luồng người dùng (user flow) và tối ưu trải nghiệm giao diện sản phẩm số.' },
+    'marketing': { bg: '#FF922B', text: '#111111', pillBg: '#111111', pillText: '#FFD8A8', cat: 'TIẾP THỊ & TRUYỀN THÔNG', desc: 'Lên chiến dịch tiếp thị số, quản trị kênh truyền thông mạng xã hội và tối ưu chuyển đổi khách hàng mục tiêu.' },
+    'project management': { bg: '#0CA678', text: '#FFFFFF', pillBg: '#084C37', pillText: '#C3FAE8', cat: 'QUẢN LÝ DỰ ÁN', desc: 'Áp dụng phương pháp Agile/Scrum, điều phối tiến độ công việc, quản trị rủi ro và gắn kết đội ngũ.' }
+  };
 
-  // Helper to split any title into 1 or 2 big punchy lines for giant vector typography
-  function formatTitleLines(title) {
-    if (!title) return { line1: 'Dự Án', line2: 'Thực Chiến' };
-    const words = title.trim().split(/\s+/);
-    if (words.length === 1) {
-      return { line1: words[0], line2: '' };
-    }
-    if (words.length === 2) {
-      return { line1: words[0], line2: words[1] };
-    }
-    const mid = Math.ceil(words.length / 2);
-    return {
-      line1: words.slice(0, mid).join(' '),
-      line2: words.slice(mid).join(' ')
-    };
+  function generateSkillSvg(skillName, theme) {
+    const bg = theme.bg || '#2563EB';
+    const text = theme.text || '#FFFFFF';
+    const pillBg = theme.pillBg || '#111827';
+    const pillText = theme.pillText || '#FFFFFF';
+    const cat = (theme.cat || 'KỸ NĂNG XÁC THỰC').toUpperCase();
+    
+    let fontSize = 38;
+    if (skillName.length > 14) fontSize = 26;
+    else if (skillName.length > 10) fontSize = 32;
+
+    const pillWidth = Math.min(230, Math.max(140, cat.length * 8.5 + 24));
+    const pillX = (295 - pillWidth) / 2;
+
+    const svgContent = `<svg width="295" height="417" viewBox="0 0 295 417" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="295" height="417" rx="22.618" fill="${bg}"/>
+  <text x="147.5" y="195" text-anchor="middle" dominant-baseline="central" fill="${text}" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="${fontSize}" letter-spacing="-0.03em">${skillName}</text>
+  <rect x="${pillX}" y="261.5" width="${pillWidth}" height="34.618" rx="17.309" fill="${pillBg}"/>
+  <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="${pillText}" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="9.5" letter-spacing="0.08em">${cat}</text>
+</svg>`;
+
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svgContent)}`;
   }
 
-  // Update wheel cards with candidate's actual projects/experiences or skills
-  window.renderCandidateCards = function(experiences, skills, skillDetails) {
-    if (!Array.isArray(experiences) || experiences.length === 0) return;
+  // SPOTLIGHT MODAL CONTROLLER
+  const modal = document.getElementById('fonlioSkillModal');
+  const modalCardPreview = document.getElementById('modalCardPreview');
+  const modalSkillTag = document.getElementById('modalSkillTag');
+  const modalVerifiedBadge = document.getElementById('modalVerifiedBadge');
+  const modalSkillTitle = document.getElementById('modalSkillTitle');
+  const modalSkillLevel = document.getElementById('modalSkillLevel');
+  const modalSkillCategory = document.getElementById('modalSkillCategory');
+  const modalSkillDesc = document.getElementById('modalSkillDesc');
+  const modalProjectSection = document.getElementById('modalProjectSection');
+  const modalProjectTitle = document.getElementById('modalProjectTitle');
+  const modalProjectMeta = document.getElementById('modalProjectMeta');
+  const modalOwnershipBadge = document.getElementById('modalOwnershipBadge');
 
-    // Separate technical experiences (wheel 1) and creative / social / leadership experiences (wheel 2)
-    const techExp = [];
-    const artExp = [];
+  window.openSkillModal = function(data) {
+    if (!modal) return;
+    
+    modalSkillTitle.textContent = data.name || 'Kỹ Năng';
+    modalSkillTag.textContent = data.category || 'KỸ NĂNG';
+    modalSkillLevel.textContent = `Trình độ: ${data.level || 'Thành thạo (Advanced)'}`;
+    modalSkillCategory.textContent = data.category || 'Chuyên môn';
+    modalSkillDesc.textContent = data.desc || 'Kỹ năng cốt lõi được bảo chứng trong hồ sơ năng lực của sinh viên trên Fonlio.';
 
-    const artCategoryKeywords = ['clb', 'media', 'sáng tạo', 'xã hội', 'tình nguyện', 'lãnh đạo', 'marketing', 'truyền thông', 'thiết kế', 'giải thưởng'];
+    if (data.isUserSkill) {
+      modalVerifiedBadge.textContent = '✓ ĐÃ CÓ TRONG HỒ SƠ';
+      modalVerifiedBadge.style.display = 'inline-block';
+      modalOwnershipBadge.innerHTML = '<span>⭐ Kỹ năng đã xác thực của bạn</span>';
+      modalOwnershipBadge.style.display = 'block';
+    } else {
+      modalVerifiedBadge.textContent = '✓ CHUẨN KỸ NĂNG FONLIO';
+      modalVerifiedBadge.style.display = 'inline-block';
+      modalOwnershipBadge.innerHTML = '<span>💡 Kỹ năng gợi ý cho ngành của bạn</span>';
+      modalOwnershipBadge.style.display = 'block';
+    }
 
-    experiences.forEach((exp) => {
-      const cat = (exp.category || '').toLowerCase();
-      const title = (exp.title || exp.projectName || '').toLowerCase();
-      const isArt = artCategoryKeywords.some(kw => cat.includes(kw) || title.includes(kw));
-      if (isArt) {
-        artExp.push(exp);
-      } else {
-        techExp.push(exp);
+    if (data.matchedProject) {
+      modalProjectSection.style.display = 'block';
+      modalProjectTitle.textContent = data.matchedProject.title || data.matchedProject.projectName || 'Dự án thực tế';
+      const org = data.matchedProject.organization || 'Minh chứng sống';
+      const role = data.matchedProject.roleLevel || data.matchedProject.position || 'Thành viên';
+      modalProjectMeta.textContent = `${role} • ${org}`;
+    } else {
+      modalProjectSection.style.display = 'none';
+    }
+
+    // Render Preview
+    modalCardPreview.innerHTML = '';
+    if (data.imgSrc) {
+      const img = document.createElement('img');
+      img.src = data.imgSrc;
+      img.alt = data.name;
+      modalCardPreview.appendChild(img);
+    } else if (data.svgHtml) {
+      modalCardPreview.innerHTML = data.svgHtml;
+    }
+
+    modal.classList.add('is-open');
+
+    // Also notify parent React app if embedded in iframe
+    try {
+      window.parent.postMessage({
+        type: 'OPEN_SKILL_SPOTLIGHT',
+        payload: {
+          skillName: data.name,
+          category: data.category,
+          level: data.level,
+          isUserSkill: data.isUserSkill
+        }
+      }, '*');
+    } catch(e) {}
+  };
+
+  window.closeSkillModal = function() {
+    if (modal) modal.classList.remove('is-open');
+  };
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') window.closeSkillModal();
+  });
+
+  // Attach click listener to all cards
+  function attachCardClickListeners(candidateSkillsSet, candidateExperiences) {
+    document.querySelectorAll('.toolkit-card:not(.toolkit-card--transition)').forEach((card) => {
+      const slot = card.closest('.toolkit__slot');
+      const img = card.querySelector('img.toolkit-card__motion, img');
+      const svg = card.querySelector('svg.toolkit-card__motion');
+      const skillName = card.getAttribute('data-skill-name') || card.querySelector('.hud-title')?.textContent || 'Kỹ năng';
+      const skillCat = card.getAttribute('data-skill-cat') || card.querySelector('.hud-tag')?.textContent || 'CHUYÊN MÔN';
+      const skillDesc = card.getAttribute('data-skill-desc') || card.querySelector('.hud-cat-text')?.textContent || '';
+      const skillLevel = card.getAttribute('data-skill-level') || 'Thành thạo (Advanced)';
+
+      const lower = skillName.toLowerCase().trim();
+      const isUserSkill = candidateSkillsSet ? candidateSkillsSet.has(lower) : false;
+
+      // Find any matched experience
+      let matchedExp = null;
+      if (Array.isArray(candidateExperiences)) {
+        matchedExp = candidateExperiences.find(exp => {
+          const t = (exp.title || exp.projectName || '').toLowerCase();
+          const d = (exp.detail || exp.description || '').toLowerCase();
+          return t.includes(lower) || d.includes(lower);
+        });
       }
+
+      card.style.cursor = 'pointer';
+      card.onclick = function(e) {
+        e.stopPropagation();
+        window.openSkillModal({
+          name: skillName,
+          category: skillCat,
+          desc: skillDesc,
+          level: skillLevel,
+          isUserSkill: isUserSkill,
+          imgSrc: img ? img.src : null,
+          svgHtml: svg ? svg.outerHTML : null,
+          matchedProject: matchedExp
+        });
+      };
     });
+  }
 
-    // If candidate has few experiences in one category, balance them across the two wheels
-    const allExp = [...experiences];
-    const targetTech = techExp.length > 0 ? techExp : allExp.slice(0, Math.ceil(allExp.length / 2));
-    const targetArt = artExp.length > 0 ? artExp : allExp.slice(Math.ceil(allExp.length / 2));
+  // Initial attach
+  attachCardClickListeners(null, null);
 
-    function updateWheelSlots(slots, expList, baseGlobalIdx) {
-      slots.forEach((slot, idx) => {
-        if (idx >= expList.length) return;
-        const exp = expList[idx];
-        const card = slot.querySelector('.toolkit-card');
-        const svg = slot.querySelector('svg.toolkit-card__motion');
-        const hud = slot.querySelector('.toolkit-card-hud');
-        if (!card || !svg) return;
+  // Sync with candidate data
+  window.syncCandidateSkills = function(userSkillsList, userSkillDetails, userExperiences) {
+    const candidateSkillsSet = new Set();
+    const detailsMap = {};
 
-        const globalIdx = baseGlobalIdx + idx;
-        card.setAttribute('data-memory-index', String(globalIdx));
-        card.onclick = function() {
-          window.parent.postMessage({
-            type: 'OPEN_MEMORY_SPOTLIGHT',
-            payload: { memoryIndex: globalIdx }
-          }, '*');
-        };
+    if (Array.isArray(userSkillsList)) {
+      userSkillsList.forEach(s => {
+        if (typeof s === 'string') candidateSkillsSet.add(s.toLowerCase().trim());
+      });
+    }
 
-        const palette = CARD_PALETTES[(baseGlobalIdx + idx) % CARD_PALETTES.length];
-        const rawTitle = exp.title || exp.projectName || 'Dự Án';
-        const rawCat = (exp.category || exp.roleLevel || 'THỰC CHIẾN').toUpperCase();
-        const { line1, line2 } = formatTitleLines(rawTitle);
-
-        // Calculate font size
-        const maxLen = Math.max(line1.length, line2.length);
-        let fontSize = 38;
-        if (maxLen > 14) fontSize = 28;
-        else if (maxLen > 10) fontSize = 32;
-
-        const pillWidth = Math.min(235, Math.max(150, rawCat.length * 8.5 + 30));
-        const pillX = (295 - pillWidth) / 2;
-
-        // Render card face SVG
-        svg.innerHTML = `
-          <rect width="295" height="417" rx="22.618" fill="${palette.bg}"/>
-          <text x="147.5" y="172" text-anchor="middle" dominant-baseline="central" fill="${palette.text}" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="900" font-size="${fontSize}" letter-spacing="-0.03em">
-            ${line2 ? `<tspan x="147.5" dy="-18">${line1}</tspan><tspan x="147.5" dy="44">${line2}</tspan>` : `<tspan x="147.5" dy="0">${line1}</tspan>`}
-          </text>
-          <rect x="${pillX}" y="261.5" width="${pillWidth}" height="34.618" rx="17.309" fill="${palette.pillBg}"/>
-          <text x="147.5" y="278.8" text-anchor="middle" dominant-baseline="central" fill="${palette.pillText}" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="800" font-size="10" letter-spacing="0.08em">${rawCat}</text>
-        `;
-
-        // Update HUD
-        if (hud) {
-          const hudTag = hud.querySelector('.hud-tag');
-          const hudTitle = hud.querySelector('.hud-title');
-          const hudLevel = hud.querySelector('.hud-level-text');
-          const hudCat = hud.querySelector('.hud-cat-text');
-          const hudProjectName = hud.querySelector('.hud-project-name');
-          const hudExp = hud.querySelector('.hud-exp-badge');
-
-          if (hudTag) hudTag.textContent = rawCat;
-          if (hudTitle) hudTitle.textContent = rawTitle;
-          if (hudLevel) hudLevel.textContent = exp.roleLevel || exp.position || 'Thực chiến';
-          if (hudCat) hudCat.textContent = exp.organization || 'Minh chứng sống';
-          if (hudProjectName) {
-            const dateStr = `${exp.startDate || ''} ${exp.endDate ? '- ' + exp.endDate : ''}`.trim();
-            hudProjectName.textContent = dateStr || 'Cột mốc đã xác thực';
-          }
-          if (hudExp) hudExp.textContent = `+${exp.expReward || 400} EXP`;
+    if (Array.isArray(userSkillDetails)) {
+      userSkillDetails.forEach(sd => {
+        if (sd && sd.name) {
+          const k = sd.name.toLowerCase().trim();
+          candidateSkillsSet.add(k);
+          detailsMap[k] = sd;
         }
       });
     }
 
-    const frontendSlots = document.querySelectorAll('.toolkit__wheel--frontend .toolkit__slot:not(.toolkit__slot--transition)');
-    updateWheelSlots(frontendSlots, targetTech, 0);
+    const experiencesList = Array.isArray(userExperiences) ? userExperiences : [];
 
-    const artSlots = document.querySelectorAll('.toolkit__wheel--art-direction .toolkit__slot:not(:has(.toolkit-card--transition))');
-    updateWheelSlots(artSlots, targetArt, targetTech.length);
+    // 1. Highlight matching default cards
+    document.querySelectorAll('.toolkit-card:not(.toolkit-card--transition)').forEach((card) => {
+      const skillName = card.getAttribute('data-skill-name') || '';
+      const lower = skillName.toLowerCase().trim();
+      const userBadge = card.querySelector('.toolkit-card-user-badge');
+      const hud = card.querySelector('.toolkit-card-hud');
+
+      if (candidateSkillsSet.has(lower)) {
+        if (userBadge) {
+          userBadge.style.display = 'inline-flex';
+          userBadge.textContent = '⭐ CỦA BẠN';
+        }
+        if (hud) {
+          const verified = hud.querySelector('.hud-verified');
+          if (verified) verified.textContent = '✓ ĐÃ XÁC THỰC';
+          const levelEl = hud.querySelector('.hud-level-text');
+          const detail = detailsMap[lower];
+          if (detail && levelEl) {
+            const lvl = detail.proficiencyLevel;
+            levelEl.textContent = `Trình độ: ${lvl === 'EXPERT' ? 'Chuyên gia' : lvl === 'ADVANCED' ? 'Thành thạo' : 'Nâng cao'}`;
+          }
+        }
+      } else {
+        if (userBadge) userBadge.style.display = 'none';
+      }
+    });
+
+    // 2. If candidate has custom skills not in the default 16, dynamically adapt extra slots
+    const defaultSkills = ['javascript', 'react', 'next.js', 'nextjs', 'vue.js', 'vue', 'three.js', 'threejs', 'gsap', 'glsl', 'webflow', 'shopify', 'figma', 'photoshop', 'illustrator', 'indesign', 'after effects', 'aftereffects', 'capcut', 'lightroom'];
+    const customUserSkills = [];
+    candidateSkillsSet.forEach(s => {
+      if (!defaultSkills.includes(s)) {
+        customUserSkills.push(s);
+      }
+    });
+
+    if (customUserSkills.length > 0) {
+      const frontendSlots = document.querySelectorAll('.toolkit__wheel--frontend .toolkit__slot:not(.toolkit__slot--transition)');
+      customUserSkills.forEach((custSkill, idx) => {
+        // Replace from slot 6 or 7
+        const slotIdx = frontendSlots.length - 1 - idx;
+        if (slotIdx >= 4 && slotIdx < frontendSlots.length) {
+          const slot = frontendSlots[slotIdx];
+          const card = slot.querySelector('.toolkit-card');
+          const img = slot.querySelector('img.toolkit-card__motion');
+          const userBadge = slot.querySelector('.toolkit-card-user-badge');
+          const hud = slot.querySelector('.toolkit-card-hud');
+          if (!card || !img) return;
+
+          const theme = CUSTOM_SKILL_THEMES[custSkill] || {
+            bg: '#1E293B',
+            text: '#38BDF8',
+            pillBg: '#38BDF8',
+            pillText: '#0F172A',
+            cat: 'KỸ NĂNG XÁC THỰC',
+            desc: `Kỹ năng ${custSkill.toUpperCase()} đã được ứng viên xác thực trong hồ sơ năng lực.`
+          };
+
+          const capitalized = custSkill.charAt(0).toUpperCase() + custSkill.slice(1);
+          img.src = generateSkillSvg(capitalized, theme);
+          img.alt = capitalized;
+
+          card.setAttribute('data-skill-name', capitalized);
+          card.setAttribute('data-skill-cat', theme.cat);
+          card.setAttribute('data-skill-desc', theme.desc);
+          card.setAttribute('data-skill-level', 'Thành thạo (Advanced)');
+
+          if (userBadge) {
+            userBadge.style.display = 'inline-flex';
+            userBadge.textContent = '⭐ CỦA BẠN';
+          }
+
+          if (hud) {
+            const titleEl = hud.querySelector('.hud-title');
+            const catEl = hud.querySelector('.hud-cat-text');
+            const tagEl = hud.querySelector('.hud-tag');
+            if (titleEl) titleEl.textContent = capitalized;
+            if (catEl) catEl.textContent = theme.cat;
+            if (tagEl) tagEl.textContent = theme.cat;
+          }
+        }
+      });
+    }
+
+    // Re-attach listeners with active candidate skills set
+    attachCardClickListeners(candidateSkillsSet, experiencesList);
   };
 
   // Auto-fetch profile from API if candidate is logged in (using stored token)
   try {
-    const token = localStorage.getItem('nextplease:access_token');
+    const token = localStorage.getItem('nextplease:access_token') || sessionStorage.getItem('nextplease:access_token');
     if (token) {
       fetch('/api/v1/profiles/me', {
         headers: {
@@ -2730,8 +3091,8 @@ html:lang(vi) .toolkit__subtitle,
           if (profile.reputationScore !== undefined) {
             document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = String(profile.reputationScore));
           }
-          if (Array.isArray(profile.experiences) && profile.experiences.length > 0) {
-            window.renderCandidateCards(profile.experiences, profile.skills, profile.skillDetails);
+          if (Array.isArray(profile.skills) && profile.skills.length > 0) {
+            window.syncCandidateSkills(profile.skills, profile.skillDetails, profile.experiences);
           }
         }
       })
@@ -2762,9 +3123,9 @@ html:lang(vi) .toolkit__subtitle,
         document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = String(data.rs));
       }
 
-      // Dynamically render candidate's actual projects/experiences onto the cards
-      if (Array.isArray(data?.experiences) && data.experiences.length > 0) {
-        window.renderCandidateCards(data.experiences, data.skills, data.skillDetails);
+      // Synchronize candidate's actual validated skills
+      if (Array.isArray(data?.skills) && data.skills.length > 0) {
+        window.syncCandidateSkills(data.skills, data.skillDetails, data.experiences);
       }
     }
   });
