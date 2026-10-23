@@ -31,10 +31,6 @@
         ${e?.t(`header.toolkit`)??`công cụ`}
       </a>
 
-      <a class="site-header__link" href="#projects">
-        ${e?.t(`header.projects`)??`dự án`}
-      </a>
-
       <a class="site-header__link" href="#contact">
         ${e?.t(`header.contact`)??`tham gia waitlist`}
       </a>
