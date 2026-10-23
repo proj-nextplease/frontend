@@ -1417,104 +1417,6 @@ html:lang(vi) .toolkit__subtitle,
   color: #FACC15;
 }
 
-/* Floating Sleek Action Capsule Dock (Positioned BELOW Card - Zero Collision) */
-.toolkit-card-capsule {
-  position: absolute;
-  top: calc(100% + 14px);
-  left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  height: 38px;
-  padding: 0 16px;
-  background: rgba(14, 18, 28, 0.92);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 9999px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255, 255, 255, 0.08);
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-              visibility 0.22s;
-  z-index: 100;
-  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
-  user-select: none;
-  cursor: pointer;
-}
-
-.toolkit-card:hover .toolkit-card-capsule {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(0);
-  pointer-events: auto;
-}
-
-.toolkit-card-capsule .capsule-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #10B981;
-  box-shadow: 0 0 8px #10B981, 0 0 3px #34D399;
-  flex-shrink: 0;
-  animation: capsuleDotPulse 2s infinite ease-in-out;
-}
-
-@keyframes capsuleDotPulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-    box-shadow: 0 0 8px #10B981, 0 0 3px #34D399;
-  }
-  50% {
-    transform: scale(1.25);
-    opacity: 0.85;
-    box-shadow: 0 0 14px #10B981, 0 0 6px #6EE7B7;
-  }
-}
-
-.toolkit-card-capsule .capsule-level {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #F8FAFC;
-  letter-spacing: -0.01em;
-}
-
-.toolkit-card-capsule .capsule-sep {
-  color: rgba(255, 255, 255, 0.22);
-  font-size: 11px;
-}
-
-.toolkit-card-capsule .capsule-action {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #94A3B8;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: color 0.18s ease;
-}
-
-.toolkit-card-capsule:hover .capsule-action,
-.toolkit-card:hover .toolkit-card-capsule .capsule-action {
-  color: #38BDF8;
-}
-
-.toolkit-card-capsule .capsule-arrow {
-  display: inline-block;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.18s ease;
-  stroke: currentColor;
-}
-
-.toolkit-card-capsule:hover .capsule-arrow,
-.toolkit-card:hover .toolkit-card-capsule:hover .capsule-arrow {
-  transform: translate(2px, -2px);
-  stroke: #38BDF8;
-}
 
 /* ==========================================================================
    PROJECTS SECTION: REFINED ALIGNMENT & ZERO COLLISION
@@ -2349,12 +2251,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="0" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--javascript" data-skill-name="JavaScript" data-skill-cat="NGÔN NGỮ LẬP TRÌNH" data-skill-desc="Ngôn ngữ cốt lõi của web hiện đại, xử lý logic tương tác động và thuật toán client-side." data-skill-level="Thành thạo (Advanced)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Thành thạo (Advanced)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/frontend/vi/javascript.svg"
@@ -2368,12 +2264,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="1" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--react" data-skill-name="React" data-skill-cat="THƯ VIỆN GIAO DIỆN" data-skill-desc="Thư viện xây dựng Single Page Application (SPA), kiến trúc component tái sử dụng và quản lý Virtual DOM hiệu năng cao." data-skill-level="Thành thạo (Advanced)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Thành thạo (Advanced)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/frontend/vi/react.svg"
@@ -2387,12 +2277,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="2" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--nextjs" data-skill-name="Next.js" data-skill-cat="FRAMEWORK FULLSTACK" data-skill-desc="Framework React hỗ trợ Server-Side Rendering (SSR), Static Site Generation (SSG) và tối ưu SEO vượt trội cho sản phẩm." data-skill-level="Nâng cao (Intermediate)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Nâng cao (Intermediate)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/frontend/vi/nextjs.svg"
@@ -2406,12 +2290,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="3" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--vue" data-skill-name="Vue.js" data-skill-cat="FRAMEWORK GIAO DIỆN" data-skill-desc="Framework giao diện với cú pháp dễ tiếp cận, hệ thống reactivity mạnh mẽ và công cụ Composition API hiện đại." data-skill-level="Nâng cao (Intermediate)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Nâng cao (Intermediate)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="/universe-clone/home/toolkit/frontend/vi/vuejs.svg"
@@ -2425,12 +2303,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="4" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--threejs" data-skill-name="three.js" data-skill-cat="ĐỒ HỌA 3D WEB" data-skill-desc="Thư viện dựng hình 3D trên nền tảng WebGL, kết xuất mô hình khối, vật lý không gian và hiệu ứng thị giác tương tác mượt mà." data-skill-level="Nâng cao (Intermediate)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Nâng cao (Intermediate)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="/universe-clone/home/toolkit/frontend/vi/threejs.svg"
@@ -2444,12 +2316,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="5" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--gsap" data-skill-name="GSAP" data-skill-cat="THƯ VIỆN CHUYỂN ĐỘNG" data-skill-desc="Tiêu chuẩn công nghiệp cho chuyển động web cao cấp, điều khiển Timeline, ScrollTrigger và vật lý đàn hồi." data-skill-level="Thành thạo (Advanced)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Thành thạo (Advanced)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/frontend/vi/gsap.svg"
@@ -2463,12 +2329,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="6" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--glsl" data-skill-name="GLSL" data-skill-cat="NGÔN NGỮ SHADER" data-skill-desc="Lập trình shader tính toán trên chip GPU, xử lý ánh sáng pixel, vertex biến dạng và hiệu ứng sóng nước trực quan." data-skill-level="Cơ bản (Intermediate)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Cơ bản (Intermediate)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/frontend/vi/glsl.svg"
@@ -2482,12 +2342,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="7" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--webflow" data-skill-name="Webflow" data-skill-cat="NỀN TẢNG DỰNG WEB" data-skill-desc="Nền tảng No-Code trực quan cho phép biến bản thiết kế thành trang web chuẩn semantic HTML5/CSS3 với tốc độ nhanh chóng." data-skill-level="Thành thạo (Advanced)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Thành thạo (Advanced)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/frontend/vi/webflow.svg"
@@ -2533,12 +2387,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="0" data-wheel="art">
                 <div class="toolkit-card toolkit-card--figma" data-skill-name="Figma" data-skill-cat="THIẾT KẾ GIAO DIỆN" data-skill-desc="Công cụ thiết kế UI/UX hàng đầu, quản lý Design System, tương tác prototype và phối hợp thời gian thực với lập trình viên." data-skill-level="Thành thạo (Advanced)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Thành thạo (Advanced)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/art-direction/vi/figma.svg"
@@ -2552,12 +2400,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="1" data-wheel="art">
                 <div class="toolkit-card toolkit-card--photoshop" data-skill-name="Photoshop" data-skill-cat="XỬ LÝ HÌNH ẢNH" data-skill-desc="Phần mềm xử lý đồ họa raster chuyên sâu, cắt ghép hình ảnh, tạo key visual và thiết kế banner quảng cáo sắc nét." data-skill-level="Thành thạo (Advanced)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Thành thạo (Advanced)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/art-direction/vi/photoshop.svg"
@@ -2571,12 +2413,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="2" data-wheel="art">
                 <div class="toolkit-card toolkit-card--illustrator" data-skill-name="Illustrator" data-skill-cat="ĐỒ HỌA VECTOR" data-skill-desc="Vẽ đồ họa vector vô hạn độ phân giải, tạo hình logo nhận diện thương hiệu, icon pack và hình minh họa chuyên nghiệp." data-skill-level="Thành thạo (Advanced)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Thành thạo (Advanced)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/art-direction/vi/illustrator.svg"
@@ -2590,12 +2426,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="3" data-wheel="art">
                 <div class="toolkit-card toolkit-card--indesign" data-skill-name="InDesign" data-skill-cat="DÀN TRANG ẤN PHẨM" data-skill-desc="Dàn trang xuất bản đa trang, thiết kế tài liệu hội thảo, brochure doanh nghiệp và sách điện tử chuẩn in ấn." data-skill-level="Cơ bản (Intermediate)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Cơ bản (Intermediate)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/art-direction/vi/indesign.svg"
@@ -2609,12 +2439,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="4" data-wheel="art">
                 <div class="toolkit-card toolkit-card--after-effects" data-skill-name="After Effects" data-skill-cat="MOTION GRAPHICS" data-skill-desc="Biên tập chuyển động logo, tạo hiệu ứng kỹ xảo video (VFX) và hoạt họa 2D sinh động cho các chiến dịch truyền thông." data-skill-level="Thành thạo (Advanced)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Thành thạo (Advanced)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/art-direction/vi/aftereffects.svg"
@@ -2628,12 +2452,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="5" data-wheel="art">
                 <div class="toolkit-card toolkit-card--capcut" data-skill-name="CapCut" data-skill-cat="VIDEO NGẮN VIRAL" data-skill-desc="Biên tập video ngắn theo nhịp điệu âm nhạc, bắt trend TikTok / Reels, tạo phụ đề tự động và hook thu hút người xem." data-skill-level="Thành thạo (Advanced)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Thành thạo (Advanced)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/art-direction/vi/capcut.svg"
@@ -2647,12 +2465,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="toolkit__slot" data-slot-index="6" data-wheel="art">
                 <div class="toolkit-card toolkit-card--lightroom" data-skill-name="Lightroom" data-skill-cat="CHỈNH MÀU ÁNH SÁNG" data-skill-desc="Xử lý màu ảnh số hàng loạt, cân chỉnh ánh sáng, phân bổ sắc thái tone màu nghệ thuật và tối ưu chất lượng ảnh." data-skill-level="Thành thạo (Advanced)">
                   <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
-                  <div class="toolkit-card-capsule">
-                    <span class="capsule-dot"></span>
-                    <span class="capsule-level">Thành thạo (Advanced)</span>
-                    <span class="capsule-sep">•</span>
-                    <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-                  </div>
                   <img
                     class="toolkit-card__motion"
                     src="home/toolkit/art-direction/vi/lightroom.svg"
@@ -3545,17 +3357,6 @@ html:lang(vi) .toolkit__subtitle,
         verifiedTag.className = 'card-verified-tag';
         verifiedTag.innerHTML = '<span class="card-verified-sparkle">✦</span> XÁC THỰC';
         card.appendChild(verifiedTag);
-
-        // 4. Add luxury floating action capsule dock BELOW card (zero collision!)
-        const capsule = document.createElement('div');
-        capsule.className = 'toolkit-card-capsule';
-        capsule.innerHTML = `
-          <span class="capsule-dot"></span>
-          <span class="capsule-level">${skillInfo.level}</span>
-          <span class="capsule-sep">•</span>
-          <span class="capsule-action">Khám phá chi tiết <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
-        `;
-        card.appendChild(capsule);
 
         // Click handler to open luxury modal
         card.onclick = function(e) {
