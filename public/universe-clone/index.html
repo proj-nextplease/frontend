@@ -1541,6 +1541,188 @@ html:lang(vi) .toolkit__subtitle,
   font-size: clamp(20px, 3.2vw, 44px) !important;
   line-height: 1.25 !important;
   letter-spacing: -0.015em !important;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.25s ease !important;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Dim all milestone links when any link is hovered */
+.projects__list.is-hovering .projects__link {
+  opacity: 0.22 !important;
+  transform: scale(0.985);
+}
+
+/* Highlight the active hovered link */
+.projects__list.is-hovering .projects__link.is-active {
+  opacity: 1 !important;
+  transform: scale(1.025) translateX(10px) !important;
+  color: #FFFFFF !important;
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.4), 0 0 50px rgba(56, 189, 248, 0.25) !important;
+}
+
+/* ==========================================================================
+   FLOATING CURSOR PREVIEW CARD (OPTION 1)
+   ========================================================================== */
+.project-cursor-preview {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 330px;
+  pointer-events: none;
+  z-index: 99999;
+  opacity: 0;
+  visibility: hidden;
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.90);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85),
+              0 0 40px rgba(56, 189, 248, 0.18),
+              0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  overflow: hidden;
+  will-change: transform, opacity;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center center;
+}
+
+.project-cursor-preview.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.project-preview-inner {
+  display: flex;
+  flex-direction: column;
+}
+
+.project-preview-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #020617;
+  overflow: hidden;
+}
+
+.project-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.project-cursor-preview.is-active .project-preview-img {
+  transform: scale(1.05);
+}
+
+.project-preview-media-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(15, 23, 42, 0.92) 100%);
+  pointer-events: none;
+}
+
+.project-preview-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  font-family: Satoshi-Variable, -apple-system, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+
+.preview-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+  display: inline-block;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.project-preview-metric {
+  position: absolute;
+  bottom: 8px;
+  left: 10px;
+  padding: 3px 9px;
+  background: rgba(185, 255, 0, 0.22);
+  border: 1px solid rgba(185, 255, 0, 0.45);
+  border-radius: 6px;
+  color: #B9FF00;
+  font-family: CabinetGrotesk-Bold, -apple-system, sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(8px);
+  transition: color 0.3s, border-color 0.3s, background 0.3s;
+}
+
+.project-preview-info {
+  padding: 10px 14px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.project-preview-role-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-preview-role-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #94A3B8;
+  text-transform: uppercase;
+  font-family: Satoshi-Variable, sans-serif;
+}
+
+.project-preview-role {
+  font-family: Satoshi-Variable, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #F8FAFC;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 175px;
+}
+
+.project-preview-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #CBD5E1;
+  font-family: Satoshi-Variable, sans-serif;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.preview-sparkle {
+  color: #F5DF4D;
+  font-size: 10px;
 }
 
 @media (max-width: 900px) {
@@ -1558,6 +1740,16 @@ html:lang(vi) .toolkit__subtitle,
   .projects__link {
     font-size: clamp(15px, 3.8vw, 22px) !important;
     text-align: center !important;
+  }
+}
+
+@media (hover: none), (pointer: coarse), (max-width: 900px) {
+  .project-cursor-preview {
+    display: none !important;
+  }
+  .projects__list.is-hovering .projects__link {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 
@@ -2554,6 +2746,7 @@ html:lang(vi) .toolkit__subtitle,
               <a
                 class="projects__link"
                 href="#contact"
+                data-milestone-index="0"
               >
                 01 / Tuần lễ Xanh trường ĐH FPT — 1,200 SV tham gia
               </a>
@@ -2561,6 +2754,7 @@ html:lang(vi) .toolkit__subtitle,
               <a
                 class="projects__link"
                 href="#contact"
+                data-milestone-index="1"
               >
                 02 / 60s Sài Gòn — Viral Video 850,000 Views
               </a>
@@ -2568,6 +2762,7 @@ html:lang(vi) .toolkit__subtitle,
               <a
                 class="projects__link"
                 href="#contact"
+                data-milestone-index="2"
               >
                 03 / NextGen Tech Hackathon — Giải Nhất Toàn Quốc
               </a>
@@ -2575,6 +2770,7 @@ html:lang(vi) .toolkit__subtitle,
               <a
                 class="projects__link"
                 href="#contact"
+                data-milestone-index="3"
               >
                 04 / Hệ thống Quản lý Điểm danh QR — CLB Phần mềm
               </a>
@@ -2582,6 +2778,7 @@ html:lang(vi) .toolkit__subtitle,
               <a
                 class="projects__link"
                 href="#contact"
+                data-milestone-index="4"
               >
                 05 / Bộ Nhận diện Thương hiệu Sinh viên — 3 Startup
               </a>
@@ -2589,6 +2786,7 @@ html:lang(vi) .toolkit__subtitle,
               <a
                 class="projects__link"
                 href="#contact"
+                data-milestone-index="5"
               >
                 06 / Báo Cáo Năng Lực Living Proof — Đạt Chuẩn 100%
               </a>
@@ -3336,7 +3534,210 @@ html:lang(vi) .toolkit__subtitle,
     ]);
   }
 })();
+
+/* ==========================================================================
+   OPTION 1: FLOATING MAGNETIC CURSOR PREVIEW FOR MILESTONES
+   ========================================================================== */
+(function initProjectCursorPreview() {
+  const MILESTONE_DATA = [
+    {
+      image: 'projects/01-fpt-green-week.jpg',
+      category: 'HOẠT ĐỘNG SỰ KIỆN',
+      metric: '1,200 SV THAM GIA',
+      role: 'Trưởng Ban Tổ Chức',
+      highlight: 'Đại Học FPT TP.HCM',
+      color: '#10B981'
+    },
+    {
+      image: 'projects/02-saigon-viral-video.jpg',
+      category: 'VIRAL MEDIA & CREATIVE',
+      metric: '850,000+ LƯỢT XEM',
+      role: 'Video Editor & Sáng Tạo',
+      highlight: '60s Sài Gòn Reels / TikTok',
+      color: '#EC4899'
+    },
+    {
+      image: 'projects/03-hackathon-champion.jpg',
+      category: 'CÔNG NGHỆ & ĐỔI MỚI',
+      metric: 'GIẢI NHẤT TOÀN QUỐC',
+      role: 'Lead Fullstack Developer',
+      highlight: 'NextGen Tech Hackathon',
+      color: '#F59E0B'
+    },
+    {
+      image: 'projects/04-qr-attendance.jpg',
+      category: 'KỸ THUẬT PHẦN MỀM',
+      metric: '3,000+ LƯỢT QUÉT',
+      role: 'Backend & Cloud System',
+      highlight: 'CLB Phần Mềm Sinh Viên',
+      color: '#06B6D4'
+    },
+    {
+      image: 'projects/05-brand-identity.jpg',
+      category: 'BRANDING & DESIGN',
+      metric: '3 DOANH NGHIỆP TIN DÙNG',
+      role: 'Art Director & Designer',
+      highlight: 'Bộ Nhận Diện Thương Hiệu',
+      color: '#A855F7'
+    },
+    {
+      image: 'projects/06-living-proof.jpg',
+      category: 'HỒ SƠ SỐ FONLIO',
+      metric: '100% ĐẠT CHUẨN TÍN NHIỆM',
+      role: 'Genesis Living Proof',
+      highlight: 'Mạng Lưới Đối Tác Fonlio',
+      color: '#B9FF00'
+    }
+  ];
+
+  const preview = document.getElementById('projectCursorPreview');
+  const previewImg = document.getElementById('projectPreviewImg');
+  const badgeText = document.getElementById('projectPreviewBadgeText');
+  const badgeDot = document.getElementById('projectPreviewDot');
+  const metric = document.getElementById('projectPreviewMetric');
+  const role = document.getElementById('projectPreviewRole');
+  const list = document.querySelector('.projects__list');
+  const links = document.querySelectorAll('.projects__link');
+
+  if (!preview || !list || !links.length) return;
+
+  // Preload preview images
+  MILESTONE_DATA.forEach(item => {
+    const img = new Image();
+    img.src = item.image;
+  });
+
+  let mouseX = -500;
+  let mouseY = -500;
+  let currentX = -500;
+  let currentY = -500;
+  let isHovering = false;
+  let rafId = null;
+
+  function updateFollower() {
+    if (!isHovering && !preview.classList.contains('is-active')) {
+      rafId = null;
+      return;
+    }
+
+    const cardW = 330;
+    const cardH = 240;
+
+    let targetX = mouseX + 28;
+    let targetY = mouseY - 110;
+
+    // Flip to left if hitting right viewport edge
+    if (targetX + cardW > window.innerWidth - 16) {
+      targetX = mouseX - cardW - 28;
+    }
+
+    // Keep card within viewport top/bottom
+    if (targetY < 24) {
+      targetY = 24;
+    } else if (targetY + cardH > window.innerHeight - 24) {
+      targetY = window.innerHeight - cardH - 24;
+    }
+
+    // Smooth Lerp damping
+    currentX += (targetX - currentX) * 0.16;
+    currentY += (targetY - currentY) * 0.16;
+
+    // Subtle dynamic tilt on horizontal velocity
+    const vx = (targetX - currentX) * 0.05;
+    const tilt = Math.max(-8, Math.min(8, vx));
+
+    preview.style.left = `${currentX}px`;
+    preview.style.top = `${currentY}px`;
+    if (isHovering) {
+      preview.style.transform = `scale(1) rotate(${tilt}deg)`;
+    } else {
+      preview.style.transform = `scale(0.85) rotate(-3deg)`;
+    }
+
+    rafId = requestAnimationFrame(updateFollower);
+  }
+
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+
+    if (isHovering && !rafId) {
+      rafId = requestAnimationFrame(updateFollower);
+    }
+  }, { passive: true });
+
+  links.forEach((link, idx) => {
+    const dataIdx = link.dataset.milestoneIndex !== undefined ? parseInt(link.dataset.milestoneIndex, 10) : idx;
+
+    link.addEventListener('mouseenter', () => {
+      const data = MILESTONE_DATA[dataIdx];
+      if (!data) return;
+
+      previewImg.src = data.image;
+      badgeText.textContent = data.category;
+      if (badgeDot) {
+        badgeDot.style.background = data.color || '#10B981';
+        badgeDot.style.boxShadow = `0 0 10px ${data.color || '#10B981'}`;
+      }
+      metric.textContent = data.metric;
+      if (data.color) {
+        metric.style.color = data.color;
+        metric.style.borderColor = `${data.color}66`;
+        metric.style.background = `${data.color}22`;
+      }
+      role.textContent = data.role;
+
+      isHovering = true;
+      list.classList.add('is-hovering');
+      links.forEach(l => l.classList.remove('is-active'));
+      link.classList.add('is-active');
+      preview.classList.add('is-active');
+
+      if (!rafId) {
+        rafId = requestAnimationFrame(updateFollower);
+      }
+    });
+
+    link.addEventListener('mouseleave', () => {
+      link.classList.remove('is-active');
+    });
+  });
+
+  list.addEventListener('mouseleave', () => {
+    isHovering = false;
+    list.classList.remove('is-hovering');
+    links.forEach(l => l.classList.remove('is-active'));
+    preview.classList.remove('is-active');
+  });
+})();
 </script>
+
+<!-- OPTION 1: FLOATING CURSOR PREVIEW CARD -->
+<div id="projectCursorPreview" class="project-cursor-preview" aria-hidden="true">
+  <div class="project-preview-inner">
+    <div class="project-preview-media">
+      <img id="projectPreviewImg" class="project-preview-img" src="projects/01-fpt-green-week.jpg" alt="" />
+      <div class="project-preview-media-overlay"></div>
+      <div class="project-preview-badge">
+        <span class="preview-badge-dot" id="projectPreviewDot"></span>
+        <span id="projectPreviewBadgeText">HOẠT ĐỘNG SỰ KIỆN</span>
+      </div>
+      <div class="project-preview-metric" id="projectPreviewMetric">
+        1,200 SV THAM GIA
+      </div>
+    </div>
+    <div class="project-preview-info">
+      <div class="project-preview-role-wrap">
+        <span class="project-preview-role-label">VAI TRÒ THỰC CHIẾN</span>
+        <div class="project-preview-role" id="projectPreviewRole">Trưởng Ban Tổ Chức</div>
+      </div>
+      <div class="project-preview-status">
+        <span class="preview-sparkle">✦</span>
+        <span>Xác thực 100%</span>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
