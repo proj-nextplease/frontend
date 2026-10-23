@@ -1326,24 +1326,47 @@ html:lang(vi) .toolkit__subtitle,
   pointer-events: none;
   width: clamp(180px, 18vw, 295px);
   margin: 0 auto;
-  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1), filter 0.25s ease;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), filter 0.28s ease;
   position: relative;
   transform: translateY(-50%);
 }
+
+/* Ambient Backlight Halo Glow on Hover */
+.toolkit-card::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 26px;
+  background: var(--card-glow, rgba(56, 189, 248, 0.45));
+  filter: blur(28px);
+  opacity: 0;
+  z-index: 0;
+  transform: scale(0.92);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
 .toolkit__wheel.is-interactive .toolkit-card {
   pointer-events: auto;
   cursor: pointer;
 }
+
 @media (any-hover: hover) and (any-pointer: fine) {
   .toolkit__wheel.is-interactive .toolkit-card:hover {
-    transform: translateY(-54%) scale(1.05);
-    filter: drop-shadow(0 20px 35px rgba(0, 0, 0, 0.7));
+    transform: translateY(-56%) scale(1.055);
+    filter: drop-shadow(0 24px 44px rgba(0, 0, 0, 0.85));
+  }
+  .toolkit__wheel.is-interactive .toolkit-card:hover::before {
+    opacity: 0.72;
+    transform: scale(1.04);
   }
 }
+
 .toolkit-card__motion {
   will-change: transform;
   border-radius: 22.6px;
 }
+
 .toolkit-card img,
 .toolkit-card svg {
   object-fit: contain;
@@ -1353,161 +1376,144 @@ html:lang(vi) .toolkit__subtitle,
   position: absolute;
   inset: 0;
   border-radius: 22.6px;
+  z-index: 1;
 }
 
-/* User Profile Badge on Card */
-.toolkit-card-user-badge {
+/* Luxury Verified Foil Stamp on Card Face */
+.card-verified-tag {
   position: absolute;
   top: 14px;
   right: 14px;
-  z-index: 10;
+  z-index: 12;
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
   border-radius: 9999px;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(185, 255, 0, 0.5);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 10px rgba(185, 255, 0, 0.25);
-  color: #b9ff00;
-  font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
-  font-size: 10px;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   pointer-events: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.toolkit-card:hover .toolkit-card-user-badge {
-  transform: scale(1.05);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 14px rgba(185, 255, 0, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
 }
 
-/* Floating Sleek Hologram / HUD Tooltip on Hover */
-.toolkit-card-hud {
+.toolkit-card:hover .card-verified-tag {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
+  transform: scale(1.04);
+}
+
+.card-verified-sparkle {
+  font-size: 8.5px;
+  color: #FACC15;
+}
+
+/* Floating Sleek Action Capsule Dock (Positioned BELOW Card - Zero Collision) */
+.toolkit-card-capsule {
   position: absolute;
-  bottom: calc(100% + 16px);
+  top: calc(100% + 14px);
   left: 50%;
-  transform: translateX(-50%) translateY(10px) scale(0.95);
-  width: clamp(240px, 22vw, 300px);
-  background: rgba(10, 15, 24, 0.94);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transform: translateX(-50%) translateY(10px);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 16px;
+  background: rgba(14, 18, 28, 0.92);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 14px;
-  padding: 14px 16px;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75), 0 0 24px rgba(185, 255, 0, 0.16);
-  z-index: 9999;
+  border-radius: 9999px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.22s cubic-bezier(0.2, 0.9, 0.3, 1), transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1), visibility 0.22s;
-  color: #ffffff;
-  text-align: left;
-  font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.22s;
+  z-index: 100;
+  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  user-select: none;
+  cursor: pointer;
 }
-.toolkit-card-hud::after {
-  content: '';
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%) rotate(45deg);
-  width: 12px;
-  height: 12px;
-  background: rgba(10, 15, 24, 0.94);
-  border-right: 1px solid rgba(255, 255, 255, 0.16);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-}
-.toolkit-card:hover .toolkit-card-hud {
+
+.toolkit-card:hover .toolkit-card-capsule {
   opacity: 1;
   visibility: visible;
+  transform: translateX(-50%) translateY(0);
   pointer-events: auto;
-  transform: translateX(-50%) translateY(0) scale(1);
 }
-.toolkit-card-hud .hud-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
+
+.toolkit-card-capsule .capsule-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981, 0 0 3px #34D399;
+  flex-shrink: 0;
+  animation: capsuleDotPulse 2s infinite ease-in-out;
 }
-.toolkit-card-hud .hud-tag {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #b9ff00;
+
+@keyframes capsuleDotPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 8px #10B981, 0 0 3px #34D399;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0.85;
+    box-shadow: 0 0 14px #10B981, 0 0 6px #6EE7B7;
+  }
 }
-.toolkit-card-hud .hud-verified {
-  font-size: 9.5px;
-  font-weight: 700;
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.12);
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  padding: 2px 6px;
-  border-radius: 9999px;
-}
-.toolkit-card-hud .hud-title {
-  font-size: 16px;
-  font-weight: 800;
-  color: #ffffff;
-  letter-spacing: -0.01em;
-  margin-bottom: 4px;
-}
-.toolkit-card-hud .hud-meta {
+
+.toolkit-card-capsule .capsule-level {
   font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.65);
-  margin-bottom: 8px;
-  display: flex;
+  font-weight: 600;
+  color: #F8FAFC;
+  letter-spacing: -0.01em;
+}
+
+.toolkit-card-capsule .capsule-sep {
+  color: rgba(255, 255, 255, 0.22);
+  font-size: 11px;
+}
+
+.toolkit-card-capsule .capsule-action {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #94A3B8;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  flex-wrap: wrap;
+  transition: color 0.18s ease;
 }
-.toolkit-card-hud .hud-project-box {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 8px 10px;
-  margin-bottom: 8px;
+
+.toolkit-card-capsule:hover .capsule-action,
+.toolkit-card:hover .toolkit-card-capsule .capsule-action {
+  color: #38BDF8;
 }
-.toolkit-card-hud .hud-project-label {
-  font-size: 10px;
-  color: #94a3b8;
-  display: block;
-  margin-bottom: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.toolkit-card-hud .hud-project-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: #ffffff;
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.toolkit-card-hud .hud-exp-badge {
+
+.toolkit-card-capsule .capsule-arrow {
   display: inline-block;
-  margin-top: 4px;
-  font-size: 10.5px;
-  font-weight: 800;
-  color: #b9ff00;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.18s ease;
+  stroke: currentColor;
 }
-.toolkit-card-hud .hud-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.45);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 8px;
-  transition: color 0.2s;
-}
-.toolkit-card:hover .toolkit-card-hud .hud-footer {
-  color: #b9ff00;
+
+.toolkit-card-capsule:hover .capsule-arrow,
+.toolkit-card:hover .toolkit-card-capsule:hover .capsule-arrow {
+  transform: translate(2px, -2px);
+  stroke: #38BDF8;
 }
 
 </style>
@@ -1729,6 +1735,7 @@ html:lang(vi) .toolkit__subtitle,
   user-select: none;
   box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.5);
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  z-index: 1;
 }
 .toolkit-card-vector-face .card-center-text {
   text-align: center;
@@ -2104,27 +2111,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 0: JavaScript -->
               <div class="toolkit__slot" data-slot-index="0" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--javascript" data-skill-name="JavaScript" data-skill-cat="NGÔN NGỮ LẬP TRÌNH" data-skill-desc="Ngôn ngữ cốt lõi của web hiện đại, xử lý logic tương tác động và thuật toán client-side." data-skill-level="Thành thạo (Advanced)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">NGÔN NGỮ LẬP TRÌNH</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">JavaScript</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Thành thạo</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Ngôn ngữ web cốt lõi</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+400 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Thành thạo (Advanced)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2138,27 +2130,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 1: React -->
               <div class="toolkit__slot" data-slot-index="1" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--react" data-skill-name="React" data-skill-cat="THƯ VIỆN GIAO DIỆN" data-skill-desc="Thư viện xây dựng Single Page Application (SPA), kiến trúc component tái sử dụng và quản lý Virtual DOM hiệu năng cao." data-skill-level="Thành thạo (Advanced)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">THƯ VIỆN GIAO DIỆN</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">React</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Thành thạo</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Single Page App & State</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+450 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Thành thạo (Advanced)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2172,27 +2149,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 2: Next.js -->
               <div class="toolkit__slot" data-slot-index="2" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--nextjs" data-skill-name="Next.js" data-skill-cat="FRAMEWORK FULLSTACK" data-skill-desc="Framework React hỗ trợ Server-Side Rendering (SSR), Static Site Generation (SSG) và tối ưu SEO vượt trội cho sản phẩm." data-skill-level="Nâng cao (Intermediate)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">FRAMEWORK FULLSTACK</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">Next.js</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Nâng cao</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">SSR &amp; Tối ưu SEO</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+420 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Nâng cao (Intermediate)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2206,27 +2168,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 3: Vue.js -->
               <div class="toolkit__slot" data-slot-index="3" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--vue" data-skill-name="Vue.js" data-skill-cat="FRAMEWORK GIAO DIỆN" data-skill-desc="Framework giao diện với cú pháp dễ tiếp cận, hệ thống reactivity mạnh mẽ và công cụ Composition API hiện đại." data-skill-level="Nâng cao (Intermediate)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">FRAMEWORK GIAO DIỆN</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">Vue.js</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Nâng cao</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Reactive UI &amp; State</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+380 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Nâng cao (Intermediate)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2240,27 +2187,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 4: three.js -->
               <div class="toolkit__slot" data-slot-index="4" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--threejs" data-skill-name="three.js" data-skill-cat="ĐỒ HỌA 3D WEB" data-skill-desc="Thư viện dựng hình 3D trên nền tảng WebGL, kết xuất mô hình khối, vật lý không gian và hiệu ứng thị giác tương tác mượt mà." data-skill-level="Nâng cao (Intermediate)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">ĐỒ HỌA 3D WEB</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">three.js</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Nâng cao</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">WebGL &amp; Không gian 3D</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+400 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Nâng cao (Intermediate)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2274,27 +2206,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 5: GSAP -->
               <div class="toolkit__slot" data-slot-index="5" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--gsap" data-skill-name="GSAP" data-skill-cat="THƯ VIỆN CHUYỂN ĐỘNG" data-skill-desc="Tiêu chuẩn công nghiệp cho chuyển động web cao cấp, điều khiển Timeline, ScrollTrigger và vật lý đàn hồi." data-skill-level="Thành thạo (Advanced)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">THƯ VIỆN CHUYỂN ĐỘNG</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">GSAP</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Thành thạo</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Timeline &amp; ScrollTrigger</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+380 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Thành thạo (Advanced)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2308,27 +2225,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 6: GLSL -->
               <div class="toolkit__slot" data-slot-index="6" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--glsl" data-skill-name="GLSL" data-skill-cat="NGÔN NGỮ SHADER" data-skill-desc="Lập trình shader tính toán trên chip GPU, xử lý ánh sáng pixel, vertex biến dạng và hiệu ứng sóng nước trực quan." data-skill-level="Cơ bản (Intermediate)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">NGÔN NGỮ SHADER</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">GLSL</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Cơ bản</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Shader GPU &amp; Pixel</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+350 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Cơ bản (Intermediate)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2342,27 +2244,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 7: Webflow -->
               <div class="toolkit__slot" data-slot-index="7" data-wheel="frontend">
                 <div class="toolkit-card toolkit-card--webflow" data-skill-name="Webflow" data-skill-cat="NỀN TẢNG DỰNG WEB" data-skill-desc="Nền tảng No-Code trực quan cho phép biến bản thiết kế thành trang web chuẩn semantic HTML5/CSS3 với tốc độ nhanh chóng." data-skill-level="Thành thạo (Advanced)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">NỀN TẢNG DỰNG WEB</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">Webflow</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Thành thạo</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">No-Code &amp; Dựng nhanh</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+320 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Thành thạo (Advanced)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2408,27 +2295,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 0: Figma -->
               <div class="toolkit__slot" data-slot-index="0" data-wheel="art">
                 <div class="toolkit-card toolkit-card--figma" data-skill-name="Figma" data-skill-cat="THIẾT KẾ GIAO DIỆN" data-skill-desc="Công cụ thiết kế UI/UX hàng đầu, quản lý Design System, tương tác prototype và phối hợp thời gian thực với lập trình viên." data-skill-level="Thành thạo (Advanced)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">UI/UX &amp; PRODUCT DESIGN</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">Figma</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Thành thạo</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Design System &amp; Prototype</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+400 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Thành thạo (Advanced)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2442,27 +2314,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 1: Photoshop -->
               <div class="toolkit__slot" data-slot-index="1" data-wheel="art">
                 <div class="toolkit-card toolkit-card--photoshop" data-skill-name="Photoshop" data-skill-cat="XỬ LÝ HÌNH ẢNH" data-skill-desc="Phần mềm xử lý đồ họa raster chuyên sâu, cắt ghép hình ảnh, tạo key visual và thiết kế banner quảng cáo sắc nét." data-skill-level="Thành thạo (Advanced)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">DIGITAL IMAGING</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">Photoshop</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Thành thạo</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Key Visual &amp; Hậu kỳ</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+350 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Thành thạo (Advanced)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2476,27 +2333,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 2: Illustrator -->
               <div class="toolkit__slot" data-slot-index="2" data-wheel="art">
                 <div class="toolkit-card toolkit-card--illustrator" data-skill-name="Illustrator" data-skill-cat="ĐỒ HỌA VECTOR" data-skill-desc="Vẽ đồ họa vector vô hạn độ phân giải, tạo hình logo nhận diện thương hiệu, icon pack và hình minh họa chuyên nghiệp." data-skill-level="Thành thạo (Advanced)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">VECTOR &amp; BRANDING</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">Illustrator</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Thành thạo</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Logo &amp; Brand Identity</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+360 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Thành thạo (Advanced)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2510,27 +2352,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 3: InDesign -->
               <div class="toolkit__slot" data-slot-index="3" data-wheel="art">
                 <div class="toolkit-card toolkit-card--indesign" data-skill-name="InDesign" data-skill-cat="DÀN TRANG ẤN PHẨM" data-skill-desc="Dàn trang xuất bản đa trang, thiết kế tài liệu hội thảo, brochure doanh nghiệp và sách điện tử chuẩn in ấn." data-skill-level="Cơ bản (Intermediate)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">EDITORIAL &amp; LAYOUT</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">InDesign</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Cơ bản</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Ấn phẩm truyền thông</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+320 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Cơ bản (Intermediate)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2544,27 +2371,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 4: After Effects -->
               <div class="toolkit__slot" data-slot-index="4" data-wheel="art">
                 <div class="toolkit-card toolkit-card--after-effects" data-skill-name="After Effects" data-skill-cat="MOTION GRAPHICS" data-skill-desc="Biên tập chuyển động logo, tạo hiệu ứng kỹ xảo video (VFX) và hoạt họa 2D sinh động cho các chiến dịch truyền thông." data-skill-level="Thành thạo (Advanced)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">MOTION GRAPHICS</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">After Effects</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Thành thạo</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">VFX &amp; Hoạt họa 2D</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+400 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Thành thạo (Advanced)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2578,27 +2390,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 5: CapCut -->
               <div class="toolkit__slot" data-slot-index="5" data-wheel="art">
                 <div class="toolkit-card toolkit-card--capcut" data-skill-name="CapCut" data-skill-cat="VIDEO NGẮN VIRAL" data-skill-desc="Biên tập video ngắn theo nhịp điệu âm nhạc, bắt trend TikTok / Reels, tạo phụ đề tự động và hook thu hút người xem." data-skill-level="Thành thạo (Advanced)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">SHORT-FORM VIDEO</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">CapCut</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Thành thạo</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Sản xuất video viral</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+380 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Thành thạo (Advanced)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -2612,27 +2409,12 @@ html:lang(vi) .toolkit__subtitle,
               <!-- Slot 6: Lightroom -->
               <div class="toolkit__slot" data-slot-index="6" data-wheel="art">
                 <div class="toolkit-card toolkit-card--lightroom" data-skill-name="Lightroom" data-skill-cat="CHỈNH MÀU ÁNH SÁNG" data-skill-desc="Xử lý màu ảnh số hàng loạt, cân chỉnh ánh sáng, phân bổ sắc thái tone màu nghệ thuật và tối ưu chất lượng ảnh." data-skill-level="Thành thạo (Advanced)">
-                  <div class="toolkit-card-user-badge" style="display: none;">⭐ CỦA BẠN</div>
-                  <div class="toolkit-card-hud">
-                    <div class="hud-top">
-                      <span class="hud-tag">COLOR GRADING</span>
-                      <span class="hud-verified">✓ CHUẨN KỸ NĂNG</span>
-                    </div>
-                    <div class="hud-title">Lightroom</div>
-                    <div class="hud-meta">
-                      <span class="hud-level-text">Trình độ: Thành thạo</span>
-                      <span>•</span>
-                      <span class="hud-cat-text">Tone màu nghệ thuật</span>
-                    </div>
-                    <div class="hud-project-box" style="display: none;">
-                      <span class="hud-project-label">Dự án ứng dụng</span>
-                      <span class="hud-project-name">Dự án thực tế</span>
-                      <span class="hud-exp-badge">+340 EXP</span>
-                    </div>
-                    <div class="hud-footer">
-                      <span>Nhấp thẻ để xem phân tích chi tiết</span>
-                      <span>↗</span>
-                    </div>
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> BẢO CHỨNG</div>
+                  <div class="toolkit-card-capsule">
+                    <span class="capsule-dot"></span>
+                    <span class="capsule-level">Thành thạo (Advanced)</span>
+                    <span class="capsule-sep">•</span>
+                    <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
                   </div>
                   <img
                     class="toolkit-card__motion"
@@ -3380,26 +3162,13 @@ html:lang(vi) .toolkit__subtitle,
         card.innerHTML = '';
         card.style.cursor = 'pointer';
 
-        // Add HUD tooltip for sleek hover feedback
-        const hud = document.createElement('div');
-        hud.className = 'toolkit-card-hud';
-        hud.innerHTML = `
-          <div class="hud-top">
-            <span class="hud-tag">${skillInfo.cat}</span>
-            <span class="hud-verified" style="color: #b9ff00;">✓ BẢO CHỨNG</span>
-          </div>
-          <div class="hud-title">${skillInfo.name}</div>
-          <div class="hud-meta">
-            <span class="hud-level-text">Trình độ: ${skillInfo.level}</span>
-          </div>
-          <div class="hud-footer">
-            <span style="color: #b9ff00;">Nhấp thẻ để xem phân tích chi tiết</span>
-            <span style="color: #b9ff00;">↗</span>
-          </div>
-        `;
-        card.appendChild(hud);
+        // 1. Set tailored ambient aura glow color matching the skill
+        const glowColor = skillInfo.textColor && skillInfo.textColor !== '#FFFFFF' && skillInfo.textColor !== '#1F1D1D' 
+          ? skillInfo.textColor 
+          : (skillInfo.bg && skillInfo.bg !== '#000000' && skillInfo.bg !== '#1E293B' ? skillInfo.bg : '#38BDF8');
+        card.style.setProperty('--card-glow', glowColor);
 
-        // Add card face
+        // 2. Add card face
         if (skillInfo.svg) {
           const img = document.createElement('img');
           img.className = 'toolkit-card__motion';
@@ -3409,6 +3178,23 @@ html:lang(vi) .toolkit__subtitle,
         } else {
           card.appendChild(createCardFaceElement(skillInfo));
         }
+
+        // 3. Add luxury verified foil stamp on card face
+        const verifiedTag = document.createElement('div');
+        verifiedTag.className = 'card-verified-tag';
+        verifiedTag.innerHTML = '<span class="card-verified-sparkle">✦</span> BẢO CHỨNG';
+        card.appendChild(verifiedTag);
+
+        // 4. Add luxury floating action capsule dock BELOW card (zero collision!)
+        const capsule = document.createElement('div');
+        capsule.className = 'toolkit-card-capsule';
+        capsule.innerHTML = `
+          <span class="capsule-dot"></span>
+          <span class="capsule-level">${skillInfo.level}</span>
+          <span class="capsule-sep">•</span>
+          <span class="capsule-action">Khám phá bảo chứng <svg class="capsule-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></span>
+        `;
+        card.appendChild(capsule);
 
         // Click handler to open luxury modal
         card.onclick = function(e) {
