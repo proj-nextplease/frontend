@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMyPortfolio } from '../api/portfolioApi.js';
+import { getMyApplications } from '../api/applicationApi.js';
 import { getStoredUser } from '../lib/authStorage.js';
 import { FonlioWrappedStory } from '../components/universe/FonlioWrappedStory.jsx';
 import { MemorySpotlightModal } from '../components/universe/MemorySpotlightModal.jsx';
@@ -97,6 +98,7 @@ export function CandidateUniversePage() {
   const iframeRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
   const [portfolio, setPortfolio] = useState(null);
+  const [applications, setApplications] = useState([]);
   const [isWrappedOpen, setIsWrappedOpen] = useState(false);
   const [selectedMemoryIndex, setSelectedMemoryIndex] = useState(0);
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
@@ -123,16 +125,20 @@ export function CandidateUniversePage() {
 
     window.addEventListener('message', handleMessage);
 
-    // Fetch candidate portfolio
+    // Fetch candidate portfolio and real completed jobs
     let isMounted = true;
-    getMyPortfolio()
-      .then((data) => {
-        if (isMounted && data) {
-          setPortfolio(data);
+    Promise.allSettled([getMyPortfolio(), getMyApplications()])
+      .then(([portfolioRes, appsRes]) => {
+        if (!isMounted) return;
+        if (portfolioRes.status === 'fulfilled' && portfolioRes.value) {
+          setPortfolio(portfolioRes.value);
+        }
+        if (appsRes.status === 'fulfilled' && Array.isArray(appsRes.value)) {
+          setApplications(appsRes.value);
         }
       })
       .catch((err) => {
-        console.warn('Portfolio load error:', err);
+        console.warn('Universe data load error:', err);
       });
 
     return () => {
@@ -186,12 +192,13 @@ export function CandidateUniversePage() {
             skills: portfolio?.skills || [],
             skillDetails: portfolio?.skillDetails || [],
             credentials: portfolio?.credentials || [],
+            applications: applications || [],
           },
         },
         '*'
       );
     }
-  }, [loaded, displayName, totalExp, totalRs, verifiedCount, displayExperiences, portfolio]);
+  }, [loaded, displayName, totalExp, totalRs, verifiedCount, displayExperiences, portfolio, applications]);
 
   const iframeSrc = useMemo(() => {
     const params = new URLSearchParams({

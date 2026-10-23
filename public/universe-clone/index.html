@@ -1464,6 +1464,19 @@ html:lang(vi) .toolkit__subtitle,
   text-shadow: 0 0 24px rgba(255, 255, 255, 0.4), 0 0 50px rgba(56, 189, 248, 0.25) !important;
 }
 
+.projects__link--cta {
+  color: #38BDF8 !important;
+  opacity: 0.82;
+  font-style: italic;
+  letter-spacing: -0.01em;
+}
+
+.projects__list.is-hovering .projects__link--cta.is-active {
+  color: #FACC15 !important;
+  opacity: 1 !important;
+  text-shadow: 0 0 28px rgba(250, 204, 21, 0.45) !important;
+}
+
 /* ==========================================================================
    FLOATING CURSOR PREVIEW CARD (OPTION 1)
    ========================================================================== */
@@ -2569,7 +2582,7 @@ html:lang(vi) .toolkit__subtitle,
             </div>
             <div class="project-preview-status">
               <span class="preview-sparkle">✦</span>
-              <span>Xác thực 100%</span>
+              <span id="projectPreviewStatusText">Xác thực 100%</span>
             </div>
           </div>
         </div>
@@ -3440,6 +3453,11 @@ html:lang(vi) .toolkit__subtitle,
       if (Array.isArray(data?.skills) && data.skills.length > 0) {
         window.renderCandidateSkillsOnly(data.skills, data.skillDetails);
       }
+
+      // RENDER REAL CANDIDATE MILESTONES (Job Fonlio + Experiences with proof + Credentials)
+      if (window.renderCandidateMilestones) {
+        window.renderCandidateMilestones(data);
+      }
     }
   });
 
@@ -3457,67 +3475,382 @@ html:lang(vi) .toolkit__subtitle,
 
 <script>
 /* ==========================================================================
-   OPTION 1: FLOATING MAGNETIC CURSOR PREVIEW FOR MILESTONES
+   AUTHENTIC LIVING PROOF MILESTONES & FLOATING MAGNETIC CURSOR PREVIEW
    ========================================================================== */
 (function setupMilestonePreview() {
-  const MILESTONE_DATA = [
+  const DEFAULT_MILESTONES = [
     {
+      type: 'EXPERIENCE',
+      expIndex: 0,
+      titleText: '01 / Tuần lễ Xanh trường ĐH FPT — 1,200 SV tham gia',
       image: '/universe-clone/projects/01-fpt-green-week.jpg',
       category: 'HOẠT ĐỘNG SỰ KIỆN',
       metric: '1,200 SV THAM GIA',
       role: 'Trưởng Ban Tổ Chức',
-      highlight: 'Đại Học FPT TP.HCM',
+      statusText: 'Xác thực chuẩn 100%',
       color: '#10B981'
     },
     {
+      type: 'EXPERIENCE',
+      expIndex: 1,
+      titleText: '02 / 60s Sài Gòn — Viral Video 850,000 Views',
       image: '/universe-clone/projects/02-saigon-viral-video.jpg',
       category: 'VIRAL MEDIA & CREATIVE',
       metric: '850,000+ LƯỢT XEM',
       role: 'Video Editor & Sáng Tạo',
-      highlight: '60s Sài Gòn Reels / TikTok',
+      statusText: 'Minh chứng sống',
       color: '#EC4899'
     },
     {
+      type: 'EXPERIENCE',
+      expIndex: 2,
+      titleText: '03 / NextGen Tech Hackathon — Giải Nhất Toàn Quốc',
       image: '/universe-clone/projects/03-hackathon-champion.jpg',
       category: 'CÔNG NGHỆ & ĐỔI MỚI',
       metric: 'GIẢI NHẤT TOÀN QUỐC',
       role: 'Lead Fullstack Developer',
-      highlight: 'NextGen Tech Hackathon',
+      statusText: 'Xác thực chuẩn 100%',
       color: '#F59E0B'
     },
     {
+      type: 'EXPERIENCE',
+      expIndex: 3,
+      titleText: '04 / Hệ thống Quản lý Điểm danh QR — CLB Phần mềm',
       image: '/universe-clone/projects/04-qr-attendance.jpg',
       category: 'KỸ THUẬT PHẦN MỀM',
       metric: '3,000+ LƯỢT QUÉT',
       role: 'Backend & Cloud System',
-      highlight: 'CLB Phần Mềm Sinh Viên',
+      statusText: 'Xác thực chuẩn 100%',
       color: '#06B6D4'
     },
     {
+      type: 'EXPERIENCE',
+      expIndex: 4,
+      titleText: '05 / Bộ Nhận diện Thương hiệu Sinh viên — 3 Startup',
       image: '/universe-clone/projects/05-brand-identity.jpg',
       category: 'BRANDING & DESIGN',
       metric: '3 DOANH NGHIỆP TIN DÙNG',
       role: 'Art Director & Designer',
-      highlight: 'Bộ Nhận Diện Thương Hiệu',
+      statusText: 'Minh chứng sống',
       color: '#A855F7'
     },
     {
+      type: 'CTA',
+      isCta: true,
+      titleText: '+ / Mở khóa cột mốc tiếp theo — Thêm đồ án hoặc nhận việc trên Fonlio',
       image: '/universe-clone/projects/06-living-proof.jpg',
-      category: 'HỒ SƠ SỐ FONLIO',
-      metric: '100% ĐẠT CHUẨN TÍN NHIỆM',
-      role: 'Genesis Living Proof',
-      highlight: 'Mạng Lưới Đối Tác Fonlio',
-      color: '#B9FF00'
+      category: 'TIẾP BƯỚC HÀNH TRÌNH',
+      metric: 'MỞ RỘNG LIVING PROOF',
+      role: 'Sẵn sàng chinh phục mục tiêu mới',
+      statusText: 'Cơ hội rộng mở',
+      color: '#FACC15'
     }
   ];
 
-  function init() {
+  let CURRENT_MILESTONES = [...DEFAULT_MILESTONES];
+
+  let mouseX = -500;
+  let mouseY = -500;
+  let currentX = -500;
+  let currentY = -500;
+  let isHovering = false;
+  let rafId = null;
+  let activeLink = null;
+
+  function getTargetPos() {
+    const cardW = 330;
+    const cardH = 240;
+
+    const safeMouseX = mouseX > 0 ? mouseX : window.innerWidth / 2;
+    const safeMouseY = mouseY > 0 ? mouseY : window.innerHeight / 2;
+
+    let targetX = safeMouseX + 28;
+    let targetY = safeMouseY - 110;
+
+    if (targetX + cardW > window.innerWidth - 16) {
+      targetX = safeMouseX - cardW - 28;
+    }
+
+    if (targetX < 16) targetX = 16;
+    if (targetY < 20) {
+      targetY = 20;
+    } else if (targetY + cardH > window.innerHeight - 20) {
+      targetY = window.innerHeight - cardH - 20;
+    }
+
+    return { targetX, targetY };
+  }
+
+  function updateFollower() {
+    const preview = document.getElementById('projectCursorPreview');
+    if (!preview) return;
+
+    if (!isHovering && !preview.classList.contains('is-active')) {
+      rafId = null;
+      return;
+    }
+
+    const { targetX, targetY } = getTargetPos();
+
+    currentX += (targetX - currentX) * 0.18;
+    currentY += (targetY - currentY) * 0.18;
+
+    const vx = (targetX - currentX) * 0.05;
+    const tilt = Math.max(-8, Math.min(8, vx));
+
+    preview.style.left = `${currentX}px`;
+    preview.style.top = `${currentY}px`;
+    if (isHovering) {
+      preview.style.transform = `scale(1) rotate(${tilt}deg)`;
+    } else {
+      preview.style.transform = `scale(0.85) rotate(-3deg)`;
+    }
+
+    rafId = requestAnimationFrame(updateFollower);
+  }
+
+  function activateMilestone(link, e) {
     const preview = document.getElementById('projectCursorPreview');
     const previewImg = document.getElementById('projectPreviewImg');
     const badgeText = document.getElementById('projectPreviewBadgeText');
     const badgeDot = document.getElementById('projectPreviewDot');
     const metric = document.getElementById('projectPreviewMetric');
     const role = document.getElementById('projectPreviewRole');
+    const statusText = document.getElementById('projectPreviewStatusText');
+    const list = document.querySelector('.projects__list');
+
+    if (!preview || !list) return;
+
+    if (e) {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    }
+
+    const links = Array.from(list.querySelectorAll('.projects__link'));
+    let dataIdx = link.dataset.milestoneIndex !== undefined ? parseInt(link.dataset.milestoneIndex, 10) : links.indexOf(link);
+    if (isNaN(dataIdx) || dataIdx < 0) dataIdx = 0;
+
+    if (activeLink === link && isHovering) return;
+    activeLink = link;
+
+    const data = CURRENT_MILESTONES[dataIdx] || CURRENT_MILESTONES[0];
+    if (!data) return;
+
+    if (previewImg && data.image) previewImg.src = data.image;
+    if (badgeText) badgeText.textContent = data.category;
+    if (badgeDot) {
+      badgeDot.style.background = data.color || '#10B981';
+      badgeDot.style.boxShadow = `0 0 10px ${data.color || '#10B981'}`;
+    }
+    if (metric) {
+      metric.textContent = data.metric;
+      if (data.color) {
+        metric.style.color = data.color;
+        metric.style.borderColor = `${data.color}66`;
+        metric.style.background = `${data.color}22`;
+      }
+    }
+    if (role) role.textContent = data.role;
+    if (statusText) statusText.textContent = data.statusText || 'Xác thực 100%';
+
+    const { targetX, targetY } = getTargetPos();
+    if (currentX < 0 || Math.abs(currentX - targetX) > 400) {
+      currentX = targetX;
+      currentY = targetY;
+      preview.style.left = `${currentX}px`;
+      preview.style.top = `${currentY}px`;
+    }
+
+    isHovering = true;
+    list.classList.add('is-hovering');
+    links.forEach(l => l.classList.remove('is-active'));
+    link.classList.add('is-active');
+    preview.classList.add('is-active');
+
+    if (!rafId) {
+      rafId = requestAnimationFrame(updateFollower);
+    }
+  }
+
+  function deactivateAll() {
+    const preview = document.getElementById('projectCursorPreview');
+    const list = document.querySelector('.projects__list');
+    isHovering = false;
+    activeLink = null;
+    if (list) {
+      list.classList.remove('is-hovering');
+      list.querySelectorAll('.projects__link').forEach(l => l.classList.remove('is-active'));
+    }
+    if (preview) {
+      preview.classList.remove('is-active');
+    }
+  }
+
+  // RENDER DYNAMIC LIVING MILESTONES (3-Tier authentic user data pipeline)
+  window.renderCandidateMilestones = function(payload) {
+    const list = document.querySelector('.projects__list');
+    if (!list) return;
+
+    const applications = Array.isArray(payload?.applications) ? payload.applications : [];
+    const experiences = Array.isArray(payload?.experiences) ? payload.experiences : [];
+    const credentials = Array.isArray(payload?.credentials) ? payload.credentials : [];
+
+    const built = [];
+
+    // TIER 1: Completed / Accepted Jobs on Fonlio (highest trust: verified by Employer)
+    applications
+      .filter(app => ['COMPLETED', 'ACCEPTED'].includes(app.status))
+      .forEach(app => {
+        const title = app.job_title || app.title || app.questTitle || 'Dự án Doanh nghiệp';
+        const company = app.company_name || app.companyName || 'Doanh nghiệp đối tác';
+        const rating = app.rating_score || app.ratingScore;
+        const metricLabel = rating ? `⭐ ${rating}/5.0` : 'Hoàn thành';
+        const metricDisplay = rating ? `⭐ ${rating}/5.0 (DOANH NGHIỆP ĐÁNH GIÁ)` : 'HOÀN THÀNH XUẤT SẮC';
+
+        built.push({
+          type: 'JOB',
+          appId: app.id,
+          titleText: `${title} — ${company} • ${metricLabel}`,
+          image: app.company_logo || '/universe-clone/projects/06-living-proof.jpg',
+          category: 'JOB THỰC CHIẾN • FONLIO',
+          metric: metricDisplay,
+          role: app.role || 'Cộng tác viên thực chiến',
+          statusText: 'Doanh nghiệp chứng thực',
+          color: '#10B981'
+        });
+      });
+
+    // TIER 2: Real Experiences & Projects from Portfolio (with Living Proof images)
+    experiences.forEach((exp, idx) => {
+      const title = exp.title || 'Dự án thực tế';
+      const org = exp.organization || 'Đồ án & Hoạt động';
+      const verified = exp.verified === true || exp.status === 'APPROVED';
+      const rewardExp = exp.expReward ? `+${exp.expReward} EXP` : '';
+      const labelResult = verified ? (rewardExp ? `${rewardExp} • Xác thực` : 'Đã xác thực') : (rewardExp || 'Minh chứng sống');
+
+      let image = '/universe-clone/projects/01-fpt-green-week.jpg';
+      if (Array.isArray(exp.proofImages) && exp.proofImages.length > 0 && exp.proofImages[0]) {
+        image = exp.proofImages[0];
+      } else if (exp.proofImage) {
+        image = exp.proofImage;
+      } else {
+        const cat = (exp.category || '').toLowerCase();
+        if (cat.includes('công nghệ') || cat.includes('tech')) image = '/universe-clone/projects/03-hackathon-champion.jpg';
+        else if (cat.includes('media') || cat.includes('video') || cat.includes('sáng tạo')) image = '/universe-clone/projects/02-saigon-viral-video.jpg';
+        else if (cat.includes('phần mềm') || cat.includes('qr')) image = '/universe-clone/projects/04-qr-attendance.jpg';
+        else if (cat.includes('brand') || cat.includes('thiết kế')) image = '/universe-clone/projects/05-brand-identity.jpg';
+        else image = '/universe-clone/projects/01-fpt-green-week.jpg';
+      }
+
+      const metricDisplay = (exp.expReward && exp.rsReward)
+        ? `+${exp.expReward} EXP • +${exp.rsReward} RS`
+        : (exp.expReward ? `+${exp.expReward} EXP THƯỞNG` : (verified ? 'XÁC THỰC 100%' : 'MINH CHỨNG SỐNG'));
+
+      built.push({
+        type: 'EXPERIENCE',
+        expIndex: idx,
+        titleText: `${title} — ${org} • ${labelResult}`,
+        image: image,
+        category: (exp.category || 'ĐỒ ÁN & KINH NGHIỆM').toUpperCase(),
+        metric: metricDisplay,
+        role: exp.roleLevel || 'Thành viên cốt lõi',
+        statusText: verified ? 'Xác thực chuẩn 100%' : 'Hồ sơ Living Proof',
+        color: verified ? '#B9FF00' : '#38BDF8'
+      });
+    });
+
+    // TIER 3: Credentials & Certifications
+    credentials.forEach(cred => {
+      const name = cred.name || 'Chứng chỉ năng lực';
+      const issuer = cred.issuer || 'Tổ chức cấp bằng';
+      const year = cred.issuedAt ? new Date(cred.issuedAt).getFullYear() : '2025';
+
+      built.push({
+        type: 'CREDENTIAL',
+        titleText: `${name} — ${issuer} • Năm ${year}`,
+        image: cred.fileData || '/universe-clone/projects/05-brand-identity.jpg',
+        category: 'CHỨNG CHỈ NĂNG LỰC',
+        metric: 'CHỨNG CHỈ UY TÍN',
+        role: `Cấp bởi ${issuer}`,
+        statusText: 'Đã xác thực',
+        color: '#A855F7'
+      });
+    });
+
+    // Handle slots: up to 5 items + 1 Call to Action slot
+    if (built.length > 0) {
+      if (built.length < 6) {
+        built.push({
+          type: 'CTA',
+          isCta: true,
+          titleText: '+ / Mở khóa cột mốc tiếp theo — Thêm đồ án hoặc nhận việc trên Fonlio',
+          image: '/universe-clone/projects/06-living-proof.jpg',
+          category: 'TIẾP BƯỚC HÀNH TRÌNH',
+          metric: 'MỞ RỘNG LIVING PROOF',
+          role: 'Sẵn sàng chinh phục mục tiêu mới',
+          statusText: 'Cơ hội rộng mở',
+          color: '#FACC15'
+        });
+      }
+    } else {
+      built.push({
+        type: 'CTA',
+        isCta: true,
+        titleText: '01 / Khởi đầu hành trình — Thêm đồ án môn học hoặc nhận việc trên Fonlio',
+        image: '/universe-clone/projects/06-living-proof.jpg',
+        category: 'CHƯA CÓ CỘT MỐC',
+        metric: 'KÍCH HOẠT HỒ SƠ',
+        role: 'Tạo dấu ấn đầu tiên của bạn',
+        statusText: 'Bắt đầu ngay hôm nay',
+        color: '#38BDF8'
+      });
+    }
+
+    CURRENT_MILESTONES = built.slice(0, 6);
+
+    // Preload preview images
+    CURRENT_MILESTONES.forEach(item => {
+      if (item.image) {
+        const img = new Image();
+        img.src = item.image;
+      }
+    });
+
+    // Render <a> tags in .projects__list
+    list.innerHTML = '';
+    CURRENT_MILESTONES.forEach((item, idx) => {
+      const a = document.createElement('a');
+      a.className = 'projects__link' + (item.isCta ? ' projects__link--cta' : '');
+      a.href = '#projects';
+      a.setAttribute('data-milestone-index', String(idx));
+
+      const numPrefix = item.isCta && idx > 0 ? '' : `${String(idx + 1).padStart(2, '0')} / `;
+      if (item.titleText.startsWith('0') || item.titleText.startsWith('+')) {
+        a.textContent = item.titleText;
+      } else {
+        a.textContent = `${numPrefix}${item.titleText}`;
+      }
+
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (item.type === 'EXPERIENCE' && typeof item.expIndex === 'number') {
+          window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: item.expIndex } }, '*');
+        } else if (item.type === 'JOB') {
+          window.parent.postMessage({ type: 'NAVIGATE_DASHBOARD' }, '*');
+        } else if (item.type === 'CTA') {
+          window.parent.postMessage({ type: 'NAVIGATE_PORTFOLIO_EDIT' }, '*');
+        }
+      });
+
+      list.appendChild(a);
+    });
+
+    deactivateAll();
+    console.log('[Fonlio] Rendered real candidate milestones:', CURRENT_MILESTONES.length);
+  };
+
+  function init() {
+    const preview = document.getElementById('projectCursorPreview');
     const list = document.querySelector('.projects__list');
 
     if (!preview || !list) {
@@ -3526,72 +3859,13 @@ html:lang(vi) .toolkit__subtitle,
       return;
     }
 
-    // Preload images for instant zero-latency hover
-    MILESTONE_DATA.forEach(item => {
-      const img = new Image();
-      img.src = item.image;
+    // Preload default images
+    CURRENT_MILESTONES.forEach(item => {
+      if (item.image) {
+        const img = new Image();
+        img.src = item.image;
+      }
     });
-
-    let mouseX = -500;
-    let mouseY = -500;
-    let currentX = -500;
-    let currentY = -500;
-    let isHovering = false;
-    let rafId = null;
-    let activeLink = null;
-
-    function getTargetPos() {
-      const cardW = 330;
-      const cardH = 240;
-
-      // Safe fallback if mouse coordinates haven't been captured yet
-      const safeMouseX = mouseX > 0 ? mouseX : window.innerWidth / 2;
-      const safeMouseY = mouseY > 0 ? mouseY : window.innerHeight / 2;
-
-      let targetX = safeMouseX + 28;
-      let targetY = safeMouseY - 110;
-
-      // Flip left if hitting right screen edge
-      if (targetX + cardW > window.innerWidth - 16) {
-        targetX = safeMouseX - cardW - 28;
-      }
-
-      // Keep within viewport bounds
-      if (targetX < 16) targetX = 16;
-      if (targetY < 20) {
-        targetY = 20;
-      } else if (targetY + cardH > window.innerHeight - 20) {
-        targetY = window.innerHeight - cardH - 20;
-      }
-
-      return { targetX, targetY };
-    }
-
-    function updateFollower() {
-      if (!isHovering && !preview.classList.contains('is-active')) {
-        rafId = null;
-        return;
-      }
-
-      const { targetX, targetY } = getTargetPos();
-
-      // Smooth Lerp damping
-      currentX += (targetX - currentX) * 0.18;
-      currentY += (targetY - currentY) * 0.18;
-
-      const vx = (targetX - currentX) * 0.05;
-      const tilt = Math.max(-8, Math.min(8, vx));
-
-      preview.style.left = `${currentX}px`;
-      preview.style.top = `${currentY}px`;
-      if (isHovering) {
-        preview.style.transform = `scale(1) rotate(${tilt}deg)`;
-      } else {
-        preview.style.transform = `scale(0.85) rotate(-3deg)`;
-      }
-
-      rafId = requestAnimationFrame(updateFollower);
-    }
 
     window.addEventListener('mousemove', (e) => {
       mouseX = e.clientX;
@@ -3606,98 +3880,84 @@ html:lang(vi) .toolkit__subtitle,
       }
     }, { passive: true });
 
-    function activateMilestone(link, e) {
-      if (e) {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-      }
-
-      const links = Array.from(list.querySelectorAll('.projects__link'));
-      let dataIdx = link.dataset.milestoneIndex !== undefined ? parseInt(link.dataset.milestoneIndex, 10) : links.indexOf(link);
-      if (isNaN(dataIdx) || dataIdx < 0) dataIdx = 0;
-
-      if (activeLink === link && isHovering) return;
-      activeLink = link;
-
-      const data = MILESTONE_DATA[dataIdx] || MILESTONE_DATA[0];
-
-      // Update card content
-      previewImg.src = data.image;
-      badgeText.textContent = data.category;
-      if (badgeDot) {
-        badgeDot.style.background = data.color || '#10B981';
-        badgeDot.style.boxShadow = `0 0 10px ${data.color || '#10B981'}`;
-      }
-      metric.textContent = data.metric;
-      if (data.color) {
-        metric.style.color = data.color;
-        metric.style.borderColor = `${data.color}66`;
-        metric.style.background = `${data.color}22`;
-      }
-      role.textContent = data.role;
-
-      // Snap position immediately on first hover or far jump
-      const { targetX, targetY } = getTargetPos();
-      if (currentX < 0 || Math.abs(currentX - targetX) > 400) {
-        currentX = targetX;
-        currentY = targetY;
-        preview.style.left = `${currentX}px`;
-        preview.style.top = `${currentY}px`;
-      }
-
-      isHovering = true;
-      list.classList.add('is-hovering');
-      links.forEach(l => l.classList.remove('is-active'));
-      link.classList.add('is-active');
-      preview.classList.add('is-active');
-
-      if (!rafId) {
-        rafId = requestAnimationFrame(updateFollower);
-      }
-    }
-
-    function deactivateAll() {
-      isHovering = false;
-      activeLink = null;
-      list.classList.remove('is-hovering');
-      list.querySelectorAll('.projects__link').forEach(l => l.classList.remove('is-active'));
-      preview.classList.remove('is-active');
-    }
-
-    // Event Delegation on list ensures 100% reliable capture even if spans inside links re-render
+    // Event Delegation on list ensures 100% reliable capture
     list.addEventListener('mouseover', (e) => {
       const link = e.target.closest('.projects__link');
-      if (link) {
-        activateMilestone(link, e);
-      }
+      if (link) activateMilestone(link, e);
     });
 
     list.addEventListener('mousemove', (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
       const link = e.target.closest('.projects__link');
-      if (link) {
-        activateMilestone(link, e);
-      }
+      if (link) activateMilestone(link, e);
     }, { passive: true });
 
     list.addEventListener('mouseleave', () => {
       deactivateAll();
     });
 
-    // Also attach to individual links as explicit fallback
-    list.querySelectorAll('.projects__link').forEach(link => {
-      link.addEventListener('mouseenter', (e) => {
-        activateMilestone(link, e);
+    // Test mode demonstration with authentic 3-tier data
+    if (window.location.search.includes('testnow') || window.location.search.includes('test')) {
+      window.renderCandidateMilestones({
+        applications: [
+          {
+            id: 'job-shopee-1',
+            job_title: 'UI/UX Designer Frontend',
+            company_name: 'Shopee Vietnam',
+            company_logo: '/universe-clone/projects/06-living-proof.jpg',
+            status: 'COMPLETED',
+            rating_score: 5.0,
+            role: 'Freelance UI Engineer'
+          }
+        ],
+        experiences: [
+          {
+            id: 'exp-qr-1',
+            title: 'Hệ thống Quản lý Điểm danh QR',
+            organization: 'CLB Phần Mềm Sinh Viên',
+            category: 'Kỹ thuật phần mềm',
+            roleLevel: 'Backend & Cloud System',
+            verified: true,
+            expReward: 450,
+            rsReward: 8,
+            proofImages: ['/universe-clone/projects/04-qr-attendance.jpg']
+          },
+          {
+            id: 'exp-hackathon-1',
+            title: 'NextGen Tech Hackathon',
+            organization: 'Khoa Công nghệ Thông tin',
+            category: 'Công nghệ & Đổi mới',
+            roleLevel: 'Lead Frontend Developer',
+            verified: true,
+            expReward: 500,
+            rsReward: 10,
+            proofImages: ['/universe-clone/projects/03-hackathon-champion.jpg']
+          },
+          {
+            id: 'exp-saigon-1',
+            title: '60s Sài Gòn — Viral Video',
+            organization: 'Dự án Sáng Tạo Độc Lập',
+            category: 'Sáng tạo & Media',
+            roleLevel: 'Video Editor & Sáng Tạo',
+            verified: true,
+            expReward: 400,
+            rsReward: 5,
+            proofImages: ['/universe-clone/projects/02-saigon-viral-video.jpg']
+          }
+        ],
+        credentials: [
+          {
+            name: 'AWS Certified Cloud Practitioner',
+            issuer: 'Amazon Web Services',
+            issuedAt: '2025-06-15',
+            fileData: '/universe-clone/projects/05-brand-identity.jpg'
+          }
+        ]
       });
-      link.addEventListener('mouseleave', () => {
-        if (activeLink === link) {
-          link.classList.remove('is-active');
-        }
-      });
-    });
+    }
 
-    console.log('[Fonlio] Milestone Cursor Preview initialized successfully with 6 projects!');
+    console.log('[Fonlio] Milestone Cursor Preview initialized successfully!');
   }
 
   if (document.readyState === 'loading') {
