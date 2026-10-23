@@ -1477,36 +1477,41 @@ html:lang(vi) .toolkit__subtitle,
   text-shadow: 0 0 28px rgba(250, 204, 21, 0.45) !important;
 }
 
+.project-letter,
+.project-letter__content {
+  pointer-events: none !important;
+}
+
 /* ==========================================================================
    FLOATING CURSOR PREVIEW CARD (OPTION 1)
    ========================================================================== */
 .project-cursor-preview {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 330px;
-  pointer-events: none;
-  z-index: 99999;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 340px !important;
+  pointer-events: none !important;
+  z-index: 2147483647 !important;
   opacity: 0;
   visibility: hidden;
   border-radius: 20px;
-  background: rgba(15, 23, 42, 0.90);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85),
-              0 0 40px rgba(56, 189, 248, 0.18),
-              0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  background: rgba(10, 15, 29, 0.94) !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9),
+              0 0 40px rgba(56, 189, 248, 0.22),
+              0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
   overflow: hidden;
-  will-change: transform, opacity;
-  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              visibility 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity, left, top;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
   transform-origin: center center;
 }
 
 .project-cursor-preview.is-active {
-  opacity: 1;
-  visibility: visible;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .project-preview-inner {
@@ -1658,13 +1663,9 @@ html:lang(vi) .toolkit__subtitle,
   }
 }
 
-@media (hover: none), (pointer: coarse), (max-width: 900px) {
+@media (max-width: 768px) {
   .project-cursor-preview {
     display: none !important;
-  }
-  .projects__list.is-hovering .projects__link {
-    opacity: 1 !important;
-    transform: none !important;
   }
 }
 
@@ -3434,7 +3435,8 @@ html:lang(vi) .toolkit__subtitle,
       }
 
       // RENDER REAL CANDIDATE MILESTONES (Job Fonlio + Experiences with proof + Credentials)
-      if (window.renderCandidateMilestones) {
+      window.__lastUniverseData = data;
+      if (typeof window.renderCandidateMilestones === 'function') {
         window.renderCandidateMilestones(data);
       }
     }
@@ -3459,58 +3461,57 @@ html:lang(vi) .toolkit__subtitle,
 (function setupMilestonePreview() {
   const DEFAULT_MILESTONES = [
     {
-      type: 'EXPERIENCE',
-      expIndex: 0,
-      titleText: '01 / Tuần lễ Xanh trường ĐH FPT — 1,200 SV tham gia',
-      image: '/universe-clone/projects/01-fpt-green-week.jpg',
-      category: 'HOẠT ĐỘNG SỰ KIỆN',
-      metric: '1,200 SV THAM GIA',
-      role: 'Trưởng Ban Tổ Chức',
-      statusText: 'Xác thực chuẩn 100%',
+      type: 'JOB',
+      appId: 'job-shopee-1',
+      titleText: '01 / UI/UX Designer Frontend — Shopee Vietnam • ⭐ 5.0',
+      image: '/universe-clone/projects/06-living-proof.jpg',
+      category: 'JOB THỰC CHIẾN • FONLIO',
+      metric: '⭐ 5.0 (DOANH NGHIỆP ĐÁNH GIÁ)',
+      role: 'Freelance UI Engineer',
+      statusText: 'Doanh nghiệp chứng thực',
       color: '#10B981'
     },
     {
       type: 'EXPERIENCE',
+      expIndex: 0,
+      titleText: '02 / Hệ thống Quản lý Điểm danh QR — CLB Phần Mềm • +450 EXP',
+      image: '/universe-clone/projects/04-qr-attendance.jpg',
+      category: 'KỸ THUẬT PHẦN MỀM',
+      metric: '+450 EXP • +8 RS THƯỞNG',
+      role: 'Backend & Cloud System',
+      statusText: 'Xác thực chuẩn 100%',
+      color: '#38BDF8'
+    },
+    {
+      type: 'EXPERIENCE',
       expIndex: 1,
-      titleText: '02 / 60s Sài Gòn — Viral Video 850,000 Views',
+      titleText: '03 / NextGen Tech Hackathon — Khoa CNTT • Giải Nhất Toàn Quốc',
+      image: '/universe-clone/projects/03-hackathon-champion.jpg',
+      category: 'CÔNG NGHỆ & ĐỔI MỚI',
+      metric: 'GIẢI NHẤT TOÀN QUỐC',
+      role: 'Lead Frontend Developer',
+      statusText: 'Xác thực chuẩn 100%',
+      color: '#B9FF00'
+    },
+    {
+      type: 'EXPERIENCE',
+      expIndex: 2,
+      titleText: '04 / 60s Sài Gòn — Viral Video — Media Thực Chiến • 850,000 Views',
       image: '/universe-clone/projects/02-saigon-viral-video.jpg',
-      category: 'VIRAL MEDIA & CREATIVE',
+      category: 'SÁNG TẠO & MEDIA',
       metric: '850,000+ LƯỢT XEM',
       role: 'Video Editor & Sáng Tạo',
       statusText: 'Minh chứng sống',
       color: '#EC4899'
     },
     {
-      type: 'EXPERIENCE',
-      expIndex: 2,
-      titleText: '03 / NextGen Tech Hackathon — Giải Nhất Toàn Quốc',
-      image: '/universe-clone/projects/03-hackathon-champion.jpg',
-      category: 'CÔNG NGHỆ & ĐỔI MỚI',
-      metric: 'GIẢI NHẤT TOÀN QUỐC',
-      role: 'Lead Fullstack Developer',
-      statusText: 'Xác thực chuẩn 100%',
-      color: '#F59E0B'
-    },
-    {
-      type: 'EXPERIENCE',
-      expIndex: 3,
-      titleText: '04 / Hệ thống Quản lý Điểm danh QR — CLB Phần mềm',
-      image: '/universe-clone/projects/04-qr-attendance.jpg',
-      category: 'KỸ THUẬT PHẦN MỀM',
-      metric: '3,000+ LƯỢT QUÉT',
-      role: 'Backend & Cloud System',
-      statusText: 'Xác thực chuẩn 100%',
-      color: '#06B6D4'
-    },
-    {
-      type: 'EXPERIENCE',
-      expIndex: 4,
-      titleText: '05 / Bộ Nhận diện Thương hiệu Sinh viên — 3 Startup',
+      type: 'CREDENTIAL',
+      titleText: '05 / AWS Certified Cloud Practitioner — Amazon Web Services • 2025',
       image: '/universe-clone/projects/05-brand-identity.jpg',
-      category: 'BRANDING & DESIGN',
-      metric: '3 DOANH NGHIỆP TIN DÙNG',
-      role: 'Art Director & Designer',
-      statusText: 'Minh chứng sống',
+      category: 'CHỨNG CHỈ NĂNG LỰC',
+      metric: 'CHỨNG CHỈ QUỐC TẾ',
+      role: 'Amazon Web Services',
+      statusText: 'Đã xác thực',
       color: '#A855F7'
     },
     {
@@ -3537,20 +3538,20 @@ html:lang(vi) .toolkit__subtitle,
   let activeLink = null;
 
   function getTargetPos() {
-    const cardW = 330;
-    const cardH = 240;
+    const cardW = 340;
+    const cardH = 260;
 
     const safeMouseX = mouseX > 0 ? mouseX : window.innerWidth / 2;
     const safeMouseY = mouseY > 0 ? mouseY : window.innerHeight / 2;
 
-    let targetX = safeMouseX + 28;
-    let targetY = safeMouseY - 110;
+    let targetX = safeMouseX + 32;
+    let targetY = safeMouseY - 120;
 
-    if (targetX + cardW > window.innerWidth - 16) {
-      targetX = safeMouseX - cardW - 28;
+    if (targetX + cardW > window.innerWidth - 20) {
+      targetX = safeMouseX - cardW - 32;
     }
 
-    if (targetX < 16) targetX = 16;
+    if (targetX < 20) targetX = 20;
     if (targetY < 20) {
       targetY = 20;
     } else if (targetY + cardH > window.innerHeight - 20) {
@@ -3571,8 +3572,8 @@ html:lang(vi) .toolkit__subtitle,
 
     const { targetX, targetY } = getTargetPos();
 
-    currentX += (targetX - currentX) * 0.18;
-    currentY += (targetY - currentY) * 0.18;
+    currentX += (targetX - currentX) * 0.22;
+    currentY += (targetY - currentY) * 0.22;
 
     const vx = (targetX - currentX) * 0.05;
     const tilt = Math.max(-8, Math.min(8, vx));
@@ -3600,47 +3601,50 @@ html:lang(vi) .toolkit__subtitle,
 
     if (!preview || !list) return;
 
-    if (e) {
+    if (e && typeof e.clientX === 'number' && e.clientX > 0) {
       mouseX = e.clientX;
       mouseY = e.clientY;
+    } else if (mouseX <= 0 || mouseY <= 0) {
+      const rect = link.getBoundingClientRect();
+      mouseX = rect.right - 60;
+      mouseY = rect.top + rect.height / 2;
     }
 
     const links = Array.from(list.querySelectorAll('.projects__link'));
     let dataIdx = link.dataset.milestoneIndex !== undefined ? parseInt(link.dataset.milestoneIndex, 10) : links.indexOf(link);
     if (isNaN(dataIdx) || dataIdx < 0) dataIdx = 0;
 
-    if (activeLink === link && isHovering) return;
-    activeLink = link;
-
     const data = CURRENT_MILESTONES[dataIdx] || CURRENT_MILESTONES[0];
     if (!data) return;
 
-    if (previewImg && data.image) previewImg.src = data.image;
-    if (badgeText) badgeText.textContent = data.category;
+    if (previewImg && data.image) {
+      previewImg.src = data.image;
+    }
+    if (badgeText) badgeText.textContent = data.category || 'CỘT MỐC THỰC CHIẾN';
     if (badgeDot) {
       badgeDot.style.background = data.color || '#10B981';
       badgeDot.style.boxShadow = `0 0 10px ${data.color || '#10B981'}`;
     }
     if (metric) {
-      metric.textContent = data.metric;
+      metric.textContent = data.metric || 'ĐÃ XÁC THỰC';
       if (data.color) {
         metric.style.color = data.color;
         metric.style.borderColor = `${data.color}66`;
         metric.style.background = `${data.color}22`;
       }
     }
-    if (role) role.textContent = data.role;
+    if (role) role.textContent = data.role || 'Ứng viên thực chiến';
     if (statusText) statusText.textContent = data.statusText || 'Xác thực 100%';
 
     const { targetX, targetY } = getTargetPos();
-    if (currentX < 0 || Math.abs(currentX - targetX) > 400) {
-      currentX = targetX;
-      currentY = targetY;
-      preview.style.left = `${currentX}px`;
-      preview.style.top = `${currentY}px`;
-    }
+    currentX = targetX;
+    currentY = targetY;
+    preview.style.left = `${currentX}px`;
+    preview.style.top = `${currentY}px`;
+    preview.style.transform = `scale(1) rotate(0deg)`;
 
     isHovering = true;
+    activeLink = link;
     list.classList.add('is-hovering');
     links.forEach(l => l.classList.remove('is-active'));
     link.classList.add('is-active');
@@ -3795,38 +3799,74 @@ html:lang(vi) .toolkit__subtitle,
       }
     });
 
-    // Render <a> tags in .projects__list
-    list.innerHTML = '';
-    CURRENT_MILESTONES.forEach((item, idx) => {
-      const a = document.createElement('a');
-      a.className = 'projects__link' + (item.isCta ? ' projects__link--cta' : '');
-      a.href = '#projects';
-      a.setAttribute('data-milestone-index', String(idx));
-
-      const numPrefix = item.isCta && idx > 0 ? '' : `${String(idx + 1).padStart(2, '0')} / `;
-      if (item.titleText.startsWith('0') || item.titleText.startsWith('+')) {
-        a.textContent = item.titleText;
-      } else {
-        a.textContent = `${numPrefix}${item.titleText}`;
-      }
-
-      a.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (item.type === 'EXPERIENCE' && typeof item.expIndex === 'number') {
-          window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: item.expIndex } }, '*');
-        } else if (item.type === 'JOB') {
-          window.parent.postMessage({ type: 'NAVIGATE_DASHBOARD' }, '*');
-        } else if (item.type === 'CTA') {
-          window.parent.postMessage({ type: 'NAVIGATE_PORTFOLIO_EDIT' }, '*');
+    const existingLinks = Array.from(list.querySelectorAll('.projects__link'));
+    if (existingLinks.length === CURRENT_MILESTONES.length) {
+      // Gracefully update existing DOM nodes in-place without destroying GSAP / letter spans
+      existingLinks.forEach((a, idx) => {
+        const item = CURRENT_MILESTONES[idx];
+        a.setAttribute('data-milestone-index', String(idx));
+        a.setAttribute('data-type', item.type || '');
+        if (item.isCta) {
+          a.classList.add('projects__link--cta');
+        } else {
+          a.classList.remove('projects__link--cta');
         }
+        const numPrefix = item.isCta && idx > 0 ? '' : `${String(idx + 1).padStart(2, '0')} / `;
+        const fullTitle = (item.titleText.startsWith('0') || item.titleText.startsWith('+'))
+          ? item.titleText
+          : `${numPrefix}${item.titleText}`;
+        a.textContent = fullTitle;
+        a.setAttribute('aria-label', fullTitle);
       });
+    } else {
+      // Re-render if counts differ
+      list.innerHTML = '';
+      CURRENT_MILESTONES.forEach((item, idx) => {
+        const a = document.createElement('a');
+        a.className = 'projects__link' + (item.isCta ? ' projects__link--cta' : '');
+        a.href = '#projects';
+        a.setAttribute('data-milestone-index', String(idx));
+        a.setAttribute('data-type', item.type || '');
 
-      list.appendChild(a);
-    });
+        const numPrefix = item.isCta && idx > 0 ? '' : `${String(idx + 1).padStart(2, '0')} / `;
+        const fullTitle = (item.titleText.startsWith('0') || item.titleText.startsWith('+'))
+          ? item.titleText
+          : `${numPrefix}${item.titleText}`;
+        a.textContent = fullTitle;
+        a.setAttribute('aria-label', fullTitle);
 
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (item.type === 'EXPERIENCE' && typeof item.expIndex === 'number') {
+            window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: item.expIndex } }, '*');
+          } else if (item.type === 'JOB') {
+            window.parent.postMessage({ type: 'NAVIGATE_DASHBOARD' }, '*');
+          } else if (item.type === 'CTA') {
+            window.parent.postMessage({ type: 'NAVIGATE_PORTFOLIO_EDIT' }, '*');
+          }
+        });
+
+        list.appendChild(a);
+      });
+    }
+
+    bindAllLinks();
     deactivateAll();
     console.log('[Fonlio] Rendered real candidate milestones:', CURRENT_MILESTONES.length);
   };
+
+  function bindAllLinks() {
+    const list = document.querySelector('.projects__list');
+    if (!list) return;
+    list.querySelectorAll('.projects__link').forEach(link => {
+      link.addEventListener('mouseenter', (e) => activateMilestone(link, e));
+      link.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        activateMilestone(link, e);
+      }, { passive: true });
+    });
+  }
 
   function init() {
     const preview = document.getElementById('projectCursorPreview');
@@ -3865,6 +3905,11 @@ html:lang(vi) .toolkit__subtitle,
       if (link) activateMilestone(link, e);
     });
 
+    list.addEventListener('mouseenter', (e) => {
+      const link = e.target.closest('.projects__link');
+      if (link) activateMilestone(link, e);
+    }, true);
+
     list.addEventListener('mousemove', (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
@@ -3875,6 +3920,20 @@ html:lang(vi) .toolkit__subtitle,
     list.addEventListener('mouseleave', () => {
       deactivateAll();
     });
+
+    bindAllLinks();
+
+    // Auto-scroll to #projects if URL requests it or testnow is present
+    if (window.location.hash === '#projects' || window.location.search.includes('projects') || window.location.search.includes('testnow')) {
+      const scrollToMilestones = () => {
+        const proj = document.getElementById('projects');
+        if (proj) {
+          proj.scrollIntoView({ behavior: 'smooth' });
+        }
+      };
+      setTimeout(scrollToMilestones, 600);
+      setTimeout(scrollToMilestones, 1500);
+    }
 
     // Test mode demonstration with authentic 3-tier data
     if (window.location.search.includes('testnow') || window.location.search.includes('test')) {
@@ -3934,6 +3993,10 @@ html:lang(vi) .toolkit__subtitle,
           }
         ]
       });
+    }
+
+    if (window.__lastUniverseData && typeof window.renderCandidateMilestones === 'function') {
+      window.renderCandidateMilestones(window.__lastUniverseData);
     }
 
     console.log('[Fonlio] Milestone Cursor Preview initialized successfully!');
