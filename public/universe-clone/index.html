@@ -1435,237 +1435,511 @@ html:lang(vi) .toolkit__subtitle,
 }
 
 .projects__list {
-  top: 22vh !important;
-  gap: clamp(14px, 3.8vh, 32px) !important;
-}
-
-.projects__link {
-  font-size: clamp(20px, 3.2vw, 44px) !important;
-  line-height: 1.25 !important;
-  letter-spacing: -0.015em !important;
-  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              color 0.25s ease !important;
-  cursor: pointer;
-  position: relative;
-}
-
-/* Dim all milestone links when any link is hovered */
-.projects__list.is-hovering .projects__link {
-  opacity: 0.22 !important;
-  transform: scale(0.985);
-}
-
-/* Highlight the active hovered link */
-.projects__list.is-hovering .projects__link.is-active {
-  opacity: 1 !important;
-  transform: scale(1.025) translateX(10px) !important;
-  color: #FFFFFF !important;
-  text-shadow: 0 0 24px rgba(255, 255, 255, 0.4), 0 0 50px rgba(56, 189, 248, 0.25) !important;
-}
-
-.projects__link--cta {
-  color: #38BDF8 !important;
-  opacity: 0.82;
-  font-style: italic;
-  letter-spacing: -0.01em;
-}
-
-.projects__list.is-hovering .projects__link--cta.is-active {
-  color: #FACC15 !important;
-  opacity: 1 !important;
-  text-shadow: 0 0 28px rgba(250, 204, 21, 0.45) !important;
-}
-
-.project-letter,
-.project-letter__content {
-  pointer-events: none !important;
+  display: none !important;
 }
 
 /* ==========================================================================
-   FLOATING CURSOR PREVIEW CARD (OPTION 1)
+   CINEMATIC SPLIT SHOWCASE (EXHIBITION OF LIVING PROOF)
    ========================================================================== */
-.project-cursor-preview {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 340px !important;
-  pointer-events: none !important;
-  z-index: 2147483647 !important;
-  opacity: 0;
-  visibility: hidden;
-  border-radius: 20px;
-  background: rgba(10, 15, 29, 0.94) !important;
-  backdrop-filter: blur(28px) !important;
-  -webkit-backdrop-filter: blur(28px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9),
-              0 0 40px rgba(56, 189, 248, 0.22),
-              0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
-  overflow: hidden;
-  will-change: transform, opacity, left, top;
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              visibility 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  transform-origin: center center;
+.projects__container {
+  background: radial-gradient(circle at 50% 30%, rgba(15, 23, 42, 0.95) 0%, #070a0f 85%) !important;
+  color: #FFFFFF !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
 }
 
-.project-cursor-preview.is-active {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-.project-preview-inner {
+.projects-cinematic-wrap {
+  width: 92%;
+  max-width: 1360px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-}
-
-.project-preview-media {
+  height: 90vh;
+  justify-content: center;
   position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #020617;
-  overflow: hidden;
+  z-index: 10;
 }
 
-.project-preview-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+.projects-cinematic-header {
+  text-align: center;
+  margin-bottom: clamp(12px, 2vh, 20px);
+  flex-shrink: 0;
 }
 
-.project-cursor-preview.is-active .project-preview-img {
-  transform: scale(1.05);
-}
-
-.project-preview-media-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(15, 23, 42, 0.92) 100%);
-  pointer-events: none;
-}
-
-.project-preview-badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
+.projects-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: rgba(0, 0, 0, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  gap: 8px;
+  padding: 4px 14px;
+  background: rgba(56, 189, 248, 0.10);
+  border: 1px solid rgba(56, 189, 248, 0.28);
   border-radius: 999px;
-  backdrop-filter: blur(10px);
-  font-family: Satoshi-Variable, -apple-system, sans-serif;
-  font-size: 10px;
+  font-family: Satoshi-Variable, sans-serif;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #FFFFFF;
+  letter-spacing: 0.08em;
+  color: #38BDF8;
+  margin-bottom: 6px;
   text-transform: uppercase;
 }
 
-.preview-badge-dot {
+.projects-kicker-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #10B981;
-  box-shadow: 0 0 8px #10B981;
-  display: inline-block;
-  transition: background 0.3s, box-shadow 0.3s;
+  background: #38BDF8;
+  box-shadow: 0 0 10px #38BDF8;
+  animation: pulseNeonDot 2s infinite ease-in-out;
 }
 
-.project-preview-metric {
-  position: absolute;
-  bottom: 8px;
-  left: 10px;
-  padding: 3px 9px;
-  background: rgba(185, 255, 0, 0.22);
-  border: 1px solid rgba(185, 255, 0, 0.45);
-  border-radius: 6px;
-  color: #B9FF00;
-  font-family: CabinetGrotesk-Bold, -apple-system, sans-serif;
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  backdrop-filter: blur(8px);
-  transition: color 0.3s, border-color 0.3s, background 0.3s;
+@keyframes pulseNeonDot {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 14px #38BDF8; }
 }
 
-.project-preview-info {
-  padding: 10px 14px 12px;
-  display: flex;
-  justify-content: space-between;
+.projects__title {
+  font-family: CabinetGrotesk-Variable, 'Be Vietnam Pro', sans-serif !important;
+  font-size: clamp(28px, 3.2vw, 44px) !important;
+  font-weight: 800 !important;
+  color: #FFFFFF !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em !important;
+  margin: 0 0 6px 0 !important;
+  text-align: center !important;
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  width: auto !important;
+}
+
+.projects-lead {
+  font-family: 'Be Vietnam Pro', Satoshi-Variable, sans-serif;
+  font-size: clamp(12.5px, 1.05vw, 15px);
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0 auto;
+  max-width: 620px;
+  line-height: 1.45;
+}
+
+/* SHOWCASE SPLIT 2 COLUMNS */
+.milestones-showcase {
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: clamp(24px, 3.5vw, 48px);
   align-items: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex: 1;
+  min-height: 0;
 }
 
-.project-preview-role-wrap {
+/* LEFT COLUMN: RAIL */
+.milestones-rail {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(7px, 1.25vh, 11px);
+  justify-content: center;
+  max-width: 620px;
+  width: 100%;
+}
+
+.milestone-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 16px;
+  background: rgba(15, 23, 42, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+
+.milestone-item:hover {
+  background: rgba(30, 41, 59, 0.72);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateX(6px);
+}
+
+.milestone-item.is-active {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.75),
+              0 0 25px rgba(56, 189, 248, 0.16),
+              inset 0 0 0 1px rgba(56, 189, 248, 0.25);
+  transform: translateX(10px);
+}
+
+.milestone-item__num-wrap {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.milestone-item__num {
+  font-family: CabinetGrotesk-Variable, sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.35);
+  transition: color 0.25s ease;
+}
+
+.milestone-item.is-active .milestone-item__num {
+  color: #38BDF8;
+}
+
+.milestone-item__indicator {
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 3px;
+  height: 24px;
+  background: #38BDF8;
+  border-radius: 999px;
+  box-shadow: 0 0 12px #38BDF8;
+  transition: transform 0.25s ease;
+}
+
+.milestone-item.is-active .milestone-item__indicator {
+  transform: translateY(-50%) scaleY(1);
+}
+
+.milestone-item__body {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.project-preview-role-label {
-  font-size: 9px;
+.milestone-item__title {
+  font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
+  font-size: clamp(13.5px, 1.05vw, 15px);
   font-weight: 700;
-  letter-spacing: 0.06em;
-  color: #94A3B8;
-  text-transform: uppercase;
-  font-family: Satoshi-Variable, sans-serif;
-}
-
-.project-preview-role {
-  font-family: Satoshi-Variable, -apple-system, sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  color: #F8FAFC;
+  color: #FFFFFF;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 175px;
+  letter-spacing: -0.01em;
 }
 
-.project-preview-status {
+.milestone-item.is-active .milestone-item__title {
+  color: #FFFFFF;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
+}
+
+.milestone-item__org {
+  font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.50);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.milestone-item.is-active .milestone-item__org {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.milestone-item__tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: #CBD5E1;
-  font-family: Satoshi-Variable, sans-serif;
-  background: rgba(255, 255, 255, 0.06);
-  padding: 4px 8px;
+  gap: 5px;
+  padding: 4px 10px;
+  background: color-mix(in srgb, var(--tag-accent, #38BDF8) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tag-accent, #38BDF8) 32%, transparent);
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+  font-family: Satoshi-Variable, 'Be Vietnam Pro', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--tag-accent, #38BDF8);
+  white-space: nowrap;
 }
 
-.preview-sparkle {
-  color: #F5DF4D;
+.milestone-tag-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* CTA ROW SPECIFIC */
+.milestone-item--cta {
+  background: rgba(250, 204, 21, 0.05);
+  border: 1px dashed rgba(250, 204, 21, 0.35);
+}
+
+.milestone-item--cta:hover,
+.milestone-item--cta.is-active {
+  background: rgba(250, 204, 21, 0.12);
+  border-color: rgba(250, 204, 21, 0.85);
+  box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.7),
+              0 0 25px rgba(250, 204, 21, 0.25);
+}
+
+.milestone-item--cta .milestone-item__num {
+  color: #FACC15;
+  font-size: 19px;
+}
+
+.milestone-item--cta .milestone-item__title {
+  color: #FACC15;
+}
+
+.milestone-item--cta .milestone-item__tag {
+  background: rgba(250, 204, 21, 0.18);
+  border-color: rgba(250, 204, 21, 0.50);
+  color: #FACC15;
+}
+
+/* RIGHT COLUMN: CINEMA SPOTLIGHT STAGE */
+.milestones-stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 560px;
+  width: 100%;
+}
+
+.spotlight-card {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9),
+              0 0 40px rgba(56, 189, 248, 0.14);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.spotlight-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9.2;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #020617;
+}
+
+.spotlight-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.28s ease, transform 0.5s ease;
+}
+
+.spotlight-media-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(7, 10, 15, 0.85) 100%);
+  pointer-events: none;
+}
+
+.spotlight-top-bar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  gap: 8px;
+}
+
+.spotlight-cat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  font-family: Satoshi-Variable, sans-serif;
   font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #FFFFFF;
 }
 
-@media (max-width: 900px) {
-  .projects__title {
-    font-size: clamp(24px, 6vw, 36px) !important;
-    white-space: normal !important;
-    top: 7vh !important;
-    padding: 0 16px !important;
-  }
-  .projects__list {
-    top: 21vh !important;
-    gap: 12px !important;
-    padding: 0 16px !important;
-  }
-  .projects__link {
-    font-size: clamp(15px, 3.8vw, 22px) !important;
-    text-align: center !important;
-  }
+.spotlight-cat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
 }
 
-@media (max-width: 768px) {
-  .project-cursor-preview {
-    display: none !important;
+.spotlight-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #34D399;
+}
+
+.spotlight-sparkle {
+  color: #B9FF00;
+}
+
+.spotlight-metric-pill {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-family: Satoshi-Variable, 'Be Vietnam Pro', sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #10B981;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.spotlight-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.spotlight-kicker {
+  font-family: Satoshi-Variable, sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+}
+
+.spotlight-title {
+  font-family: CabinetGrotesk-Variable, 'Be Vietnam Pro', sans-serif;
+  font-size: clamp(16px, 1.3vw, 20px);
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 3px 0 2px 0;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+.spotlight-org {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+
+.spotlight-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 9px 12px;
+  background: rgba(2, 6, 23, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+}
+
+.spotlight-meta-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.spotlight-meta-label {
+  font-family: Satoshi-Variable, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.42);
+  text-transform: uppercase;
+}
+
+.spotlight-meta-value {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.spotlight-meta-value--green {
+  color: #34D399;
+}
+
+.spotlight-action-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.16) 0%, rgba(16, 185, 129, 0.16) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 11px;
+  color: #FFFFFF;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.spotlight-action-btn:hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.28) 0%, rgba(16, 185, 129, 0.28) 100%);
+  border-color: rgba(56, 189, 248, 0.65);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+  transform: translateY(-2px);
+}
+
+.spotlight-action-btn svg {
+  transition: transform 0.25s ease;
+}
+
+.spotlight-action-btn:hover svg {
+  transform: translateX(4px);
+}
+
+/* RESPONSIVE LAYOUT */
+@media (max-width: 992px) {
+  .projects-cinematic-wrap {
+    height: auto;
+    padding: 30px 0;
+  }
+  .milestones-showcase {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .milestones-stage {
+    order: -1;
+    max-width: 100%;
+  }
+  .milestones-rail {
+    max-width: 100%;
   }
 }
 
@@ -2566,63 +2840,91 @@ html:lang(vi) .toolkit__subtitle,
       <section class="projects" id="projects">
         <div class="projects__pin-height">
           <div class="projects__container">
-            <h2 class="projects__title">Cột Mốc Thực Chiến</h2>
+            <!-- Legacy hook for smooth scrolling compatibility -->
+            <nav class="projects__list" style="display: none !important;" aria-hidden="true"></nav>
 
-            <nav class="projects__list" aria-label="Cột mốc thực chiến của ứng viên">
-              <a
-                class="projects__link"
-                href="#projects"
-                data-milestone-index="0"
-                data-type="JOB"
-              >
-                01 / UI/UX Designer Frontend — Shopee Vietnam • ⭐ 5.0
-              </a>
+            <div class="projects-cinematic-wrap">
+              <!-- SECTION HEADER -->
+              <div class="projects-cinematic-header">
+                <div class="projects-kicker">
+                  <span class="projects-kicker-dot"></span>
+                  <span>TRIỂN LÃM MINH CHỨNG SỐNG • LIVING PROOF</span>
+                </div>
+                <h2 class="projects__title">Cột Mốc Thực Chiến</h2>
+                <p class="projects-lead">
+                  Bảo chứng năng lực thực tế qua việc làm hoàn thành, đồ án thực chiến và chứng chỉ chính quy
+                </p>
+              </div>
 
-              <a
-                class="projects__link"
-                href="#projects"
-                data-milestone-index="1"
-                data-type="EXPERIENCE"
-              >
-                02 / Hệ thống Quản lý Điểm danh QR — CLB Phần Mềm • +450 EXP
-              </a>
+              <!-- SPLIT EXHIBITION STAGE -->
+              <div class="milestones-showcase">
+                <!-- CỘT TRÁI: INTERACTIVE MILESTONE RAIL -->
+                <div class="milestones-rail" id="milestonesRail" role="tablist" aria-label="Danh sách cột mốc thực chiến">
+                  <!-- Injected dynamically by JS -->
+                </div>
 
-              <a
-                class="projects__link"
-                href="#projects"
-                data-milestone-index="2"
-                data-type="EXPERIENCE"
-              >
-                03 / NextGen Tech Hackathon — Khoa CNTT • Giải Nhất Toàn Quốc
-              </a>
+                <!-- CỘT PHẢI: CINEMA SPOTLIGHT STAGE -->
+                <div class="milestones-stage">
+                  <div class="spotlight-card" id="spotlightCard">
+                    <!-- MEDIA VIEWPORT -->
+                    <div class="spotlight-media">
+                      <img id="spotlightImg" class="spotlight-img" src="/universe-clone/projects/06-living-proof.jpg" alt="Living Proof Preview" />
+                      <div class="spotlight-media-gradient"></div>
 
-              <a
-                class="projects__link"
-                href="#projects"
-                data-milestone-index="3"
-                data-type="EXPERIENCE"
-              >
-                04 / 60s Sài Gòn — Viral Video — Media Thực Chiến • 850,000 Views
-              </a>
+                      <!-- TOP BADGES -->
+                      <div class="spotlight-top-bar">
+                        <div class="spotlight-cat-badge" id="spotlightBadge">
+                          <span class="spotlight-cat-dot" id="spotlightDot"></span>
+                          <span id="spotlightCategory">JOB THỰC CHIẾN • FONLIO</span>
+                        </div>
+                        <div class="spotlight-verified-badge" id="spotlightVerifiedBadge">
+                          <span class="spotlight-sparkle">✦</span>
+                          <span id="spotlightStatus">Doanh nghiệp chứng thực</span>
+                        </div>
+                      </div>
 
-              <a
-                class="projects__link"
-                href="#projects"
-                data-milestone-index="4"
-                data-type="CREDENTIAL"
-              >
-                05 / AWS Certified Cloud Practitioner — Amazon Web Services • 2025
-              </a>
+                      <!-- FLOATING METRIC PILL -->
+                      <div class="spotlight-metric-pill" id="spotlightMetric">
+                        ⭐ 5.0 (DOANH NGHIỆP ĐÁNH GIÁ)
+                      </div>
+                    </div>
 
-              <a
-                class="projects__link projects__link--cta"
-                href="#projects"
-                data-milestone-index="5"
-                data-type="CTA"
-              >
-                + / Mở khóa cột mốc tiếp theo — Thêm đồ án hoặc nhận việc trên Fonlio
-              </a>
-            </nav>
+                    <!-- CONTENT INFO BODY -->
+                    <div class="spotlight-body">
+                      <div>
+                        <span class="spotlight-kicker" id="spotlightKicker">DỰ ÁN / VỊ TRÍ THỰC CHIẾN</span>
+                        <h3 class="spotlight-title" id="spotlightTitle">UI/UX Designer Frontend</h3>
+                        <p class="spotlight-org" id="spotlightOrg">Shopee Vietnam • Đối tác doanh nghiệp</p>
+                      </div>
+
+                      <div class="spotlight-meta-grid">
+                        <div class="spotlight-meta-box">
+                          <span class="spotlight-meta-label">VAI TRÒ THỰC CHIẾN</span>
+                          <span class="spotlight-meta-value" id="spotlightRole">Freelance UI Engineer</span>
+                        </div>
+                        <div class="spotlight-meta-box">
+                          <span class="spotlight-meta-label">TIÊU CHUẨN XÁC THỰC</span>
+                          <span class="spotlight-meta-value spotlight-meta-value--green" id="spotlightTrust">Bảo chứng 100%</span>
+                        </div>
+                      </div>
+
+                      <!-- ACTION BUTTON -->
+                      <div>
+                        <button type="button" class="spotlight-action-btn" id="spotlightActionBtn">
+                          <span id="spotlightBtnText">Khám phá chi tiết minh chứng</span>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
       </section>
@@ -3456,229 +3758,280 @@ html:lang(vi) .toolkit__subtitle,
 
 <script>
 /* ==========================================================================
-   AUTHENTIC LIVING PROOF MILESTONES & FLOATING MAGNETIC CURSOR PREVIEW
+   AUTHENTIC LIVING PROOF MILESTONES — CINEMATIC SPLIT SHOWCASE CONTROLLER
    ========================================================================== */
-(function setupMilestonePreview() {
+(function setupMilestoneShowcase() {
   const DEFAULT_MILESTONES = [
     {
       type: 'JOB',
       appId: 'job-shopee-1',
-      titleText: '01 / UI/UX Designer Frontend — Shopee Vietnam • ⭐ 5.0',
+      num: '01',
+      title: 'UI/UX Designer Frontend',
+      org: 'Shopee Vietnam • Đối tác doanh nghiệp',
+      tagText: 'Doanh nghiệp chứng thực',
+      tagColor: '#10B981',
       image: '/universe-clone/projects/06-living-proof.jpg',
       category: 'JOB THỰC CHIẾN • FONLIO',
-      metric: '⭐ 5.0 (DOANH NGHIỆP ĐÁNH GIÁ)',
+      metricDisplay: '⭐ 5.0 (DOANH NGHIỆP ĐÁNH GIÁ)',
       role: 'Freelance UI Engineer',
       statusText: 'Doanh nghiệp chứng thực',
+      trustText: 'Bảo chứng doanh nghiệp',
+      kicker: 'DỰ ÁN / VỊ TRÍ THỰC CHIẾN',
       color: '#10B981'
     },
     {
       type: 'EXPERIENCE',
       expIndex: 0,
-      titleText: '02 / Hệ thống Quản lý Điểm danh QR — CLB Phần Mềm • +450 EXP',
+      num: '02',
+      title: 'Hệ thống Quản lý Điểm danh QR',
+      org: 'CLB Phần Mềm Sinh Viên • +450 EXP',
+      tagText: 'Xác thực 100%',
+      tagColor: '#38BDF8',
       image: '/universe-clone/projects/04-qr-attendance.jpg',
       category: 'KỸ THUẬT PHẦN MỀM',
-      metric: '+450 EXP • +8 RS THƯỞNG',
+      metricDisplay: '+450 EXP • +8 RS THƯỞNG',
       role: 'Backend & Cloud System',
       statusText: 'Xác thực chuẩn 100%',
+      trustText: 'Bảo chứng Living Proof',
+      kicker: 'ĐỒ ÁN & KINH NGHIỆM THỰC TẾ',
       color: '#38BDF8'
     },
     {
       type: 'EXPERIENCE',
       expIndex: 1,
-      titleText: '03 / NextGen Tech Hackathon — Khoa CNTT • Giải Nhất Toàn Quốc',
+      num: '03',
+      title: 'NextGen Tech Hackathon',
+      org: 'Khoa Công nghệ Thông tin • Giải Nhất Toàn Quốc',
+      tagText: 'Giải Nhất Toàn Quốc',
+      tagColor: '#B9FF00',
       image: '/universe-clone/projects/03-hackathon-champion.jpg',
       category: 'CÔNG NGHỆ & ĐỔI MỚI',
-      metric: 'GIẢI NHẤT TOÀN QUỐC',
+      metricDisplay: 'GIẢI NHẤT TOÀN QUỐC',
       role: 'Lead Frontend Developer',
       statusText: 'Xác thực chuẩn 100%',
+      trustText: 'Bảo chứng giải thưởng',
+      kicker: 'ĐỒ ÁN & KINH NGHIỆM THỰC TẾ',
       color: '#B9FF00'
     },
     {
       type: 'EXPERIENCE',
       expIndex: 2,
-      titleText: '04 / 60s Sài Gòn — Viral Video — Media Thực Chiến • 850,000 Views',
+      num: '04',
+      title: '60s Sài Gòn — Viral Video',
+      org: 'Dự án Sáng Tạo Độc Lập • 850,000 Views',
+      tagText: '850,000+ Views',
+      tagColor: '#EC4899',
       image: '/universe-clone/projects/02-saigon-viral-video.jpg',
       category: 'SÁNG TẠO & MEDIA',
-      metric: '850,000+ LƯỢT XEM',
+      metricDisplay: '850,000+ LƯỢT XEM',
       role: 'Video Editor & Sáng Tạo',
       statusText: 'Minh chứng sống',
+      trustText: 'Bảo chứng Living Proof',
+      kicker: 'DỰ ÁN SÁNG TẠO ĐỘC LẬP',
       color: '#EC4899'
     },
     {
       type: 'CREDENTIAL',
-      titleText: '05 / AWS Certified Cloud Practitioner — Amazon Web Services • 2025',
+      num: '05',
+      title: 'AWS Certified Cloud Practitioner',
+      org: 'Amazon Web Services • Năm 2025',
+      tagText: 'Chứng chỉ Quốc tế',
+      tagColor: '#A855F7',
       image: '/universe-clone/projects/05-brand-identity.jpg',
       category: 'CHỨNG CHỈ NĂNG LỰC',
-      metric: 'CHỨNG CHỈ QUỐC TẾ',
+      metricDisplay: 'CHỨNG CHỈ QUỐC TẾ',
       role: 'Amazon Web Services',
       statusText: 'Đã xác thực',
+      trustText: 'Chính quy cấp bằng',
+      kicker: 'CHỨNG NHẬN QUỐC TẾ',
       color: '#A855F7'
     },
     {
       type: 'CTA',
       isCta: true,
-      titleText: '+ / Mở khóa cột mốc tiếp theo — Thêm đồ án hoặc nhận việc trên Fonlio',
+      num: '+',
+      title: 'Mở khóa cột mốc tiếp theo',
+      org: 'Thêm đồ án môn học hoặc nhận việc thực tế trên Fonlio',
+      tagText: 'Cơ hội rộng mở',
+      tagColor: '#FACC15',
       image: '/universe-clone/projects/06-living-proof.jpg',
       category: 'TIẾP BƯỚC HÀNH TRÌNH',
-      metric: 'MỞ RỘNG LIVING PROOF',
-      role: 'Sẵn sàng chinh phục mục tiêu mới',
+      metricDisplay: 'MỞ RỘNG LIVING PROOF',
+      role: 'Sẵn sàng đón nhận cơ hội mới',
       statusText: 'Cơ hội rộng mở',
+      trustText: 'Kích hoạt hồ sơ',
+      kicker: 'HÀNH TRÌNH TƯƠNG LAI',
       color: '#FACC15'
     }
   ];
 
   let CURRENT_MILESTONES = [...DEFAULT_MILESTONES];
+  let activeIndex = 0;
 
-  let mouseX = -500;
-  let mouseY = -500;
-  let currentX = -500;
-  let currentY = -500;
-  let isHovering = false;
-  let rafId = null;
-  let activeLink = null;
+  function updateSpotlight(item) {
+    if (!item) return;
 
-  function getTargetPos() {
-    const cardW = 340;
-    const cardH = 260;
+    const spotlightImg = document.getElementById('spotlightImg');
+    const spotlightCategory = document.getElementById('spotlightCategory');
+    const spotlightDot = document.getElementById('spotlightDot');
+    const spotlightStatus = document.getElementById('spotlightStatus');
+    const spotlightMetric = document.getElementById('spotlightMetric');
+    const spotlightKicker = document.getElementById('spotlightKicker');
+    const spotlightTitle = document.getElementById('spotlightTitle');
+    const spotlightOrg = document.getElementById('spotlightOrg');
+    const spotlightRole = document.getElementById('spotlightRole');
+    const spotlightTrust = document.getElementById('spotlightTrust');
+    const spotlightActionBtn = document.getElementById('spotlightActionBtn');
+    const spotlightBtnText = document.getElementById('spotlightBtnText');
 
-    const safeMouseX = mouseX > 0 ? mouseX : window.innerWidth / 2;
-    const safeMouseY = mouseY > 0 ? mouseY : window.innerHeight / 2;
-
-    let targetX = safeMouseX + 32;
-    let targetY = safeMouseY - 120;
-
-    if (targetX + cardW > window.innerWidth - 20) {
-      targetX = safeMouseX - cardW - 32;
+    if (spotlightCategory) spotlightCategory.textContent = item.category || 'CỘT MỐC THỰC CHIẾN';
+    if (spotlightDot) {
+      spotlightDot.style.background = item.color || '#38BDF8';
+      spotlightDot.style.boxShadow = `0 0 8px ${item.color || '#38BDF8'}`;
     }
-
-    if (targetX < 20) targetX = 20;
-    if (targetY < 20) {
-      targetY = 20;
-    } else if (targetY + cardH > window.innerHeight - 20) {
-      targetY = window.innerHeight - cardH - 20;
+    if (spotlightStatus) spotlightStatus.textContent = item.statusText || 'Xác thực 100%';
+    if (spotlightMetric) {
+      spotlightMetric.textContent = item.metricDisplay || 'ĐÃ XÁC THỰC';
+      spotlightMetric.style.color = item.color || '#10B981';
+      spotlightMetric.style.borderColor = `${item.color || '#10B981'}55`;
     }
+    if (spotlightKicker) spotlightKicker.textContent = item.kicker || 'CHI TIẾT CỘT MỐC';
+    if (spotlightTitle) spotlightTitle.textContent = item.title;
+    if (spotlightOrg) spotlightOrg.textContent = item.org;
+    if (spotlightRole) spotlightRole.textContent = item.role || 'Ứng viên thực chiến';
+    if (spotlightTrust) spotlightTrust.textContent = item.trustText || 'Bảo chứng 100%';
 
-    return { targetX, targetY };
-  }
-
-  function updateFollower() {
-    const preview = document.getElementById('projectCursorPreview');
-    if (!preview) return;
-
-    if (!isHovering && !preview.classList.contains('is-active')) {
-      rafId = null;
-      return;
-    }
-
-    const { targetX, targetY } = getTargetPos();
-
-    currentX += (targetX - currentX) * 0.22;
-    currentY += (targetY - currentY) * 0.22;
-
-    const vx = (targetX - currentX) * 0.05;
-    const tilt = Math.max(-8, Math.min(8, vx));
-
-    preview.style.left = `${currentX}px`;
-    preview.style.top = `${currentY}px`;
-    if (isHovering) {
-      preview.style.transform = `scale(1) rotate(${tilt}deg)`;
-    } else {
-      preview.style.transform = `scale(0.85) rotate(-3deg)`;
-    }
-
-    rafId = requestAnimationFrame(updateFollower);
-  }
-
-  function activateMilestone(link, e) {
-    const preview = document.getElementById('projectCursorPreview');
-    const previewImg = document.getElementById('projectPreviewImg');
-    const badgeText = document.getElementById('projectPreviewBadgeText');
-    const badgeDot = document.getElementById('projectPreviewDot');
-    const metric = document.getElementById('projectPreviewMetric');
-    const role = document.getElementById('projectPreviewRole');
-    const statusText = document.getElementById('projectPreviewStatusText');
-    const list = document.querySelector('.projects__list');
-
-    if (!preview || !list) return;
-
-    if (e && typeof e.clientX === 'number' && e.clientX > 0) {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    } else if (mouseX <= 0 || mouseY <= 0) {
-      const rect = link.getBoundingClientRect();
-      mouseX = rect.right - 60;
-      mouseY = rect.top + rect.height / 2;
-    }
-
-    const links = Array.from(list.querySelectorAll('.projects__link'));
-    let dataIdx = link.dataset.milestoneIndex !== undefined ? parseInt(link.dataset.milestoneIndex, 10) : links.indexOf(link);
-    if (isNaN(dataIdx) || dataIdx < 0) dataIdx = 0;
-
-    const data = CURRENT_MILESTONES[dataIdx] || CURRENT_MILESTONES[0];
-    if (!data) return;
-
-    if (previewImg && data.image) {
-      previewImg.src = data.image;
-    }
-    if (badgeText) badgeText.textContent = data.category || 'CỘT MỐC THỰC CHIẾN';
-    if (badgeDot) {
-      badgeDot.style.background = data.color || '#10B981';
-      badgeDot.style.boxShadow = `0 0 10px ${data.color || '#10B981'}`;
-    }
-    if (metric) {
-      metric.textContent = data.metric || 'ĐÃ XÁC THỰC';
-      if (data.color) {
-        metric.style.color = data.color;
-        metric.style.borderColor = `${data.color}66`;
-        metric.style.background = `${data.color}22`;
+    // Button label and click handler
+    if (spotlightBtnText) {
+      if (item.type === 'EXPERIENCE') {
+        spotlightBtnText.textContent = 'Khám phá chi tiết minh chứng';
+      } else if (item.type === 'JOB') {
+        spotlightBtnText.textContent = 'Xem hợp đồng & đánh giá việc làm';
+      } else if (item.type === 'CREDENTIAL') {
+        spotlightBtnText.textContent = 'Xem chứng chỉ & hồ sơ bảo chứng';
+      } else {
+        spotlightBtnText.textContent = 'Thêm cột mốc mới vào Portfolio';
       }
     }
-    if (role) role.textContent = data.role || 'Ứng viên thực chiến';
-    if (statusText) statusText.textContent = data.statusText || 'Xác thực 100%';
 
-    const { targetX, targetY } = getTargetPos();
-    currentX = targetX;
-    currentY = targetY;
-    preview.style.left = `${currentX}px`;
-    preview.style.top = `${currentY}px`;
-    preview.style.transform = `scale(1) rotate(0deg)`;
+    if (spotlightActionBtn) {
+      spotlightActionBtn.onclick = function() {
+        if (item.type === 'EXPERIENCE' && typeof item.expIndex === 'number') {
+          window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: item.expIndex } }, '*');
+        } else if (item.type === 'JOB') {
+          window.parent.postMessage({ type: 'NAVIGATE_DASHBOARD' }, '*');
+        } else if (item.type === 'CTA') {
+          window.parent.postMessage({ type: 'NAVIGATE_PORTFOLIO_EDIT' }, '*');
+        } else {
+          window.parent.postMessage({ type: 'OPEN_CERTIFICATE_MODAL', payload: { cred: item } }, '*');
+        }
+      };
+    }
 
-    isHovering = true;
-    activeLink = link;
-    list.classList.add('is-hovering');
-    links.forEach(l => l.classList.remove('is-active'));
-    link.classList.add('is-active');
-    preview.classList.add('is-active');
-
-    if (!rafId) {
-      rafId = requestAnimationFrame(updateFollower);
+    // Cross-fade image smoothly
+    if (spotlightImg && item.image) {
+      spotlightImg.style.opacity = '0.3';
+      const temp = new Image();
+      temp.onload = function() {
+        spotlightImg.src = item.image;
+        spotlightImg.style.opacity = '1';
+      };
+      temp.onerror = function() {
+        spotlightImg.src = '/universe-clone/projects/06-living-proof.jpg';
+        spotlightImg.style.opacity = '1';
+      };
+      temp.src = item.image;
     }
   }
 
-  function deactivateAll() {
-    const preview = document.getElementById('projectCursorPreview');
-    const list = document.querySelector('.projects__list');
-    isHovering = false;
-    activeLink = null;
-    if (list) {
-      list.classList.remove('is-hovering');
-      list.querySelectorAll('.projects__link').forEach(l => l.classList.remove('is-active'));
-    }
-    if (preview) {
-      preview.classList.remove('is-active');
-    }
+  function renderShowcase() {
+    const rail = document.getElementById('milestonesRail');
+    const legacyList = document.querySelector('.projects__list');
+    if (!rail) return;
+
+    rail.innerHTML = '';
+    if (legacyList) legacyList.innerHTML = '';
+
+    CURRENT_MILESTONES.forEach((item, idx) => {
+      // Create Milestone Item for Left Rail
+      const row = document.createElement('div');
+      row.className = 'milestone-item' + (item.isCta ? ' milestone-item--cta' : '') + (idx === activeIndex ? ' is-active' : '');
+      row.setAttribute('role', 'tab');
+      row.setAttribute('tabindex', '0');
+      row.setAttribute('aria-selected', idx === activeIndex ? 'true' : 'false');
+      row.setAttribute('data-index', String(idx));
+
+      row.innerHTML = `
+        <div class="milestone-item__indicator"></div>
+        <div class="milestone-item__num-wrap">
+          <span class="milestone-item__num">${item.num || String(idx + 1).padStart(2, '0')}</span>
+        </div>
+        <div class="milestone-item__body">
+          <div class="milestone-item__title">${item.title}</div>
+          <div class="milestone-item__org">${item.org}</div>
+        </div>
+        <div class="milestone-item__tag" style="--tag-accent: ${item.tagColor || '#38BDF8'};">
+          <span class="milestone-tag-dot"></span>
+          <span>${item.tagText || 'Xác thực'}</span>
+        </div>
+      `;
+
+      function activateThisItem() {
+        if (activeIndex === idx && row.classList.contains('is-active')) return;
+        activeIndex = idx;
+        rail.querySelectorAll('.milestone-item').forEach((el, i) => {
+          const isActive = i === idx;
+          el.classList.toggle('is-active', isActive);
+          el.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        updateSpotlight(item);
+      }
+
+      row.addEventListener('mouseenter', activateThisItem);
+      row.addEventListener('focus', activateThisItem);
+      row.addEventListener('click', () => {
+        activateThisItem();
+        if (item.type === 'EXPERIENCE' && typeof item.expIndex === 'number') {
+          window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: item.expIndex } }, '*');
+        } else if (item.type === 'JOB') {
+          window.parent.postMessage({ type: 'NAVIGATE_DASHBOARD' }, '*');
+        } else if (item.type === 'CTA') {
+          window.parent.postMessage({ type: 'NAVIGATE_PORTFOLIO_EDIT' }, '*');
+        }
+      });
+
+      rail.appendChild(row);
+
+      // Keep hidden legacy links for GSAP ScrollTrigger compatibility
+      if (legacyList) {
+        const legacyA = document.createElement('a');
+        legacyA.className = 'projects__link';
+        legacyA.href = '#projects';
+        legacyA.textContent = `${item.num || String(idx + 1).padStart(2, '0')} / ${item.title}`;
+        legacyList.appendChild(legacyA);
+      }
+    });
+
+    // Initialize spotlight with active item
+    updateSpotlight(CURRENT_MILESTONES[activeIndex] || CURRENT_MILESTONES[0]);
+
+    // Preload images
+    CURRENT_MILESTONES.forEach(item => {
+      if (item.image) {
+        const img = new Image();
+        img.src = item.image;
+      }
+    });
   }
 
   // RENDER DYNAMIC LIVING MILESTONES (3-Tier authentic user data pipeline)
   window.renderCandidateMilestones = function(payload) {
-    const list = document.querySelector('.projects__list');
-    if (!list) return;
-
     const applications = Array.isArray(payload?.applications) ? payload.applications : [];
     const experiences = Array.isArray(payload?.experiences) ? payload.experiences : [];
     const credentials = Array.isArray(payload?.credentials) ? payload.credentials : [];
 
     const built = [];
+    let counter = 1;
 
     // TIER 1: Completed / Accepted Jobs on Fonlio (highest trust: verified by Employer)
     applications
@@ -3687,18 +4040,23 @@ html:lang(vi) .toolkit__subtitle,
         const title = app.job_title || app.title || app.questTitle || 'Dự án Doanh nghiệp';
         const company = app.company_name || app.companyName || 'Doanh nghiệp đối tác';
         const rating = app.rating_score || app.ratingScore;
-        const metricLabel = rating ? `⭐ ${rating}/5.0` : 'Hoàn thành';
         const metricDisplay = rating ? `⭐ ${rating}/5.0 (DOANH NGHIỆP ĐÁNH GIÁ)` : 'HOÀN THÀNH XUẤT SẮC';
 
         built.push({
           type: 'JOB',
           appId: app.id,
-          titleText: `${title} — ${company} • ${metricLabel}`,
+          num: String(counter++).padStart(2, '0'),
+          title: title,
+          org: `${company} • ${rating ? `⭐ ${rating}/5.0` : 'Đã nghiệm thu'}`,
+          tagText: 'Doanh nghiệp chứng thực',
+          tagColor: '#10B981',
           image: app.company_logo || '/universe-clone/projects/06-living-proof.jpg',
           category: 'JOB THỰC CHIẾN • FONLIO',
-          metric: metricDisplay,
+          metricDisplay: metricDisplay,
           role: app.role || 'Cộng tác viên thực chiến',
           statusText: 'Doanh nghiệp chứng thực',
+          trustText: 'Bảo chứng doanh nghiệp',
+          kicker: 'DỰ ÁN / VỊ TRÍ THỰC CHIẾN',
           color: '#10B981'
         });
       });
@@ -3709,7 +4067,7 @@ html:lang(vi) .toolkit__subtitle,
       const org = exp.organization || 'Đồ án & Hoạt động';
       const verified = exp.verified === true || exp.status === 'APPROVED';
       const rewardExp = exp.expReward ? `+${exp.expReward} EXP` : '';
-      const labelResult = verified ? (rewardExp ? `${rewardExp} • Xác thực` : 'Đã xác thực') : (rewardExp || 'Minh chứng sống');
+      const tagLabel = verified ? (rewardExp || 'Xác thực 100%') : (rewardExp || 'Minh chứng sống');
 
       let image = '/universe-clone/projects/01-fpt-green-week.jpg';
       if (Array.isArray(exp.proofImages) && exp.proofImages.length > 0 && exp.proofImages[0]) {
@@ -3732,12 +4090,18 @@ html:lang(vi) .toolkit__subtitle,
       built.push({
         type: 'EXPERIENCE',
         expIndex: idx,
-        titleText: `${title} — ${org} • ${labelResult}`,
+        num: String(counter++).padStart(2, '0'),
+        title: title,
+        org: `${org} • ${rewardExp || (verified ? 'Xác thực' : 'Đồ án')}`,
+        tagText: tagLabel,
+        tagColor: verified ? '#B9FF00' : '#38BDF8',
         image: image,
         category: (exp.category || 'ĐỒ ÁN & KINH NGHIỆM').toUpperCase(),
-        metric: metricDisplay,
+        metricDisplay: metricDisplay,
         role: exp.roleLevel || 'Thành viên cốt lõi',
         statusText: verified ? 'Xác thực chuẩn 100%' : 'Hồ sơ Living Proof',
+        trustText: verified ? 'Bảo chứng Living Proof' : 'Minh chứng hồ sơ',
+        kicker: 'ĐỒ ÁN & KINH NGHIỆM THỰC TẾ',
         color: verified ? '#B9FF00' : '#38BDF8'
       });
     });
@@ -3750,12 +4114,18 @@ html:lang(vi) .toolkit__subtitle,
 
       built.push({
         type: 'CREDENTIAL',
-        titleText: `${name} — ${issuer} • Năm ${year}`,
+        num: String(counter++).padStart(2, '0'),
+        title: name,
+        org: `${issuer} • Năm ${year}`,
+        tagText: 'Chứng chỉ Uy tín',
+        tagColor: '#A855F7',
         image: cred.fileData || '/universe-clone/projects/05-brand-identity.jpg',
         category: 'CHỨNG CHỈ NĂNG LỰC',
-        metric: 'CHỨNG CHỈ UY TÍN',
+        metricDisplay: 'CHỨNG CHỈ QUỐC TẾ',
         role: `Cấp bởi ${issuer}`,
         statusText: 'Đã xác thực',
+        trustText: 'Chính quy cấp bằng',
+        kicker: 'CHỨNG NHẬN QUỐC TẾ',
         color: '#A855F7'
       });
     });
@@ -3766,12 +4136,18 @@ html:lang(vi) .toolkit__subtitle,
         built.push({
           type: 'CTA',
           isCta: true,
-          titleText: '+ / Mở khóa cột mốc tiếp theo — Thêm đồ án hoặc nhận việc trên Fonlio',
+          num: '+',
+          title: 'Mở khóa cột mốc tiếp theo',
+          org: 'Thêm đồ án môn học hoặc nhận việc thực tế trên Fonlio',
+          tagText: 'Cơ hội rộng mở',
+          tagColor: '#FACC15',
           image: '/universe-clone/projects/06-living-proof.jpg',
           category: 'TIẾP BƯỚC HÀNH TRÌNH',
-          metric: 'MỞ RỘNG LIVING PROOF',
-          role: 'Sẵn sàng chinh phục mục tiêu mới',
+          metricDisplay: 'MỞ RỘNG LIVING PROOF',
+          role: 'Sẵn sàng đón nhận cơ hội mới',
           statusText: 'Cơ hội rộng mở',
+          trustText: 'Kích hoạt hồ sơ',
+          kicker: 'HÀNH TRÌNH TƯƠNG LAI',
           color: '#FACC15'
         });
       }
@@ -3779,151 +4155,32 @@ html:lang(vi) .toolkit__subtitle,
       built.push({
         type: 'CTA',
         isCta: true,
-        titleText: '01 / Khởi đầu hành trình — Thêm đồ án môn học hoặc nhận việc trên Fonlio',
+        num: '01',
+        title: 'Khởi đầu hành trình thực chiến',
+        org: 'Thêm đồ án môn học hoặc nhận việc trên Fonlio',
+        tagText: 'Bắt đầu ngay',
+        tagColor: '#38BDF8',
         image: '/universe-clone/projects/06-living-proof.jpg',
         category: 'CHƯA CÓ CỘT MỐC',
-        metric: 'KÍCH HOẠT HỒ SƠ',
+        metricDisplay: 'KÍCH HOẠT HỒ SƠ',
         role: 'Tạo dấu ấn đầu tiên của bạn',
         statusText: 'Bắt đầu ngay hôm nay',
+        trustText: 'Khởi đầu hành trình',
+        kicker: 'HÀNH TRÌNH TƯƠNG LAI',
         color: '#38BDF8'
       });
     }
 
     CURRENT_MILESTONES = built.slice(0, 6);
-
-    // Preload preview images
-    CURRENT_MILESTONES.forEach(item => {
-      if (item.image) {
-        const img = new Image();
-        img.src = item.image;
-      }
-    });
-
-    const existingLinks = Array.from(list.querySelectorAll('.projects__link'));
-    if (existingLinks.length === CURRENT_MILESTONES.length) {
-      // Gracefully update existing DOM nodes in-place without destroying GSAP / letter spans
-      existingLinks.forEach((a, idx) => {
-        const item = CURRENT_MILESTONES[idx];
-        a.setAttribute('data-milestone-index', String(idx));
-        a.setAttribute('data-type', item.type || '');
-        if (item.isCta) {
-          a.classList.add('projects__link--cta');
-        } else {
-          a.classList.remove('projects__link--cta');
-        }
-        const numPrefix = item.isCta && idx > 0 ? '' : `${String(idx + 1).padStart(2, '0')} / `;
-        const fullTitle = (item.titleText.startsWith('0') || item.titleText.startsWith('+'))
-          ? item.titleText
-          : `${numPrefix}${item.titleText}`;
-        a.textContent = fullTitle;
-        a.setAttribute('aria-label', fullTitle);
-      });
-    } else {
-      // Re-render if counts differ
-      list.innerHTML = '';
-      CURRENT_MILESTONES.forEach((item, idx) => {
-        const a = document.createElement('a');
-        a.className = 'projects__link' + (item.isCta ? ' projects__link--cta' : '');
-        a.href = '#projects';
-        a.setAttribute('data-milestone-index', String(idx));
-        a.setAttribute('data-type', item.type || '');
-
-        const numPrefix = item.isCta && idx > 0 ? '' : `${String(idx + 1).padStart(2, '0')} / `;
-        const fullTitle = (item.titleText.startsWith('0') || item.titleText.startsWith('+'))
-          ? item.titleText
-          : `${numPrefix}${item.titleText}`;
-        a.textContent = fullTitle;
-        a.setAttribute('aria-label', fullTitle);
-
-        a.addEventListener('click', (e) => {
-          e.preventDefault();
-          if (item.type === 'EXPERIENCE' && typeof item.expIndex === 'number') {
-            window.parent.postMessage({ type: 'OPEN_MEMORY_SPOTLIGHT', payload: { memoryIndex: item.expIndex } }, '*');
-          } else if (item.type === 'JOB') {
-            window.parent.postMessage({ type: 'NAVIGATE_DASHBOARD' }, '*');
-          } else if (item.type === 'CTA') {
-            window.parent.postMessage({ type: 'NAVIGATE_PORTFOLIO_EDIT' }, '*');
-          }
-        });
-
-        list.appendChild(a);
-      });
-    }
-
-    bindAllLinks();
-    deactivateAll();
-    console.log('[Fonlio] Rendered real candidate milestones:', CURRENT_MILESTONES.length);
+    activeIndex = 0;
+    renderShowcase();
+    console.log('[Fonlio] Cinematic Showcase updated with authentic milestones:', CURRENT_MILESTONES.length);
   };
 
-  function bindAllLinks() {
-    const list = document.querySelector('.projects__list');
-    if (!list) return;
-    list.querySelectorAll('.projects__link').forEach(link => {
-      link.addEventListener('mouseenter', (e) => activateMilestone(link, e));
-      link.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        activateMilestone(link, e);
-      }, { passive: true });
-    });
-  }
-
   function init() {
-    const preview = document.getElementById('projectCursorPreview');
-    const list = document.querySelector('.projects__list');
+    renderShowcase();
 
-    if (!preview || !list) {
-      console.warn('[Fonlio] Milestone preview elements not found, retrying...');
-      setTimeout(init, 200);
-      return;
-    }
-
-    // Preload default images
-    CURRENT_MILESTONES.forEach(item => {
-      if (item.image) {
-        const img = new Image();
-        img.src = item.image;
-      }
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-
-      if (isHovering && !e.target.closest('.projects')) {
-        deactivateAll();
-      }
-
-      if (isHovering && !rafId) {
-        rafId = requestAnimationFrame(updateFollower);
-      }
-    }, { passive: true });
-
-    // Event Delegation on list ensures 100% reliable capture
-    list.addEventListener('mouseover', (e) => {
-      const link = e.target.closest('.projects__link');
-      if (link) activateMilestone(link, e);
-    });
-
-    list.addEventListener('mouseenter', (e) => {
-      const link = e.target.closest('.projects__link');
-      if (link) activateMilestone(link, e);
-    }, true);
-
-    list.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-      const link = e.target.closest('.projects__link');
-      if (link) activateMilestone(link, e);
-    }, { passive: true });
-
-    list.addEventListener('mouseleave', () => {
-      deactivateAll();
-    });
-
-    bindAllLinks();
-
-    // Auto-scroll to #projects if URL requests it or testnow is present
+    // Auto-scroll to #projects if URL requests it
     if (window.location.hash === '#projects' || window.location.search.includes('projects') || window.location.search.includes('testnow')) {
       const scrollToMilestones = () => {
         const proj = document.getElementById('projects');
@@ -3999,7 +4256,7 @@ html:lang(vi) .toolkit__subtitle,
       window.renderCandidateMilestones(window.__lastUniverseData);
     }
 
-    console.log('[Fonlio] Milestone Cursor Preview initialized successfully!');
+    console.log('[Fonlio] Cinematic Split Showcase initialized successfully!');
   }
 
   if (document.readyState === 'loading') {
@@ -4009,33 +4266,6 @@ html:lang(vi) .toolkit__subtitle,
   }
 })();
 </script>
-
-<!-- AUTHENTIC LIVING PROOF FLOATING CURSOR PREVIEW CARD (Direct child of body, never clipped by section transforms) -->
-<div id="projectCursorPreview" class="project-cursor-preview" aria-hidden="true">
-  <div class="project-preview-inner">
-    <div class="project-preview-media">
-      <img id="projectPreviewImg" class="project-preview-img" src="/universe-clone/projects/06-living-proof.jpg" alt="" />
-      <div class="project-preview-media-overlay"></div>
-      <div class="project-preview-badge">
-        <span class="preview-badge-dot" id="projectPreviewDot"></span>
-        <span id="projectPreviewBadgeText">JOB THỰC CHIẾN • FONLIO</span>
-      </div>
-      <div class="project-preview-metric" id="projectPreviewMetric">
-        ⭐ 5.0 (DOANH NGHIỆP ĐÁNH GIÁ)
-      </div>
-    </div>
-    <div class="project-preview-info">
-      <div class="project-preview-role-wrap">
-        <span class="project-preview-role-label">VAI TRÒ THỰC CHIẾN</span>
-        <div class="project-preview-role" id="projectPreviewRole">Freelance UI Engineer</div>
-      </div>
-      <div class="project-preview-status">
-        <span class="preview-sparkle">✦</span>
-        <span id="projectPreviewStatusText">Doanh nghiệp chứng thực</span>
-      </div>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
