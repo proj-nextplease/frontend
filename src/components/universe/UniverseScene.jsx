@@ -232,8 +232,6 @@ function createMemoryOrb(exp, idx) {
 
 export function UniverseScene({
   experiences = [],
-  candidate = null,
-  activeFilter = 'ALL',
   onSelectExperience = () => {},
   className = '',
 }) {
@@ -562,7 +560,7 @@ export function UniverseScene({
       s.dragStart.y = e.clientY;
     }
 
-    function onPointerUp(e) {
+    function onPointerUp() {
       s.isDragging = false;
       if (s.camera) {
         s.raycaster.setFromCamera(s.mouse, s.camera);
@@ -604,7 +602,7 @@ export function UniverseScene({
 
     function animate() {
       animationId = requestAnimationFrame(animate);
-      const delta = clock.getDelta();
+      const _delta = clock.getDelta();
       const elapsed = clock.getElapsedTime();
 
       // Centerpiece Gyroscope Rotations

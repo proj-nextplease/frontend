@@ -99,7 +99,11 @@ export function CandidateUniversePage() {
   const [loaded, setLoaded] = useState(false);
   const [portfolio, setPortfolio] = useState(null);
   const [applications, setApplications] = useState([]);
-  const [isWrappedOpen, setIsWrappedOpen] = useState(false);
+  const [isWrappedOpen, setIsWrappedOpen] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('wrapped') === 'true' || urlParams.get('openWrapped') === 'true';
+  });
   const [selectedMemoryIndex, setSelectedMemoryIndex] = useState(0);
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
 
@@ -107,11 +111,6 @@ export function CandidateUniversePage() {
     document.title = 'FONLIO — Vũ Trụ Ký Ức & Triển Lãm Minh Chứng Sống';
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('wrapped') === 'true' || urlParams.get('openWrapped') === 'true') {
-      setIsWrappedOpen(true);
-    }
 
     // Bridge messages from the universe iframe
     const handleMessage = (event) => {
@@ -170,23 +169,17 @@ export function CandidateUniversePage() {
   const realExperiences = portfolio?.experiences || [];
   const displayExperiences = realExperiences.length > 0 ? realExperiences : SAMPLE_MEMORIES;
 
-  const totalExp = useMemo(() => {
-    if (portfolio?.totalExp !== undefined && portfolio?.totalExp !== null) {
-      return portfolio.totalExp;
-    }
-    return displayExperiences.reduce((acc, curr) => acc + (curr.expReward || 300), 0);
-  }, [portfolio?.totalExp, displayExperiences]);
+  const totalExp =
+    portfolio?.totalExp !== undefined && portfolio?.totalExp !== null
+      ? portfolio.totalExp
+      : displayExperiences.reduce((acc, curr) => acc + (curr.expReward || 300), 0);
 
-  const totalRs = useMemo(() => {
-    if (portfolio?.reputationScore !== undefined && portfolio?.reputationScore !== null) {
-      return portfolio.reputationScore;
-    }
-    return displayExperiences.reduce((acc, curr) => acc + (curr.rsReward || 5), 0);
-  }, [portfolio?.reputationScore, displayExperiences]);
+  const totalRs =
+    portfolio?.reputationScore !== undefined && portfolio?.reputationScore !== null
+      ? portfolio.reputationScore
+      : displayExperiences.reduce((acc, curr) => acc + (curr.rsReward || 5), 0);
 
-  const verifiedCount = useMemo(() => {
-    return displayExperiences.filter((e) => e.status === 'APPROVED' || e.verified).length;
-  }, [displayExperiences]);
+  const verifiedCount = displayExperiences.filter((e) => e.status === 'APPROVED' || e.verified).length;
 
   // When portfolio finishes loading, update iframe dynamically
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Play, Pause, Sparkles, Award, Zap, ShieldCheck, Share2, Download, Copy, Check, ArrowRight } from 'lucide-react';
 import { UserAvatar } from '../UserAvatar.jsx';
 
@@ -99,27 +99,27 @@ export function FonlioWrappedStory({
     return () => clearInterval(timerRef.current);
   }, [currentSlide, isPaused, totalSlides]);
 
-  function goToSlide(idx) {
+  const goToSlide = useCallback((idx) => {
     if (idx >= 0 && idx < totalSlides) {
       setCurrentSlide(idx);
       setProgress(0);
       setIsPaused(false);
     }
-  }
+  }, [totalSlides]);
 
-  function handleNext() {
+  const handleNext = useCallback(() => {
     if (currentSlide < totalSlides - 1) {
       goToSlide(currentSlide + 1);
     } else {
       setIsPaused(true);
     }
-  }
+  }, [currentSlide, totalSlides, goToSlide]);
 
-  function handlePrev() {
+  const handlePrev = useCallback(() => {
     if (currentSlide > 0) {
       goToSlide(currentSlide - 1);
     }
-  }
+  }, [currentSlide, goToSlide]);
 
   useEffect(() => {
     function onKeyDown(e) {
@@ -133,7 +133,7 @@ export function FonlioWrappedStory({
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [currentSlide, isPaused, onClose]);
+  }, [onClose, handleNext, handlePrev]);
 
   const displayName = candidate?.name || 'Bạn';
 

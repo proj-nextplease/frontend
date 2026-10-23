@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import {
   ShieldCheck,
   Zap,
@@ -29,10 +29,13 @@ export function TactileMemoryCard3D({
   const cardRef = useRef(null);
 
   // Reset flip when experience changes
-  useEffect(() => {
+  const expKey = experience?.id ?? experience?.title;
+  const [prevExpKey, setPrevExpKey] = useState(expKey);
+  if (expKey !== prevExpKey) {
+    setPrevExpKey(expKey);
     setIsFlipped(false);
     setTilt({ x: 0, y: 0 });
-  }, [experience?.id, experience?.title]);
+  }
 
   function handleMouseMove(e) {
     if (!cardRef.current) return;

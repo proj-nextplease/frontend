@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,7 +15,6 @@ import { MemorySpotlightModal } from './MemorySpotlightModal.jsx';
 
 export function MemoryWheel3D({
   experiences = [],
-  onOpenWrapped = () => {},
 }) {
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -36,14 +35,13 @@ export function MemoryWheel3D({
     });
   }, [experiences, activeFilter]);
 
-  // Clamp active index
-  useEffect(() => {
-    if (activeIndex >= filtered.length) {
-      setActiveIndex(Math.max(0, filtered.length - 1));
-    }
-  }, [filtered.length, activeIndex]);
+  // Clamp active index during render
+  const safeActiveIndex = filtered.length > 0 ? Math.min(activeIndex, filtered.length - 1) : 0;
+  if (safeActiveIndex !== activeIndex && filtered.length > 0) {
+    setActiveIndex(safeActiveIndex);
+  }
 
-  const currentExp = filtered[activeIndex] || filtered[0] || null;
+  const currentExp = filtered[safeActiveIndex] || filtered[0] || null;
 
   function handlePrev() {
     setActiveIndex((prev) => Math.max(0, prev - 1));

@@ -30,10 +30,13 @@ export function MemorySpotlightModal({
   const cardRef = useRef(null);
 
   // Reset flip when experience changes
-  useEffect(() => {
+  const expKey = experience?.id ?? experience?.title;
+  const [prevExpKey, setPrevExpKey] = useState(expKey);
+  if (expKey !== prevExpKey) {
+    setPrevExpKey(expKey);
     setIsFlipped(false);
     setTilt({ x: 0, y: 0 });
-  }, [experience?.id, experience?.title]);
+  }
 
   // Handle ESC key
   useEffect(() => {
