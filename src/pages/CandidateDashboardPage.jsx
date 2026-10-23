@@ -40,8 +40,9 @@ import {
   LogOut,
   Copy,
   BookmarkCheck, Link2, Heart, AlertCircle, Compass,
+  ShoppingBag, Globe, Coins,
 } from 'lucide-react';
-import { getMyPortfolio, updateMySlug } from '../api/portfolioApi.js';
+import { getMyPortfolio, updateMySlug, exportPortfolioWebsite } from '../api/portfolioApi.js';
 import { UserAvatar } from '../components/UserAvatar.jsx';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
@@ -52,23 +53,15 @@ import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
 import { getJobs, getCompanies, getCompanyDetail, getJobDetail, getFollowedCompanyIds, followCompany, unfollowCompany, getSavedJobs } from '../api/jobApi.js';
 import { useSavedJobs } from '../lib/savedJobs.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
-import { applyToJob, getMyApplications, withdrawApplication } from '../api/applicationApi.js';
+import { applyToJob, getMyApplications, withdrawApplication, acceptApplicationOffer, declineApplicationOffer } from '../api/applicationApi.js';
 import { NotificationBell } from '../components/NotificationBell.jsx';
 import { NeonBloom } from '../components/NeonBloom.jsx';
 import { INK, EMERALD, EMERALD_BRIGHT } from '../styles/neonPalette.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
-import { getWallet, buyPremium, createPayOsTopUp, getPayOsTopUpStatus, cancelPayOsTopUp } from '../api/walletApi.js';
+import { getWallet, createPayOsTopUp, getPayOsTopUpStatus, cancelPayOsTopUp } from '../api/walletApi.js';
 import { PayOsCheckout, PayOsSuccess } from '../components/PayOsCheckout.jsx';
 import { WalletHistory } from '../components/WalletHistory.jsx';
 import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication, getSavedQuestIds, getSavedQuests, saveQuest, unsaveQuest } from '../api/questApi.js';
-import {
-  boostApplication,
-  unlockInsight,
-  getInsight,
-  requestExpressVerification,
-  subscribeJobMatchAlert,
-  getPremiumConfig
-} from '../api/premiumApi.js';
 import { getGamification, pingGamification, claimQuest, recordGamificationEvent } from '../api/gamificationApi.js';
 import { Flame, Target, Gift, ChevronDown, ChevronLeft, ChevronRight, TrendingUp, Eye } from 'lucide-react';
 
@@ -149,19 +142,6 @@ function formatMonthValue(value) {
   const monthIndex = Number(month) - 1;
   if (!year || monthIndex < 0 || monthIndex > 11) return 'Chọn tháng / năm';
   return `${MONTH_LABELS[monthIndex]} ${year}`;
-}
-
-function encodePremiumTarget(type, id) {
-  return `${type}:${id}`;
-}
-
-function decodePremiumTarget(value) {
-  const separatorIndex = value.indexOf(':');
-  if (separatorIndex < 0) return { type: 'JOB', id: value };
-  return {
-    type: value.slice(0, separatorIndex),
-    id: value.slice(separatorIndex + 1),
-  };
 }
 
 function CredentialMonthPicker({ id, label, value, minValue, maxValue, openPicker, setOpenPicker, onChange, helperText }) {
@@ -541,7 +521,7 @@ const AREA_TABS = [
   { view: 'SAVED', slug: 'saved', label: 'Việc đã lưu', icon: Heart },
   { view: 'MY_APPLICATIONS', slug: 'my_applications', label: 'Ứng tuyển', icon: ClipboardCheck },
   { view: 'CREDENTIALS', slug: 'credentials', label: 'Minh chứng', icon: ShieldCheck },
-  { view: 'PREMIUM_STORE', slug: 'premium_store', label: 'Premium', icon: Sparkles },
+  { view: 'PREMIUM_STORE', slug: 'store', label: 'Cửa hàng', icon: ShoppingBag },
 ];
 
 /* Slug cũ không còn tab riêng nữa → đưa về đúng nơi phụ trách việc đó. */
@@ -559,7 +539,7 @@ const EMERALD_ACCENT = EMERALD;
 // submitted credentials) vs the overview stats layout. Used to pick a shape
 // that resembles the tab actually being loaded, instead of always showing the
 // same generic layout regardless of which tab the URL points to.
-const SKELETON_GRID_TABS = new Set(['opportunities', 'quests', 'recommendations', 'premium_store', 'organizations']);
+const SKELETON_GRID_TABS = new Set(['opportunities', 'quests', 'recommendations', 'premium_store', 'store', 'organizations']);
 const SKELETON_LIST_TABS = new Set(['saved', 'my_applications', 'credentials']);
 
 export function skeletonVariantForTabSlug(tabSlug) {
@@ -934,7 +914,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [applyModalLoading, setApplyModalLoading] = useState(false);
   const [applyModalError, setApplyModalError] = useState('');
   const [applySuccessMsg, setApplySuccessMsg] = useState('');
-  const [showPremiumPaywall, setShowPremiumPaywall] = useState(false);
 
   // Withdraw states
   const [withdrawingId, setWithdrawingId] = useState(null);
@@ -942,11 +921,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   // Pending withdraw confirmation: { id, isQuest, title } or null.
   const [withdrawConfirm, setWithdrawConfirm] = useState(null);
 
-  // Wallet & Premium states
+  // Wallet states
   const [wallet, setWallet] = useState(null);
   const [walletLoading, setWalletLoading] = useState(true);
   const [showTopUpModal, setShowTopUpModal] = useState(false);
-  const [topUpAmount, setTopUpAmount] = useState('50000');
+  const [topUpAmount, setTopUpAmount] = useState('39000');
   const [topUpLoading, setTopUpLoading] = useState(false);
   const [topUpError, setTopUpError] = useState('');
   const [topUpSuccess, setTopUpSuccess] = useState('');
@@ -955,31 +934,21 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [topUpCheckState, setTopUpCheckState] = useState('idle');
   /* Đơn đang chờ thanh toán. Khác null nghĩa là modal đang hiện màn QR. */
   const [pendingPayment, setPendingPayment] = useState(null);
-  /* Số NP vừa nạp xong, để màn thành công hiện đúng con số. */
+  /* Số Điểm vừa nạp xong, để màn thành công hiện đúng con số. */
   const [topUpPaidAmount, setTopUpPaidAmount] = useState(0);
-  const [buyPremiumLoading, setBuyPremiumLoading] = useState(false);
-  const [buyPremiumError, setBuyPremiumError] = useState('');
 
-  // Premium Monetization states
-  const [premiumConfig, setPremiumConfig] = useState({
-    boostPriceNp: 25000,
-    boostDurationHours: 48,
-    insightPriceNp: 10000,
-    expressPriceNp: 15000,
-    themePriceNp: 50000,
-    matchAlertPriceNp: 19000,
-    earlyAccessHours: 12
-  });
-  const [insightData, setInsightData] = useState(null);
-  const [insightLoadingJobId, setInsightLoadingJobId] = useState(null);
-  const [insightModalJob, setInsightModalJob] = useState(null);
-  const [boostLoadingId, setBoostLoadingId] = useState(null);
-  const [expressLoadingId, setExpressLoadingId] = useState(null);
-  const [subscribingMatchAlert, setSubscribingMatchAlert] = useState(false);
-  const [showMatchAlertModal, setShowMatchAlertModal] = useState(false);
-  const [selectedBoostAppId, setSelectedBoostAppId] = useState('');
-  const [selectedExpressSubId, setSelectedExpressSubId] = useState('');
-  const [selectedInsightJobId, setSelectedInsightJobId] = useState('');
+  // Job Offer action states
+  const [offerActionLoadingId, setOfferActionLoadingId] = useState(null);
+  const [offerActionError, setOfferActionError] = useState('');
+
+  // Portfolio Website Export states
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportResult, setExportResult] = useState(null);
+  const [exportError, setExportError] = useState('');
+  const [copiedExportUrl, setCopiedExportUrl] = useState(false);
+
+
 
   // Quest states
   const [questsList, setQuestsList] = useState([]);
@@ -1200,6 +1169,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     }
     if (tabSlug === 'universe') {
       navigate('/candidates/universe');
+      return;
+    }
+    if (tabSlug === 'store' || tabSlug === 'premium_store') {
+      setActiveView('PREMIUM_STORE');
+      setSelectedOrg(null);
       return;
     }
     const upperTab = tabSlug.toUpperCase();
@@ -1457,7 +1431,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     const orderCode = Number(params.get('orderCode')) || pending?.orderCode || 0;
 
     // Dọn tham số khỏi URL ngay, để refresh không chạy lại luồng này.
-    navigate(`/candidates/dashboard/premium_store`, { replace: true });
+    navigate(`/candidates/dashboard/store`, { replace: true });
     try { sessionStorage.removeItem('np_payos_pending'); } catch { /* bỏ qua */ }
 
     setShowTopUpModal(true);
@@ -1511,12 +1485,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
-  // Load premium config and recommendations on mount/update
-  useEffect(() => {
-    getPremiumConfig()
-      .then(cfg => { setPremiumConfig(cfg); clearLoadError('gia-premium'); })
-      .catch(err => noteLoadError('gia-premium', err));
-  }, [refreshKey]);
+
 
   // Load quests when OPPORTUNITIES tab opens (or on mount)
   useEffect(() => {
@@ -1643,30 +1612,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     setTopUpSuccess(`Đã nạp ${Number(status?.amountVnd || 0).toLocaleString('vi-VN')} NP vào ví!`);
   }
 
-  async function handleBuyPremium() {
-    setBuyPremiumError('');
-    setBuyPremiumLoading(true);
-    try {
-      const result = await buyPremium();
-      setWallet(prev => prev ? {
-        ...prev,
-        npBalance: result.npBalance,
-        isPremium: true,
-        premiumUntil: result.premiumUntil,
-      } : prev);
-      setShowPremiumPaywall(false);
-      setApplySuccessMsg('Premium Pass đã được kích hoạt! Bạn có thể ứng tuyển các cơ hội Premium ngay bây giờ.');
-      setTimeout(() => setApplySuccessMsg(''), 7000);
-    } catch (err) {
-      if (err.errorCode === 'INSUFFICIENT_NP') {
-        setBuyPremiumError(err.message);
-      } else {
-        setBuyPremiumError(err.message || 'Mua Premium thất bại. Vui lòng thử lại.');
-      }
-    } finally {
-      setBuyPremiumLoading(false);
-    }
-  }
+
 
   const handleSubmitCredential = async (e) => {
     e.preventDefault();
@@ -1706,7 +1652,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   };
 
   const handleTabChange = (viewName) => {
-    navigate(`/candidates/dashboard/${viewName.toLowerCase()}`);
+    const matched = AREA_TABS.find(t => t.view === viewName);
+    const slug = matched ? matched.slug : viewName.toLowerCase();
+    navigate(`/candidates/dashboard/${slug}`);
   };
 
   // Only real DB partners (UUID id) are followable — mock/seed orgs have
@@ -1848,12 +1796,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       setApplySuccessMsg(`Ứng tuyển thành công vị trí "${selectedJobForApply.title}"! Nhà tuyển dụng sẽ xem xét trong thời gian sớm nhất.`);
       setTimeout(() => setApplySuccessMsg(''), 6000);
     } catch (err) {
-      if (err.errorCode === 'PREMIUM_REQUIRED') {
-        setShowApplyModal(false);
-        setShowPremiumPaywall(true);
-      } else {
-        setApplyModalError(err.message || 'Ứng tuyển thất bại. Vui lòng thử lại.');
-      }
+      setApplyModalError(err.message || 'Ứng tuyển thất bại. Vui lòng thử lại.');
     } finally {
       setApplyModalLoading(false);
     }
@@ -1863,12 +1806,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [toast, setToast] = useState(null);
   const showToast = (type, message) => setToast({ type, message });
-
-  /* Ngày hết hạn hiển thị khi rê chuột lên huy hiệu. Người dùng mua theo
-     tháng nên "còn hiệu lực tới bao giờ" là thông tin họ sẽ đi tìm. */
-  const premiumUntilLabel = wallet?.premiumUntil
-    ? `Premium còn hiệu lực tới ${new Date(wallet.premiumUntil).toLocaleDateString('vi-VN')}`
-    : 'Premium đang hoạt động';
   const askConfirm = (opts) => setConfirmDialog(opts);
   useEffect(() => {
     if (!toast) return undefined;
@@ -1876,116 +1813,86 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const handleBoostApplication = (applicationId, applicationType) => {
-    askConfirm({
-      title: 'Đẩy tin nổi bật (Profile Boost)',
-      message: `Hệ thống sẽ trừ ${premiumConfig.boostPriceNp.toLocaleString()} NP để ghim đơn ứng tuyển này lên đầu danh sách của nhà tuyển dụng trong ${premiumConfig.boostDurationHours || 48} giờ.`,
-      confirmText: 'Boost ngay',
-      accent: '#f59e0b',
-      onConfirm: async () => {
-        const loadingKey = encodePremiumTarget(applicationType, applicationId);
-        setBoostLoadingId(loadingKey);
-        try {
-          const result = await boostApplication(applicationId, applicationType);
-          if (applicationType === 'QUEST') {
-            const apps = await getMyQuestApplications();
-            setQuestApplications(apps || []);
-          } else {
-            const apps = await getMyApplications();
-            setAppliedJobs(apps || []);
-          }
-          setWallet(prev => prev ? { ...prev, npBalance: result.npBalance } : prev);
-          showToast('success', 'Đẩy tin nổi bật thành công!');
-        } catch (err) {
-          showToast('error', err.message || 'Đẩy tin nổi bật thất bại.');
-        } finally {
-          setBoostLoadingId(null);
-        }
-      },
-    });
-  };
-
-  const handleViewInsight = async (application) => {
-    const applicationType = application.applicationType || 'JOB';
-    const targetId = application.targetId || application.job_id || application.jobId || application.questId || application.id;
-    const loadingKey = encodePremiumTarget(applicationType, targetId);
-    setInsightLoadingJobId(loadingKey);
-    try {
-      const res = await getInsight(targetId, applicationType);
-      setInsightData(res);
-      setInsightModalJob({ ...application, applicationType, targetId });
-    } catch (err) {
-      showToast('error', err.message || "Không thể tải thống kê ứng tuyển.");
-    } finally {
-      setInsightLoadingJobId(null);
+  // Candidate Point Model Handlers
+  async function handleAcceptOffer(app) {
+    const fee = (app.compensation && Number(app.compensation) > 0) ? (wallet?.paidJobAcceptanceFeeNp || 19000) : 0;
+    if (fee > 0 && (wallet?.npBalance ?? 0) < fee) {
+      const errMsg = `Số dư ví hiện tại (${(wallet?.npBalance ?? 0).toLocaleString()} Điểm) không đủ để thanh toán phí nhận việc (${fee.toLocaleString()} Điểm). Vui lòng nạp thêm Điểm.`;
+      setOfferActionError(errMsg);
+      showToast('error', errMsg);
+      setTopUpAmount(String(wallet?.defaultTopupPackageNp || 39000));
+      setShowTopUpModal(true);
+      return;
     }
-  };
+    setOfferActionLoadingId(app.id);
+    setOfferActionError('');
+    try {
+      const res = await acceptApplicationOffer(app.id);
+      setAppliedJobs(prev => prev.map(a => a.id === app.id ? { ...a, status: 'ACCEPTED' } : a));
+      if (res?.balanceAfter != null) {
+        setWallet(prev => prev ? { ...prev, npBalance: res.balanceAfter } : prev);
+      }
+      const successMsg = fee > 0 ? `Chúc mừng bạn! Bạn đã xác nhận nhận việc thành công (Phí trừ: ${fee.toLocaleString()} Điểm).` : 'Chúc mừng bạn! Bạn đã xác nhận nhận việc thành công.';
+      setApplySuccessMsg(successMsg);
+      showToast('success', successMsg);
+      getWallet().then(w => setWallet(w)).catch(() => {});
+    } catch (err) {
+      setOfferActionError(err.message || 'Không thể xác nhận nhận việc. Vui lòng thử lại.');
+      showToast('error', err.message || 'Không thể xác nhận nhận việc.');
+    } finally {
+      setOfferActionLoadingId(null);
+    }
+  }
 
-  const handleUnlockInsight = (targetId, applicationType) => {
+  function handleDeclineOffer(app) {
     askConfirm({
-      title: 'Mở khóa Application Insight',
-      message: `Hệ thống sẽ trừ ${premiumConfig.insightPriceNp.toLocaleString()} NP để mở khóa thứ hạng và phân tích cạnh tranh cho đơn ứng tuyển này.`,
-      confirmText: 'Mở khóa',
-      accent: '#10b981',
+      title: 'Từ chối lời mời nhận việc',
+      message: 'Bạn có chắc chắn muốn từ chối lời mời nhận việc này? Thao tác này không thể hoàn tác.',
+      confirmText: 'Từ chối lời mời',
+      accent: '#ef4444',
       onConfirm: async () => {
+        setOfferActionLoadingId(app.id);
+        setOfferActionError('');
         try {
-          const res = await unlockInsight(targetId, applicationType);
-          setWallet(prev => prev ? { ...prev, npBalance: res.npBalance } : prev);
-          const newInsight = await getInsight(targetId, applicationType);
-          setInsightData(newInsight);
-          showToast('success', 'Mở khóa Insight thành công!');
+          await declineApplicationOffer(app.id);
+          setAppliedJobs(prev => prev.map(a => a.id === app.id ? { ...a, status: 'OFFER_DECLINED' } : a));
+          setApplySuccessMsg('Bạn đã từ chối lời mời nhận việc.');
+          showToast('success', 'Bạn đã từ chối lời mời nhận việc.');
         } catch (err) {
-          showToast('error', err.message || 'Mở khóa Insight thất bại.');
-        }
-      },
-    });
-  };
-
-  const handleExpressVerification = (experienceId) => {
-    askConfirm({
-      title: 'Xác thực nhanh 24h (Express)',
-      message: `Hệ thống sẽ trừ ${premiumConfig.expressPriceNp.toLocaleString()} NP để ưu tiên thẩm định minh chứng này trong 24 giờ.`,
-      confirmText: 'Nâng cấp Express',
-      accent: '#f59e0b',
-      onConfirm: async () => {
-        setExpressLoadingId(experienceId);
-        try {
-          const res = await requestExpressVerification(experienceId);
-          setWallet(prev => prev ? { ...prev, npBalance: res.npBalance } : prev);
-          const creds = await getMyCredentialSubmissions();
-          setCredentialSubmissions(creds || []);
-          showToast('success', 'Đăng ký xác thực nhanh thành công!');
-        } catch (err) {
-          showToast('error', err.message || 'Đăng ký duyệt nhanh thất bại.');
+          setOfferActionError(err.message || 'Không thể từ chối lời mời. Vui lòng thử lại.');
+          showToast('error', err.message || 'Không thể từ chối lời mời.');
         } finally {
-          setExpressLoadingId(null);
+          setOfferActionLoadingId(null);
         }
-      },
+      }
     });
-  };
+  }
 
-  const handleSubscribeMatchAlert = () => {
-    askConfirm({
-      title: 'Đăng ký Job Match Alert',
-      message: `Hệ thống sẽ trừ ${(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP cho gói 30 ngày: gợi ý việc làm cá nhân hóa + xem sớm tin mới.`,
-      confirmText: 'Đăng ký ngay',
-      accent: '#10b981',
-      onConfirm: async () => {
-        setSubscribingMatchAlert(true);
-        try {
-          await subscribeJobMatchAlert();
-          const newWallet = await getWallet();
-          setWallet(newWallet);
-          showToast('success', 'Đăng ký dịch vụ Job Match Alert thành công!');
-          setShowMatchAlertModal(false);
-        } catch (err) {
-          showToast('error', err.message || 'Đăng ký thất bại.');
-        } finally {
-          setSubscribingMatchAlert(false);
-        }
-      },
-    });
-  };
+  async function handleExportPortfolio() {
+    const fee = wallet?.portfolioExportFeeNp || 1000;
+    if ((wallet?.npBalance ?? 0) < fee) {
+      const errMsg = `Số dư ví hiện tại (${(wallet?.npBalance ?? 0).toLocaleString()} Điểm) không đủ thanh toán phí xuất website (${fee.toLocaleString()} Điểm). Vui lòng nạp thêm Điểm.`;
+      setExportError(errMsg);
+      showToast('error', errMsg);
+      return;
+    }
+    setExportLoading(true);
+    setExportError('');
+    try {
+      const res = await exportPortfolioWebsite();
+      setExportResult(res);
+      if (res?.balanceAfter != null) {
+        setWallet(prev => prev ? { ...prev, npBalance: res.balanceAfter } : prev);
+      }
+      showToast('success', 'Xuất bản website portfolio thành công!');
+      getWallet().then(w => setWallet(w)).catch(() => {});
+    } catch (err) {
+      setExportError(err.message || 'Xuất bản website thất bại. Vui lòng thử lại.');
+      showToast('error', err.message || 'Xuất bản website thất bại.');
+    } finally {
+      setExportLoading(false);
+    }
+  }
 
   // Rút đơn là thao tác không hoàn tác (không tự nộp lại được) nên luôn hỏi
   // xác nhận trước. Nút "Rút đơn" mở modal xác nhận; modal mới thực sự gọi API.
@@ -2171,11 +2078,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               type="button"
               className="np-area-wallet"
               onClick={() => setShowTopUpModal(true)}
-              title="Nạp NP vào ví"
+              title="Nạp Điểm vào ví"
             >
               <WalletCards size={16} />
               <span>{walletLoading ? '—' : (wallet?.npBalance ?? 0).toLocaleString('vi-VN')}</span>
-              <span className="np-area-wallet-unit">NP</span>
+              <span className="np-area-wallet-unit">Điểm</span>
               <Plus size={13} strokeWidth={2.6} />
             </button>
             {/* Mặc định NotificationBell tự neo `position: fixed` ở góc trên
@@ -2298,15 +2205,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <span className="np-pp-eyebrow">Hộ chiếu năng lực</span>
                 <h2 className="np-pp-name">
                   {portfolio?.name || 'Ứng viên'}
-                  {/* Người mua cần THẤY thứ mình đã trả tiền, ngay ở chỗ dễ
-                      thấy nhất. Trước đây trạng thái Premium chỉ tồn tại trong
-                      DB và ở trang quản trị — ứng viên mua xong không có gì
-                      đổi trên màn hình của họ. */}
-                  {wallet?.isPremium && (
-                    <span className="np-pp-premium" title={premiumUntilLabel}>
-                      <Crown size={16} /> Premium
-                    </span>
-                  )}
                 </h2>
                 <p className="np-pp-sub">
                   {has3D
@@ -2331,16 +2229,27 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     <UserRound size={15} /> {has3D ? 'Chỉnh sửa Portfolio' : 'Thiết lập Portfolio'}
                   </Link>
                   {has3D && (
-                    <button
-                      type="button"
-                      className="np-pp-btn"
-                      onClick={handleCopyPortfolioLink}
-                      disabled={copyLinkStatus === 'copying'}
-                      title="Sao chép link Portfolio công khai để chia sẻ"
-                    >
-                      <Copy size={15} />
-                      {copyLinkStatus === 'done' ? 'Đã sao chép' : copyLinkStatus === 'error' ? 'Lỗi, thử lại' : 'Sao chép link'}
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="np-pp-btn"
+                        onClick={handleCopyPortfolioLink}
+                        disabled={copyLinkStatus === 'copying'}
+                        title="Sao chép link Portfolio công khai để chia sẻ"
+                      >
+                        <Copy size={15} />
+                        {copyLinkStatus === 'done' ? 'Đã sao chép' : copyLinkStatus === 'error' ? 'Lỗi, thử lại' : 'Sao chép link'}
+                      </button>
+                      <button
+                        type="button"
+                        className="np-pp-btn"
+                        onClick={() => { setExportError(''); setExportResult(null); setShowExportModal(true); }}
+                        title="Xuất bản Portfolio thành website công khai (1.000 Điểm)"
+                        style={{ border: '1px solid rgba(16, 185, 129, 0.45)', color: '#10b981' }}
+                      >
+                        <Globe size={15} /> Xuất website (1.000 Điểm)
+                      </button>
+                    </>
                   )}
                 </div>
 
@@ -2382,12 +2291,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   type="button"
                   className="np-pp-cell"
                   onClick={() => setShowTopUpModal(true)}
-                  title="Nhấn để nạp NP"
+                  title="Nhấn để nạp Điểm"
                 >
                   <span className="np-pp-cell-val">{walletLoading ? '—' : <CountUp value={wallet?.npBalance ?? 0} />}</span>
                   <span className="np-pp-cell-cap">
-                    <WalletCards size={12} /> Ví NP
-                    {wallet?.isPremium && <Crown size={11} color="#fbbf24" style={{ marginLeft: '2px' }} />}
+                    <WalletCards size={12} /> Ví Điểm
                   </span>
                 </button>
                 <div className="np-pp-cell">
@@ -2661,7 +2569,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                             <a href={`/jobs/${job.id}`} target="_blank" rel="noopener noreferrer" onClick={() => viewOpportunityOnce(job.id)} className="np-role-title">{job.title}</a>
-                            {job.requiresPremium && <span className="np-role-badge" style={{ color: '#d97706', background: 'rgba(245,158,11,0.14)' }}><Crown size={9} /> Premium</span>}
                             {isLocked && <span className="np-role-badge" style={{ color: '#dc2626', background: 'rgba(220,38,38,0.08)' }}><LockKeyhole size={9} /> Cần {job.minReqRs} RS</span>}
                           </div>
                           <div className="np-job-meta">
@@ -2969,12 +2876,24 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             SUBMITTED: 'rgba(233,247,242,0.62)',
             VIEWED: '#67e8f9',
             SHORTLISTED: '#f59e0b',
+            OFFERED: '#8b5cf6',
             ACCEPTED: '#10b981',
+            OFFER_DECLINED: 'rgba(233,247,242,0.45)',
             COMPLETED: '#34d399',
             REJECTED: '#f87171',
             WITHDRAWN: 'rgba(233,247,242,0.45)',
           };
-          const JOB_STATUS_LABEL = { SUBMITTED: 'Đã nộp', VIEWED: 'Đã xem', SHORTLISTED: 'Vào vòng tiếp', ACCEPTED: 'Chấp thuận', REJECTED: 'Từ chối', COMPLETED: 'Hoàn thành', WITHDRAWN: 'Rút đơn' };
+          const JOB_STATUS_LABEL = {
+            SUBMITTED: 'Đã nộp',
+            VIEWED: 'Đã xem',
+            SHORTLISTED: 'Vào vòng tiếp',
+            OFFERED: 'Được mời nhận việc',
+            ACCEPTED: 'Đã nhận việc',
+            OFFER_DECLINED: 'Đã từ chối lời mời',
+            REJECTED: 'Từ chối',
+            COMPLETED: 'Hoàn thành',
+            WITHDRAWN: 'Rút đơn',
+          };
           const filteredBizApps = appliedJobs.filter(app => {
             const title = (app.job_title || app.title || '').toLowerCase();
             const company = (app.company_name || app.companyName || '').toLowerCase();
@@ -3005,8 +2924,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             ? [
                 { label: 'Đơn tới doanh nghiệp', val: appliedJobs.length, color: '#fff' },
                 { label: 'Đang chờ phản hồi', val: bizCount('SUBMITTED') + bizCount('VIEWED'), color: 'rgba(233,247,242,0.62)' },
-                { label: 'Có tiến triển', val: bizCount('SHORTLISTED') + bizCount('ACCEPTED') + bizCount('COMPLETED'), color: '#10b981' },
-                { label: 'Đã khép lại', val: bizCount('REJECTED') + bizCount('WITHDRAWN'), color: 'rgba(233,247,242,0.45)' },
+                { label: 'Có tiến triển', val: bizCount('SHORTLISTED') + bizCount('OFFERED') + bizCount('ACCEPTED') + bizCount('COMPLETED'), color: '#10b981' },
+                { label: 'Đã khép lại', val: bizCount('REJECTED') + bizCount('WITHDRAWN') + bizCount('OFFER_DECLINED'), color: 'rgba(233,247,242,0.45)' },
               ]
             : [
                 { label: 'Đơn tới CLB & Quest', val: questApplications.length, color: '#fff' },
@@ -3079,7 +2998,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       {filteredBizApps.map((app, idx) => {
                         const st = app.status || 'SUBMITTED';
                         const sc = JOB_STATUS_COLOR[st] || '#6b7280';
-                        const isBoosted = app.boostedUntil && new Date(app.boostedUntil) > new Date();
                         return (
                           <div className="appcard" key={app.id || idx} style={{ '--app-status': sc, '--app-status-soft': `${sc}1a` }}>
                             <div className="appcard-logo"><Building size={20} style={{ color: 'var(--c-muted)' }} /></div>
@@ -3095,6 +3013,58 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 </div>
                               </div>
                               <InlineStatusTimeline status={st} appliedAt={app.applied_at || app.appliedAt} updatedAt={app.updated_at || app.updatedAt} color={sc} history={app.statusHistory} />
+                              {st === 'OFFERED' && (
+                                <div style={{
+                                  margin: '12px 0',
+                                  padding: '14px 16px',
+                                  borderRadius: '12px',
+                                  background: 'rgba(139, 92, 246, 0.12)',
+                                  border: '1px solid rgba(139, 92, 246, 0.35)',
+                                }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#a855f7', fontWeight: 700, fontSize: '0.92rem', marginBottom: '6px' }}>
+                                    <Sparkles size={16} /> Bạn nhận được lời mời nhận việc!
+                                  </div>
+                                  <p style={{ margin: '0 0 10px', fontSize: '0.84rem', color: 'var(--c-ink)', lineHeight: 1.5 }}>
+                                    {app.compensation && Number(app.compensation) > 0
+                                      ? `Doanh nghiệp muốn tuyển bạn cho vị trí này với mức thù lao ${Number(app.compensation).toLocaleString('vi-VN')} đ. Xác nhận nhận việc với mức phí 19.000 Điểm.`
+                                      : 'Doanh nghiệp muốn tuyển bạn cho vị trí phi lợi nhuận / không thù lao (Miễn phí 0 Điểm).'}
+                                  </p>
+                                  {offerActionError && offerActionLoadingId === app.id && (
+                                    <div className="alert-banner error" style={{ margin: '0 0 10px', fontSize: '0.8rem', padding: '8px 12px' }}>
+                                      <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                                      <span>{offerActionError}</span>
+                                    </div>
+                                  )}
+                                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                    <button
+                                      type="button"
+                                      className="button primary-button"
+                                      style={{ fontSize: '0.84rem', padding: '8px 16px', gap: '6px' }}
+                                      disabled={offerActionLoadingId === app.id}
+                                      onClick={() => handleAcceptOffer(app)}
+                                    >
+                                      <Check size={14} />
+                                      {offerActionLoadingId === app.id
+                                        ? 'Đang xử lý...'
+                                        : (app.compensation && Number(app.compensation) > 0 ? 'Đồng ý nhận việc (19.000 Điểm)' : 'Đồng ý nhận việc (Miễn phí)')}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="button secondary-button"
+                                      style={{ fontSize: '0.84rem', padding: '8px 14px' }}
+                                      disabled={offerActionLoadingId === app.id}
+                                      onClick={() => handleDeclineOffer(app)}
+                                    >
+                                      Từ chối lời mời
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                              {st === 'OFFER_DECLINED' && (
+                                <div style={{ margin: '8px 0', fontSize: '0.82rem', color: 'var(--c-muted)', fontStyle: 'italic' }}>
+                                  Bạn đã từ chối lời mời nhận việc này.
+                                </div>
+                              )}
                               {st === 'REJECTED' && (app.reject_reason || app.rejectionReason) && (
                                 <div className="appcard-reject">Lý do từ chối: {app.reject_reason || app.rejectionReason}</div>
                               )}
@@ -3109,20 +3079,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 {['SUBMITTED', 'VIEWED', 'SHORTLISTED'].includes(st) && (
                                   <button type="button" className="apptrack-btn" onClick={() => requestWithdraw(app.id, false, app.job_title || app.title)} disabled={withdrawingId === app.id}>{withdrawingId === app.id ? 'Đang rút...' : 'Rút đơn'}</button>
                                 )}
-                                {(() => { const ik = encodePremiumTarget('JOB', app.job_id || app.jobId || app.id); return (
-                                  <button type="button" className="apptrack-btn insight" onClick={() => handleViewInsight(app)} disabled={insightLoadingJobId === ik}>
-                                    <TrendingUp size={14} /> {insightLoadingJobId === ik ? '...' : 'Insight'}
-                                  </button>
-                                ); })()}
-                                {isBoosted ? (
-                                  <span className="apptrack-btn boosted" title={`Nổi bật đến ${new Date(app.boostedUntil).toLocaleString('vi-VN')}`}><Sparkles size={13} /> Đang nổi bật</span>
-                                ) : ['SUBMITTED', 'VIEWED'].includes(st) ? (
-                                  (() => { const bk = encodePremiumTarget('JOB', app.id); return (
-                                  <button type="button" className="apptrack-btn boost" onClick={() => handleBoostApplication(app.id, 'JOB')} disabled={boostLoadingId === bk} title={`Đẩy tin nổi bật ${premiumConfig.boostDurationHours}h · ${premiumConfig.boostPriceNp.toLocaleString()} NP`}>
-                                    {boostLoadingId === bk ? '...' : <><Sparkles size={13} /> Đẩy nổi bật</>}
-                                  </button>
-                                  ); })()
-                                ) : null}
                               </div>
                             </div>
                           </div>
@@ -3151,7 +3107,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     )}
                   </div>
 
-                  {filteredClubApps.length === 0 ? (
+                  {questApplicationsLoading ? (
+                    <div className="apptrack-state"><RefreshCw size={20} style={{ color: 'var(--primary)', animation: 'spin 1.4s linear infinite' }} /><p>Đang tải đơn tham gia Quest...</p></div>
+                  ) : filteredClubApps.length === 0 ? (
                     loadErrors['don-quest']
                       ? renderLoadError('don-quest')
                       : <div className="apptrack-empty"><Zap size={28} /><p>{myAppsClubSearch || myAppsClubStatusFilter ? 'Không tìm thấy Quest phù hợp.' : 'Bạn chưa tham gia Quest nào từ CLB.'}</p></div>
@@ -3191,20 +3149,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 {qa.status === 'SUBMITTED' && (
                                   <button type="button" className="apptrack-btn" onClick={() => requestWithdraw(qa.id, true, qa.questTitle)} disabled={withdrawingId === qa.id}>{withdrawingId === qa.id ? 'Đang rút...' : 'Rút đơn'}</button>
                                 )}
-                                {(() => { const ik = encodePremiumTarget('QUEST', qa.questId); return (
-                                  <button type="button" className="apptrack-btn insight" onClick={() => handleViewInsight({ ...qa, applicationType: 'QUEST', targetId: qa.questId })} disabled={insightLoadingJobId === ik}>
-                                    <TrendingUp size={14} /> {insightLoadingJobId === ik ? '...' : 'Insight'}
-                                  </button>
-                                ); })()}
-                                {(qa.boostedUntil && new Date(qa.boostedUntil) > new Date()) ? (
-                                  <span className="apptrack-btn boosted" title={`Nổi bật đến ${new Date(qa.boostedUntil).toLocaleString('vi-VN')}`}><Sparkles size={13} /> Đang nổi bật</span>
-                                ) : qa.status === 'SUBMITTED' ? (
-                                  (() => { const bk = encodePremiumTarget('QUEST', qa.id); return (
-                                  <button type="button" className="apptrack-btn boost" onClick={() => handleBoostApplication(qa.id, 'QUEST')} disabled={boostLoadingId === bk} title={`Đẩy nổi bật ${premiumConfig.boostDurationHours}h · ${premiumConfig.boostPriceNp.toLocaleString()} NP`}>
-                                    {boostLoadingId === bk ? '...' : <><Sparkles size={13} /> Đẩy nổi bật</>}
-                                  </button>
-                                  ); })()
-                                ) : null}
                               </div>
                             </div>
                           </div>
@@ -3218,306 +3162,172 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           );
         })()}
 
-        {/* 2e. PREMIUM STORE VIEW */}
+        {/* 2e. CANDIDATE POINT STORE VIEW */}
         {activeView === 'PREMIUM_STORE' && (
           <section className="candidate-premium-workspace np-view">
             <div className="np-saved-head">
               <div>
-                <h2 className="np-saved-title">Cửa hàng Premium</h2>
-                <p className="np-saved-sub">Nâng cấp trải nghiệm và tăng tốc hồ sơ bằng số dư NP.</p>
+                <h2 className="np-saved-title">Cửa hàng Điểm FONLIO</h2>
+                <p className="np-saved-sub">Mô hình minh bạch: Điểm không bao giờ hết hạn, chỉ trừ khi nhận việc thành công hoặc xuất website cá nhân.</p>
               </div>
               {renderReloadButton()}
             </div>
 
-            {buyPremiumError && (
-              <div className="alert-banner error candidate-premium-alert">
-                <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
-                <span>{buyPremiumError}</span>
-                {buyPremiumError.includes('Số dư') && (
-                  <button type="button" className="candidate-premium-inline-link" onClick={() => setShowTopUpModal(true)}>Nạp thêm NP</button>
-                )}
-              </div>
-            )}
-
             <div className="np-premium-wallet">
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
-                <span style={{ flexShrink: 0, width: '46px', height: '46px', borderRadius: '13px', background: 'var(--c-red-soft)', color: 'var(--c-red)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><WalletCards size={22} /></span>
+                <span style={{ flexShrink: 0, width: '46px', height: '46px', borderRadius: '13px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><WalletCards size={22} /></span>
                 <div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--c-muted)', fontWeight: '600' }}>Số dư ví của bạn</div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--c-ink)', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>{walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString('vi-VN')} <span style={{ fontSize: '0.9rem', color: 'var(--c-muted)' }}>NP</span></div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--c-ink)', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>{walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString('vi-VN')} <span style={{ fontSize: '0.9rem', color: 'var(--c-muted)' }}>Điểm</span></div>
                 </div>
               </div>
-              <button type="button" className="button primary-button" onClick={() => setShowTopUpModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                <WalletCards size={16} /> Nạp NP
+              <button type="button" className="button primary-button" onClick={() => { setTopUpAmount('39000'); setShowTopUpModal(true); }} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <WalletCards size={16} /> Nạp Điểm
               </button>
             </div>
 
-            {/* Lịch sử giao dịch. Dữ liệu đã nằm sẵn trong /wallet
-                (recentTransactions, 20 dòng gần nhất) — web vẫn gọi API đó từ
-                trước nhưng bỏ qua trường này, nên đây thuần là việc hiển thị. */}
+            {/* Hero Banner: Gói Tiêu Chuẩn 39.000 VNĐ */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(99, 102, 241, 0.08) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: '18px',
+              padding: '24px 28px',
+              marginBottom: '28px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                <div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#10b981', color: '#fff', fontSize: '0.74rem', fontWeight: '800', textTransform: 'uppercase', padding: '3px 10px', borderRadius: '999px', marginBottom: '8px', letterSpacing: '0.04em' }}>
+                    <Sparkles size={12} /> Gói tiêu chuẩn khuyên dùng
+                  </div>
+                  <h2 style={{ margin: 0, fontSize: '1.45rem', fontWeight: '800', color: 'var(--c-ink)' }}>Gói Điểm Tiêu Chuẩn · 39.000 VNĐ</h2>
+                  <p style={{ margin: '6px 0 0', fontSize: '0.88rem', color: 'var(--c-muted)', lineHeight: 1.5 }}>
+                    39.000 VNĐ nhận ngay <strong>39.000 Điểm FONLIO</strong>. Điểm thuộc quyền sở hữu của bạn và vĩnh viễn không bao giờ hết hạn.
+                  </p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#10b981', lineHeight: 1.1 }}>39.000đ</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--c-muted)' }}>= 39.000 Điểm</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.84rem', color: 'var(--c-ink)' }}>
+                  <CheckCircle2 size={16} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span><strong>Không bao giờ hết hạn:</strong> Sử dụng bất kỳ lúc nào bạn cần, không áp lực thời gian.</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.84rem', color: 'var(--c-ink)' }}>
+                  <CheckCircle2 size={16} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span><strong>Đủ nhận 2 việc làm có thù lao:</strong> 19.000 Điểm / lần nhận việc chính thức thành công.</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.84rem', color: 'var(--c-ink)' }}>
+                  <CheckCircle2 size={16} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span><strong>Dư 1 lần xuất website:</strong> 1.000 Điểm / lần xuất bản website portfolio công khai.</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.84rem', color: 'var(--c-ink)' }}>
+                  <CheckCircle2 size={16} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span><strong>Thanh toán QR PayOS:</strong> Tự động kích hoạt điểm chỉ sau 3 giây.</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginTop: '4px' }}>
+                <button
+                  type="button"
+                  className="button primary-button"
+                  style={{ padding: '12px 24px', fontSize: '0.95rem', fontWeight: '700' }}
+                  onClick={() => { setTopUpAmount('39000'); setShowTopUpModal(true); }}
+                >
+                  <Coins size={16} /> Nạp ngay gói 39.000đ
+                </button>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--c-muted)', fontWeight: '600' }}>Hoặc chọn số khác:</span>
+                  {[69000, 99000, 199000].map(amt => (
+                    <button
+                      key={amt}
+                      type="button"
+                      className="button secondary-button"
+                      style={{ padding: '6px 12px', fontSize: '0.8rem', borderRadius: '8px' }}
+                      onClick={() => { setTopUpAmount(String(amt)); setShowTopUpModal(true); }}
+                    >
+                      {(amt / 1000).toFixed(0)}k đ
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bảng chi phí & cam kết minh bạch */}
+            <div style={{ marginBottom: '28px' }}>
+              <div className="np-prem-heading" style={{ marginBottom: '14px' }}>
+                <h3>Cam kết minh bạch dịch vụ</h3>
+                <p>Mô hình dựa trên giá trị thực tế — ứng viên chỉ trả phí khi thực sự đạt được kết quả.</p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+                <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '14px', padding: '18px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#10b981', background: 'rgba(16, 185, 129, 0.12)', padding: '2px 8px', borderRadius: '6px' }}>Miễn phí 100%</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '800', color: '#10b981' }}>0 Điểm</span>
+                  </div>
+                  <h4 style={{ margin: '0 0 6px', fontSize: '0.95rem', color: 'var(--c-ink)' }}>Ứng tuyển mọi vị trí</h4>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--c-muted)', lineHeight: 1.5 }}>
+                    Không giới hạn số lượng đơn nộp tới doanh nghiệp, tổ chức và các câu lạc bộ sinh viên.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '14px', padding: '18px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#10b981', background: 'rgba(16, 185, 129, 0.12)', padding: '2px 8px', borderRadius: '6px' }}>Miễn phí 100%</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '800', color: '#10b981' }}>0 Điểm</span>
+                  </div>
+                  <h4 style={{ margin: '0 0 6px', fontSize: '0.95rem', color: 'var(--c-ink)' }}>Tạo & Sửa Living Portfolio</h4>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--c-muted)', lineHeight: 1.5 }}>
+                    Thiết kế hồ sơ vũ trụ 3D, cập nhật tiểu sử, linh vật và bằng chứng năng lực hoàn toàn miễn phí.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '14px', padding: '18px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#10b981', background: 'rgba(16, 185, 129, 0.12)', padding: '2px 8px', borderRadius: '6px' }}>Miễn phí 100%</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '800', color: '#10b981' }}>0 Điểm</span>
+                  </div>
+                  <h4 style={{ margin: '0 0 6px', fontSize: '0.95rem', color: 'var(--c-ink)' }}>Thẩm định minh chứng Proof of Work</h4>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--c-muted)', lineHeight: 1.5 }}>
+                    Nộp chứng chỉ, dự án thực tế để tích lũy Reputation Score và EXP không tốn bất kỳ chi phí nào.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '14px', padding: '18px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--primary)', background: 'rgba(99, 102, 241, 0.12)', padding: '2px 8px', borderRadius: '6px' }}>Chỉ khi xuất bản</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--primary)' }}>1.000 Điểm</span>
+                  </div>
+                  <h4 style={{ margin: '0 0 6px', fontSize: '0.95rem', color: 'var(--c-ink)' }}>Xuất Website Portfolio cá nhân</h4>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--c-muted)', lineHeight: 1.5 }}>
+                    Xuất bản website công khai với link định danh riêng (/p/:slug) để đính kèm CV nộp nhà tuyển dụng.
+                  </p>
+                </div>
+
+                <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '14px', padding: '18px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.12)', padding: '2px 8px', borderRadius: '6px' }}>Trả khi có kết quả</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '800', color: '#8b5cf6' }}>19.000 Điểm</span>
+                  </div>
+                  <h4 style={{ margin: '0 0 6px', fontSize: '0.95rem', color: 'var(--c-ink)' }}>Phí nhận việc có thù lao</h4>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--c-muted)', lineHeight: 1.5 }}>
+                    Chỉ thu khi nhà tuyển dụng chọn bạn và bạn xác nhận đồng ý nhận offer (Vị trí không thù lao là 0 Điểm).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Lịch sử giao dịch */}
             <WalletHistory
               transactions={wallet?.recentTransactions}
               loading={walletLoading}
             />
-
-            <div className="candidate-premium-layout">
-              <section className={`candidate-premium-pass-card ${wallet?.isPremium ? 'active' : ''}`}>
-                <div className="candidate-premium-card-header">
-                  <div className="candidate-premium-card-title">
-                    <div className="candidate-premium-mark">
-                      <Crown size={22} />
-                    </div>
-                    <div>
-                      <span>{wallet?.isPremium ? 'Đang sở hữu' : 'Gói tài khoản'}</span>
-                      <h2>Premium Pass</h2>
-                    </div>
-                  </div>
-                  <span className={`candidate-premium-status ${wallet?.isPremium ? 'success' : ''}`}>
-                    {/* Giá này admin SỬA ĐƯỢC (khoá premium_price_np trong Cấu
-                        hình hệ thống). Ghi cứng "40,000" nghĩa là đổi giá xong
-                        thì cửa hàng vẫn rao giá cũ trong khi ví trừ giá mới.
-                        wallet.premiumPriceNp đã có sẵn ngay trong biến này. */}
-                    {wallet?.isPremium
-                      ? 'Đã kích hoạt'
-                      : `${(wallet?.premiumPriceNp ?? 40000).toLocaleString('vi-VN')} NP / tháng`}
-                  </span>
-                </div>
-                <p className="candidate-premium-pass-copy">
-                  Mở quyền ứng tuyển vào cơ hội yêu cầu Premium, hiển thị huy hiệu trên portfolio và tăng độ tin cậy khi nhà tuyển dụng xem hồ sơ.
-                </p>
-                <div className="candidate-premium-benefit-list">
-                  <span><CheckCircle2 size={15} /> Ứng tuyển cơ hội yêu cầu Premium</span>
-                  <span><CheckCircle2 size={15} /> Huy hiệu Premium trên hồ sơ</span>
-                  <span><CheckCircle2 size={15} /> Phù hợp ứng viên muốn tìm cơ hội chất lượng cao</span>
-                </div>
-                {!wallet?.isPremium ? (
-                  <button
-                    type="button"
-                    className="button primary-button candidate-premium-full-button"
-                    onClick={handleBuyPremium}
-                    disabled={buyPremiumLoading}
-                  >
-                    {buyPremiumLoading ? 'Đang xử lý...' : 'Kích hoạt Premium'}
-                  </button>
-                ) : (
-                  <span className="candidate-premium-owned">Đã sở hữu quyền lợi Premium</span>
-                )}
-              </section>
-
-            </div>
-
-            <div className="np-prem-heading">
-              <h3>Dịch vụ tăng tốc hồ sơ</h3>
-              <p>Mua lẻ bằng NP, không cần Premium Pass.</p>
-            </div>
-
-            <div className="candidate-premium-service-list np-stagger">
-              <article className={`candidate-premium-service-row ${wallet?.hasJobMatchAlert ? 'active' : ''}`}>
-                <div className="candidate-premium-service-copy">
-                  <div className="candidate-premium-mark"><Sparkles size={20} /></div>
-                  <div>
-                    <div className="candidate-premium-service-title">
-                      <h3>Job Match Alert & Đề xuất AI</h3>
-                      <span className="candidate-premium-soon">Sắp ra mắt</span>
-                    </div>
-                    {/* Mô tả cũ hứa ba thứ mà không thứ nào tồn tại: "xem sớm
-                        12h" không có dòng code nào dùng earlyAccessHours ngoài
-                        chỗ khai config; "tab gợi ý" đã bị xoá; và không có
-                        tích hợp AI nào trong backend. Phần khớp kỹ năng thì có
-                        thật nhưng chưa bắn được thông báo nào vì chưa tin nào
-                        được gắn kỹ năng. Nói đúng hiện trạng thay vì bán một
-                        thứ chưa có. */}
-                    <p>Nhận thông báo khi có tin tuyển dụng hoặc Quest CLB khớp kỹ năng trong hồ sơ, kèm gợi ý được xếp hạng và giải thích vì sao phù hợp. Tính năng đang hoàn thiện.</p>
-                  </div>
-                </div>
-                <div className="candidate-premium-row-action">
-                  <button type="button" className="button secondary-button" disabled>
-                    Sắp ra mắt
-                  </button>
-                </div>
-              </article>
-
-              {(() => {
-                const allApplications = [
-                  ...appliedJobs.map(app => ({
-                    ...app,
-                    applicationType: 'JOB',
-                    title: app.job_title || app.title,
-                    companyName: app.company_name || app.companyName,
-                  })),
-                  ...questApplications.map(app => ({
-                    ...app,
-                    applicationType: 'QUEST',
-                    title: app.questTitle,
-                    companyName: app.companyName,
-                  })),
-                ];
-                const boostableApps = allApplications.filter(app =>
-                  !['WITHDRAWN', 'REJECTED', 'COMPLETED'].includes(app.status)
-                  && !(app.boostedUntil && new Date(app.boostedUntil) > new Date())
-                );
-                const premiumApplicationsLoading = applicationsLoading || questApplicationsLoading;
-                return (
-                  <article className="candidate-premium-service-row">
-                    <div className="candidate-premium-service-copy">
-                      <div className="candidate-premium-mark"><ExternalLink size={19} /></div>
-                      <div>
-                        <div className="candidate-premium-service-title">
-                          <h3>Profile Boost</h3>
-                          <span>{(premiumConfig.boostPriceNp || 25000).toLocaleString()} NP</span>
-                        </div>
-                        <p>Ghim đơn ứng tuyển trong {premiumConfig.boostDurationHours || 48}h để xuất hiện nổi bật hơn trong danh sách của nhà tuyển dụng.</p>
-                      </div>
-                    </div>
-                    <div className="candidate-premium-row-action wide">
-                      <label className="premium-field-label">Chọn đơn ứng tuyển để ghim</label>
-                      {premiumApplicationsLoading ? (
-                        <div className="premium-inline-state">Đang tải danh sách đơn ứng tuyển...</div>
-                      ) : allApplications.length === 0 ? (
-                        <div className="premium-inline-state danger">Bạn chưa có đơn ứng tuyển nào. Hãy ứng tuyển vào một công việc trước.</div>
-                      ) : boostableApps.length === 0 ? (
-                        <div className="premium-inline-state warning">Tất cả đơn ứng tuyển của bạn đang được boost hoặc đã kết thúc.</div>
-                      ) : (
-                        <select value={selectedBoostAppId} onChange={(e) => setSelectedBoostAppId(e.target.value)} className="premium-store-select">
-                          <option value="">-- Chọn đơn ứng tuyển --</option>
-                          {boostableApps.map(app => (
-                            <option key={`${app.applicationType}-${app.id}`} value={encodePremiumTarget(app.applicationType, app.id)}>
-                              [{app.applicationType === 'QUEST' ? 'Quest' : 'Việc làm'}] {app.title} ({app.companyName})
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                      <button
-                        type="button"
-                        className="button primary-button"
-                        disabled={!selectedBoostAppId || boostLoadingId === selectedBoostAppId}
-                        onClick={async () => {
-                          const target = decodePremiumTarget(selectedBoostAppId);
-                          await handleBoostApplication(target.id, target.type);
-                          setSelectedBoostAppId('');
-                        }}
-                      >
-                        {boostLoadingId === selectedBoostAppId ? <><span className="premium-loading-dot" aria-hidden="true" /> Đang xử lý...</> : 'Boost đơn ngay'}
-                      </button>
-                    </div>
-                  </article>
-                );
-              })()}
-
-              {(() => {
-                const expressableCredentials = credentialSubmissions.filter(sub => sub.verification_status === 'PENDING' && !sub.expressVerification);
-                return (
-                  <article className="candidate-premium-service-row">
-                    <div className="candidate-premium-service-copy">
-                      <div className="candidate-premium-mark"><Zap size={20} /></div>
-                      <div>
-                        <div className="candidate-premium-service-title">
-                          <h3>Duyệt nhanh 24h Express</h3>
-                          <span>{(premiumConfig.expressPriceNp || 15000).toLocaleString()} NP</span>
-                        </div>
-                        <p>Ưu tiên thẩm định minh chứng đang chờ duyệt để rút ngắn thời gian tích lũy RS và EXP.</p>
-                      </div>
-                    </div>
-                    <div className="candidate-premium-row-action wide">
-                      <label className="premium-field-label">Chọn minh chứng chờ duyệt</label>
-                      {expressableCredentials.length === 0 ? (
-                        <div className="premium-inline-state warning">Bạn chưa có minh chứng chờ duyệt phù hợp để nâng cấp Express.</div>
-                      ) : (
-                        <select value={selectedExpressSubId} onChange={(e) => setSelectedExpressSubId(e.target.value)} className="premium-store-select">
-                          <option value="">-- Chọn minh chứng --</option>
-                          {expressableCredentials.map(sub => (
-                            <option key={sub.id} value={sub.id}>{sub.project_name} - {sub.position}</option>
-                          ))}
-                        </select>
-                      )}
-                      <button
-                        type="button"
-                        className="button primary-button"
-                        disabled={!selectedExpressSubId || expressLoadingId === selectedExpressSubId}
-                        onClick={async () => {
-                          await handleExpressVerification(selectedExpressSubId);
-                          setSelectedExpressSubId('');
-                        }}
-                      >
-                        {expressLoadingId === selectedExpressSubId ? <><span className="premium-loading-dot" aria-hidden="true" /> Đang xử lý...</> : 'Nâng cấp Express'}
-                      </button>
-                    </div>
-                  </article>
-                );
-              })()}
-
-              {(() => {
-                const insightApps = [
-                  ...appliedJobs.map(app => ({
-                    ...app,
-                    applicationType: 'JOB',
-                    targetId: app.job_id || app.jobId,
-                    title: app.job_title || app.title,
-                    companyName: app.company_name || app.companyName,
-                  })),
-                  ...questApplications.map(app => ({
-                    ...app,
-                    applicationType: 'QUEST',
-                    targetId: app.questId,
-                    title: app.questTitle,
-                    companyName: app.companyName,
-                  })),
-                ];
-                const premiumApplicationsLoading = applicationsLoading || questApplicationsLoading;
-                return (
-                  <article className="candidate-premium-service-row">
-                    <div className="candidate-premium-service-copy">
-                      <div className="candidate-premium-mark"><Award size={20} /></div>
-                      <div>
-                        <div className="candidate-premium-service-title">
-                          <h3>Application Insight</h3>
-                          <span>{(premiumConfig.insightPriceNp || 10000).toLocaleString()} NP</span>
-                        </div>
-                        <p>Mở khóa xếp hạng thực tế và phân tích Reputation Score trong nhóm ứng viên của từng cơ hội.</p>
-                      </div>
-                    </div>
-                    <div className="candidate-premium-row-action wide">
-                      <label className="premium-field-label">Chọn đơn tuyển dụng để xem</label>
-                      {premiumApplicationsLoading ? (
-                        <div className="premium-inline-state">Đang tải danh sách đơn ứng tuyển...</div>
-                      ) : insightApps.length === 0 ? (
-                        <div className="premium-inline-state danger">Bạn chưa có đơn ứng tuyển nào.</div>
-                      ) : (
-                        <select value={selectedInsightJobId} onChange={(e) => setSelectedInsightJobId(e.target.value)} className="premium-store-select">
-                          <option value="">-- Chọn đơn ứng tuyển --</option>
-                          {insightApps.map(app => (
-                            <option key={`${app.applicationType}-${app.id}`} value={encodePremiumTarget(app.applicationType, app.targetId)}>
-                              [{app.applicationType === 'QUEST' ? 'Quest' : 'Việc làm'}] {app.title} ({app.companyName})
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                      <button
-                        type="button"
-                        className="button primary-button"
-                        disabled={!selectedInsightJobId || insightLoadingJobId === selectedInsightJobId}
-                        onClick={async () => {
-                          const target = decodePremiumTarget(selectedInsightJobId);
-                          const matched = insightApps.find(app =>
-                            app.applicationType === target.type && String(app.targetId) === target.id
-                          );
-                          await handleViewInsight(matched || {
-                            applicationType: target.type,
-                            targetId: target.id,
-                            title: 'Đơn ứng tuyển',
-                            companyName: 'Đối tác',
-                          });
-                          setSelectedInsightJobId('');
-                        }}
-                      >
-                        {insightLoadingJobId === selectedInsightJobId ? <><span className="premium-loading-dot" aria-hidden="true" /> Đang tải...</> : 'Xem Insight'}
-                      </button>
-                    </div>
-                  </article>
-                );
-              })()}
-
-            </div>
           </section>
         )}
 
@@ -4163,17 +3973,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
                         <div className="np-proof-side">
                           <span className={`np-proof-status ${statusKey}`}>{statusLabel}</span>
-                          {!sub.expressVerification && status === 'PENDING' && (
-                            <button
-                              type="button"
-                              className="np-proof-express-btn"
-                              onClick={() => handleExpressVerification(sub.id)}
-                              disabled={expressLoadingId === sub.id}
-                              title={`Nâng cấp duyệt nhanh 24h với ${premiumConfig.expressPriceNp.toLocaleString()} NP`}
-                            >
-                              {expressLoadingId === sub.id ? 'Đang xử lý…' : <><Zap size={11} /> Duyệt nhanh 24h</>}
-                            </button>
-                          )}
                         </div>
                       </li>
                     );
@@ -4359,13 +4158,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         </div>
       )}
 
-      {/* ─── Top-Up NP Modal ─── */}
+      {/* ─── Top-Up Diem Modal ─── */}
       {showTopUpModal && (
         <div className="glass-modal-overlay" onClick={closeTopUpModal}>
           <div className="glass-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: pendingPayment ? '660px' : '400px' }}>
             <div className="glass-modal-header">
               <WalletCards size={20} color="var(--primary)" />
-              <h2>{pendingPayment ? 'Quét mã để thanh toán' : 'Nạp NP vào ví'}</h2>
+              <h2>{pendingPayment ? 'Quét mã để thanh toán' : 'Nạp Điểm vào ví'}</h2>
             </div>
             <div className="glass-modal-body">
               {pendingPayment ? (
@@ -4378,16 +4177,15 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 />
               ) : (
               <>
-              {/* Thẻ số dư ẩn đi ở màn thành công — màn đó đã hiện số dư mới rồi,
-                  để cả hai thì cùng một con số xuất hiện hai lần trong một khung. */}
+              {/* Thẻ số dư ẩn đi ở màn thành công — màn đó đã hiện số dư mới rồi */}
               <div style={{ display: topUpSuccess ? 'none' : 'block', background: 'var(--surface-soft)', borderRadius: '14px', padding: '14px 16px', marginBottom: '18px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                   <span style={{ fontSize: '0.84rem', color: 'var(--muted)', fontWeight: '600' }}>Số dư hiện tại</span>
-                  <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)' }}>{(wallet?.npBalance ?? 0).toLocaleString()} NP</span>
+                  <span style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)' }}>{(wallet?.npBalance ?? 0).toLocaleString()} Điểm</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.84rem', color: 'var(--muted)', fontWeight: '600' }}>Tỷ giá</span>
-                  <span style={{ fontSize: '0.84rem', color: 'var(--muted)' }}>1 VND = 1 NP</span>
+                  <span style={{ fontSize: '0.84rem', color: 'var(--muted)', fontWeight: '600' }}>Tỷ giá quy đổi</span>
+                  <span style={{ fontSize: '0.84rem', color: '#10b981', fontWeight: 600 }}>1 VND = 1 Điểm (Vĩnh viễn)</span>
                 </div>
               </div>
 
@@ -4396,20 +4194,17 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <div className="np-topup-spinner" style={{ margin: '0 auto 12px' }} />
                   <p style={{ margin: 0, fontWeight: 700, color: 'var(--ink)' }}>Đang xác nhận thanh toán…</p>
                   <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: 'var(--muted)', lineHeight: 1.5 }}>
-                    Nếu bạn đã chuyển khoản, NP sẽ vào ví trong vài giây.
+                    Nếu bạn đã chuyển khoản, Điểm sẽ vào ví trong vài giây.
                     Không cần trả lại lần nữa.
                   </p>
                 </div>
               ) : topUpCheckState === 'cancelled' || topUpCheckState === 'timeout' || topUpCheckState === 'unknown' ? (
-                /* Hai nhánh này BẮT BUỘC phải có nút quay lại. Trước đây chúng
-                   chỉ hiện một dòng thông báo, nên modal đứng yên ở đó và cách
-                   duy nhất để nạp lại là tải lại trang. */
                 <div>
                   <div className={`alert-banner${topUpCheckState === 'cancelled' ? ' error' : ''}`} style={{ marginBottom: '14px' }}>
                     <AlertTriangle size={14} style={{ flexShrink: 0 }} />
                     {topUpCheckState === 'cancelled'
                       ? 'Đã huỷ thanh toán — chưa có khoản tiền nào bị trừ.'
-                      : 'Đơn đã hết hạn. Nếu bạn vừa chuyển khoản thành công, NP vẫn sẽ tự vào ví.'}
+                      : 'Đơn đã hết hạn. Nếu bạn vừa chuyển khoản thành công, Điểm vẫn sẽ tự vào ví.'}
                   </div>
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button type="button" className="button primary-button" style={{ flex: 1 }}
@@ -4433,23 +4228,23 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     type="number"
                     min="10000"
                     max="10000000"
-                    step="10000"
+                    step="1000"
                     value={topUpAmount}
                     onChange={e => setTopUpAmount(e.target.value)}
-                    placeholder="VD: 50000"
+                    placeholder="VD: 39000"
                     style={{ marginBottom: '10px' }}
                   />
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
-                    {[20000, 50000, 100000, 200000].map(amt => (
+                    {[39000, 69000, 99000, 199000].map(amt => (
                       <button key={amt} type="button" onClick={() => setTopUpAmount(String(amt))}
-                        style={{ fontSize: '0.78rem', fontWeight: '700', padding: '5px 10px', borderRadius: '8px', border: `1px solid ${topUpAmount === String(amt) ? 'var(--primary)' : 'var(--line)'}`, background: topUpAmount === String(amt) ? 'rgba(var(--primary-rgb),0.08)' : 'transparent', color: topUpAmount === String(amt) ? 'var(--primary)' : 'var(--muted)', cursor: 'pointer' }}>
-                        {(amt / 1000).toFixed(0)}K
+                        style={{ fontSize: '0.78rem', fontWeight: '700', padding: '6px 12px', borderRadius: '8px', border: `1px solid ${topUpAmount === String(amt) ? '#10b981' : 'var(--line)'}`, background: topUpAmount === String(amt) ? 'rgba(16, 185, 129, 0.12)' : 'transparent', color: topUpAmount === String(amt) ? '#10b981' : 'var(--muted)', cursor: 'pointer' }}>
+                        {(amt / 1000).toFixed(0)}K {amt === 39000 ? '★' : ''}
                       </button>
                     ))}
                   </div>
                   {topUpAmount && parseInt(topUpAmount) >= 10000 && (
                     <p style={{ margin: '0 0 12px', fontSize: '0.84rem', color: '#16a34a', fontWeight: '700' }}>
-                      → Nhận được {parseInt(topUpAmount).toLocaleString('vi-VN')} NP
+                      → Nhận được {parseInt(topUpAmount).toLocaleString('vi-VN')} Điểm FONLIO
                     </p>
                   )}
                   {topUpError && (
@@ -4467,8 +4262,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 </form>
               )}
               <p style={{ margin: '14px 0 0', fontSize: '0.76rem', color: 'var(--muted)', textAlign: 'center', lineHeight: 1.4 }}>
-                Thanh toán qua PayOS — hỗ trợ chuyển khoản ngân hàng và ví điện tử.
-                NP vào ví ngay khi PayOS xác nhận đã nhận tiền.
+                Thanh toán qua PayOS — hỗ trợ chuyển khoản ngân hàng quét mã QR siêu tốc.
+                Điểm vào ví ngay khi PayOS xác nhận đã nhận tiền.
               </p>
               </>
               )}
@@ -4477,215 +4272,115 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         </div>
       )}
 
-      {/* ─── Premium Paywall Modal ─── */}
-      {showPremiumPaywall && (
-        <div className="glass-modal-overlay" onClick={() => setShowPremiumPaywall(false)}>
-          <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+      {/* ─── Export Portfolio Website Modal ─── */}
+      {showExportModal && (
+        <div className="glass-modal-overlay" onClick={() => { if (!exportLoading) { setShowExportModal(false); setExportResult(null); setExportError(''); } }}>
+          <div className="glass-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="glass-modal-header">
-              <Crown size={22} color="#f59e0b" />
-              <h2>Yêu cầu Premium Pass</h2>
+              <Globe size={20} color="#10b981" />
+              <h2>Xuất Portfolio thành Website</h2>
             </div>
             <div className="glass-modal-body">
-              <div style={{ textAlign: 'center', padding: '8px 0 20px' }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                  <Crown size={32} color="#fff" />
-                </div>
-                <h3 style={{ margin: '0 0 10px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)' }}>Cơ hội này chỉ dành cho Premium</h3>
-                <p style={{ margin: '0 0 18px', fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.6 }}>
-                  Nhà tuyển dụng yêu cầu ứng viên có <strong>Premium Pass</strong> để ứng tuyển vị trí này — giúp đảm bảo chất lượng hồ sơ và giảm spam.
-                </p>
-                <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '14px', padding: '14px 18px', textAlign: 'left', marginBottom: '6px' }}>
-                  <p style={{ margin: '0 0 8px', fontWeight: '800', fontSize: '0.9rem', color: 'var(--ink)' }}>Premium Pass bao gồm:</p>
-                  {['Ứng tuyển không giới hạn vị trí Premium', 'Hồ sơ nổi bật hơn trong kết quả tìm kiếm', 'Badge xác nhận Premium trên Profile 3D'].map(item => (
-                    <div key={item} style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '0.85rem', color: 'var(--ink)', marginBottom: '4px' }}>
-                      <Check size={14} color="#16a34a" style={{ flexShrink: 0 }} /> {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="glass-modal-body" style={{ paddingTop: 0 }}>
-              {buyPremiumError && (
-                <div className="alert-banner error" style={{ marginTop: 0, marginBottom: '12px' }}>
-                  <AlertTriangle size={14} style={{ flexShrink: 0 }} />
-                  {buyPremiumError}
-                  {buyPremiumError.includes('Số dư') && (
-                    <button onClick={() => { setShowPremiumPaywall(false); setShowTopUpModal(true); }} style={{ marginLeft: '8px', fontSize: '0.8rem', fontWeight: '700', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
-                      Nạp NP ngay
-                    </button>
-                  )}
-                </div>
-              )}
-              <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--muted)', textAlign: 'center' }}>
-                Số dư hiện tại: <strong style={{ color: 'var(--ink)' }}>{walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString()} NP</strong>
-                {' · '}Chi phí: <strong style={{ color: '#d97706' }}>40,000 NP</strong>
-              </p>
-            </div>
-            <div className="glass-modal-footer">
-              <button className="button secondary-button" onClick={() => { setShowPremiumPaywall(false); setBuyPremiumError(''); }} type="button" style={{ padding: '10px 16px', borderRadius: '12px' }}>
-                Để sau
-              </button>
-              <button className="button primary-button" onClick={handleBuyPremium} type="button" disabled={buyPremiumLoading} style={{ padding: '10px 18px', borderRadius: '12px', background: '#d97706', border: 'none' }}>
-                {buyPremiumLoading ? 'Đang xử lý...' : <><Crown size={15} style={{ marginRight: '6px' }} /> Kích hoạt Premium</>}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── Application Insight Modal ─── */}
-      {insightModalJob && (
-        <div className="glass-modal-overlay" onClick={() => { setInsightModalJob(null); setInsightData(null); }}>
-          <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
-            <div className="glass-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkles size={20} color="#10b981" />
-                <h2 style={{ margin: 0, fontFamily: 'inherit', fontSize: '1.2rem', fontWeight: '500', letterSpacing: '-0.02em' }}>Phân tích cạnh tranh</h2>
-              </div>
-              <button 
-                onClick={() => { setInsightModalJob(null); setInsightData(null); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--c-muted)', fontSize: '1.2rem' }}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="glass-modal-body" style={{ padding: '20px 24px' }}>
-              <div style={{ marginBottom: '16px' }}>
-                <p style={{ margin: '0 0 4px', fontSize: '0.78rem', textTransform: 'uppercase', fontWeight: '800', color: 'var(--c-muted)' }}>
-                  {insightModalJob.applicationType === 'QUEST' ? 'Quest / CLB' : 'Công việc'}
-                </p>
-                <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: 'var(--c-ink)' }}>{insightModalJob.job_title || insightModalJob.questTitle || insightModalJob.title}</h4>
-                <p style={{ margin: '4px 0 0', fontSize: '0.84rem', color: 'var(--muted)' }}>{insightModalJob.company_name || insightModalJob.companyName}</p>
-              </div>
-
-              {/* Total applicants (Teaser, always unlocked) */}
-              <div style={{ background: 'var(--c-surface-soft)', borderRadius: '12px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', border: '1px solid var(--c-line)' }}>
-                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--c-ink)' }}>Tổng số ứng viên ứng tuyển:</span>
-                <strong style={{ fontSize: '1.1rem', color: 'var(--c-red)', fontWeight: '900' }}>
-                  {insightData?.totalApplicants ?? 0}
-                </strong>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-                {/* Avg RS */}
-                <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '14px', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
-                  <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: '750', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Trung bình RS</span>
-                  <div style={{ filter: !insightData?.unlocked ? 'blur(4px)' : 'none', fontSize: '1.4rem', fontWeight: '900', color: 'var(--c-ink)' }}>
-                    {insightData?.unlocked ? insightData.averageRs : 99}
+              {exportResult ? (
+                <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                    <BadgeCheck size={32} />
                   </div>
-                  {!insightData?.unlocked && (
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--c-veil)' }}>
-                      <LockKeyhole size={16} color="var(--c-muted)" />
-                    </div>
-                  )}
-                </div>
-
-                {/* My Rank */}
-                <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '14px', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
-                  <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: '750', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Hạng của bạn</span>
-                  <div style={{ filter: !insightData?.unlocked ? 'blur(4px)' : 'none', fontSize: '1.4rem', fontWeight: '900', color: 'var(--c-ink)' }}>
-                    {insightData?.unlocked ? `${insightData.myRank} / ${insightData.totalApplicants}` : '7 / 42'}
-                  </div>
-                  {!insightData?.unlocked && (
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--c-veil)' }}>
-                      <LockKeyhole size={16} color="var(--c-muted)" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Percentile visual indicator */}
-              <div style={{ background: 'var(--c-surface)', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden', marginBottom: '20px' }}>
-                <span style={{ display: 'block', fontSize: '0.76rem', fontWeight: '750', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px', textAlign: 'center' }}>Tỷ lệ phần trăm cạnh tranh</span>
-                <div style={{ filter: !insightData?.unlocked ? 'blur(4px)' : 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                  <strong style={{ fontSize: '1.6rem', fontWeight: '500', color: '#10b981' }}>
-                    {insightData?.unlocked ? `Giỏi hơn ${insightData.percentile}%` : 'Giỏi hơn 85%'}
-                  </strong>
-                  <div style={{ width: '100%', height: '8px', background: 'var(--c-line)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ width: insightData?.unlocked ? `${insightData.percentile}%` : '85%', height: '100%', background: '#10b981', borderRadius: '4px' }} />
-                  </div>
-                  <span style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>
-                    {insightData?.unlocked ? 'Hồ sơ của bạn vượt trội hơn ' + insightData.percentile + '% số ứng viên khác.' : 'Độ cạnh tranh so với các đối thủ khác'}
-                  </span>
-                </div>
-                {!insightData?.unlocked && (
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--c-veil)' }}>
-                    <LockKeyhole size={20} color="var(--c-muted)" />
-                  </div>
-                )}
-              </div>
-
-              {/* Unlock Actions */}
-              {!insightData?.unlocked && (
-                <div style={{ background: 'rgba(124,58,237,0.04)', border: '1.5px dashed rgba(124,58,237,0.35)', borderRadius: '16px', padding: '20px', textAlign: 'center' }}>
-                  <p style={{ margin: '0 0 14px', fontSize: '0.86rem', color: 'var(--c-ink)', lineHeight: 1.4, fontWeight: '600' }}>
-                    Tìm hiểu đối thủ và xem vị trí xếp hạng thực tế của bạn dựa trên điểm Reputation Score để chuẩn bị tốt nhất.
+                  <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 800, color: 'var(--c-ink)' }}>Xuất bản Website thành công!</h3>
+                  <p style={{ margin: '0 0 16px', fontSize: '0.88rem', color: 'var(--c-muted)', lineHeight: 1.5 }}>
+                    Portfolio của bạn đã được xuất bản ra đường dẫn công khai, sẵn sàng gửi tới nhà tuyển dụng.
                   </p>
-                  <button
-                    onClick={() => handleUnlockInsight(insightModalJob.targetId, insightModalJob.applicationType)}
-                    style={{ background: '#10b981', border: 'none', color: '#0b0f0e', padding: '11px 20px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '500', cursor: 'pointer' }}
-                  >
-                    Mở khóa ngay ({premiumConfig.insightPriceNp.toLocaleString()} NP)
-                  </button>
+                  <div style={{ background: 'var(--c-surface-soft)', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--c-line)', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                    <span style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {exportResult.publicUrl}
+                    </span>
+                    <button
+                      type="button"
+                      className="button secondary-button"
+                      style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                      onClick={() => {
+                        navigator.clipboard.writeText(exportResult.publicUrl);
+                        setCopiedExportUrl(true);
+                        setTimeout(() => setCopiedExportUrl(false), 2000);
+                      }}
+                    >
+                      {copiedExportUrl ? 'Đã chép' : 'Sao chép'}
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <a
+                      href={exportResult.publicUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="button primary-button"
+                      style={{ flex: 1, textDecoration: 'none', justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <ExternalLink size={15} /> Mở trang Website
+                    </a>
+                    <button
+                      type="button"
+                      className="button secondary-button"
+                      onClick={() => { setShowExportModal(false); setExportResult(null); }}
+                    >
+                      Đóng
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ margin: '0 0 16px', fontSize: '0.88rem', color: 'var(--c-muted)', lineHeight: 1.6 }}>
+                    Tính năng này đóng gói hồ sơ năng lực và các minh chứng Proof of Work của bạn thành một website chuyên nghiệp công khai có thể gửi ứng tuyển bất kỳ đâu.
+                  </p>
+                  <div style={{ background: 'var(--c-surface-soft)', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px', border: '1px solid var(--c-line)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.86rem' }}>
+                      <span style={{ color: 'var(--c-muted)' }}>Phí xuất bản:</span>
+                      <strong style={{ color: 'var(--c-ink)' }}>1.000 Điểm / lần</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.86rem' }}>
+                      <span style={{ color: 'var(--c-muted)' }}>Số dư ví hiện tại:</span>
+                      <strong style={{ color: (wallet?.npBalance ?? 0) >= 1000 ? '#10b981' : '#ef4444' }}>
+                        {(wallet?.npBalance ?? 0).toLocaleString('vi-VN')} Điểm
+                      </strong>
+                    </div>
+                  </div>
+                  {exportError && (
+                    <div className="alert-banner error" style={{ marginBottom: '14px', fontSize: '0.84rem' }}>
+                      <AlertTriangle size={15} style={{ flexShrink: 0 }} />
+                      <span>{exportError}</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    {(wallet?.npBalance ?? 0) < 1000 ? (
+                      <button
+                        type="button"
+                        className="button primary-button"
+                        style={{ flex: 1 }}
+                        onClick={() => { setShowExportModal(false); setTopUpAmount('39000'); setShowTopUpModal(true); }}
+                      >
+                        <WalletCards size={16} /> Nạp thêm Điểm
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="button primary-button"
+                        style={{ flex: 1 }}
+                        disabled={exportLoading}
+                        onClick={handleExportPortfolio}
+                      >
+                        {exportLoading ? 'Đang xuất bản...' : 'Xác nhận xuất website (1.000 Điểm)'}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="button secondary-button"
+                      disabled={exportLoading}
+                      onClick={() => { setShowExportModal(false); setExportError(''); }}
+                    >
+                      Hủy
+                    </button>
+                  </div>
                 </div>
               )}
-            </div>
-            <div className="glass-modal-footer">
-              <button 
-                className="button secondary-button" 
-                onClick={() => { setInsightModalJob(null); setInsightData(null); }}
-                style={{ padding: '10px 16px', borderRadius: '12px' }}
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── Job Match Alert / Early Access Modal ─── */}
-      {showMatchAlertModal && (
-        <div className="glass-modal-overlay" onClick={() => setShowMatchAlertModal(false)}>
-          <div className="glass-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
-            <div className="glass-modal-header">
-              <Sparkles size={22} color="#f59e0b" />
-              <h2>Cơ hội trong Cổng xem sớm</h2>
-            </div>
-            <div className="glass-modal-body" style={{ padding: '20px 24px' }}>
-              <div style={{ textAlign: 'center', padding: '8px 0' }}>
-                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', margin: '0 auto 16px' }}>
-                  <Clock3 size={28} />
-                </div>
-                <h3 style={{ margin: '0 0 10px', fontSize: '1.1rem', fontWeight: '800', color: 'var(--ink)' }}>Tin tuyển dụng vừa đăng tải</h3>
-                <p style={{ margin: '0 0 18px', fontSize: '0.88rem', color: 'var(--muted)', lineHeight: 1.6 }}>
-                  Vị trí tuyển dụng này hiện đang trong thời gian <strong>Early Access (12 giờ đầu)</strong> dành riêng cho các thành viên đã đăng ký gói Job Match Alert.
-                </p>
-                <div style={{ background: 'var(--c-surface-soft)', border: '1px solid var(--c-line)', borderRadius: '12px', padding: '14px', textAlign: 'left', fontSize: '0.84rem', color: 'var(--ink)', lineHeight: 1.4 }}>
-                  <p style={{ margin: '0 0 6px', fontWeight: '800' }}>Quyền lợi khi đăng ký Job Match Alert:</p>
-                  <div>⌛ Xem sớm & nộp hồ sơ trước các ứng viên khác 12h.</div>
-                  <div>✨ Mở khóa bảng Gợi ý việc làm & thử thách CLB cá nhân hóa.</div>
-                </div>
-              </div>
-            </div>
-            <div className="glass-modal-body" style={{ paddingTop: 0 }}>
-              <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--muted)', textAlign: 'center' }}>
-                Số dư hiện tại: <strong style={{ color: 'var(--ink)' }}>{wallet?.npBalance?.toLocaleString() ?? 0} NP</strong>
-                {' · '}Gói đăng ký: <strong style={{ color: '#d97706' }}>{(premiumConfig.matchAlertPriceNp || 19000).toLocaleString()} NP / tháng</strong>
-              </p>
-            </div>
-            <div className="glass-modal-footer">
-              <button className="button secondary-button" onClick={() => setShowMatchAlertModal(false)} style={{ padding: '10px 16px', borderRadius: '12px' }}>
-                Để sau
-              </button>
-              <button 
-                className="button primary-button" 
-                onClick={handleSubscribeMatchAlert} 
-                disabled={subscribingMatchAlert} 
-                style={{ padding: '10px 18px', borderRadius: '12px', background: '#d97706', border: 'none' }}
-              >
-                {subscribingMatchAlert ? 'Đang kích hoạt...' : 'Kích hoạt ngay'}
-              </button>
             </div>
           </div>
         </div>

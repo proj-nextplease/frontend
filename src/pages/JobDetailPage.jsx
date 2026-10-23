@@ -329,20 +329,7 @@ export function JobDetailPage() {
   }
 
   const isQuest = job.postType === 'QUEST' || isQuestPage;
-  const isPremium = Boolean(
-    job.requiresPremium === true ||
-    job.requiresPremium === 'true' ||
-    job.requiresPremium === 1 ||
-    job.requiresPremium === 't' ||
-    job.isPremium === true ||
-    job.isPremium === 'true' ||
-    job.requires_premium === true ||
-    job.requires_premium === 'true' ||
-    job.requires_premium === 't' ||
-    job.requires_premium === 1 ||
-    job.premiumRequired === true ||
-    job.tier === 'PREMIUM'
-  );
+  const isPremium = false; // Discontinued: all jobs are free to apply per candidate point model
   const rs = portfolio?.reputationScore || 0;
   const isLocked = rs < (job.minReqRs || 0);
   const typeLabel = JOB_TYPE_LABELS[job.jobType] || job.jobType || (isQuest ? 'Quest sinh viên' : 'Toàn thời gian');
