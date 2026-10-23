@@ -41,6 +41,58 @@ const CandidatePortfolioPreviewPage = lazy(() =>
   })),
 );
 
+const CandidateUniversePage = lazy(() =>
+  import('../pages/CandidateUniversePage.jsx').then((module) => ({
+    default: module.CandidateUniversePage,
+  })),
+);
+
+function ProtectedUniverseRoute() {
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function checkSession() {
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (isMounted) {
+          setSession(currentSession);
+          setLoading(false);
+        }
+      } catch {
+        if (isMounted) setLoading(false);
+      }
+    }
+    checkSession();
+    return () => { isMounted = false; };
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ background: '#07080a', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6ee7b7', fontFamily: 'sans-serif' }}>
+        Đang tải Vũ trụ ký ức...
+      </div>
+    );
+  }
+
+  const hasAuth = Boolean(session || getStoredToken());
+  const isPreview = window.location.search.includes('preview') || window.location.search.includes('wrapped') || window.location.search.includes('test');
+  if (!hasAuth && !isPreview) {
+    return <Navigate to="/candidate/login" replace />;
+  }
+
+  return (
+    <Suspense fallback={<div style={{ background: '#07080a', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6ee7b7', fontFamily: 'sans-serif' }}>Đang khởi tạo Vũ trụ...</div>}>
+      <CandidateUniversePage />
+    </Suspense>
+  );
+}
+
 function ProtectedDashboardRoute() {
   const { tabSlug } = useParams();
   const [session, setSession] = useState(null);
@@ -384,6 +436,8 @@ export function AppRouter() {
       {/* Ngoài AppLayout: trang tự dựng SiteHeader/SiteFooter giống HomePage,
           nên để trong layout sẽ bị đội hai thanh điều hướng. */}
       <Route path="/waitlist" element={<WaitlistPage />} />
+      <Route path="/candidates/universe" element={<ProtectedUniverseRoute />} />
+      <Route path="/candidate/universe" element={<ProtectedUniverseRoute />} />
 
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />

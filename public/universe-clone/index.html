@@ -1,0 +1,3987 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-------- LANGUAGE --------->
+    <script>
+      // Mặc định luôn là tiếng Việt (vi)
+      try {
+        localStorage.setItem("ximitech.language", "vi");
+      } catch (error) {}
+      document.documentElement.lang = "vi";
+    </script>
+
+    <!-------- SCROLL INTENT + LOADER STATE --------->
+    <script>
+      {
+        // Capture scroll and hash before native restoration.
+        const navigationType = performance.getEntriesByType("navigation")[0]?.type
+        const isReload = navigationType === "reload"
+
+        history.scrollRestoration = isReload ? "manual" : "auto"
+
+        const supportedHashes = [
+          "#hero",
+          "#manifesto",
+          "#parcours",
+          "#toolkit",
+          "#projects",
+          "#contact",
+        ]
+
+        const initialHash = supportedHashes.includes(location.hash) ? location.hash : null
+
+        // Strip the fragment before any element carries that id.
+        if (initialHash) {
+          history.replaceState(null, "", location.pathname + location.search)
+        }
+
+        let homeLoaderShown = false
+        let storedScroll = 0
+        let storedTheme = "cream"
+        let hasIncomingTransition = false
+
+        try {
+          homeLoaderShown = sessionStorage.getItem("homeLoaderShown") === "true"
+          storedScroll = Math.max(0, Number(sessionStorage.getItem("homeScrollOffset")) || 0)
+          storedTheme = sessionStorage.getItem("homeScrollTheme") === "dark" ? "dark" : "cream"
+          hasIncomingTransition = sessionStorage.getItem("pageTransitionPending") === "true"
+        } catch (error) {
+          // Without sessionStorage the default flow still works
+        }
+
+        const initialScroll = isReload && !initialHash ? storedScroll : 0
+
+        window.__homeScrollIntent = {
+          hash: initialHash,
+          offset: initialScroll,
+        }
+
+        const shouldShowHomeLoader = !homeLoaderShown
+        const hasScrollToRestore = initialHash !== null || initialScroll > 0
+
+        // Avoid stacking the restore cover with an incoming transition.
+        const shouldCoverRestore =
+          !shouldShowHomeLoader && hasScrollToRestore && !hasIncomingTransition
+
+        document.documentElement.dataset.homeLoaderState = shouldShowHomeLoader
+          ? "pending"
+          : shouldCoverRestore
+            ? "restoring"
+            : "skipped"
+
+        if (shouldCoverRestore) {
+          document.documentElement.dataset.homeLoaderTheme = storedTheme
+        }
+
+        if (shouldShowHomeLoader) {
+          try {
+            sessionStorage.setItem("homeLoaderShown", "true")
+          } catch (error) {
+            // The loader will simply show again
+          }
+        }
+      }
+    </script>
+
+    <!-------- LINKS --------->
+    <!-- CSS -->
+
+    <!-- JS -->
+
+    <!-- FAV -->
+    <link rel="icon" href="brand/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="brand/apple-touch-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="author" content="FONLIO Team" />
+    <meta
+      name="description"
+      content="FONLIO — Nền tảng Portfolio sống và xác thực năng lực thực chiến dành cho sinh viên. Đăng ký sớm nhận thẻ VIP Genesis."
+      data-i18n-attr="content:home.description"
+    />
+
+    <title data-i18n="home.title">FONLIO — Living Portfolio &amp; Cơ hội việc làm cho sinh viên</title>
+    <link rel="canonical" href="https://lab1.ximitech.vn/" />
+    <meta
+      property="og:title"
+      content="FONLIO — Living Portfolio cho Sinh viên"
+    />
+    <meta
+      property="og:description"
+      content="FONLIO — Nền tảng Portfolio sống và xác thực năng lực thực chiến dành cho sinh viên. Đăng ký sớm nhận thẻ VIP Genesis."
+      data-i18n-attr="content:home.description"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://lab1.ximitech.vn/" />
+    <meta property="og:image" content="/waitlist-clone/brand/logoland4.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Logo 3D FONLIO cùng Living Proof"
+      data-i18n-attr="content:home.imageAlt"
+    />
+    <script type="module" crossorigin src="assets/home-xt2.js?v=20"></script>
+    <link rel="modulepreload" crossorigin href="assets/chunk-Deb1DmFP.js">
+    <link rel="modulepreload" crossorigin href="assets/setupCrossPageTransitions-xt2.js">
+    <link rel="modulepreload" crossorigin href="assets/Observer-C5OqvjuH.js">
+    <link rel="modulepreload" crossorigin href="assets/ScrollTrigger-Or8JzwiZ.js">
+    <link rel="modulepreload" crossorigin href="assets/setupHeaderVisibility-D-FHk4jp.js">
+    <link rel="modulepreload" crossorigin href="assets/three.module-fBMLdKIM.js">
+    <link rel="stylesheet" crossorigin href="assets/setupCrossPageTransitions-D60GSfRM.css">
+    <link rel="stylesheet" crossorigin href="assets/setupHeaderVisibility-fOJvfYOR.css">
+    <link rel="stylesheet" crossorigin href="assets/home-xt2.css?v=14">
+    <link rel="stylesheet" href="assets/fonts-vi.css">
+    <link rel="stylesheet" href="assets/ximitech.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Fredoka:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  
+<style>
+/* FONLIO BRAND HEADER LOGO */
+.site-header__logo.fonlio-header-brand {
+  width: auto !important;
+  height: clamp(38px, 4.2vw, 48px) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  text-decoration: none !important;
+}
+.fonlio-header-wordmark {
+  height: clamp(36px, 3.8vw, 44px) !important;
+  width: auto !important;
+  max-width: 220px !important;
+  object-fit: contain !important;
+  display: block !important;
+  user-select: none !important;
+  filter: drop-shadow(0 0 16px rgba(185, 255, 0, 0.45)) drop-shadow(0 0 36px rgba(45, 212, 191, 0.25)) !important;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease !important;
+}
+.site-header__logo.fonlio-header-brand:hover .fonlio-header-wordmark {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 22px rgba(185, 255, 0, 0.7)) drop-shadow(0 0 44px rgba(45, 212, 191, 0.45)) !important;
+}
+
+/* ==========================================================================
+   FONLIO UNIVERSE FOOTER & LUXURY DIRECTORY DECK
+   ========================================================================== */
+.next-footer {
+  height: auto !important;
+  min-height: calc(75vh - 18px) !important;
+  max-height: none !important;
+  z-index: 10 !important;
+  display: flex !important;
+  align-items: center !important;
+  position: absolute !important;
+  bottom: 18px !important;
+  left: 18px !important;
+  right: 18px !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+}
+
+.next-section__svg {
+  z-index: 1 !important;
+}
+
+.next-footer__background {
+  background-position: center !important;
+  background-size: cover !important;
+  position: absolute !important;
+  inset: 0 !important;
+}
+
+.next-footer__content {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: clamp(36px, 4.5vw, 72px) clamp(24px, 4vw, 64px) !important;
+  align-items: center !important;
+  display: flex !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.next-footer__inner {
+  width: 100% !important;
+  max-width: 1280px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: clamp(36px, 5vw, 72px) !important;
+  flex-wrap: wrap !important;
+}
+
+.next-footer__main {
+  flex: 1 1 480px !important;
+  max-width: 580px !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+  padding: 0 !important;
+}
+
+/* Badge */
+.universe-footer-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 15px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.38) !important;
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: #120e20 !important;
+  width: fit-content !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+}
+
+.universe-footer-badge__dot {
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  box-shadow: 0 0 10px #10b981 !important;
+  display: inline-block !important;
+  animation: fonlioPulseDot 2s infinite ease-in-out !important;
+}
+
+@keyframes fonlioPulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+/* Headline */
+.next-footer__headline {
+  font-family: CabinetGrotesk-Variable, CabinetGrotesk-Bold, sans-serif !important;
+  font-size: clamp(34px, 4vw, 56px) !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.025em !important;
+  margin: 0 !important;
+  color: #120e20 !important;
+  font-weight: 700 !important;
+}
+
+.next-footer__headline span {
+  display: inline !important;
+  white-space: normal !important;
+}
+
+.next-footer__headline-accent {
+  display: inline-block !important;
+  background: linear-gradient(135deg, #120e20 20%, #4a154b 60%, #ff6b4a 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Lead text */
+.next-footer__lead {
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: clamp(14px, 1.05vw, 16px) !important;
+  line-height: 1.65 !important;
+  color: rgba(18, 14, 32, 0.8) !important;
+  max-width: 490px !important;
+  margin: 0 !important;
+  font-weight: 400 !important;
+}
+
+/* Action CTA buttons */
+.next-footer__actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  flex-wrap: wrap !important;
+  margin-top: 4px !important;
+}
+
+.universe-cta-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  padding: 13px 26px !important;
+  border-radius: 999px !important;
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border: none !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+}
+
+.universe-cta-btn--lime {
+  background: #120e20 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 10px 24px -4px rgba(18, 14, 32, 0.35) !important;
+}
+
+.universe-cta-btn--lime svg {
+  color: #b9ff00 !important;
+  fill: #b9ff00 !important;
+}
+
+.universe-cta-btn--lime:hover {
+  background: #231c38 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 14px 28px -4px rgba(18, 14, 32, 0.45) !important;
+}
+
+.universe-cta-btn--lime:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+.universe-cta-btn--shimmer {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.universe-cta-btn--shimmer::after {
+  content: "" !important;
+  position: absolute !important;
+  top: -50% !important;
+  left: -60% !important;
+  width: 40% !important;
+  height: 200% !important;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 100%
+  ) !important;
+  transform: rotate(25deg) !important;
+  pointer-events: none !important;
+  animation: universeBtnLaser 3.2s infinite ease-in-out !important;
+}
+
+@keyframes universeBtnLaser {
+  0%, 40% { left: -60%; }
+  75%, 100% { left: 160%; }
+}
+
+.universe-cta-btn--outline {
+  background: rgba(255, 255, 255, 0.75) !important;
+  color: #120e20 !important;
+  border: 1px solid rgba(18, 14, 32, 0.16) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  box-shadow: 0 4px 14px rgba(18, 14, 32, 0.06) !important;
+}
+
+.universe-cta-btn--outline:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: rgba(18, 14, 32, 0.3) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(18, 14, 32, 0.12) !important;
+}
+
+.universe-cta-btn--outline:active {
+  transform: translateY(0) !important;
+}
+
+/* Footer Meta */
+.next-footer__meta {
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 12.5px !important;
+  color: rgba(18, 14, 32, 0.65) !important;
+  margin-top: 8px !important;
+}
+
+/* ==========================================================================
+   RIGHT DECK: LUXURY FROSTED DIRECTORY
+   ========================================================================== */
+.next-footer__deck {
+  flex: 1 1 440px !important;
+  max-width: 520px !important;
+  min-width: 320px !important;
+  background: rgba(255, 255, 255, 0.32) !important;
+  backdrop-filter: blur(40px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  border-radius: 28px !important;
+  padding: clamp(28px, 3.2vw, 36px) clamp(24px, 3vw, 36px) !important;
+  box-shadow: 0 28px 60px -15px rgba(35, 12, 55, 0.16),
+              0 0 0 1px rgba(255, 255, 255, 0.45) inset,
+              0 10px 30px rgba(255, 255, 255, 0.2) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 24px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease !important;
+}
+
+.next-footer__deck:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 36px 72px -12px rgba(35, 12, 55, 0.22),
+              0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+              0 14px 36px rgba(255, 255, 255, 0.25) !important;
+}
+
+.next-footer__deck::before {
+  content: "" !important;
+  position: absolute !important;
+  top: -60px !important;
+  right: -60px !important;
+  width: 180px !important;
+  height: 180px !important;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0%, transparent 70%) !important;
+  pointer-events: none !important;
+}
+
+.next-footer__columns {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 28px !important;
+}
+
+.next-footer__col {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.next-footer__col-title {
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: rgba(18, 14, 32, 0.55) !important;
+  margin-bottom: 14px !important;
+}
+
+.next-footer__links {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 11px !important;
+}
+
+.next-footer__links li {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.next-footer__links li a {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  text-decoration: none !important;
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #120e20 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative !important;
+}
+
+.next-footer__links li a:hover {
+  color: #ff6b4a !important;
+  transform: translateX(3px) !important;
+}
+
+.next-footer__link-static {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: rgba(18, 14, 32, 0.85) !important;
+}
+
+.next-footer__link-tag {
+  font-family: "Be Vietnam Pro", sans-serif !important;
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  padding: 2px 7px !important;
+  border-radius: 999px !important;
+  background: #b9ff00 !important;
+  color: #121111 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.3 !important;
+}
+
+.next-footer__link-tag--green {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Bottom contact & socials inside deck */
+.next-footer__deck-contact {
+  padding-top: 18px !important;
+  border-top: 1px solid rgba(18, 14, 32, 0.12) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  flex-wrap: wrap !important;
+}
+
+.next-footer__deck-items {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.next-footer__deck-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #120e20 !important;
+  text-decoration: none !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.next-footer__deck-item svg {
+  color: #120e20 !important;
+  opacity: 0.8 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.next-footer__deck-item:hover {
+  color: #ff6b4a !important;
+  transform: translateY(-1px) !important;
+}
+
+.next-footer__deck-item:hover svg {
+  color: #ff6b4a !important;
+  opacity: 1 !important;
+  transform: scale(1.12) !important;
+}
+
+.next-footer__deck-sep {
+  color: rgba(18, 14, 32, 0.3) !important;
+  font-size: 11px !important;
+  user-select: none !important;
+}
+
+.next-footer__deck-socials {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.next-footer__deck-socials .np-footer-social-btn {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  color: #120e20 !important;
+  border: 1px solid rgba(18, 14, 32, 0.1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-decoration: none !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 2px 8px rgba(18, 14, 32, 0.05) !important;
+  flex-shrink: 0 !important;
+}
+
+.next-footer__deck-socials .np-footer-social-btn:hover {
+  background: #120e20 !important;
+  color: #ffffff !important;
+  border-color: #120e20 !important;
+  transform: translateY(-2px) scale(1.06) !important;
+  box-shadow: 0 6px 16px rgba(18, 14, 32, 0.15) !important;
+}
+
+@media (max-width: 960px) {
+  .next-footer {
+    height: auto !important;
+    min-height: 85vh !important;
+    position: relative !important;
+  }
+  .next-footer__inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 36px !important;
+  }
+  .next-footer__main {
+    max-width: 100% !important;
+  }
+  .next-footer__deck {
+    max-width: 100% !important;
+  }
+}
+
+/* ==========================================================================
+   UNIVERSE STORY WRAPPED MODAL
+   ========================================================================== */
+.universe-wrapped-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 100000 !important;
+  background: #090808 !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  user-select: none !important;
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  opacity: 0 !important;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.universe-wrapped-backdrop.is-open {
+  display: flex !important;
+  opacity: 1 !important;
+}
+
+.universe-wrapped-aura {
+  position: absolute !important;
+  inset: 0 !important;
+  background: 
+    radial-gradient(circle at 18% 18%, rgba(255, 107, 74, 0.28) 0%, transparent 48%),
+    radial-gradient(circle at 82% 25%, rgba(155, 124, 255, 0.32) 0%, transparent 52%),
+    radial-gradient(circle at 50% 88%, rgba(185, 255, 0, 0.18) 0%, transparent 58%),
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.1) 0%, transparent 60%),
+    #0a0808 !important;
+  pointer-events: none !important;
+}
+
+.universe-wrapped-card {
+  width: 100% !important;
+  max-width: 460px !important;
+  height: 100% !important;
+  max-height: 840px !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: 10 !important;
+  background: rgba(18, 16, 16, 0.92) !important;
+  backdrop-filter: blur(40px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(190%) !important;
+  border: 1px solid rgba(245, 231, 223, 0.18) !important;
+  border-radius: 32px !important;
+  overflow: hidden !important;
+  box-shadow: 0 32px 90px -10px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(245, 231, 223, 0.12) inset, 0 0 50px rgba(185, 255, 0, 0.14) !important;
+}
+
+.universe-wrapped-bars {
+  position: absolute !important;
+  top: 18px !important;
+  left: 18px !important;
+  right: 18px !important;
+  display: flex !important;
+  gap: 6px !important;
+  z-index: 30 !important;
+}
+
+.universe-wrapped-bar {
+  flex: 1 !important;
+  height: 3.5px !important;
+  background: rgba(245, 231, 223, 0.18) !important;
+  border-radius: 99px !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+}
+
+.universe-wrapped-bar-fill {
+  height: 100% !important;
+  width: 0% !important;
+  background: #b9ff00 !important;
+  box-shadow: 0 0 12px #b9ff00 !important;
+  transition: width 0.05s linear !important;
+}
+
+.universe-wrapped-header {
+  position: absolute !important;
+  top: 30px !important;
+  left: 20px !important;
+  right: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  z-index: 30 !important;
+}
+
+.universe-wrapped-user {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.universe-wrapped-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: #1e1b1b !important;
+  border: 1.5px solid #b9ff00 !important;
+  color: #f5e7df !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+}
+
+.universe-wrapped-name {
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  color: #f5e7df !important;
+  line-height: 1.2 !important;
+}
+
+.universe-wrapped-tag {
+  font-size: 0.72rem !important;
+  color: #b9ff00 !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+}
+
+.universe-wrapped-controls {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.universe-wrapped-ctrl-btn {
+  background: rgba(245, 231, 223, 0.08) !important;
+  border: 1px solid rgba(245, 231, 223, 0.16) !important;
+  color: #f5e7df !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: background 0.2s !important;
+}
+
+.universe-wrapped-ctrl-btn:hover {
+  background: rgba(245, 231, 223, 0.18) !important;
+}
+
+.universe-wrapped-tap-left {
+  position: absolute !important;
+  left: 0 !important;
+  top: 70px !important;
+  bottom: 70px !important;
+  width: 35% !important;
+  z-index: 20 !important;
+  cursor: pointer !important;
+}
+
+.universe-wrapped-tap-right {
+  position: absolute !important;
+  right: 0 !important;
+  top: 70px !important;
+  bottom: 70px !important;
+  width: 35% !important;
+  z-index: 20 !important;
+  cursor: pointer !important;
+}
+
+.universe-wrapped-body {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  padding: 70px 32px 32px !important;
+  text-align: center !important;
+  position: relative !important;
+  z-index: 15 !important;
+}
+
+.universe-wrapped-slide {
+  display: none !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 18px !important;
+  animation: npWrappedPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.universe-wrapped-slide.is-active {
+  display: flex !important;
+}
+
+.universe-wrapped-orb {
+  width: 104px !important;
+  height: 104px !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 35% 30%, #b9ff00 0%, #ff6b4a 60%, #9b7cff 100%) !important;
+  box-shadow: 0 0 50px rgba(185, 255, 0, 0.5), 0 0 80px rgba(255, 107, 74, 0.35) !important;
+  animation: npGlowLime 2.6s infinite ease-in-out !important;
+  margin-bottom: 6px !important;
+}
+
+.universe-wrapped-badge {
+  font-size: 0.76rem !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  font-weight: 800 !important;
+  padding: 5px 14px !important;
+  border-radius: 999px !important;
+}
+
+.universe-wrapped-badge--lime {
+  color: #b9ff00 !important;
+  background: rgba(185, 255, 0, 0.1) !important;
+  border: 1px solid rgba(185, 255, 0, 0.3) !important;
+}
+
+.universe-wrapped-badge--violet {
+  color: #9b7cff !important;
+  background: rgba(155, 124, 255, 0.12) !important;
+  border: 1px solid rgba(155, 124, 255, 0.3) !important;
+}
+
+.universe-wrapped-badge--coral {
+  color: #ff6b4a !important;
+  background: rgba(255, 107, 74, 0.12) !important;
+  border: 1px solid rgba(255, 107, 74, 0.3) !important;
+}
+
+.universe-wrapped-title {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  font-size: 2.25rem !important;
+  font-weight: 800 !important;
+  color: #f5e7df !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
+  letter-spacing: -0.03em !important;
+}
+
+.universe-wrapped-subtitle {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  font-size: 1.95rem !important;
+  font-weight: 800 !important;
+  color: #f5e7df !important;
+  margin: 0 !important;
+  letter-spacing: -0.025em !important;
+}
+
+.universe-wrapped-desc {
+  color: rgba(245, 231, 223, 0.72) !important;
+  font-size: 0.96rem !important;
+  line-height: 1.65 !important;
+  max-width: 340px !important;
+  margin: 0 !important;
+}
+
+.universe-wrapped-start-btn {
+  font-size: 0.84rem !important;
+  color: #121111 !important;
+  font-weight: 800 !important;
+  margin-top: 10px !important;
+  padding: 10px 22px !important;
+  border-radius: 999px !important;
+  background: #b9ff00 !important;
+  border: none !important;
+  box-shadow: 0 10px 26px -4px rgba(185, 255, 0, 0.55) !important;
+  cursor: pointer !important;
+  transition: transform 0.2s, background 0.2s !important;
+}
+
+.universe-wrapped-start-btn:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  background: #c6ff1a !important;
+}
+
+.universe-wrapped-counter {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  font-size: 5.6rem !important;
+  font-weight: 900 !important;
+  color: #b9ff00 !important;
+  line-height: 1 !important;
+  text-shadow: 0 0 45px rgba(185, 255, 0, 0.65) !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -0.04em !important;
+}
+
+.universe-wrapped-counter-label {
+  font-size: 1.05rem !important;
+  color: #f5e7df !important;
+  font-weight: 700 !important;
+}
+
+.universe-wrapped-stats-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+  width: 100% !important;
+  margin-top: 8px !important;
+}
+
+.universe-wrapped-stat-card {
+  padding: 16px !important;
+  border-radius: 20px !important;
+  background: rgba(28, 25, 25, 0.75) !important;
+  border: 1px solid rgba(245, 231, 223, 0.14) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.universe-wrapped-stat-label {
+  font-size: 0.72rem !important;
+  color: rgba(245, 231, 223, 0.6) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.universe-wrapped-stat-val {
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  margin-top: 6px !important;
+}
+
+.universe-wrapped-stat-val--coral {
+  color: #ff6b4a !important;
+}
+
+.universe-wrapped-stat-val--lime {
+  color: #b9ff00 !important;
+}
+
+.universe-wrapped-star-card {
+  width: 100% !important;
+  padding: 24px 22px !important;
+  border-radius: 24px !important;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 107, 74, 0.18) 0%, rgba(24, 21, 21, 0.95) 85%) !important;
+  border: 1px solid rgba(255, 107, 74, 0.35) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), 0 0 35px rgba(255, 107, 74, 0.18) !important;
+  box-sizing: border-box !important;
+}
+
+.universe-wrapped-star-title {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  color: #f5e7df !important;
+  margin-bottom: 6px !important;
+}
+
+.universe-wrapped-star-org {
+  font-size: 0.92rem !important;
+  color: #9b7cff !important;
+  font-weight: 700 !important;
+  margin-bottom: 14px !important;
+}
+
+.universe-wrapped-star-desc {
+  font-size: 0.88rem !important;
+  color: rgba(245, 231, 223, 0.75) !important;
+  line-height: 1.65 !important;
+  margin: 0 0 18px !important;
+}
+
+.universe-wrapped-star-tags {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.universe-wrapped-star-tag {
+  padding: 6px 14px !important;
+  border-radius: 999px !important;
+  font-size: 0.8rem !important;
+  font-weight: 800 !important;
+}
+
+.universe-wrapped-star-tag--coral {
+  background: rgba(255, 107, 74, 0.18) !important;
+  border: 1px solid rgba(255, 107, 74, 0.35) !important;
+  color: #ff6b4a !important;
+}
+
+.universe-wrapped-star-tag--green {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #10b981 !important;
+}
+
+.universe-wrapped-chips {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  margin-top: 10px !important;
+}
+
+.universe-wrapped-chip {
+  padding: 11px 20px !important;
+  border-radius: 16px !important;
+  background: rgba(155, 124, 255, 0.12) !important;
+  border: 1px solid rgba(155, 124, 255, 0.32) !important;
+  color: #f5e7df !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  box-shadow: 0 6px 20px rgba(155, 124, 255, 0.1) !important;
+}
+
+.universe-wrapped-archetype-title {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  font-size: 2.15rem !important;
+  font-weight: 900 !important;
+  color: #f5e7df !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.03em !important;
+  text-shadow: 0 0 35px rgba(45, 212, 191, 0.6) !important;
+  margin: 0 !important;
+}
+
+.universe-wrapped-archetype-sub {
+  font-size: 0.95rem !important;
+  color: #2dd4bf !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+}
+
+.universe-wrapped-archetype-ring {
+  width: 78px !important;
+  height: 78px !important;
+  border-radius: 50% !important;
+  border: 2px dashed #2dd4bf !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 8px 0 !important;
+  box-shadow: 0 0 30px rgba(45, 212, 191, 0.3) !important;
+}
+
+.universe-wrapped-vip-card {
+  width: 100% !important;
+  padding: 24px 20px !important;
+  border-radius: 24px !important;
+  background: linear-gradient(145deg, #221f1f 0%, #131111 100%) !important;
+  border: 1px solid rgba(185, 255, 0, 0.45) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(185, 255, 0, 0.22) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 12px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.universe-wrapped-vip-avatar {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 50% !important;
+  background: #2a2525 !important;
+  border: 2px solid #b9ff00 !important;
+  color: #f5e7df !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 22px !important;
+  font-weight: 800 !important;
+}
+
+.universe-wrapped-vip-name {
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  color: #f5e7df !important;
+  letter-spacing: -0.01em !important;
+}
+
+.universe-wrapped-vip-role {
+  font-size: 0.82rem !important;
+  color: #b9ff00 !important;
+  font-weight: 800 !important;
+}
+
+.universe-wrapped-vip-stats {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 8px !important;
+  width: 100% !important;
+  background: rgba(32, 28, 28, 0.8) !important;
+  padding: 12px !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(245, 231, 223, 0.1) !important;
+  box-sizing: border-box !important;
+}
+
+.universe-wrapped-vip-stat-lbl {
+  font-size: 0.7rem !important;
+  color: rgba(245, 231, 223, 0.55) !important;
+  font-weight: 700 !important;
+}
+
+.universe-wrapped-vip-stat-num {
+  font-size: 1.2rem !important;
+  font-weight: 900 !important;
+}
+
+.universe-wrapped-vip-stat-num--lime { color: #b9ff00 !important; }
+.universe-wrapped-vip-stat-num--teal { color: #2dd4bf !important; }
+.universe-wrapped-vip-stat-num--coral { color: #ff6b4a !important; }
+
+.universe-wrapped-vip-slug {
+  font-size: 0.76rem !important;
+  color: rgba(245, 231, 223, 0.5) !important;
+  font-weight: 600 !important;
+}
+
+.universe-wrapped-share-actions {
+  display: flex !important;
+  gap: 10px !important;
+  width: 100% !important;
+  margin-top: 6px !important;
+}
+
+.universe-wrapped-share-btn {
+  flex: 1 !important;
+  padding: 13px 16px !important;
+  border-radius: 14px !important;
+  background: #b9ff00 !important;
+  color: #121111 !important;
+  border: none !important;
+  font-weight: 800 !important;
+  font-size: 0.88rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 6px 20px rgba(185, 255, 0, 0.35) !important;
+}
+
+.universe-wrapped-share-btn:hover {
+  background: #c6ff1a !important;
+  transform: translateY(-1px) !important;
+}
+
+.universe-wrapped-close-btn {
+  padding: 13px 18px !important;
+  border-radius: 14px !important;
+  background: rgba(245, 231, 223, 0.08) !important;
+  color: #f5e7df !important;
+  border: 1px solid rgba(245, 231, 223, 0.18) !important;
+  font-weight: 700 !important;
+  font-size: 0.88rem !important;
+  cursor: pointer !important;
+  transition: background 0.2s !important;
+}
+
+.universe-wrapped-close-btn:hover {
+  background: rgba(245, 231, 223, 0.18) !important;
+}
+
+.universe-wrapped-footer {
+  padding: 14px 22px !important;
+  border-top: 1px solid rgba(245, 231, 223, 0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  z-index: 30 !important;
+  font-size: 0.82rem !important;
+  color: rgba(245, 231, 223, 0.6) !important;
+  font-weight: 600 !important;
+}
+
+.universe-wrapped-nav-btn {
+  background: none !important;
+  border: none !important;
+  color: #f5e7df !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  padding: 4px 8px !important;
+  transition: color 0.2s !important;
+}
+
+.universe-wrapped-nav-btn:hover {
+  color: #b9ff00 !important;
+}
+
+.universe-wrapped-nav-btn--next {
+  color: #b9ff00 !important;
+  font-weight: 800 !important;
+}
+
+/* ==========================================================================
+   FONLIO DARK THEME & USER CUSTOMIZATIONS
+   ========================================================================== */
+:root {
+  --color-dark: #070a0f !important;
+  --color-cream: #070a0f !important;
+  --color-accent: #b9ff00 !important;
+  --color-accent-soft: #0e141d !important;
+  --lab-bg: #070a0f !important;
+}
+
+body {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+
+/* 1. HIDE IMAGE 1 ELEMENTS */
+.lab-badge,
+.sound-toggle {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+/* 2. HIDE IMAGE 5 ELEMENT */
+.next-section__playground-link,
+.playground-link {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+/* 3. HARD REFRESH INTRO FONLIO LOGO */
+.ximi-intro {
+  background: #070a0f !important;
+}
+.ximi-intro__glow {
+  background: radial-gradient(circle, rgba(185, 255, 0, 0.28) 0%, rgba(45, 212, 191, 0.12) 40%, rgba(7, 10, 15, 0) 70%) !important;
+}
+.ximi-intro__logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+}
+.ximi-intro__brand-logo {
+  width: clamp(180px, 24vw, 300px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 24px rgba(185, 255, 0, 0.85)) drop-shadow(0 0 55px rgba(45, 212, 191, 0.45));
+  animation: fonlio-intro-pulse 1.4s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+}
+@keyframes fonlio-intro-pulse {
+  0% { transform: scale(0.96); filter: drop-shadow(0 0 18px rgba(185, 255, 0, 0.6)) drop-shadow(0 0 35px rgba(45, 212, 191, 0.3)); }
+  100% { transform: scale(1.04); filter: drop-shadow(0 0 30px rgba(185, 255, 0, 0.95)) drop-shadow(0 0 65px rgba(45, 212, 191, 0.6)); }
+}
+.ximi-intro__word {
+  color: #ffffff !important;
+  letter-spacing: 0.2em !important;
+  font-family: CabinetGrotesk-Variable, sans-serif !important;
+  font-weight: 800 !important;
+}
+.ximi-intro__tagline {
+  color: #34d399 !important;
+  letter-spacing: 0.12em !important;
+  font-size: 13px !important;
+  text-transform: uppercase !important;
+}
+
+/* 4. IMAGE 2: HEADING WORDMARK & BRAND LETTERS STYLING */
+.fonlio-heading-wordmark,
+.fonlio-brand-letter,
+.trajectory .title .fonlio-brand-letter,
+.trajectory .title x-w.fonlio-brand-word .letter,
+x-w.fonlio-brand-word .letter {
+  font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em !important;
+  text-transform: uppercase !important;
+  color: #b9ff00 !important;
+  text-shadow: 0 0 24px rgba(185, 255, 0, 0.7), 0 0 45px rgba(45, 212, 191, 0.4) !important;
+  display: inline-block !important;
+}
+
+/* 5. IMAGE 3: TRAJECTORY DIALOGUE LOGO */
+.fonlio-dialogue-logo {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.fonlio-trajectory-logo-img {
+  height: clamp(54px, 7.5vw, 96px) !important;
+  width: auto !important;
+  max-width: 85vw !important;
+  object-fit: contain !important;
+  vertical-align: middle !important;
+  filter: drop-shadow(0 0 22px rgba(185, 255, 0, 0.8)) drop-shadow(0 0 48px rgba(45, 212, 191, 0.4)) !important;
+}
+
+/* 6. DARK THEME SECTIONS */
+.manifesto {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.manifesto .text {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+.trajectory {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.trajectory {
+  margin-top: clamp(-500px, -55svh, -450px) !important;
+  position: relative !important;
+  z-index: 2 !important;
+  border-radius: 32px 32px 0 0 !important;
+}
+.trajectory .entry .title {
+  color: #ffffff !important;
+}
+/* Editorial 2-Tier Typography for Trajectory */
+.trajectory .title.trajectory-editorial {
+  font-size: unset !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+.trajectory-editorial .trajectory-title__motion {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: clamp(14px, 2.5vw, 32px) !important;
+  width: 100% !important;
+}
+.trajectory-editorial__sub {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif !important;
+  font-size: clamp(16px, 2.4vw, 32px) !important;
+  font-weight: 600 !important;
+  letter-spacing: clamp(0.12em, 0.22vw, 0.24em) !important;
+  text-transform: uppercase !important;
+  color: rgba(245, 231, 223, 0.72) !important;
+  display: inline-block !important;
+  white-space: nowrap !important;
+  text-shadow: 0 0 20px rgba(245, 231, 223, 0.25) !important;
+}
+.trajectory-editorial__sub .letter,
+.trajectory-editorial__sub x-w .letter {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif !important;
+  font-weight: 600 !important;
+  color: rgba(245, 231, 223, 0.75) !important;
+  display: inline-block !important;
+  letter-spacing: inherit !important;
+}
+.trajectory-editorial__main {
+  font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif !important;
+  font-size: clamp(48px, 8.8vw, 118px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.015em !important;
+  text-transform: uppercase !important;
+  line-height: 0.95 !important;
+  display: inline-block !important;
+  white-space: nowrap !important;
+  color: #b9ff00 !important;
+  text-shadow: 0 0 28px rgba(185, 255, 0, 0.75), 0 0 60px rgba(45, 212, 191, 0.45) !important;
+}
+.trajectory-editorial__main .letter,
+.trajectory-editorial__main x-w .letter {
+  font-family: 'Fredoka', 'Baloo 2', cursive, sans-serif !important;
+  font-weight: 800 !important;
+  color: #b9ff00 !important;
+  text-shadow: 0 0 28px rgba(185, 255, 0, 0.75), 0 0 60px rgba(45, 212, 191, 0.45) !important;
+  display: inline-block !important;
+}
+.trajectory-sentences__pin-height {
+  height: 380vh !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .trajectory-sentences__pin-height {
+    height: 360vh !important;
+  }
+}
+.trajectory-sentences__container {
+  background-color: #070a0f !important;
+}
+.trajectory-sentences__sentence {
+  color: #ffffff !important;
+}
+/* TOOLKIT SECTION - DARK THEME & HIGH CONTRAST */
+.toolkit,
+.toolkit__container {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.toolkit__header {
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+html:lang(vi) .toolkit__title,
+.toolkit__title {
+  color: #ffffff !important;
+  font-family: 'Be Vietnam Pro', Arial, sans-serif !important;
+  font-size: max(48px, 6vw) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.toolkit__subtitle-wrap {
+  height: 3.2em !important;
+  margin-top: 1.5vh !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+html:lang(vi) .toolkit__subtitle,
+.toolkit__subtitle,
+.toolkit__subtitle--front,
+.toolkit__subtitle--art {
+  color: #b9ff00 !important;
+  font-family: 'Be Vietnam Pro', Arial, sans-serif !important;
+  font-size: max(20px, 2vw) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+}
+.projects {
+  background-color: #070a0f !important;
+}
+.projects__container {
+  background-color: #0a0e16 !important;
+  color: #ffffff !important;
+  border-top: 1px solid rgba(185, 255, 0, 0.12) !important;
+  border-bottom: 1px solid rgba(185, 255, 0, 0.12) !important;
+}
+.projects__title {
+  color: #ffffff !important;
+}
+.projects__link {
+  color: rgba(255, 255, 255, 0.76) !important;
+  transition: color 0.3s ease, text-shadow 0.3s ease !important;
+}
+.projects__link:hover {
+  color: #b9ff00 !important;
+  text-shadow: 0 0 20px rgba(185, 255, 0, 0.6) !important;
+}
+.next-section {
+  background-color: #070a0f !important;
+  color: #ffffff !important;
+}
+.next-section__container {
+  background-color: #070a0f !important;
+}
+.next-section__intro {
+  color: #ffffff !important;
+}
+.next-section__text {
+  fill: #ffffff !important;
+  font-family: 'Be Vietnam Pro', CabinetGrotesk-Variable, sans-serif !important;
+}
+#nextTextCream {
+  fill: #ffffff !important;
+}
+#nextTextGradientPart {
+  fill: url(#nextTextGradient) !important;
+}
+
+/* ==========================================================================
+   UNIVERSE CUSTOMIZATIONS: VŨ TRỤ KÝ ỨC & HỒ SƠ NĂNG LỰC
+   ========================================================================== */
+.universe-back-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #f5e7df;
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.universe-back-home-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(185, 255, 0, 0.5);
+  color: #b9ff00;
+  transform: translateX(-3px);
+  box-shadow: 0 6px 20px rgba(185, 255, 0, 0.25);
+}
+.universe-back-home-btn svg {
+  transition: transform 0.25s ease;
+}
+.universe-back-home-btn:hover svg {
+  transform: translateX(-2px);
+}
+
+.universe-back-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #f5e7df;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+.universe-back-btn:hover {
+  background: rgba(185, 255, 0, 0.2);
+  border-color: #b9ff00;
+  color: #b9ff00;
+  transform: translateX(-3px);
+}
+
+.site-header {
+  pointer-events: none !important;
+}
+
+.site-header__left,
+.site-header__nav,
+.site-header__right {
+  pointer-events: auto !important;
+}
+
+@media (min-width: 700px) {
+  .site-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    align-items: center !important;
+  }
+  .site-header__left {
+    grid-column: 1 !important;
+    justify-self: start !important;
+  }
+  .site-header__nav {
+    grid-column: 2 !important;
+    justify-self: center !important;
+  }
+  .site-header__right {
+    grid-column: 3 !important;
+    justify-self: end !important;
+  }
+}
+
+@media (max-width: 960px) {
+  .universe-user-badge {
+    display: none !important;
+  }
+  .universe-header-tag {
+    display: none !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .site-header__right {
+    display: none !important;
+  }
+  .universe-back-home-btn span {
+    display: none !important;
+  }
+  .universe-back-home-btn {
+    padding: 8px !important;
+    border-radius: 50% !important;
+    width: 38px !important;
+    height: 38px !important;
+    justify-content: center !important;
+  }
+}
+
+.universe-header-tag {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b9ff00;
+  background: rgba(185, 255, 0, 0.12);
+  border: 1px solid rgba(185, 255, 0, 0.3);
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.universe-header-cta {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #b9ff00;
+  border: none;
+  color: #0b1e19;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(185, 255, 0, 0.4);
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  white-space: nowrap;
+}
+.universe-header-cta:hover {
+  background: #ffffff;
+  color: #000000;
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
+}
+
+/* HERO CENTERPIECE OVERLAY */
+.universe-hero-centerpiece {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  width: 90%;
+  max-width: 980px;
+  text-align: center;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.universe-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: rgba(185, 255, 0, 0.1);
+  border: 1px solid rgba(185, 255, 0, 0.35);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #b9ff00;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 0 24px rgba(185, 255, 0, 0.25);
+  pointer-events: auto;
+}
+.universe-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #b9ff00;
+  box-shadow: 0 0 10px #b9ff00;
+  animation: universeDotPulse 1.8s ease-in-out infinite;
+}
+@keyframes universeDotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+.universe-hero-title {
+  font-family: 'Be Vietnam Pro', 'CabinetGrotesk-Variable', sans-serif;
+  font-size: clamp(30px, 4.8vw, 64px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 10px 40px rgba(0, 0, 0, 0.85);
+  pointer-events: auto;
+}
+
+.universe-hero-subtitle {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: clamp(14px, 1.35vw, 17px);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 660px;
+  margin: 0;
+  pointer-events: auto;
+}
+
+.universe-hero-pills {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  pointer-events: auto;
+}
+.universe-hero-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #ffffff;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+.universe-hero-pill--active {
+  background: rgba(52, 211, 153, 0.14);
+  border-color: rgba(52, 211, 153, 0.45);
+  color: #34d399;
+}
+.universe-pill-val {
+  font-weight: 800;
+  font-size: 14px;
+  color: #b9ff00;
+}
+.universe-hero-pill--active .universe-pill-val {
+  color: #34d399;
+}
+.universe-pill-lbl {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
+}
+
+/* FOOTER CTA BUTTON STYLES */
+.universe-cta-btn {
+  height: 46px;
+  padding: 0 24px;
+  border-radius: 999px;
+  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+.universe-cta-btn--lime {
+  background: #b9ff00;
+  border: none;
+  color: #051a15;
+  box-shadow: 0 6px 20px rgba(185, 255, 0, 0.35);
+}
+.universe-cta-btn--lime:hover {
+  background: #ffffff;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(255, 255, 255, 0.5);
+}
+.universe-cta-btn--outline {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  color: #120e20;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 4px 16px rgba(35, 12, 55, 0.08);
+}
+.universe-cta-btn--outline:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: #ffffff;
+  color: #000000;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(35, 12, 55, 0.16);
+}
+
+/* ==========================================================================
+   SINGLE-WHEEL SYSTEM & POSITIONING ELEVATION (OPTION 1)
+   Eliminate empty 2nd deck, eliminate empty black void, center candidate cards
+   ========================================================================== */
+.toolkit__pin-height {
+  height: 280vh !important;
+}
+.toolkit__header {
+  top: 10vh !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+.toolkit__subtitle-wrap {
+  height: 3.2em !important;
+  margin-top: 1.5vh !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+.toolkit__subtitle--art {
+  display: none !important;
+}
+.toolkit__wheel--art-direction {
+  display: none !important;
+}
+.toolkit__wheel {
+  top: 48vh !important;
+}
+.toolkit__wheel--frontend::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50vw;
+  height: 50vw;
+  max-width: 600px;
+  max-height: 600px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.14) 0%, rgba(185, 255, 0, 0.06) 40%, transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+}
+.toolkit__slot--zoom {
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 1000;
+}
+.toolkit__slot--zoom.is-visible {
+  visibility: visible !important;
+}
+@media (width >= 1025px) {
+  .toolkit__header {
+    top: 9vh !important;
+  }
+  .toolkit__wheel {
+    top: 48vh !important;
+  }
+}
+@media (width >= 601px) and (height <= 1000px) {
+  .toolkit__header {
+    top: 8vh !important;
+  }
+  .toolkit__wheel {
+    top: 46vh !important;
+  }
+}
+@media (max-width: 600px) {
+  .toolkit__header {
+    top: 6svh !important;
+  }
+  .toolkit__wheel {
+    top: 46svh !important;
+  }
+}
+
+/* ==========================================================================
+   ICONIC TOOLKIT CARDS & CANDIDATE REAL PROOF SYSTEM
+   ========================================================================== */
+.toolkit-card {
+  aspect-ratio: 295 / 417;
+  will-change: transform;
+  cursor: default;
+  pointer-events: none;
+  width: clamp(180px, 18vw, 295px);
+  margin: 0 auto;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), filter 0.28s ease;
+  position: relative;
+  transform: translateY(-50%);
+}
+
+/* Ambient Backlight Halo Glow on Hover */
+.toolkit-card::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 26px;
+  background: var(--card-glow, rgba(56, 189, 248, 0.45));
+  filter: blur(28px);
+  opacity: 0;
+  z-index: 0;
+  transform: scale(0.92);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.toolkit__wheel.is-interactive .toolkit-card {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+@media (any-hover: hover) and (any-pointer: fine) {
+  .toolkit__wheel.is-interactive .toolkit-card:hover {
+    transform: translateY(-56%) scale(1.055);
+    filter: drop-shadow(0 24px 44px rgba(0, 0, 0, 0.85));
+  }
+  .toolkit__wheel.is-interactive .toolkit-card:hover::before {
+    opacity: 0.72;
+    transform: scale(1.04);
+  }
+}
+
+.toolkit-card__motion {
+  will-change: transform;
+  border-radius: 22.6px;
+}
+
+.toolkit-card img,
+.toolkit-card svg {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  display: block;
+  position: absolute;
+  inset: 0;
+  border-radius: 22.6px;
+  z-index: 1;
+}
+
+/* Luxury Verified Foil Stamp on Card Face */
+.card-verified-tag {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+}
+
+.toolkit-card:hover .card-verified-tag {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
+  transform: scale(1.04);
+}
+
+.card-verified-sparkle {
+  font-size: 8.5px;
+  color: #FACC15;
+}
+
+
+/* ==========================================================================
+   PROJECTS SECTION: REFINED ALIGNMENT & ZERO COLLISION
+   ========================================================================== */
+.projects__title {
+  font-size: clamp(32px, 4.2vw, 56px) !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  top: 9vh !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  letter-spacing: -0.02em !important;
+}
+
+.projects {
+  display: none !important;
+}
+
+</style>
+
+</head>
+  <body>
+    <!-------- HOME LOADER -------->
+    <div
+      class="home-loader"
+      role="status"
+      aria-label="Đang tải trang"
+      data-i18n-attr="aria-label:home.loaderLabel"
+    >
+      <canvas class="home-loader__canvas" aria-hidden="true"></canvas>
+    </div>
+
+    <!-------- INTRO XIMITECH (chỉ lần mở đầu tiên trong phiên) -------->
+    <div class="ximi-intro" aria-hidden="true" hidden>
+      <div class="ximi-intro__glow"></div>
+      <div class="ximi-intro__center">
+        <div class="ximi-intro__logo-wrap">
+          <img src="/waitlist-clone/brand/logoland4.png" alt="FONLIO" class="ximi-intro__brand-logo" />
+        </div>
+      </div>
+      <div class="ximi-intro__meta">
+        <span class="ximi-intro__count">000</span>
+        <span class="ximi-intro__line"><span></span></span>
+        <span>fonlio.vn</span>
+      </div>
+    </div>
+    <script>
+      {
+        // Intro chạy trước loader gốc. Bundle chờ window.__ximiIntro rồi mới
+        // lộ logo và hero, nên hai hiệu ứng nối tiếp chứ không chồng nhau.
+        const intro = document.querySelector(".ximi-intro")
+        const firstVisit = document.documentElement.dataset.homeLoaderState === "pending"
+        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+        if (intro && firstVisit && !reduce) {
+          intro.hidden = false
+          const count = intro.querySelector(".ximi-intro__count")
+          const total = 2300
+          const start = performance.now()
+
+          window.__ximiIntro = new Promise((resolve) => {
+            const tick = (now) => {
+              const t = Math.min((now - start) / total, 1)
+              const eased = 1 - Math.pow(1 - t, 3)
+              count.textContent = String(Math.round(eased * 100)).padStart(3, "0")
+              if (t < 1) return requestAnimationFrame(tick)
+
+              intro.classList.add("is-leaving")
+              setTimeout(() => {
+                intro.remove()
+                resolve()
+              }, 950)
+            }
+            requestAnimationFrame(tick)
+          })
+        } else if (intro) {
+          intro.remove()
+        }
+      }
+    </script>
+
+    <!-------- TRANSITION -------->
+    <script>
+      if (sessionStorage.getItem("pageTransitionPending") === "true") {
+        const storedColor = sessionStorage.getItem("pageTransitionColor")
+        const color = storedColor === "dark" ? "dark" : "cream"
+
+        const transition = document.createElement("div")
+
+        transition.classList.add("page-transition", `page-transition--${color}`)
+
+        transition.setAttribute("aria-hidden", "true")
+        document.body.prepend(transition)
+      }
+    </script>
+
+    <header class="site-header">
+      <div class="site-header__left" style="display: flex; align-items: center; gap: 12px; pointer-events: auto;">
+        <button
+          type="button"
+          class="universe-back-home-btn"
+          onclick="window.goBackHome()"
+          title="Về trang chủ"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Trang chủ</span>
+        </button>
+        <a
+          class="site-header__logo fonlio-header-brand"
+          href="#hero"
+          aria-label="Về đầu trang"
+        >
+          <img
+            src="/waitlist-clone/brand/logoland4.png"
+            alt="fonlio:"
+            class="fonlio-header-wordmark"
+          />
+        </a>
+      </div>
+
+      <nav class="site-header__nav" aria-label="Điều hướng chính">
+        <a class="site-header__link site-header__link--secondary" href="#parcours">hành trình</a>
+        <a class="site-header__link site-header__link--secondary" href="#toolkit">triển lãm ký ức</a>
+        <a class="site-header__link" href="#contact">hồ sơ năng lực</a>
+      </nav>
+
+      <div class="site-header__right"></div>
+    </header>
+
+    <nav
+      class="scroll-indicator"
+      aria-label="Điều hướng giữa các phần"
+      data-i18n-attr="aria-label:home.sectionNavigationLabel"
+    >
+      <a
+        class="scroll-indicator__item is-active"
+        href="index.html#hero"
+        aria-label="Hero"
+        aria-current="location"
+      >
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+
+      <a
+        class="scroll-indicator__item"
+        href="index.html#parcours"
+        aria-label="Quy trình"
+        data-i18n-attr="aria-label:home.navigationJourney"
+      >
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+
+      <a class="scroll-indicator__item" href="index.html#toolkit" aria-label="Toolkit">
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+
+      <a
+        class="scroll-indicator__item"
+        href="index.html#contact"
+        aria-label="Liên hệ và chân trang"
+        data-i18n-attr="aria-label:home.navigationNext"
+      >
+        <span class="scroll-indicator__bar" aria-hidden="true"></span>
+      </a>
+    </nav>
+
+    <!-------- SOUND TOGGLE (REMOVED) -------->
+    <script src="assets/ximitech-sound.js" defer></script>
+
+    <main>
+      <!-------- HERO SECTION -------->
+      <section class="hero-three" id="hero">
+        <div class="hero-three__frame">
+          <canvas class="webgl" aria-hidden="true"></canvas>
+        </div>
+
+        <div class="hero-content">
+          <h1 class="visually-hidden">
+            FONLIO — Living Portfolio cho Sinh viên
+          </h1>
+
+          <div style="position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 10; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0.75;">
+            <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); backdrop-filter: blur(16px); color: #f5e7df; font-family: 'Be Vietnam Pro', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: #b9ff00; display: inline-block;"></span>
+              <span>Cuộn để khám phá hành trình</span>
+            </div>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b9ff00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation: universeBounce 1.8s infinite;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <style>@keyframes universeBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+
+/* HIDE THE UNNECESSARY "CỦA BẠN" BADGE COMPLETELY */
+.toolkit-card-user-badge {
+  display: none !important;
+}
+
+/* CRISP INLINE SVG / DOM CARD FACE */
+.toolkit-card-vector-face {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 295 / 417;
+  border-radius: 22.6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.5);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  z-index: 1;
+}
+.toolkit-card-vector-face .card-center-text {
+  text-align: center;
+  font-weight: 900;
+  font-size: 38px;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  padding: 0 20px;
+}
+.toolkit-card-vector-face .card-bottom-pill {
+  position: absolute;
+  bottom: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 18px;
+  border-radius: 17.3px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ULTRA-PREMIUM SPOTLIGHT MODAL (IMAGE 2) */
+.toolkit-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999999;
+  background: rgba(4, 8, 14, 0.88);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.toolkit-modal-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.toolkit-modal-content {
+  position: relative;
+  max-width: 880px;
+  width: 100%;
+  background: radial-gradient(130% 120% at 50% 0%, #111A29 0%, #060B12 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 32px;
+  padding: 40px;
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  gap: 40px;
+  box-shadow: 0 40px 100px -10px rgba(0, 0, 0, 0.95), 0 0 45px var(--modal-glow-color, rgba(185, 255, 0, 0.15));
+  transform: scale(0.92) translateY(28px);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+  overflow: hidden;
+}
+.toolkit-modal-backdrop.is-open .toolkit-modal-content {
+  transform: scale(1) translateY(0);
+}
+.toolkit-modal-content::before {
+  content: '';
+  position: absolute;
+  top: -90px;
+  left: 20%;
+  width: 360px;
+  height: 220px;
+  background: radial-gradient(circle, var(--modal-glow-color, rgba(56, 189, 248, 0.25)) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(50px);
+}
+@media (max-width: 840px) {
+  .toolkit-modal-content {
+    grid-template-columns: 1fr;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+    gap: 24px;
+  }
+}
+.toolkit-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10;
+}
+.toolkit-modal-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  transform: rotate(90deg) scale(1.08);
+}
+.toolkit-modal-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+}
+.modal-card-preview {
+  width: 100%;
+  max-width: 270px;
+  aspect-ratio: 295 / 417;
+  border-radius: 22.6px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px -10px rgba(0, 0, 0, 0.9), 0 0 35px var(--modal-glow-color, rgba(99, 102, 241, 0.3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+  position: relative;
+  transform: perspective(1000px) rotateY(-8deg) rotateX(4deg);
+}
+.modal-card-preview:hover {
+  transform: perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1.03);
+}
+.modal-card-preview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.02) 40%, transparent 60%);
+  pointer-events: none;
+  border-radius: 22.6px;
+}
+.modal-card-preview img,
+.modal-card-preview svg,
+.modal-card-preview .toolkit-card-vector-face {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.toolkit-modal-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 2;
+}
+.modal-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.modal-tag {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.24);
+}
+.modal-verified {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(185, 255, 0, 0.12);
+  color: #b9ff00;
+  border: 1px solid rgba(185, 255, 0, 0.32);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 0 16px rgba(185, 255, 0, 0.15);
+}
+.modal-title {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-size: 40px;
+  font-weight: 900;
+  color: #F8FAFC;
+  margin: 0 0 8px 0;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+.modal-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 16px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.modal-dot {
+  color: rgba(255, 255, 255, 0.25);
+}
+.modal-desc {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.76);
+  margin: 0 0 18px 0;
+}
+/* CORE COMPETENCIES LIST */
+.modal-competencies-section {
+  margin-bottom: 22px;
+}
+.modal-section-label {
+  display: block;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.modal-competencies-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.modal-competency-pill {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #E2E8F0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 5px 12px;
+  border-radius: 999px;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s ease;
+}
+.modal-competency-pill:hover {
+  background: rgba(185, 255, 0, 0.12);
+  border-color: rgba(185, 255, 0, 0.35);
+  color: #B9FF00;
+  transform: translateY(-1px);
+}
+/* LUXURY STAT TILES */
+.modal-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+@media (max-width: 540px) {
+  .modal-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.modal-stat-tile {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+.modal-stat-tile:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.modal-stat-value {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: #38bdf8;
+}
+.modal-stat-label {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.modal-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: auto;
+}
+.modal-btn-action {
+  padding: 13px 32px;
+  border-radius: 12px;
+  background: #b9ff00;
+  color: #0A0F18;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14.5px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  box-shadow: 0 8px 24px rgba(185, 255, 0, 0.28);
+}
+.modal-btn-action:hover {
+  background: #cbfd2b;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(185, 255, 0, 0.45);
+}
+</style>
+          </div>
+        </div>
+      </section>
+
+      <!-------- TRAJECTOIRY SECTION -------->
+      <section class="trajectory" id="parcours">
+        <section class="entry">
+          <div class="container">
+            <h2 class="title trajectory-editorial">
+              <span class="trajectory-editorial__sub">Nơi Ký Ức Hóa</span>
+              <span class="trajectory-editorial__main">Minh Chứng Sống</span>
+            </h2>
+          </div>
+        </section>
+
+        <section class="trajectory-sentences">
+          <div class="trajectory-sentences__pin-height">
+            <div class="trajectory-sentences__container">
+              <div class="trajectory-sentences__visuals" aria-hidden="true">
+                <div class="trajectory-sentences__visual trajectory-sentences__visual--left"></div>
+                <div class="trajectory-sentences__visual trajectory-sentences__visual--right"></div>
+                <canvas class="trajectory-sentences__canvas" aria-hidden="true"></canvas>
+              </div>
+
+              <div class="trajectory-sentences__center">
+
+                <div
+                  class="trajectory-sentences__sentence is-dialogue"
+                >
+                  FONLIO
+                </div>
+
+                <div class="trajectory-sentences__sentence is-both is-two-lines">
+                  <span>tôn vinh</span><br />
+                  <span>cùng bạn.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-------- TOOLKIT SECTION -------->
+      <section class="toolkit" id="toolkit">
+        <div class="toolkit__pin-height">
+          <div class="toolkit__container">
+            <div class="toolkit__header">
+              <h2 class="toolkit__title">Triển Lãm Ký Ức</h2>
+
+              <div class="toolkit__subtitle-wrap">
+                <h3 class="toolkit__subtitle toolkit__subtitle--front">Kĩ năng của bạn</h3>
+                <h3 class="toolkit__subtitle toolkit__subtitle--art">Sáng tạo &amp; Lãnh đạo</h3>
+              </div>
+            </div>
+
+                                                <!-- Frontend Deck: Technical & Digital Skills -->
+            <div class="toolkit__wheel toolkit__wheel--frontend">
+              <!-- Slot 0: JavaScript -->
+              <div class="toolkit__slot" data-slot-index="0" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--javascript" data-skill-name="JavaScript" data-skill-cat="NGÔN NGỮ LẬP TRÌNH" data-skill-desc="Ngôn ngữ cốt lõi của web hiện đại, xử lý logic tương tác động và thuật toán client-side." data-skill-level="Thành thạo (Advanced)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/javascript.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.javascript"
+                    alt="JavaScript"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 1: React -->
+              <div class="toolkit__slot" data-slot-index="1" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--react" data-skill-name="React" data-skill-cat="THƯ VIỆN GIAO DIỆN" data-skill-desc="Thư viện xây dựng Single Page Application (SPA), kiến trúc component tái sử dụng và quản lý Virtual DOM hiệu năng cao." data-skill-level="Thành thạo (Advanced)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/react.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.react"
+                    alt="React"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 2: Next.js -->
+              <div class="toolkit__slot" data-slot-index="2" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--nextjs" data-skill-name="Next.js" data-skill-cat="FRAMEWORK FULLSTACK" data-skill-desc="Framework React hỗ trợ Server-Side Rendering (SSR), Static Site Generation (SSG) và tối ưu SEO vượt trội cho sản phẩm." data-skill-level="Nâng cao (Intermediate)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/nextjs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.nextjs"
+                    alt="Next.js"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 3: Vue.js -->
+              <div class="toolkit__slot" data-slot-index="3" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--vue" data-skill-name="Vue.js" data-skill-cat="FRAMEWORK GIAO DIỆN" data-skill-desc="Framework giao diện với cú pháp dễ tiếp cận, hệ thống reactivity mạnh mẽ và công cụ Composition API hiện đại." data-skill-level="Nâng cao (Intermediate)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="/universe-clone/home/toolkit/frontend/vi/vuejs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.vuejs"
+                    alt="Vue.js"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 4: three.js -->
+              <div class="toolkit__slot" data-slot-index="4" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--threejs" data-skill-name="three.js" data-skill-cat="ĐỒ HỌA 3D WEB" data-skill-desc="Thư viện dựng hình 3D trên nền tảng WebGL, kết xuất mô hình khối, vật lý không gian và hiệu ứng thị giác tương tác mượt mà." data-skill-level="Nâng cao (Intermediate)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="/universe-clone/home/toolkit/frontend/vi/threejs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.threejs"
+                    alt="three.js"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 5: GSAP -->
+              <div class="toolkit__slot" data-slot-index="5" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--gsap" data-skill-name="GSAP" data-skill-cat="THƯ VIỆN CHUYỂN ĐỘNG" data-skill-desc="Tiêu chuẩn công nghiệp cho chuyển động web cao cấp, điều khiển Timeline, ScrollTrigger và vật lý đàn hồi." data-skill-level="Thành thạo (Advanced)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/gsap.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.gsap"
+                    alt="GSAP"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 6: GLSL -->
+              <div class="toolkit__slot" data-slot-index="6" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--glsl" data-skill-name="GLSL" data-skill-cat="NGÔN NGỮ SHADER" data-skill-desc="Lập trình shader tính toán trên chip GPU, xử lý ánh sáng pixel, vertex biến dạng và hiệu ứng sóng nước trực quan." data-skill-level="Cơ bản (Intermediate)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/glsl.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.glsl"
+                    alt="GLSL"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 7: Webflow -->
+              <div class="toolkit__slot" data-slot-index="7" data-wheel="frontend">
+                <div class="toolkit-card toolkit-card--webflow" data-skill-name="Webflow" data-skill-cat="NỀN TẢNG DỰNG WEB" data-skill-desc="Nền tảng No-Code trực quan cho phép biến bản thiết kế thành trang web chuẩn semantic HTML5/CSS3 với tốc độ nhanh chóng." data-skill-level="Thành thạo (Advanced)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/frontend/vi/webflow.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.webflow"
+                    alt="Webflow"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 8: Shopify / Flip -->
+              <div class="toolkit__slot toolkit__slot--transition">
+                <div class="toolkit-card toolkit-card--flip toolkit-card--shopify" data-skill-name="Shopify" data-skill-cat="THƯƠNG MẠI ĐIỆN TỬ" data-skill-desc="Nền tảng vận hành gian hàng trực tuyến toàn cầu, tùy biến Liquid template và tích hợp cổng thanh toán." data-skill-level="Thành thạo (Advanced)">
+                  <div class="toolkit-card__flipper toolkit-card__motion">
+                    <div class="toolkit-card__face toolkit-card--front">
+                      <img
+                        src="home/toolkit/frontend/vi/shopify.svg"
+                        alt="Shopify"
+                        data-i18n-attr="src:home.toolkitAssets.frontend.shopify"
+                      />
+                    </div>
+                    <div class="toolkit-card__face toolkit-card__face--back">
+                      <img
+                        src="home/toolkit/art-direction/vi/figma.svg"
+                        alt="Figma"
+                        data-i18n-attr="src:home.toolkitAssets.artDirection.figma"
+                      />
+                    </div>
+                  </div>
+              <!-- Slot 9: Single-Wheel Zoom Transition to #projects -->
+              <div class="toolkit__slot toolkit__slot--zoom">
+                <div class="toolkit-card toolkit-card--transition">
+                  <canvas
+                    class="toolkit-card__cream-reveal toolkit-card__reveal-canvas toolkit-card__motion"
+                    aria-hidden="true"
+                  ></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Art direction deck: Creative, Leadership & Design (Eliminated in Option 1) -->
+            <div class="toolkit__wheel toolkit__wheel--art-direction" style="display: none !important;">
+              <!-- Slot 0: Figma -->
+              <div class="toolkit__slot" data-slot-index="0" data-wheel="art">
+                <div class="toolkit-card toolkit-card--figma" data-skill-name="Figma" data-skill-cat="THIẾT KẾ GIAO DIỆN" data-skill-desc="Công cụ thiết kế UI/UX hàng đầu, quản lý Design System, tương tác prototype và phối hợp thời gian thực với lập trình viên." data-skill-level="Thành thạo (Advanced)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/figma.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.figma"
+                    alt="Figma"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 1: Photoshop -->
+              <div class="toolkit__slot" data-slot-index="1" data-wheel="art">
+                <div class="toolkit-card toolkit-card--photoshop" data-skill-name="Photoshop" data-skill-cat="XỬ LÝ HÌNH ẢNH" data-skill-desc="Phần mềm xử lý đồ họa raster chuyên sâu, cắt ghép hình ảnh, tạo key visual và thiết kế banner quảng cáo sắc nét." data-skill-level="Thành thạo (Advanced)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/photoshop.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.photoshop"
+                    alt="Photoshop"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 2: Illustrator -->
+              <div class="toolkit__slot" data-slot-index="2" data-wheel="art">
+                <div class="toolkit-card toolkit-card--illustrator" data-skill-name="Illustrator" data-skill-cat="ĐỒ HỌA VECTOR" data-skill-desc="Vẽ đồ họa vector vô hạn độ phân giải, tạo hình logo nhận diện thương hiệu, icon pack và hình minh họa chuyên nghiệp." data-skill-level="Thành thạo (Advanced)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/illustrator.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.illustrator"
+                    alt="Illustrator"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 3: InDesign -->
+              <div class="toolkit__slot" data-slot-index="3" data-wheel="art">
+                <div class="toolkit-card toolkit-card--indesign" data-skill-name="InDesign" data-skill-cat="DÀN TRANG ẤN PHẨM" data-skill-desc="Dàn trang xuất bản đa trang, thiết kế tài liệu hội thảo, brochure doanh nghiệp và sách điện tử chuẩn in ấn." data-skill-level="Cơ bản (Intermediate)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/indesign.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.indesign"
+                    alt="InDesign"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 4: After Effects -->
+              <div class="toolkit__slot" data-slot-index="4" data-wheel="art">
+                <div class="toolkit-card toolkit-card--after-effects" data-skill-name="After Effects" data-skill-cat="MOTION GRAPHICS" data-skill-desc="Biên tập chuyển động logo, tạo hiệu ứng kỹ xảo video (VFX) và hoạt họa 2D sinh động cho các chiến dịch truyền thông." data-skill-level="Thành thạo (Advanced)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/aftereffects.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.afterEffects"
+                    alt="After Effects"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 5: CapCut -->
+              <div class="toolkit__slot" data-slot-index="5" data-wheel="art">
+                <div class="toolkit-card toolkit-card--capcut" data-skill-name="CapCut" data-skill-cat="VIDEO NGẮN VIRAL" data-skill-desc="Biên tập video ngắn theo nhịp điệu âm nhạc, bắt trend TikTok / Reels, tạo phụ đề tự động và hook thu hút người xem." data-skill-level="Thành thạo (Advanced)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/capcut.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.capcut"
+                    alt="CapCut"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 6: Lightroom -->
+              <div class="toolkit__slot" data-slot-index="6" data-wheel="art">
+                <div class="toolkit-card toolkit-card--lightroom" data-skill-name="Lightroom" data-skill-cat="CHỈNH MÀU ÁNH SÁNG" data-skill-desc="Xử lý màu ảnh số hàng loạt, cân chỉnh ánh sáng, phân bổ sắc thái tone màu nghệ thuật và tối ưu chất lượng ảnh." data-skill-level="Thành thạo (Advanced)">
+                  <div class="card-verified-tag"><span class="card-verified-sparkle">✦</span> XÁC THỰC</div>
+                  <img
+                    class="toolkit-card__motion"
+                    src="home/toolkit/art-direction/vi/lightroom.svg"
+                    data-i18n-attr="src:home.toolkitAssets.artDirection.lightroom"
+                    alt="Lightroom"
+                  />
+                </div>
+              </div>
+
+              <!-- Slot 7: Transition Canvas -->
+              <div class="toolkit__slot">
+                <div class="toolkit-card toolkit-card--transition">
+                  <canvas
+                    class="toolkit-card__cream-reveal toolkit-card__reveal-canvas toolkit-card__motion"
+                    aria-hidden="true"
+                  ></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+            <!-- NATIVE SPOTLIGHT MODAL FOR SKILLS & PROOF CARDS -->
+      <div id="fonlioSkillModal" class="toolkit-modal-backdrop" onclick="if(event.target===this) window.closeSkillModal()">
+        <div class="toolkit-modal-content" onclick="event.stopPropagation()">
+          <button class="toolkit-modal-close" onclick="window.closeSkillModal()" aria-label="Đóng modal">✕</button>
+          
+          <div class="toolkit-modal-left">
+            <div id="modalCardPreview" class="modal-card-preview">
+              <!-- Rendered preview card with 3D glow -->
+            </div>
+          </div>
+
+          <div class="toolkit-modal-right">
+            <div class="modal-badge-row">
+              <span id="modalSkillTag" class="modal-tag">CHUYÊN MÔN</span>
+              <span id="modalVerifiedBadge" class="modal-verified">✓ NĂNG LỰC XÁC THỰC</span>
+            </div>
+
+            <h3 id="modalSkillTitle" class="modal-title">UI/UX Design</h3>
+            
+            <div class="modal-meta-row">
+              <span id="modalSkillLevel" class="modal-level">Trình độ: Thành thạo (Advanced)</span>
+              <span class="modal-dot">•</span>
+              <span id="modalSkillCategory" class="modal-cat">Thiết kế trải nghiệm</span>
+            </div>
+
+            <p id="modalSkillDesc" class="modal-desc">
+              Kỹ năng cốt lõi được định danh và xác thực trong Living Portfolio của ứng viên. Đáp ứng tiêu chuẩn đánh giá khắt khe từ mạng lưới đối tác doanh nghiệp Fonlio.
+            </p>
+
+            <div class="modal-competencies-section">
+              <span class="modal-section-label">Năng lực thực chiến xác thực</span>
+              <div id="modalSkillCompetencies" class="modal-competencies-row">
+                <!-- Dynamically populated tags -->
+              </div>
+            </div>
+
+            <div class="modal-stats-grid">
+              <div class="modal-stat-tile">
+                <span id="modalStatExp" class="modal-stat-value">+450 EXP</span>
+                <span class="modal-stat-label">Điểm Kinh Nghiệm</span>
+              </div>
+              <div class="modal-stat-tile">
+                <span id="modalStatDemand" class="modal-stat-value" style="color: #34d399;">Top 5% Cao</span>
+                <span class="modal-stat-label">Nhu Cầu Tuyển Dụng</span>
+              </div>
+              <div class="modal-stat-tile">
+                <span id="modalStatRs" class="modal-stat-value" style="color: #F5DF4D;">Chuẩn RS</span>
+                <span class="modal-stat-label">Độ Tín Nhiệm</span>
+              </div>
+            </div>
+
+            <div class="modal-action-row">
+              <button type="button" class="modal-btn-action" onclick="window.closeSkillModal()">
+                <span>Đã hiểu</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-------- NEXT SECTION -------->
+      <section class="next-section">
+        <div class="next-section__pin-height">
+          <div class="next-section__container">
+            <div class="next-section__intro">
+              <p data-i18n="home.nextIntro">Sẵn sàng bứt phá?</p>
+              <!-- Playground link removed -->
+            </div>
+
+            <svg
+              class="next-section__svg"
+              fill="none"
+              width="3898"
+              height="891"
+              viewBox="0 0 3898 891"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="nextTextGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="80%" stop-color="#f6c177" />
+                  <stop offset="85%" stop-color="#9b7cff" />
+                  <stop offset="100%" stop-color="#ff6b4a" />
+                </linearGradient>
+              </defs>
+
+              <path
+                id="nextPath"
+                d="M0.398438 611.016C175.398 377.517 857.398 -285.484 1461.4 139.638C1911.53 456.46 2114.4 805.516 2679.4 611.016C3088.4 470.219 3704.54 -33.3124 4354.9 781.516C4700.9 1215.02 5305.6 1466.52 6108.4 328.516"
+              />
+
+              <text class="next-section__text">
+                <textPath id="nextTextPath" href="#nextPath" text-anchor="start">
+                  <tspan id="nextTextCream" data-i18n="home.nextTextCream">
+                    Hồ sơ của bạn xứng đáng
+                  </tspan>
+                  <tspan
+                    id="nextTextGradientPart"
+                    fill="url(#nextTextGradient)"
+                    data-i18n="home.nextTextGradient"
+                  >
+                    được công nhận bằng sản phẩm thật
+                  </tspan>
+                </textPath>
+              </text>
+
+              <circle id="nextOrb" class="next-section__orb" cx="0" cy="0" r="14" fill="#ff6b4a" />
+            </svg>
+
+            <!-------- FOOTER REVEAL -------->
+            <footer
+              id="contact"
+              class="next-footer"
+              aria-label="Chân trang"
+              data-i18n-attr="aria-label:home.footerLabel"
+            >
+              <div class="next-footer__background" aria-hidden="true"></div>
+
+              <div class="next-footer__content">
+                <div class="next-footer__inner">
+                  <div class="next-footer__main">
+                    <h2 class="next-footer__headline">
+                      <span>Tỏa sáng cùng</span><br />
+                      <span>Minh chứng sống</span><br />
+                      <span class="next-footer__headline-accent">Vũ Trụ Fonlio.</span>
+                    </h2>
+
+                    <p class="next-footer__lead">
+                      Mọi ký ức của bạn từ dự án sinh viên, hoạt động ngoại khóa đến giải thưởng công nghệ đều trở thành minh chứng sống (Living Proof) thuyết phục nhất với nhà tuyển dụng.
+                    </p>
+
+                    <div class="next-footer__actions">
+                      <button
+                        type="button"
+                        class="universe-cta-btn universe-cta-btn--lime universe-cta-btn--shimmer"
+                        onclick="window.triggerWrapped()"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span>Khởi Chiếu Story Wrapped</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="universe-cta-btn universe-cta-btn--outline"
+                        onclick="window.parent.postMessage({ type: 'NAVIGATE_DASHBOARD' }, '*')"
+                      >
+                        <span>← Về Dashboard</span>
+                      </button>
+                    </div>
+
+                    <div class="next-footer__meta">
+                      <p>© 2026 FONLIO — Living Portfolio &amp; Hồ Sơ Năng Lực Sinh Viên</p>
+                    </div>
+                  </div>
+
+                  <div class="next-footer__deck">
+                    <div class="next-footer__columns">
+                      <div class="next-footer__col">
+                        <div class="next-footer__col-title">VŨ TRỤ KÝ ỨC</div>
+                        <ul class="next-footer__links">
+                          <li>
+                            <a href="javascript:void(0)" onclick="window.triggerWrapped()">
+                              <span>Cuốn phim Wrapped</span>
+                              <span class="next-footer__link-tag">HOT</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a href="#toolkit">
+                              <span>Triển lãm Kỹ năng</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a href="#parcours">
+                              <span>Hành trình Thực chiến</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a href="#hero">
+                              <span>Về đầu trang</span>
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div class="next-footer__col">
+                        <div class="next-footer__col-title">NỀN TẢNG FONLIO</div>
+                        <ul class="next-footer__links">
+                          <li>
+                            <a href="javascript:void(0)" onclick="window.navigateToApp('/candidates/dashboard/overview')">
+                              <span>Bàn làm việc (Dashboard)</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a href="javascript:void(0)" onclick="window.navigateToApp('/candidates/dashboard/portfolio')">
+                              <span>Hồ sơ năng lực</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a href="javascript:void(0)" onclick="window.navigateToApp('/jobs')">
+                              <span>Việc làm &amp; Tuyển dụng</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a href="javascript:void(0)" onclick="window.navigateToApp('/')">
+                              <span>Trang chủ Fonlio</span>
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div class="next-footer__deck-contact">
+                      <div class="next-footer__deck-items">
+                        <a class="next-footer__deck-item" href="mailto:fonlioofficial@gmail.com" title="Email FONLIO">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+                          <span>fonlioofficial@gmail.com</span>
+                        </a>
+                        <span class="next-footer__deck-sep">•</span>
+                        <a class="next-footer__deck-item" href="tel:0981362340" title="Hotline FONLIO">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                          <span>0981 362 340</span>
+                        </a>
+                      </div>
+
+                      <div class="next-footer__deck-socials" aria-label="Mạng xã hội FONLIO">
+                        <a class="np-footer-social-btn" href="https://www.facebook.com/profile.php?id=61594934129474" target="_blank" rel="noopener noreferrer" title="Facebook FONLIO" aria-label="Facebook">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                        </a>
+                        <a class="np-footer-social-btn" href="https://www.instagram.com/fonlioofficial/" target="_blank" rel="noopener noreferrer" title="Instagram FONLIO" aria-label="Instagram">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>
+                        </a>
+                        <a class="np-footer-social-btn" href="https://www.tiktok.com/@fonlio.official" target="_blank" rel="noopener noreferrer" title="TikTok FONLIO" aria-label="TikTok">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.5 6.27 6.27 0 0 0 1.95-4.5V8.69a8.18 8.18 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-.95-.12z" /></svg>
+                        </a>
+                        <a class="np-footer-social-btn" href="https://www.threads.com/@fonlioofficial/post/Dd87ob7j87A?xmt=AQG0sQna5phj3eo0gGFAz7fhAtyjYHfc5dwHr1LkXJ14a9E" target="_blank" rel="noopener noreferrer" title="Threads FONLIO" aria-label="Threads">
+                          <svg width="15" height="15" viewBox="0 0 192 192" fill="currentColor"><path d="M141.537 88.9883C140.71 88.5919 139.87 88.2104 139.019 87.8451C137.537 60.5382 122.616 44.905 97.5619 44.745C97.4484 44.7443 97.3355 44.7443 97.222 44.7443C82.2364 44.7443 69.7731 51.1409 62.102 62.7807L75.881 72.2328C81.6116 63.5383 90.6052 61.6848 97.2286 61.6848C97.3051 61.6848 97.3819 61.6848 97.4576 61.6855C105.707 61.7381 111.932 64.1366 115.961 68.814C118.893 72.2193 120.854 76.925 121.825 82.8638C114.511 81.6207 106.601 81.2385 98.145 81.7233C74.3247 83.0954 59.0111 96.9879 60.0396 116.292C60.5615 126.084 65.4397 134.508 73.775 140.011C80.8224 144.663 89.899 146.938 99.3323 146.423C111.79 145.74 121.563 140.987 128.381 132.296C133.559 125.696 136.834 117.143 138.28 106.366C144.217 109.949 148.617 114.664 151.047 120.332C155.179 129.967 155.42 145.8 142.501 158.708C131.182 170.016 117.576 174.908 97.0135 175.059C74.2042 174.89 56.9538 167.575 45.7381 153.317C35.2355 139.966 29.8077 120.682 29.6052 96C29.8077 71.3178 35.2355 52.0336 45.7381 38.6827C56.9538 24.4249 74.2039 17.11 97.0132 16.9405C119.988 17.1113 137.539 24.4614 149.184 38.788C154.894 45.8136 159.199 54.6488 162.037 64.9503L178.184 60.6422C174.744 47.9622 169.331 37.0357 161.965 27.974C147.036 9.60668 125.202 0.195148 97.0695 0H96.9569C68.8816 0.19447 47.2921 9.6418 32.7883 28.0793C19.8819 44.4864 13.2244 67.3157 13.0007 95.9325L13 96L13.0007 96.0675C13.2244 124.684 19.8819 147.514 32.7883 163.921C47.2921 182.358 68.8816 191.806 96.9569 192H97.0695C122.03 191.827 139.624 185.292 154.118 170.811C173.081 151.866 172.51 128.119 166.26 113.541C161.776 103.087 153.227 94.5962 141.537 88.9883ZM98.4405 129.507C88.0005 130.095 77.1544 125.409 76.6196 115.372C76.2232 107.93 81.9158 99.626 99.0812 98.6368C101.047 98.5234 102.976 98.468 104.871 98.468C111.106 98.468 116.939 99.0737 122.242 100.233C120.264 124.935 108.662 128.946 98.4405 129.507Z" /></svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </footer>
+          </div>
+        </div>
+      </section>
+
+      <!-- NATIVE UNIVERSE WRAPPED STORY MODAL -->
+      <div id="fonlioWrappedModal" class="universe-wrapped-backdrop" onclick="if(event.target===this) window.closeWrappedModal()">
+        <div class="universe-wrapped-aura" aria-hidden="true"></div>
+        <div class="universe-wrapped-card" onclick="event.stopPropagation()">
+          <!-- Progress Bars -->
+          <div class="universe-wrapped-bars" id="wrappedBars">
+            <div class="universe-wrapped-bar"><div class="universe-wrapped-bar-fill"></div></div>
+            <div class="universe-wrapped-bar"><div class="universe-wrapped-bar-fill"></div></div>
+            <div class="universe-wrapped-bar"><div class="universe-wrapped-bar-fill"></div></div>
+            <div class="universe-wrapped-bar"><div class="universe-wrapped-bar-fill"></div></div>
+            <div class="universe-wrapped-bar"><div class="universe-wrapped-bar-fill"></div></div>
+            <div class="universe-wrapped-bar"><div class="universe-wrapped-bar-fill"></div></div>
+          </div>
+
+          <!-- Header -->
+          <div class="universe-wrapped-header">
+            <div class="universe-wrapped-user">
+              <div class="universe-wrapped-avatar" id="wrappedAvatar">P</div>
+              <div>
+                <div class="universe-wrapped-name js-candidate-name">Tài Phát</div>
+                <div class="universe-wrapped-tag">FONLIO WRAPPED ✦ 2026</div>
+              </div>
+            </div>
+            <div class="universe-wrapped-controls">
+              <button type="button" class="universe-wrapped-ctrl-btn" onclick="window.toggleWrappedPlay()" id="wrappedPlayBtn" title="Tạm dừng / Tiếp tục">
+                <svg id="wrappedPauseIcon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                <svg id="wrappedPlayIcon" style="display:none;" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button type="button" class="universe-wrapped-ctrl-btn" onclick="window.closeWrappedModal()" title="Đóng">✕</button>
+            </div>
+          </div>
+
+          <!-- Tap Navigation Zones -->
+          <div class="universe-wrapped-tap-left" onclick="window.prevWrappedSlide()"></div>
+          <div class="universe-wrapped-tap-right" onclick="window.nextWrappedSlide()"></div>
+
+          <!-- Slides Container -->
+          <div class="universe-wrapped-body" id="wrappedBody">
+            <!-- Slide 0: Welcome -->
+            <div class="universe-wrapped-slide is-active" data-slide="0">
+              <div class="universe-wrapped-orb"></div>
+              <span class="universe-wrapped-badge universe-wrapped-badge--lime">HÀNH TRÌNH THỰC CHIẾN • LIVING PROOF</span>
+              <h2 class="universe-wrapped-title">Mỗi dự án là một vì sao thắp sáng.</h2>
+              <p class="universe-wrapped-desc">Chào <strong class="js-candidate-name">Tài Phát</strong>, hãy cùng chiêm ngưỡng những bước tiến thực chiến mà bạn đã tôi luyện suốt thời gian qua.</p>
+              <button type="button" class="universe-wrapped-start-btn" onclick="window.nextWrappedSlide()">Khám phá ngay ✦</button>
+            </div>
+
+            <!-- Slide 1: Numbers -->
+            <div class="universe-wrapped-slide" data-slide="1">
+              <span class="universe-wrapped-badge universe-wrapped-badge--violet">DẤU ẤN VŨ TRỤ</span>
+              <h2 class="universe-wrapped-subtitle">Bạn đã tôi luyện</h2>
+              <div class="universe-wrapped-counter js-candidate-count">6</div>
+              <div class="universe-wrapped-counter-label">Ký ức &amp; Cột mốc thực chiến</div>
+              <div class="universe-wrapped-stats-grid">
+                <div class="universe-wrapped-stat-card">
+                  <div class="universe-wrapped-stat-label">Kinh nghiệm tích lũy</div>
+                  <div class="universe-wrapped-stat-val universe-wrapped-stat-val--coral"><span class="js-candidate-exp">2,250</span> EXP</div>
+                </div>
+                <div class="universe-wrapped-stat-card">
+                  <div class="universe-wrapped-stat-label">Điểm tín nhiệm RS</div>
+                  <div class="universe-wrapped-stat-val universe-wrapped-stat-val--lime"><span class="js-candidate-rs">85</span>/100</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 2: Brightest Star -->
+            <div class="universe-wrapped-slide" data-slide="2">
+              <span class="universe-wrapped-badge universe-wrapped-badge--coral">DỰ ÁN SÁNG GIÁ NHẤT</span>
+              <h2 class="universe-wrapped-subtitle">Dấu ấn bứt phá của bạn</h2>
+              <div class="universe-wrapped-star-card">
+                <div class="universe-wrapped-star-title" id="wrappedStarTitle">NextGen Tech Hackathon</div>
+                <div class="universe-wrapped-star-org" id="wrappedStarOrg">Khoa Công nghệ Thông tin</div>
+                <p class="universe-wrapped-star-desc" id="wrappedStarDesc">Dẫn dắt đội ngũ 4 thành viên phát triển ứng dụng AI, giành Giải Nhất chung cuộc sau 48 giờ thi liên tục.</p>
+                <div class="universe-wrapped-star-tags">
+                  <span class="universe-wrapped-star-tag universe-wrapped-star-tag--coral">✦ +500 EXP</span>
+                  <span class="universe-wrapped-star-tag universe-wrapped-star-tag--green">✓ Bảo chứng Living Proof</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 3: Skills -->
+            <div class="universe-wrapped-slide" data-slide="3">
+              <span class="universe-wrapped-badge universe-wrapped-badge--violet">VŨ KHÍ THỰC CHIẾN</span>
+              <h2 class="universe-wrapped-subtitle">Chòm sao năng lực</h2>
+              <p class="universe-wrapped-desc">Những kỹ năng vững chắc nhất bạn đã rèn luyện qua từng kỳ đồ án và dự án thực.</p>
+              <div class="universe-wrapped-chips" id="wrappedSkillsContainer">
+                <div class="universe-wrapped-chip">✦ UI/UX Design</div>
+                <div class="universe-wrapped-chip">✦ ReactJS</div>
+                <div class="universe-wrapped-chip">✦ Figma</div>
+                <div class="universe-wrapped-chip">✦ TypeScript</div>
+                <div class="universe-wrapped-chip">✦ NodeJS</div>
+              </div>
+            </div>
+
+            <!-- Slide 4: Archetype -->
+            <div class="universe-wrapped-slide" data-slide="4">
+              <span class="universe-wrapped-badge universe-wrapped-badge--lime">BẢN SẮC CỦA BẠN</span>
+              <h2 class="universe-wrapped-archetype-title">KIẾN TRÚC SƯ HỆ THỐNG</h2>
+              <div class="universe-wrapped-archetype-sub">[The Master Architect]</div>
+              <div class="universe-wrapped-archetype-ring">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              </div>
+              <p class="universe-wrapped-desc">Tư duy logic sắc bén, đào sâu bản chất và luôn xây dựng những giải pháp bền bỉ.</p>
+            </div>
+
+            <!-- Slide 5: VIP Genesis Card -->
+            <div class="universe-wrapped-slide" data-slide="5">
+              <span class="universe-wrapped-badge universe-wrapped-badge--lime">THẺ BẢO CHỨNG GENESIS</span>
+              <div class="universe-wrapped-vip-card">
+                <div class="universe-wrapped-vip-avatar" id="wrappedVipAvatar">P</div>
+                <div class="universe-wrapped-vip-name js-candidate-name">Tài Phát</div>
+                <div class="universe-wrapped-vip-role">KIẾN TRÚC SƯ HỆ THỐNG</div>
+                <div class="universe-wrapped-vip-stats">
+                  <div>
+                    <div class="universe-wrapped-vip-stat-lbl">Dự án</div>
+                    <div class="universe-wrapped-vip-stat-num universe-wrapped-vip-stat-num--lime js-candidate-count">6</div>
+                  </div>
+                  <div>
+                    <div class="universe-wrapped-vip-stat-lbl">Điểm RS</div>
+                    <div class="universe-wrapped-vip-stat-num universe-wrapped-vip-stat-num--teal js-candidate-rs">85</div>
+                  </div>
+                  <div>
+                    <div class="universe-wrapped-vip-stat-lbl">Cấp độ</div>
+                    <div class="universe-wrapped-vip-stat-num universe-wrapped-vip-stat-num--coral">Lv.2</div>
+                  </div>
+                </div>
+                <div class="universe-wrapped-vip-slug">fonlio.online/p/tai-phat</div>
+              </div>
+              <div class="universe-wrapped-share-actions">
+                <button type="button" class="universe-wrapped-share-btn" onclick="window.copyWrappedShare(this)">
+                  <span>Chia sẻ hành trình</span>
+                </button>
+                <button type="button" class="universe-wrapped-close-btn" onclick="window.closeWrappedModal()">Vào 3D</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Navigation -->
+          <div class="universe-wrapped-footer">
+            <button type="button" class="universe-wrapped-nav-btn" id="wrappedPrevBtn" onclick="window.prevWrappedSlide()">← Trước</button>
+            <span class="universe-wrapped-counter-text" id="wrappedCounterText">1 / 6</span>
+            <button type="button" class="universe-wrapped-nav-btn universe-wrapped-nav-btn--next" id="wrappedNextBtn" onclick="window.nextWrappedSlide()">Tiếp →</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  
+<script>
+(function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const nameParam = urlParams.get('name');
+  const expParam = urlParams.get('exp');
+  const rsParam = urlParams.get('rs');
+
+  if (nameParam) {
+    document.querySelectorAll('.js-candidate-name').forEach(el => el.textContent = nameParam);
+    const avatar = document.getElementById('cardAvatarInitial');
+    if (avatar) avatar.textContent = nameParam.trim().charAt(0).toUpperCase();
+    const headAvatar = document.getElementById('headerUserInitial');
+    if (headAvatar) headAvatar.textContent = nameParam.trim().charAt(0).toUpperCase();
+  }
+  if (expParam) {
+    const formattedExp = Number(expParam).toLocaleString('vi-VN');
+    document.querySelectorAll('.js-candidate-exp').forEach(el => el.textContent = formattedExp);
+  }
+  if (rsParam) {
+    document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = rsParam);
+  }
+
+  // Curated styles and definitions for all skills
+    const SKILL_CATALOG = {
+    'javascript': {
+      name: 'JavaScript',
+      cat: 'NGÔN NGỮ LẬP TRÌNH',
+      pillText: 'Ngôn ngữ lập trình',
+      bg: '#F5DF4D',
+      textColor: '#1F1D1D',
+      pillBg: '#1F1D1D',
+      pillColor: '#F5DF4D',
+      svg: 'home/toolkit/frontend/vi/javascript.svg',
+      desc: 'Ngôn ngữ nền tảng của web hiện đại, xử lý logic tương tác động, cấu trúc dữ liệu và thuật toán client-side.',
+      exp: 420,
+      competencies: ['ES6+ Modern Syntax', 'Async/Await & Promises', 'DOM Manipulation', 'REST API Integration', 'Data Structures']
+    },
+    'react': {
+      name: 'React',
+      cat: 'THƯ VIỆN GIAO DIỆN',
+      pillText: 'Thư viện giao diện',
+      bg: '#1E293B',
+      textColor: '#00D8FF',
+      pillBg: '#00D8FF',
+      pillColor: '#0F172A',
+      svg: 'home/toolkit/frontend/vi/react.svg',
+      desc: 'Thư viện xây dựng Single Page Application (SPA), kiến trúc component tái sử dụng và quản lý Virtual DOM hiệu năng cao.',
+      exp: 450,
+      competencies: ['Functional Components & Hooks', 'Custom Hooks & State', 'Context & Memoization', 'Performance Optimization']
+    },
+    'reactjs': {
+      name: 'React',
+      cat: 'THƯ VIỆN GIAO DIỆN',
+      pillText: 'Thư viện giao diện',
+      bg: '#1E293B',
+      textColor: '#00D8FF',
+      pillBg: '#00D8FF',
+      pillColor: '#0F172A',
+      svg: 'home/toolkit/frontend/vi/react.svg',
+      desc: 'Thư viện xây dựng Single Page Application (SPA), kiến trúc component tái sử dụng và quản lý Virtual DOM hiệu năng cao.',
+      exp: 450,
+      competencies: ['Functional Components & Hooks', 'Custom Hooks & State', 'Context & Memoization', 'Performance Optimization']
+    },
+    'nextjs': {
+      name: 'Next.js',
+      cat: 'FRAMEWORK FULLSTACK',
+      pillText: 'Framework web',
+      bg: '#000000',
+      textColor: '#FFFFFF',
+      pillBg: '#FFFFFF',
+      pillColor: '#000000',
+      svg: 'home/toolkit/frontend/vi/nextjs.svg',
+      desc: 'Framework React hỗ trợ Server-Side Rendering (SSR), Static Site Generation (SSG) và tối ưu SEO vượt trội cho sản phẩm.',
+      exp: 430,
+      competencies: ['App Router & SSR', 'Server Components', 'API Routes & Middleware', 'Image & SEO Optimization']
+    },
+    'next.js': {
+      name: 'Next.js',
+      cat: 'FRAMEWORK FULLSTACK',
+      pillText: 'Framework web',
+      bg: '#000000',
+      textColor: '#FFFFFF',
+      pillBg: '#FFFFFF',
+      pillColor: '#000000',
+      svg: 'home/toolkit/frontend/vi/nextjs.svg',
+      desc: 'Framework React hỗ trợ Server-Side Rendering (SSR), Static Site Generation (SSG) và tối ưu SEO vượt trội cho sản phẩm.',
+      exp: 430,
+      competencies: ['App Router & SSR', 'Server Components', 'API Routes & Middleware', 'Image & SEO Optimization']
+    },
+    'ui/ux': {
+      name: 'UI/UX Design',
+      cat: 'THIẾT KẾ TRẢI NGHIỆM',
+      pillText: 'Thiết kế giao diện',
+      bg: '#6366F1',
+      textColor: '#FFFFFF',
+      pillBg: '#1E1B4B',
+      pillColor: '#C7D2FE',
+      desc: 'Nghiên cứu hành vi người dùng, vẽ luồng người dùng (user flow), wireframing và thiết kế giao diện sản phẩm số trực quan.',
+      exp: 440,
+      competencies: ['Figma Design System', 'User Flow & Wireframe', 'Interactive Prototype', 'Usability Testing', 'Design Tokens']
+    },
+    'ui/ux design': {
+      name: 'UI/UX Design',
+      cat: 'THIẾT KẾ TRẢI NGHIỆM',
+      pillText: 'Thiết kế giao diện',
+      bg: '#6366F1',
+      textColor: '#FFFFFF',
+      pillBg: '#1E1B4B',
+      pillColor: '#C7D2FE',
+      desc: 'Nghiên cứu hành vi người dùng, vẽ luồng người dùng (user flow), wireframing và thiết kế giao diện sản phẩm số trực quan.',
+      exp: 440,
+      competencies: ['Figma Design System', 'User Flow & Wireframe', 'Interactive Prototype', 'Usability Testing', 'Design Tokens']
+    },
+    'sql': {
+      name: 'SQL Database',
+      cat: 'CƠ SỞ DỮ LIỆU',
+      pillText: 'Cơ sở dữ liệu SQL',
+      bg: '#0369A1',
+      textColor: '#FFFFFF',
+      pillBg: '#082F49',
+      pillColor: '#BAE6FD',
+      desc: 'Thiết kế hệ cơ sở dữ liệu quan hệ, tối ưu truy vấn Index, Transaction và đảm bảo toàn vẹn dữ liệu cho hệ thống quy mô lớn.',
+      exp: 410,
+      competencies: ['Relational Modeling', 'Index Optimization', 'ACID Transactions', 'PostgreSQL / MySQL', 'Complex Queries']
+    },
+    'figma': {
+      name: 'Figma',
+      cat: 'THIẾT KẾ UI/UX',
+      pillText: 'Công cụ thiết kế',
+      bg: '#8B5CF6',
+      textColor: '#FFFFFF',
+      pillBg: '#2E1065',
+      pillColor: '#DDD6FE',
+      svg: 'home/toolkit/art-direction/vi/figma.svg',
+      desc: 'Công cụ thiết kế UI/UX hàng đầu, quản lý Design System, tạo prototype tương tác và phối hợp thời gian thực với đội ngũ kỹ thuật.',
+      exp: 400,
+      competencies: ['Auto Layout & Tokens', 'Component Library', 'Design System Architecture', 'Interactive Prototype', 'Dev Handoff']
+    },
+    'python': {
+      name: 'Python',
+      cat: 'LẬP TRÌNH & DATA',
+      pillText: 'Ngôn ngữ Python',
+      bg: '#1E3A5F',
+      textColor: '#FFD43B',
+      pillBg: '#0F1E33',
+      pillColor: '#FFD43B',
+      desc: 'Phát triển backend, xử lý dữ liệu với Pandas/NumPy, tự động hóa tác vụ và triển khai mô hình học máy ứng dụng.',
+      exp: 430,
+      competencies: ['Data Structures & Algorithms', 'Pandas & NumPy', 'Backend FastAPI/Django', 'Automation Scripting']
+    },
+    'java': {
+      name: 'Java',
+      cat: 'ENTERPRISE BACKEND',
+      pillText: 'Nền tảng Java',
+      bg: '#DC2626',
+      textColor: '#FFFFFF',
+      pillBg: '#1F2937',
+      pillColor: '#FECACA',
+      desc: 'Lập trình hướng đối tượng vững chắc, xây dựng hệ thống phân tán, xử lý đa luồng và dịch vụ microservices chịu tải cao.',
+      exp: 440,
+      competencies: ['OOP Architecture', 'Multithreading & Concurrency', 'Spring Boot API', 'Clean Architecture', 'Unit Testing']
+    },
+    'spring boot': {
+      name: 'Spring Boot',
+      cat: 'BACKEND FRAMEWORK',
+      pillText: 'Spring Boot',
+      bg: '#16A34A',
+      textColor: '#FFFFFF',
+      pillBg: '#052E16',
+      pillColor: '#BBF7D0',
+      desc: 'Xây dựng API RESTful chuẩn bảo mật, kết nối PostgreSQL, phân quyền JWT và triển khai giải pháp backend chuẩn doanh nghiệp.',
+      exp: 460,
+      competencies: ['RESTful Web Services', 'Spring Security & JWT', 'Spring Data JPA', 'Microservices Architecture']
+    },
+    'docker': {
+      name: 'Docker',
+      cat: 'DEVOPS CONTAINER',
+      pillText: 'DevOps & Container',
+      bg: '#0284C7',
+      textColor: '#FFFFFF',
+      pillBg: '#082F49',
+      pillColor: '#E0F2FE',
+      desc: 'Đóng gói ứng dụng thành container độc lập, đồng nhất môi trường phát triển và cấu hình CI/CD tự động hóa.',
+      exp: 420,
+      competencies: ['Docker Compose', 'Containerization', 'CI/CD Pipelines', 'Environment Isolation']
+    },
+    'git': {
+      name: 'Git & GitHub',
+      cat: 'QUẢN LÝ MÃ NGUỒN',
+      pillText: 'Version Control',
+      bg: '#EA580C',
+      textColor: '#FFFFFF',
+      pillBg: '#431407',
+      pillColor: '#FFEDD5',
+      desc: 'Quản trị phiên bản mã nguồn phân tán, chiến lược branching GitFlow, code review và giải quyết xung đột mã nguồn.',
+      exp: 390,
+      competencies: ['GitFlow Strategy', 'Branching & Merging', 'Code Review & Pull Requests', 'Submodules & Rebasing']
+    },
+    'photoshop': {
+      name: 'Photoshop',
+      cat: 'XỬ LÝ HÌNH ẢNH',
+      pillText: 'Đồ họa hình ảnh',
+      bg: '#001E36',
+      textColor: '#31A8FF',
+      pillBg: '#31A8FF',
+      pillColor: '#001E36',
+      svg: 'home/toolkit/art-direction/vi/photoshop.svg',
+      desc: 'Chỉnh sửa hình ảnh bitmap chuyên nghiệp, cắt ghép kỹ thuật số, tạo key visual và thiết kế banner truyền thông.',
+      exp: 370,
+      competencies: ['Bitmap Retouching', 'Key Visual Composition', 'Digital Compositing', 'Marketing Assets']
+    },
+    'illustrator': {
+      name: 'Illustrator',
+      cat: 'ĐỒ HỌA VECTOR',
+      pillText: 'Đồ họa vector',
+      bg: '#330000',
+      textColor: '#FF9A00',
+      pillBg: '#FF9A00',
+      pillColor: '#330000',
+      svg: 'home/toolkit/art-direction/vi/illustrator.svg',
+      desc: 'Sáng tạo bộ nhận diện thương hiệu, thiết kế logo, typography ấn phẩm và đồ họa vector độ phân giải vô hạn.',
+      exp: 380,
+      competencies: ['Vector Illustration', 'Brand Identity & Logo', 'Typography Design', 'SVG Asset Export']
+    },
+    'vue': {
+      name: 'Vue.js',
+      cat: 'FRAMEWORK GIAO DIỆN',
+      pillText: 'Framework web',
+      bg: '#4CBB88',
+      textColor: '#FFFFFF',
+      pillBg: '#415366',
+      pillColor: '#FFFFFF',
+      svg: '/universe-clone/home/toolkit/frontend/vi/vuejs.svg',
+      desc: 'Framework giao diện với cú pháp dễ tiếp cận, hệ thống reactivity mạnh mẽ và công cụ Composition API hiện đại.',
+      exp: 420,
+      competencies: ['Composition API', 'Vue Router & Pinia', 'Reactivity System', 'Component Design']
+    },
+    'vuejs': {
+      name: 'Vue.js',
+      cat: 'FRAMEWORK GIAO DIỆN',
+      pillText: 'Framework web',
+      bg: '#4CBB88',
+      textColor: '#FFFFFF',
+      pillBg: '#415366',
+      pillColor: '#FFFFFF',
+      svg: '/universe-clone/home/toolkit/frontend/vi/vuejs.svg',
+      desc: 'Framework giao diện với cú pháp dễ tiếp cận, hệ thống reactivity mạnh mẽ và công cụ Composition API hiện đại.',
+      exp: 420,
+      competencies: ['Composition API', 'Vue Router & Pinia', 'Reactivity System', 'Component Design']
+    },
+    'vue.js': {
+      name: 'Vue.js',
+      cat: 'FRAMEWORK GIAO DIỆN',
+      pillText: 'Framework web',
+      bg: '#4CBB88',
+      textColor: '#FFFFFF',
+      pillBg: '#415366',
+      pillColor: '#FFFFFF',
+      svg: '/universe-clone/home/toolkit/frontend/vi/vuejs.svg',
+      desc: 'Framework giao diện với cú pháp dễ tiếp cận, hệ thống reactivity mạnh mẽ và công cụ Composition API hiện đại.',
+      exp: 420,
+      competencies: ['Composition API', 'Vue Router & Pinia', 'Reactivity System', 'Component Design']
+    },
+    'three': {
+      name: 'three.js',
+      cat: 'ĐỒ HỌA 3D WEB',
+      pillText: 'Đồ họa 3D',
+      bg: '#FFFFFF',
+      textColor: '#000000',
+      pillBg: '#000000',
+      pillColor: '#FFFFFF',
+      svg: '/universe-clone/home/toolkit/frontend/vi/threejs.svg',
+      desc: 'Thư viện dựng hình 3D trên nền tảng WebGL, kết xuất mô hình khối, vật lý không gian và hiệu ứng thị giác tương tác mượt mà.',
+      exp: 450,
+      competencies: ['WebGL Shaders', 'Scene & Camera', 'Lighting & PBR Materials', 'Interactive 3D Mesh']
+    },
+    'threejs': {
+      name: 'three.js',
+      cat: 'ĐỒ HỌA 3D WEB',
+      pillText: 'Đồ họa 3D',
+      bg: '#FFFFFF',
+      textColor: '#000000',
+      pillBg: '#000000',
+      pillColor: '#FFFFFF',
+      svg: '/universe-clone/home/toolkit/frontend/vi/threejs.svg',
+      desc: 'Thư viện dựng hình 3D trên nền tảng WebGL, kết xuất mô hình khối, vật lý không gian và hiệu ứng thị giác tương tác mượt mà.',
+      exp: 450,
+      competencies: ['WebGL Shaders', 'Scene & Camera', 'Lighting & PBR Materials', 'Interactive 3D Mesh']
+    },
+    'three.js': {
+      name: 'three.js',
+      cat: 'ĐỒ HỌA 3D WEB',
+      pillText: 'Đồ họa 3D',
+      bg: '#FFFFFF',
+      textColor: '#000000',
+      pillBg: '#000000',
+      pillColor: '#FFFFFF',
+      svg: '/universe-clone/home/toolkit/frontend/vi/threejs.svg',
+      desc: 'Thư viện dựng hình 3D trên nền tảng WebGL, kết xuất mô hình khối, vật lý không gian và hiệu ứng thị giác tương tác mượt mà.',
+      exp: 450,
+      competencies: ['WebGL Shaders', 'Scene & Camera', 'Lighting & PBR Materials', 'Interactive 3D Mesh']
+    },
+    'gsap': {
+      name: 'GSAP',
+      cat: 'THƯ VIỆN CHUYỂN ĐỘNG',
+      pillText: 'Chuyển động web',
+      bg: '#0E1719',
+      textColor: '#0AE448',
+      pillBg: '#0AE448',
+      pillColor: '#0E1719',
+      svg: '/universe-clone/home/toolkit/frontend/vi/gsap.svg',
+      desc: 'Tiêu chuẩn công nghiệp cho chuyển động web cao cấp, điều khiển Timeline, ScrollTrigger và hiệu ứng đàn hồi sống động.',
+      exp: 440,
+      competencies: ['Timeline Sequencing', 'ScrollTrigger Parallax', 'Physics & Easing', 'Micro-interactions']
+    }
+  };
+
+  // Helper to build DOM-based card face with real Google Fonts
+  function createCardFaceElement(skillInfo) {
+    const container = document.createElement('div');
+    container.className = 'toolkit-card-vector-face toolkit-card__motion';
+    container.style.backgroundColor = skillInfo.bg || '#1E293B';
+
+    const words = skillInfo.name.split(' ');
+    let titleHtml = '';
+    if (words.length <= 1) {
+      titleHtml = `<div style="font-size: 38px; color: ${skillInfo.textColor};">${words[0]}</div>`;
+    } else {
+      titleHtml = `<div style="font-size: 34px; color: ${skillInfo.textColor};">${words[0]}</div><div style="font-size: 34px; color: ${skillInfo.textColor}; margin-top: 4px;">${words.slice(1).join(' ')}</div>`;
+    }
+
+    container.innerHTML = `
+      <div class="card-center-text">
+        ${titleHtml}
+      </div>
+      <div class="card-bottom-pill" style="background-color: ${skillInfo.pillBg}; color: ${skillInfo.pillColor};">
+        ${skillInfo.pillText || skillInfo.cat}
+      </div>
+    `;
+
+    return container;
+  }
+
+  // SPOTLIGHT MODAL CONTROLLER
+  const modal = document.getElementById('fonlioSkillModal');
+  const modalCardPreview = document.getElementById('modalCardPreview');
+  const modalSkillTag = document.getElementById('modalSkillTag');
+  const modalSkillTitle = document.getElementById('modalSkillTitle');
+  const modalSkillLevel = document.getElementById('modalSkillLevel');
+  const modalSkillCategory = document.getElementById('modalSkillCategory');
+  const modalSkillDesc = document.getElementById('modalSkillDesc');
+  const modalStatExp = document.getElementById('modalStatExp');
+
+  window.openSkillModal = function(skillInfo) {
+    if (!modal) return;
+    
+    modalSkillTitle.textContent = skillInfo.name;
+    modalSkillTag.textContent = skillInfo.cat || 'CHUYÊN MÔN';
+    modalSkillLevel.textContent = `Trình độ: ${skillInfo.level || 'Thành thạo (Advanced)'}`;
+    modalSkillCategory.textContent = skillInfo.cat || 'Chuyên môn xác thực';
+    modalSkillDesc.textContent = skillInfo.desc || `Kỹ năng ${skillInfo.name} đã được xác thực trong Living Portfolio của ứng viên. Đáp ứng tốt tiêu chuẩn đánh giá từ đối tác tuyển dụng Fonlio.`;
+    if (modalStatExp) modalStatExp.textContent = `+${skillInfo.exp || 420} EXP`;
+
+    // Set ambient glow matching the skill color
+    const glowColor = skillInfo.bg || '#38BDF8';
+    modal.style.setProperty('--modal-glow-color', glowColor + '55');
+
+    // Populate competencies
+    const compContainer = document.getElementById('modalSkillCompetencies');
+    if (compContainer) {
+      compContainer.innerHTML = '';
+      const list = skillInfo.competencies || [skillInfo.name, 'Kỹ năng thực chiến', 'Chuẩn hóa Fonlio'];
+      list.forEach(tag => {
+        const pill = document.createElement('span');
+        pill.className = 'modal-competency-pill';
+        pill.textContent = tag;
+        compContainer.appendChild(pill);
+      });
+    }
+
+    // Render Preview Card
+    modalCardPreview.innerHTML = '';
+    if (skillInfo.svg) {
+      const img = document.createElement('img');
+      img.src = skillInfo.svg;
+      img.alt = skillInfo.name;
+      modalCardPreview.appendChild(img);
+    } else {
+      modalCardPreview.appendChild(createCardFaceElement(skillInfo));
+    }
+
+    modal.classList.add('is-open');
+
+    // Notify React app if in iframe
+    try {
+      window.parent.postMessage({
+        type: 'OPEN_SKILL_SPOTLIGHT',
+        payload: {
+          skillName: skillInfo.name,
+          category: skillInfo.cat,
+          level: skillInfo.level
+        }
+      }, '*');
+    } catch(e) {}
+  };
+
+  window.closeSkillModal = function() {
+    if (modal) modal.classList.remove('is-open');
+  };
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') window.closeSkillModal();
+  });
+
+  // CORE FUNCTION: Renders ONLY what the candidate actually has!
+  window.renderCandidateSkillsOnly = function(skillsList, skillDetails) {
+    if (!Array.isArray(skillsList) || skillsList.length === 0) return;
+
+    // Update subtitle text to "Kĩ năng của bạn"
+    const frontSub = document.querySelector('.toolkit__subtitle--front');
+    if (frontSub) frontSub.textContent = 'Kĩ năng của bạn';
+
+
+
+    // Build ordered list of skill items
+    const userSkills = [];
+    const detailsMap = {};
+    if (Array.isArray(skillDetails)) {
+      skillDetails.forEach(sd => {
+        if (sd && sd.name) detailsMap[sd.name.toLowerCase().trim()] = sd;
+      });
+    }
+
+    skillsList.forEach(rawName => {
+      if (!rawName) return;
+      const clean = String(rawName).trim();
+      const lower = clean.toLowerCase();
+      const detail = detailsMap[lower] || {};
+      const catalogItem = SKILL_CATALOG[lower] || {
+        name: clean,
+        cat: (detail.category || 'KỸ NĂNG XÁC THỰC').toUpperCase(),
+        pillText: clean,
+        bg: '#1E293B',
+        textColor: '#38BDF8',
+        pillBg: '#38BDF8',
+        pillColor: '#0F172A',
+        desc: `Kỹ năng ${clean} đã được ứng viên xác thực trong hồ sơ năng lực.`,
+        exp: 400,
+        competencies: [clean, 'Kỹ năng xác thực', 'Chuẩn Fonlio']
+      };
+
+      const lvl = detail.proficiencyLevel;
+      const levelText = lvl === 'EXPERT' ? 'Chuyên gia (Expert)' : lvl === 'ADVANCED' ? 'Thành thạo (Advanced)' : 'Nâng cao (Intermediate)';
+
+      userSkills.push({
+        ...catalogItem,
+        level: levelText
+      });
+    });
+
+    if (userSkills.length === 0) return;
+
+    // Get all slots in Wheel 1 (frontend) excluding transitions
+    const frontendSlots = Array.from(document.querySelectorAll('.toolkit__wheel--frontend .toolkit__slot:not(.toolkit__slot--transition):not(.toolkit__slot--zoom)'));
+    
+    // Completely hide Wheel 2 (Option 1 single-deck architecture)
+    const artWheel = document.querySelector('.toolkit__wheel--art-direction');
+    if (artWheel) artWheel.style.display = 'none';
+    const artSubtitle = document.querySelector('.toolkit__subtitle--art');
+    if (artSubtitle) artSubtitle.style.display = 'none';
+
+    // Populate each slot with user's actual skill
+    frontendSlots.forEach((slot, index) => {
+      if (index < userSkills.length) {
+        slot.style.display = '';
+        slot.classList.add('is-visible');
+        const card = slot.querySelector('.toolkit-card');
+        if (!card) return;
+
+        const skillInfo = userSkills[index];
+
+        // Clean card and add contents
+        card.innerHTML = '';
+        card.style.cursor = 'pointer';
+
+        // 1. Set tailored ambient aura glow color matching the skill
+        const glowColor = skillInfo.textColor && skillInfo.textColor !== '#FFFFFF' && skillInfo.textColor !== '#1F1D1D' 
+          ? skillInfo.textColor 
+          : (skillInfo.bg && skillInfo.bg !== '#000000' && skillInfo.bg !== '#1E293B' ? skillInfo.bg : '#38BDF8');
+        card.style.setProperty('--card-glow', glowColor);
+
+        // 2. Add card face
+        if (skillInfo.svg) {
+          const img = document.createElement('img');
+          img.className = 'toolkit-card__motion';
+          img.src = skillInfo.svg;
+          img.alt = skillInfo.name;
+          card.appendChild(img);
+        } else {
+          card.appendChild(createCardFaceElement(skillInfo));
+        }
+
+        // 3. Add luxury verified foil stamp on card face
+        const verifiedTag = document.createElement('div');
+        verifiedTag.className = 'card-verified-tag';
+        verifiedTag.innerHTML = '<span class="card-verified-sparkle">✦</span> XÁC THỰC';
+        card.appendChild(verifiedTag);
+
+        // Click handler to open luxury modal
+        card.onclick = function(e) {
+          e.stopPropagation();
+          window.openSkillModal(skillInfo);
+        };
+      } else {
+        // HIDE ALL UNUSED TEMPLATE SLOTS!
+        slot.style.display = 'none';
+        slot.classList.remove('is-visible');
+      }
+    });
+
+    // Hide transition flip slot
+    const flipSlot = document.querySelector('.toolkit__slot--transition');
+    if (flipSlot) flipSlot.style.display = 'none';
+  };
+
+  // Auto-fetch profile from API if token exists
+  try {
+    const token = localStorage.getItem('nextplease:access_token') || sessionStorage.getItem('nextplease:access_token');
+    if (token) {
+      fetch('/api/v1/profiles/me', {
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res?.success && res?.data) {
+          const profile = res.data;
+          const candidateName = profile.name || profile.displayName || profile.fullName;
+          if (candidateName) {
+            document.querySelectorAll('.js-candidate-name').forEach(el => el.textContent = candidateName);
+            const avatar = document.getElementById('cardAvatarInitial');
+            if (avatar) avatar.textContent = candidateName.trim().charAt(0).toUpperCase();
+            const headAvatar = document.getElementById('headerUserInitial');
+            if (headAvatar) headAvatar.textContent = candidateName.trim().charAt(0).toUpperCase();
+          }
+          if (profile.totalExp !== undefined) {
+            const formatted = Number(profile.totalExp).toLocaleString('vi-VN');
+            document.querySelectorAll('.js-candidate-exp').forEach(el => el.textContent = formatted);
+          }
+          if (profile.reputationScore !== undefined) {
+            document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = String(profile.reputationScore));
+          }
+          if (Array.isArray(profile.skills) && profile.skills.length > 0) {
+            window.renderCandidateSkillsOnly(profile.skills, profile.skillDetails);
+          }
+        }
+      })
+      .catch(err => {
+        console.warn('Auto profile fetch warning:', err);
+      });
+    }
+  } catch (e) {
+    console.warn('LocalStorage error:', e);
+  }
+
+  // Listen for data updates posted from parent React app (CandidateUniversePage)
+  window.addEventListener('message', (evt) => {
+    if (evt.data?.type === 'UPDATE_UNIVERSE_DATA') {
+      const data = evt.data.payload;
+      if (data?.name) {
+        document.querySelectorAll('.js-candidate-name').forEach(el => el.textContent = data.name);
+        const avatar = document.getElementById('cardAvatarInitial');
+        if (avatar) avatar.textContent = data.name.trim().charAt(0).toUpperCase();
+        const headAvatar = document.getElementById('headerUserInitial');
+        if (headAvatar) headAvatar.textContent = data.name.trim().charAt(0).toUpperCase();
+      }
+      if (data?.exp !== undefined) {
+        const formatted = Number(data.exp).toLocaleString('vi-VN');
+        document.querySelectorAll('.js-candidate-exp').forEach(el => el.textContent = formatted);
+      }
+      if (data?.rs !== undefined) {
+        document.querySelectorAll('.js-candidate-rs').forEach(el => el.textContent = String(data.rs));
+      }
+
+      // RENDER ONLY WHAT CANDIDATE ACTUALLY HAS!
+      if (Array.isArray(data?.skills) && data.skills.length > 0) {
+        window.renderCandidateSkillsOnly(data.skills, data.skillDetails);
+      }
+
+      // RENDER REAL CANDIDATE MILESTONES (Job Fonlio + Experiences with proof + Credentials)
+      window.__lastUniverseData = data;
+      if (typeof window.renderCandidateMilestones === 'function') {
+        window.renderCandidateMilestones(data);
+      }
+    }
+  });
+
+  /* ==========================================================================
+     UNIVERSE STORY WRAPPED MODAL CONTROLLER
+     ========================================================================== */
+  let curWrappedSlide = 0;
+  const totalWrappedSlides = 6;
+  let wrappedTimer = null;
+  let isWrappedPaused = false;
+  let wrappedProgress = 0;
+  const wrappedDuration = 6000;
+
+  function updateWrappedSlide(idx) {
+    curWrappedSlide = (idx + totalWrappedSlides) % totalWrappedSlides;
+    wrappedProgress = 0;
+    document.querySelectorAll('.universe-wrapped-slide').forEach((s, i) => {
+      s.classList.toggle('is-active', i === curWrappedSlide);
+    });
+    const counterText = document.getElementById('wrappedCounterText');
+    if (counterText) counterText.textContent = (curWrappedSlide + 1) + ' / ' + totalWrappedSlides;
+    const nextBtn = document.getElementById('wrappedNextBtn');
+    if (nextBtn) nextBtn.textContent = curWrappedSlide === totalWrappedSlides - 1 ? 'Hoàn tất ✓' : 'Tiếp →';
+    updateWrappedBars();
+  }
+
+  function updateWrappedBars() {
+    const bars = document.querySelectorAll('.universe-wrapped-bar-fill');
+    bars.forEach((b, i) => {
+      if (i < curWrappedSlide) b.style.width = '100%';
+      else if (i === curWrappedSlide) b.style.width = wrappedProgress + '%';
+      else b.style.width = '0%';
+    });
+  }
+
+  function startWrappedTimer() {
+    clearInterval(wrappedTimer);
+    if (isWrappedPaused) return;
+    const step = (50 / wrappedDuration) * 100;
+    wrappedTimer = setInterval(() => {
+      wrappedProgress += step;
+      if (wrappedProgress >= 100) {
+        if (curWrappedSlide < totalWrappedSlides - 1) {
+          updateWrappedSlide(curWrappedSlide + 1);
+        } else {
+          isWrappedPaused = true;
+          clearInterval(wrappedTimer);
+        }
+      }
+      updateWrappedBars();
+    }, 50);
+  }
+
+  window.openWrappedModal = function() {
+    const modal = document.getElementById('fonlioWrappedModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      requestAnimationFrame(() => modal.classList.add('is-open'));
+      isWrappedPaused = false;
+      updateWrappedSlide(0);
+      startWrappedTimer();
+    }
+  };
+
+  window.closeWrappedModal = function() {
+    const modal = document.getElementById('fonlioWrappedModal');
+    if (modal) {
+      modal.classList.remove('is-open');
+      clearInterval(wrappedTimer);
+      setTimeout(() => { modal.style.display = 'none'; }, 350);
+    }
+  };
+
+  window.nextWrappedSlide = function() {
+    if (curWrappedSlide < totalWrappedSlides - 1) {
+      updateWrappedSlide(curWrappedSlide + 1);
+      startWrappedTimer();
+    } else {
+      window.closeWrappedModal();
+    }
+  };
+
+  window.prevWrappedSlide = function() {
+    if (curWrappedSlide > 0) {
+      updateWrappedSlide(curWrappedSlide - 1);
+      startWrappedTimer();
+    }
+  };
+
+  window.toggleWrappedPlay = function() {
+    isWrappedPaused = !isWrappedPaused;
+    const pauseIcon = document.getElementById('wrappedPauseIcon');
+    const playIcon = document.getElementById('wrappedPlayIcon');
+    if (pauseIcon && playIcon) {
+      pauseIcon.style.display = isWrappedPaused ? 'none' : 'block';
+      playIcon.style.display = isWrappedPaused ? 'block' : 'none';
+    }
+    if (!isWrappedPaused) startWrappedTimer();
+    else clearInterval(wrappedTimer);
+  };
+
+  window.copyWrappedShare = function(btn) {
+    if (btn) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '✓ Đã sao chép link!';
+      btn.style.background = '#10b981';
+      setTimeout(() => {
+        btn.innerHTML = orig;
+        btn.style.background = '#b9ff00';
+      }, 2500);
+    }
+  };
+
+  window.goBackHome = function() {
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'NAVIGATE_HOME' }, '*');
+      }
+    } catch (e) {}
+    try {
+      if (window.top && window.top !== window) {
+        window.top.location.href = '/';
+        return;
+      }
+    } catch (e) {}
+    window.location.href = '/';
+  };
+
+  window.navigateToApp = function(path) {
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'NAVIGATE_PATH', payload: { path: path } }, '*');
+        return;
+      }
+    } catch (e) {}
+    try {
+      if (window.top && window.top !== window) {
+        window.top.location.href = path;
+        return;
+      }
+    } catch (e) {}
+    window.location.href = path;
+  };
+
+  window.triggerWrapped = function() {
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'OPEN_WRAPPED' }, '*');
+    } else {
+      window.openWrappedModal();
+    }
+  };
+
+  // Keyboard controls: ESC to close, Left/Right arrow to navigate
+  window.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('fonlioWrappedModal');
+    if (!modal || !modal.classList.contains('is-open')) return;
+    if (e.key === 'Escape') window.closeWrappedModal();
+    if (e.key === 'ArrowRight') window.nextWrappedSlide();
+    if (e.key === 'ArrowLeft') window.prevWrappedSlide();
+    if (e.key === ' ') {
+      e.preventDefault();
+      window.toggleWrappedPlay();
+    }
+  });
+
+  // Handle actions when viewed directly without parent iframe
+  window.addEventListener('message', (evt) => {
+    if (window.parent === window) {
+      if (evt.data?.type === 'OPEN_WRAPPED') {
+        window.openWrappedModal();
+      } else if (evt.data?.type === 'NAVIGATE_HOME') {
+        window.location.href = '/';
+      } else if (evt.data?.type === 'NAVIGATE_DASHBOARD') {
+        window.location.href = '/candidates/dashboard/overview';
+      }
+    }
+  });
+
+  if (window.location.search.includes('testnow') || window.location.search.includes('test')) {
+    window.renderCandidateSkillsOnly(['UI/UX Design', 'ReactJS', 'Figma', 'TypeScript', 'NodeJS'], [
+      { name: 'UI/UX Design', category: 'Thiết kế trải nghiệm', proficiencyLevel: 'EXPERT' },
+      { name: 'ReactJS', category: 'Frontend Web App', proficiencyLevel: 'ADVANCED' },
+      { name: 'Figma', category: 'Design System & UI', proficiencyLevel: 'ADVANCED' },
+      { name: 'TypeScript', category: 'Type Safety & Architecture', proficiencyLevel: 'INTERMEDIATE' },
+      { name: 'NodeJS', category: 'Backend & RESTful API', proficiencyLevel: 'ADVANCED' }
+    ]);
+  }
+
+  if (window.location.search.includes('openWrapped') || window.location.search.includes('wrapped')) {
+    setTimeout(() => { window.openWrappedModal(); }, 600);
+  }
+})();
+</script>
+
+
+</body>
+</html>
