@@ -127,6 +127,10 @@ export function CandidateUniversePage() {
         navigate('/candidates/dashboard/overview');
       } else if (event.data?.type === 'NAVIGATE_PORTFOLIO_EDIT') {
         navigate('/candidates/dashboard/portfolio');
+      } else if (event.data?.type === 'NAVIGATE_JOBS') {
+        navigate('/jobs');
+      } else if (event.data?.type === 'NAVIGATE_PATH' && event.data?.payload?.path) {
+        navigate(event.data.payload.path);
       }
     };
 

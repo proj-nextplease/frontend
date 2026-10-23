@@ -321,17 +321,23 @@
 }
 
 .universe-cta-btn--lime {
-  background: #b9ff00 !important;
-  color: #121111 !important;
-  box-shadow: 0 10px 28px -6px rgba(185, 255, 0, 0.55),
-              0 0 0 1px rgba(185, 255, 0, 0.35) inset !important;
+  background: #120e20 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 10px 24px -4px rgba(18, 14, 32, 0.35) !important;
+}
+
+.universe-cta-btn--lime svg {
+  color: #b9ff00 !important;
+  fill: #b9ff00 !important;
 }
 
 .universe-cta-btn--lime:hover {
-  background: #c6ff1a !important;
+  background: #231c38 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
   transform: translateY(-2px) scale(1.02) !important;
-  box-shadow: 0 16px 36px -4px rgba(185, 255, 0, 0.75),
-              0 0 0 1px rgba(185, 255, 0, 0.5) inset !important;
+  box-shadow: 0 14px 28px -4px rgba(18, 14, 32, 0.45) !important;
 }
 
 .universe-cta-btn--lime:active {
@@ -353,7 +359,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0.35) 50%,
     transparent 100%
   ) !important;
   transform: rotate(25deg) !important;
@@ -367,19 +373,20 @@
 }
 
 .universe-cta-btn--outline {
-  background: rgba(255, 255, 255, 0.45) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
   color: #120e20 !important;
-  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(18, 14, 32, 0.16) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 4px 14px rgba(18, 14, 32, 0.06) !important;
 }
 
 .universe-cta-btn--outline:hover {
-  background: rgba(255, 255, 255, 0.8) !important;
-  border-color: rgba(255, 255, 255, 0.95) !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: rgba(18, 14, 32, 0.3) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 8px 22px rgba(18, 14, 32, 0.08) !important;
+  box-shadow: 0 8px 20px rgba(18, 14, 32, 0.12) !important;
 }
 
 .universe-cta-btn--outline:active {
@@ -2062,7 +2069,6 @@ html:lang(vi) .toolkit__subtitle,
             class="fonlio-header-wordmark"
           />
         </a>
-        <span class="universe-header-tag">VŨ TRỤ KÝ ỨC</span>
       </div>
 
       <nav class="site-header__nav" aria-label="Điều hướng chính">
@@ -2071,24 +2077,7 @@ html:lang(vi) .toolkit__subtitle,
         <a class="site-header__link" href="#contact">hồ sơ năng lực</a>
       </nav>
 
-      <div class="site-header__right" style="display: flex; align-items: center; gap: 10px; pointer-events: auto;">
-        <div class="universe-user-badge" style="display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 6px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 999px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
-          <div style="width: 26px; height: 26px; border-radius: 50%; background: #b9ff00; color: #041612; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">
-            <span id="headerUserInitial">P</span>
-          </div>
-          <span class="js-candidate-name" style="font-size: 12px; font-weight: 700; color: #f5e7df;">Tài Phát</span>
-          <span style="font-size: 11px; color: #b9ff00; font-weight: 600;">• <span class="js-candidate-exp">2,250</span> EXP</span>
-        </div>
-
-        <button
-          type="button"
-          class="universe-header-cta"
-          onclick="window.triggerWrapped()"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          <span>Cuốn phim Wrapped</span>
-        </button>
-      </div>
+      <div class="site-header__right"></div>
     </header>
 
     <nav
@@ -2907,11 +2896,6 @@ html:lang(vi) .toolkit__subtitle,
               <div class="next-footer__content">
                 <div class="next-footer__inner">
                   <div class="next-footer__main">
-                    <div class="universe-footer-badge">
-                      <span class="universe-footer-badge__dot"></span>
-                      <span>HỒ SƠ SỐ • LIVING PROOF VERIFIED</span>
-                    </div>
-
                     <h2 class="next-footer__headline">
                       <span>Tỏa sáng cùng</span><br />
                       <span>Minh chứng sống</span><br />
@@ -2948,7 +2932,7 @@ html:lang(vi) .toolkit__subtitle,
                   <div class="next-footer__deck">
                     <div class="next-footer__columns">
                       <div class="next-footer__col">
-                        <div class="next-footer__col-title">VŨ TRỤ FONLIO</div>
+                        <div class="next-footer__col-title">VŨ TRỤ KÝ ỨC</div>
                         <ul class="next-footer__links">
                           <li>
                             <a href="javascript:void(0)" onclick="window.triggerWrapped()">
@@ -2958,7 +2942,7 @@ html:lang(vi) .toolkit__subtitle,
                           </li>
                           <li>
                             <a href="#toolkit">
-                              <span>Bộ công cụ Kỹ năng</span>
+                              <span>Triển lãm Kỹ năng</span>
                             </a>
                           </li>
                           <li>
@@ -2967,36 +2951,35 @@ html:lang(vi) .toolkit__subtitle,
                             </a>
                           </li>
                           <li>
-                            <a href="javascript:void(0)" onclick="window.parent.postMessage({ type: 'NAVIGATE_DASHBOARD' }, '*')">
-                              <span>Bàn làm việc (Dashboard)</span>
+                            <a href="#hero">
+                              <span>Về đầu trang</span>
                             </a>
                           </li>
                         </ul>
                       </div>
 
                       <div class="next-footer__col">
-                        <div class="next-footer__col-title">HỆ SINH THÁI</div>
+                        <div class="next-footer__col-title">NỀN TẢNG FONLIO</div>
                         <ul class="next-footer__links">
                           <li>
-                            <span class="next-footer__link-static">
-                              <span>50+ Đối tác Tuyển dụng</span>
-                            </span>
+                            <a href="javascript:void(0)" onclick="window.navigateToApp('/candidates/dashboard/overview')">
+                              <span>Bàn làm việc (Dashboard)</span>
+                            </a>
                           </li>
                           <li>
-                            <span class="next-footer__link-static">
-                              <span>Fonlio Trust Engine</span>
-                              <span class="next-footer__link-tag next-footer__link-tag--green">SECURED</span>
-                            </span>
+                            <a href="javascript:void(0)" onclick="window.navigateToApp('/candidates/dashboard/portfolio')">
+                              <span>Hồ sơ năng lực</span>
+                            </a>
                           </li>
                           <li>
-                            <span class="next-footer__link-static">
-                              <span>Cộng đồng Sinh viên CLB</span>
-                            </span>
+                            <a href="javascript:void(0)" onclick="window.navigateToApp('/jobs')">
+                              <span>Việc làm &amp; Tuyển dụng</span>
+                            </a>
                           </li>
                           <li>
-                            <span class="next-footer__link-static">
-                              <span>Chuẩn hóa Living Proof</span>
-                            </span>
+                            <a href="javascript:void(0)" onclick="window.navigateToApp('/')">
+                              <span>Trang chủ Fonlio</span>
+                            </a>
                           </li>
                         </ul>
                       </div>
@@ -3016,14 +2999,8 @@ html:lang(vi) .toolkit__subtitle,
                       </div>
 
                       <div class="next-footer__deck-socials">
-                        <a class="np-footer-social-btn" href="https://www.facebook.com/profile.php?id=61594934129474" target="_blank" rel="noopener noreferrer" title="Facebook">
+                        <a class="np-footer-social-btn" href="https://www.facebook.com/profile.php?id=61594934129474" target="_blank" rel="noopener noreferrer" title="Facebook FONLIO">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
-                        </a>
-                        <a class="np-footer-social-btn" href="https://www.instagram.com/fonlioofficial/" target="_blank" rel="noopener noreferrer" title="Instagram">
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>
-                        </a>
-                        <a class="np-footer-social-btn" href="https://www.tiktok.com/@fonlio.official" target="_blank" rel="noopener noreferrer" title="TikTok">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.5 6.27 6.27 0 0 0 1.95-4.5V8.69a8.18 8.18 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-.95-.12z" /></svg>
                         </a>
                       </div>
                     </div>
@@ -3904,6 +3881,22 @@ html:lang(vi) .toolkit__subtitle,
       }
     } catch (e) {}
     window.location.href = '/';
+  };
+
+  window.navigateToApp = function(path) {
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'NAVIGATE_PATH', payload: { path: path } }, '*');
+        return;
+      }
+    } catch (e) {}
+    try {
+      if (window.top && window.top !== window) {
+        window.top.location.href = path;
+        return;
+      }
+    } catch (e) {}
+    window.location.href = path;
   };
 
   window.triggerWrapped = function() {
