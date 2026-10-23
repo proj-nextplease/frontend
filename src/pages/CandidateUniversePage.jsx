@@ -108,6 +108,11 @@ export function CandidateUniversePage() {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('wrapped') === 'true' || urlParams.get('openWrapped') === 'true') {
+      setIsWrappedOpen(true);
+    }
+
     // Bridge messages from the universe iframe
     const handleMessage = (event) => {
       if (event.data?.type === 'OPEN_WRAPPED') {
@@ -157,7 +162,7 @@ export function CandidateUniversePage() {
     user?.username ||
     'Tài Phát';
   const realExperiences = portfolio?.experiences || [];
-  const displayExperiences = realExperiences;
+  const displayExperiences = realExperiences.length > 0 ? realExperiences : SAMPLE_MEMORIES;
 
   const totalExp = useMemo(() => {
     if (portfolio?.totalExp !== undefined && portfolio?.totalExp !== null) {
@@ -289,7 +294,16 @@ export function CandidateUniversePage() {
           }}
         >
           <FonlioWrappedStory
-            candidate={{ name: displayName, avatar: portfolio?.avatar }}
+            candidate={{
+              name: displayName,
+              avatar: portfolio?.avatar,
+              avatarUrl: portfolio?.avatarUrl,
+              totalExp: totalExp,
+              reputationScore: totalRs,
+              currentLevel: portfolio?.currentLevel || 2,
+              skills: portfolio?.skills?.length ? portfolio.skills : ['UI/UX Design', 'ReactJS', 'Figma', 'TypeScript', 'NodeJS'],
+              publicSlug: portfolio?.publicSlug || 'tai-phat',
+            }}
             experiences={displayExperiences}
             onClose={() => setIsWrappedOpen(false)}
           />

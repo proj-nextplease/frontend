@@ -59,7 +59,7 @@ export function FonlioWrappedStory({
       title: 'NHÀ THÁM HIỂM TOÀN NĂNG',
       subtitle: 'The Cosmic Explorer',
       desc: 'Không ngừng học hỏi, sẵn sàng dấn thân và từng ngày mở rộng biên giới tri thức.',
-      accent: '#b9ff00',
+      accent: '#9b7cff',
     };
   }, [experiences]);
 
@@ -150,36 +150,56 @@ export function FonlioWrappedStory({
         position: 'fixed',
         inset: 0,
         zIndex: 200,
-        background: '#0d0c0c',
+        background: '#090808',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         userSelect: 'none',
-        fontFamily: "'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif",
+        fontFamily: "'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif",
       }}
     >
       <style>{`
         @keyframes npWrappedPop {
-          0% { transform: scale(0.94); opacity: 0; }
+          0% { transform: scale(0.95); opacity: 0; }
           100% { transform: scale(1); opacity: 1; }
         }
         @keyframes npGlowLime {
-          0% { filter: drop-shadow(0 0 16px rgba(185, 255, 0, 0.45)); }
-          50% { filter: drop-shadow(0 0 36px rgba(185, 255, 0, 0.85)); }
-          100% { filter: drop-shadow(0 0 16px rgba(185, 255, 0, 0.45)); }
+          0% { filter: drop-shadow(0 0 16px rgba(185, 255, 0, 0.45)) drop-shadow(0 0 32px rgba(255, 107, 74, 0.3)); }
+          50% { filter: drop-shadow(0 0 38px rgba(185, 255, 0, 0.85)) drop-shadow(0 0 50px rgba(255, 107, 74, 0.5)); }
+          100% { filter: drop-shadow(0 0 16px rgba(185, 255, 0, 0.45)) drop-shadow(0 0 32px rgba(255, 107, 74, 0.3)); }
+        }
+        @keyframes npLaserBeam {
+          0%, 40% { transform: translateX(-100%) rotate(25deg); }
+          75%, 100% { transform: translateX(300%) rotate(25deg); }
         }
         .np-wrapped-inner {
-          animation: npWrappedPop 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          animation: npWrappedPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}</style>
 
-      {/* Background Radial Glow */}
+      {/* Universe Multi-Orb Cosmic Atmosphere */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'radial-gradient(ellipse at 50% 30%, #134e43 0%, #0d3830 50%, #061f1a 100%)',
+          background: `
+            radial-gradient(circle at 18% 18%, rgba(255, 107, 74, 0.28) 0%, transparent 48%),
+            radial-gradient(circle at 82% 25%, rgba(155, 124, 255, 0.32) 0%, transparent 52%),
+            radial-gradient(circle at 50% 88%, rgba(185, 255, 0, 0.18) 0%, transparent 58%),
+            radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.1) 0%, transparent 60%),
+            #0a0808
+          `,
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Subtle Noise Texture Overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(circle at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.6) 100%)',
           pointerEvents: 'none',
         }}
       />
@@ -195,15 +215,16 @@ export function FonlioWrappedStory({
           display: 'flex',
           flexDirection: 'column',
           zIndex: 10,
-          background: 'rgba(11, 38, 31, 0.96)',
-          backdropFilter: 'blur(30px)',
-          border: '1px solid rgba(255, 255, 255, 0.22)',
+          background: 'rgba(18, 16, 16, 0.92)',
+          backdropFilter: 'blur(40px) saturate(190%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(190%)',
+          border: '1px solid rgba(245, 231, 223, 0.18)',
           borderRadius: '32px',
           overflow: 'hidden',
-          boxShadow: '0 30px 90px rgba(0, 0, 0, 0.9), 0 0 45px rgba(185, 255, 0, 0.2)',
+          boxShadow: '0 32px 90px -10px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(245, 231, 223, 0.12) inset, 0 0 50px rgba(185, 255, 0, 0.14)',
         }}
       >
-        {/* Story Segment Bars */}
+        {/* Story Segment Progress Bars */}
         <div
           style={{
             position: 'absolute',
@@ -225,7 +246,7 @@ export function FonlioWrappedStory({
                 style={{
                   flex: 1,
                   height: '3.5px',
-                  background: 'rgba(245, 231, 223, 0.2)',
+                  background: 'rgba(245, 231, 223, 0.18)',
                   borderRadius: '99px',
                   overflow: 'hidden',
                   cursor: 'pointer',
@@ -236,7 +257,7 @@ export function FonlioWrappedStory({
                     height: '100%',
                     width: `${widthPct}%`,
                     background: '#b9ff00',
-                    boxShadow: '0 0 10px #b9ff00',
+                    boxShadow: '0 0 12px #b9ff00',
                     transition: isCurrent ? 'width 0.05s linear' : 'none',
                   }}
                 />
@@ -258,13 +279,24 @@ export function FonlioWrappedStory({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <UserAvatar src={candidate?.avatarUrl} name={displayName} size={30} />
+            <div style={{ position: 'relative' }}>
+              <UserAvatar src={candidate?.avatarUrl} name={displayName} size={32} />
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: '-2px',
+                  borderRadius: '50%',
+                  border: '1.5px solid #b9ff00',
+                  pointerEvents: 'none',
+                }}
+              />
+            </div>
             <div>
-              <div style={{ fontSize: '0.86rem', fontWeight: 800, color: '#f5e7df', lineHeight: 1.2 }}>
+              <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#f5e7df', lineHeight: 1.2 }}>
                 {displayName}
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#b9ff00', fontWeight: 700, letterSpacing: '0.04em' }}>
-                FONLIO WRAPPED
+              <div style={{ fontSize: '0.72rem', color: '#b9ff00', fontWeight: 800, letterSpacing: '0.06em' }}>
+                FONLIO WRAPPED ✦ 2026
               </div>
             </div>
           </div>
@@ -275,7 +307,7 @@ export function FonlioWrappedStory({
               onClick={() => setIsPaused((p) => !p)}
               style={{
                 background: 'rgba(245, 231, 223, 0.08)',
-                border: '1px solid rgba(245, 231, 223, 0.12)',
+                border: '1px solid rgba(245, 231, 223, 0.16)',
                 color: '#f5e7df',
                 width: '34px',
                 height: '34px',
@@ -284,6 +316,7 @@ export function FonlioWrappedStory({
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
+                transition: 'background 0.2s',
               }}
             >
               {isPaused ? <Play size={14} /> : <Pause size={14} />}
@@ -293,7 +326,7 @@ export function FonlioWrappedStory({
               onClick={onClose}
               style={{
                 background: 'rgba(245, 231, 223, 0.08)',
-                border: '1px solid rgba(245, 231, 223, 0.12)',
+                border: '1px solid rgba(245, 231, 223, 0.16)',
                 color: '#f5e7df',
                 width: '34px',
                 height: '34px',
@@ -302,6 +335,7 @@ export function FonlioWrappedStory({
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
+                transition: 'background 0.2s',
               }}
             >
               <X size={16} />
@@ -355,54 +389,59 @@ export function FonlioWrappedStory({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
               <div
                 style={{
-                  width: '96px',
-                  height: '96px',
+                  width: '104px',
+                  height: '104px',
                   borderRadius: '50%',
-                  background: 'radial-gradient(circle, #b9ff00 0%, #2dd4bf 70%, transparent 100%)',
+                  background: 'radial-gradient(circle at 35% 30%, #b9ff00 0%, #ff6b4a 60%, #9b7cff 100%)',
                   animation: 'npGlowLime 2.6s infinite ease-in-out',
-                  marginBottom: '10px',
+                  marginBottom: '6px',
                 }}
               />
               <span
                 style={{
-                  fontSize: '0.8rem',
+                  fontSize: '0.76rem',
                   letterSpacing: '0.14em',
                   textTransform: 'uppercase',
                   color: '#b9ff00',
                   fontWeight: 800,
+                  padding: '5px 14px',
+                  borderRadius: '999px',
+                  background: 'rgba(185, 255, 0, 0.1)',
+                  border: '1px solid rgba(185, 255, 0, 0.3)',
                 }}
               >
-                HÀNH TRÌNH CỦA BẠN
+                HÀNH TRÌNH THỰC CHIẾN • LIVING PROOF
               </span>
               <h1
                 style={{
-                  fontFamily: "'Be Vietnam Pro', 'Plus Jakarta Sans', sans-serif",
-                  fontSize: '2.1rem',
-                  fontWeight: 900,
-                  color: '#ffffff',
-                  lineHeight: 1.25,
+                  fontFamily: "'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif",
+                  fontSize: '2.25rem',
+                  fontWeight: 800,
+                  color: '#f5e7df',
+                  lineHeight: 1.15,
                   margin: 0,
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '-0.03em',
                 }}
               >
                 Mỗi dự án là một vì sao thắp sáng.
               </h1>
-              <p style={{ color: '#d6d3d1', fontSize: '0.98rem', lineHeight: 1.65, maxWidth: '340px' }}>
-                Chào {displayName}, hãy cùng chiêm ngưỡng những bước tiến thực chiến mà bạn đã bền bỉ tôi luyện suốt thời gian qua.
+              <p style={{ color: 'rgba(245, 231, 223, 0.72)', fontSize: '0.96rem', lineHeight: 1.65, maxWidth: '340px', margin: 0 }}>
+                Chào <strong style={{ color: '#f5e7df' }}>{displayName}</strong>, hãy cùng chiêm ngưỡng những bước tiến thực chiến mà bạn đã tôi luyện suốt thời gian qua.
               </p>
               <div
                 style={{
-                  fontSize: '0.82rem',
-                  color: '#141313',
+                  fontSize: '0.84rem',
+                  color: '#121111',
                   fontWeight: 800,
-                  marginTop: '14px',
-                  padding: '8px 18px',
+                  marginTop: '10px',
+                  padding: '10px 22px',
                   borderRadius: '999px',
                   background: '#b9ff00',
-                  boxShadow: '0 0 20px rgba(185, 255, 0, 0.4)',
+                  boxShadow: '0 10px 26px -4px rgba(185, 255, 0, 0.55)',
+                  cursor: 'pointer',
                 }}
               >
-                Chạm để bắt đầu ✦
+                Khám phá ngay ✦
               </div>
             </div>
           )}
@@ -412,43 +451,48 @@ export function FonlioWrappedStory({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
               <span
                 style={{
-                  fontSize: '0.78rem',
+                  fontSize: '0.76rem',
                   letterSpacing: '0.14em',
                   textTransform: 'uppercase',
-                  color: '#2dd4bf',
+                  color: '#9b7cff',
                   fontWeight: 800,
+                  padding: '5px 14px',
+                  borderRadius: '999px',
+                  background: 'rgba(155, 124, 255, 0.12)',
+                  border: '1px solid rgba(155, 124, 255, 0.3)',
                 }}
               >
                 DẤU ẤN VŨ TRỤ
               </span>
               <h2
                 style={{
-                  fontFamily: "'Be Vietnam Pro', 'Plus Jakarta Sans', sans-serif",
-                  fontSize: '1.9rem',
-                  fontWeight: 900,
-                  color: '#ffffff',
+                  fontFamily: "'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif",
+                  fontSize: '2rem',
+                  fontWeight: 800,
+                  color: '#f5e7df',
                   margin: 0,
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '-0.025em',
                 }}
               >
-                Bạn đã hoàn thành
+                Bạn đã tôi luyện
               </h2>
 
               <div
                 style={{
-                  fontFamily: "'Be Vietnam Pro', 'Plus Jakarta Sans', sans-serif",
-                  fontSize: '5.2rem',
+                  fontFamily: "'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif",
+                  fontSize: '5.6rem',
                   fontWeight: 900,
                   color: '#b9ff00',
                   lineHeight: 1,
-                  textShadow: '0 0 40px rgba(185, 255, 0, 0.65)',
+                  textShadow: '0 0 45px rgba(185, 255, 0, 0.65)',
                   fontVariantNumeric: 'tabular-nums',
+                  letterSpacing: '-0.04em',
                 }}
               >
                 {experiences.length}
               </div>
-              <span style={{ fontSize: '1.1rem', color: '#f5e7df', fontWeight: 800 }}>
-                Ký ức & Cột mốc thực chiến
+              <span style={{ fontSize: '1.05rem', color: '#f5e7df', fontWeight: 700 }}>
+                Ký ức &amp; Cột mốc thực chiến
               </span>
 
               <div
@@ -463,15 +507,16 @@ export function FonlioWrappedStory({
                 <div
                   style={{
                     padding: '16px',
-                    borderRadius: '18px',
-                    background: 'rgba(35, 33, 33, 0.7)',
-                    border: '1px solid rgba(245, 231, 223, 0.12)',
+                    borderRadius: '20px',
+                    background: 'rgba(28, 25, 25, 0.75)',
+                    border: '1px solid rgba(245, 231, 223, 0.14)',
+                    boxShadow: '0 10px 24px rgba(0, 0, 0, 0.4)',
                   }}
                 >
-                  <div style={{ fontSize: '0.75rem', color: '#78716c', fontWeight: 700, textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'rgba(245, 231, 223, 0.6)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     Kinh nghiệm tích lũy
                   </div>
-                  <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#f59e0b', marginTop: '4px' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ff6b4a', marginTop: '6px' }}>
                     {(candidate?.totalExp || 850).toLocaleString()} EXP
                   </div>
                 </div>
@@ -479,15 +524,16 @@ export function FonlioWrappedStory({
                 <div
                   style={{
                     padding: '16px',
-                    borderRadius: '18px',
-                    background: 'rgba(35, 33, 33, 0.7)',
-                    border: '1px solid rgba(245, 231, 223, 0.12)',
+                    borderRadius: '20px',
+                    background: 'rgba(28, 25, 25, 0.75)',
+                    border: '1px solid rgba(245, 231, 223, 0.14)',
+                    boxShadow: '0 10px 24px rgba(0, 0, 0, 0.4)',
                   }}
                 >
-                  <div style={{ fontSize: '0.75rem', color: '#78716c', fontWeight: 700, textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'rgba(245, 231, 223, 0.6)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     Điểm tín nhiệm RS
                   </div>
-                  <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#b9ff00', marginTop: '4px' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#b9ff00', marginTop: '6px' }}>
                     {candidate?.reputationScore || 75}/100
                   </div>
                 </div>
@@ -500,23 +546,27 @@ export function FonlioWrappedStory({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '18px' }}>
               <span
                 style={{
-                  fontSize: '0.78rem',
+                  fontSize: '0.76rem',
                   letterSpacing: '0.14em',
                   textTransform: 'uppercase',
-                  color: '#f59e0b',
+                  color: '#ff6b4a',
                   fontWeight: 800,
+                  padding: '5px 14px',
+                  borderRadius: '999px',
+                  background: 'rgba(255, 107, 74, 0.12)',
+                  border: '1px solid rgba(255, 107, 74, 0.3)',
                 }}
               >
                 DỰ ÁN SÁNG GIÁ NHẤT
               </span>
               <h2
                 style={{
-                  fontFamily: "'Be Vietnam Pro', 'Plus Jakarta Sans', sans-serif",
-                  fontSize: '1.85rem',
-                  fontWeight: 900,
-                  color: '#ffffff',
+                  fontFamily: "'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif",
+                  fontSize: '1.9rem',
+                  fontWeight: 800,
+                  color: '#f5e7df',
                   margin: 0,
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '-0.025em',
                 }}
               >
                 Dấu ấn bứt phá của bạn
@@ -528,38 +578,39 @@ export function FonlioWrappedStory({
                     width: '100%',
                     padding: '24px 22px',
                     borderRadius: '24px',
-                    background: 'radial-gradient(circle at 50% 0%, rgba(185, 255, 0, 0.15) 0%, rgba(28, 25, 25, 0.95) 80%)',
-                    border: '1px solid rgba(185, 255, 0, 0.35)',
-                    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(185, 255, 0, 0.15)',
+                    background: 'radial-gradient(circle at 50% 0%, rgba(255, 107, 74, 0.18) 0%, rgba(24, 21, 21, 0.95) 85%)',
+                    border: '1px solid rgba(255, 107, 74, 0.35)',
+                    boxShadow: '0 20px 48px rgba(0, 0, 0, 0.7), 0 0 35px rgba(255, 107, 74, 0.18)',
                     marginTop: '6px',
                   }}
                 >
                   <div
                     style={{
-                      fontFamily: "'Be Vietnam Pro', 'Plus Jakarta Sans', sans-serif",
-                      fontSize: '1.35rem',
+                      fontFamily: "'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif",
+                      fontSize: '1.4rem',
                       fontWeight: 800,
-                      color: '#fff',
+                      color: '#f5e7df',
                       marginBottom: '6px',
                     }}
                   >
                     {brightestStar.title}
                   </div>
-                  <div style={{ fontSize: '0.92rem', color: '#2dd4bf', fontWeight: 700, marginBottom: '14px' }}>
+                  <div style={{ fontSize: '0.92rem', color: '#9b7cff', fontWeight: 700, marginBottom: '14px' }}>
                     {brightestStar.organization}
                   </div>
 
-                  <p style={{ fontSize: '0.86rem', color: '#a8a29e', lineHeight: 1.65, margin: '0 0 16px' }}>
+                  <p style={{ fontSize: '0.88rem', color: 'rgba(245, 231, 223, 0.75)', lineHeight: 1.65, margin: '0 0 18px' }}>
                     {brightestStar.detail ? brightestStar.detail.slice(0, 150) + '...' : 'Một cột mốc kiên cường và đầy nhiệt huyết.'}
                   </p>
 
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <span
                       style={{
-                        padding: '5px 12px',
+                        padding: '6px 14px',
                         borderRadius: '999px',
-                        background: 'rgba(245, 158, 11, 0.2)',
-                        color: '#f59e0b',
+                        background: 'rgba(255, 107, 74, 0.18)',
+                        border: '1px solid rgba(255, 107, 74, 0.35)',
+                        color: '#ff6b4a',
                         fontSize: '0.8rem',
                         fontWeight: 800,
                       }}
@@ -569,21 +620,22 @@ export function FonlioWrappedStory({
                     {brightestStar.verified && (
                       <span
                         style={{
-                          padding: '5px 12px',
+                          padding: '6px 14px',
                           borderRadius: '999px',
-                          background: 'rgba(185, 255, 0, 0.2)',
-                          color: '#b9ff00',
+                          background: 'rgba(16, 185, 129, 0.18)',
+                          border: '1px solid rgba(16, 185, 129, 0.35)',
+                          color: '#10b981',
                           fontSize: '0.8rem',
                           fontWeight: 800,
                         }}
                       >
-                        Bảo chứng Living Proof
+                        ✓ Bảo chứng Living Proof
                       </span>
                     )}
                   </div>
                 </div>
               ) : (
-                <div style={{ color: '#a8a29e' }}>Đang chờ đợi vì sao đầu tiên...</div>
+                <div style={{ color: 'rgba(245, 231, 223, 0.5)' }}>Đang chờ đợi vì sao đầu tiên...</div>
               )}
             </div>
           )}
@@ -593,29 +645,33 @@ export function FonlioWrappedStory({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
               <span
                 style={{
-                  fontSize: '0.78rem',
+                  fontSize: '0.76rem',
                   letterSpacing: '0.14em',
                   textTransform: 'uppercase',
-                  color: '#2dd4bf',
+                  color: '#9b7cff',
                   fontWeight: 800,
+                  padding: '5px 14px',
+                  borderRadius: '999px',
+                  background: 'rgba(155, 124, 255, 0.12)',
+                  border: '1px solid rgba(155, 124, 255, 0.3)',
                 }}
               >
                 VŨ KHÍ THỰC CHIẾN
               </span>
               <h2
                 style={{
-                  fontFamily: "'Be Vietnam Pro', 'Plus Jakarta Sans', sans-serif",
-                  fontSize: '1.85rem',
-                  fontWeight: 900,
-                  color: '#ffffff',
+                  fontFamily: "'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif",
+                  fontSize: '2rem',
+                  fontWeight: 800,
+                  color: '#f5e7df',
                   margin: 0,
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '-0.025em',
                 }}
               >
                 Chòm sao năng lực
               </h2>
 
-              <p style={{ color: '#a8a29e', fontSize: '0.92rem', maxWidth: '300px' }}>
+              <p style={{ color: 'rgba(245, 231, 223, 0.7)', fontSize: '0.94rem', maxWidth: '320px', margin: 0 }}>
                 Những kỹ năng vững chắc nhất bạn đã rèn luyện qua từng kỳ đồ án và dự án thực.
               </p>
 
@@ -626,12 +682,12 @@ export function FonlioWrappedStory({
                     style={{
                       padding: '11px 20px',
                       borderRadius: '16px',
-                      background: 'rgba(45, 212, 191, 0.12)',
-                      border: '1px solid rgba(45, 212, 191, 0.35)',
+                      background: 'rgba(155, 124, 255, 0.12)',
+                      border: '1px solid rgba(155, 124, 255, 0.32)',
                       color: '#f5e7df',
-                      fontSize: '0.95rem',
+                      fontSize: '0.92rem',
                       fontWeight: 700,
-                      boxShadow: '0 6px 20px rgba(45, 212, 191, 0.1)',
+                      boxShadow: '0 6px 20px rgba(155, 124, 255, 0.1)',
                     }}
                   >
                     ✦ {sk}
@@ -646,11 +702,15 @@ export function FonlioWrappedStory({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '18px' }}>
               <span
                 style={{
-                  fontSize: '0.78rem',
+                  fontSize: '0.76rem',
                   letterSpacing: '0.14em',
                   textTransform: 'uppercase',
                   color: archetype.accent,
                   fontWeight: 800,
+                  padding: '5px 14px',
+                  borderRadius: '999px',
+                  background: `${archetype.accent}18`,
+                  border: `1px solid ${archetype.accent}44`,
                 }}
               >
                 BẢN SẮC CỦA BẠN
@@ -658,13 +718,13 @@ export function FonlioWrappedStory({
 
               <div
                 style={{
-                  fontFamily: "'Be Vietnam Pro', 'Plus Jakarta Sans', sans-serif",
-                  fontSize: '2.1rem',
+                  fontFamily: "'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif",
+                  fontSize: '2.15rem',
                   fontWeight: 900,
-                  color: '#ffffff',
-                  lineHeight: 1.2,
-                  letterSpacing: '-0.02em',
-                  textShadow: `0 0 30px ${archetype.accent}77`,
+                  color: '#f5e7df',
+                  lineHeight: 1.15,
+                  letterSpacing: '-0.03em',
+                  textShadow: `0 0 35px ${archetype.accent}88`,
                 }}
               >
                 {archetype.title}
@@ -672,7 +732,7 @@ export function FonlioWrappedStory({
 
               <div
                 style={{
-                  fontSize: '1rem',
+                  fontSize: '0.95rem',
                   color: archetype.accent,
                   fontWeight: 800,
                   letterSpacing: '0.08em',
@@ -683,14 +743,15 @@ export function FonlioWrappedStory({
 
               <div
                 style={{
-                  width: '76px',
-                  height: '76px',
+                  width: '78px',
+                  height: '78px',
                   borderRadius: '50%',
                   border: `2px dashed ${archetype.accent}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '8px 0',
+                  boxShadow: `0 0 30px ${archetype.accent}44`,
                 }}
               >
                 <Sparkles size={34} style={{ color: archetype.accent }} />
@@ -698,10 +759,11 @@ export function FonlioWrappedStory({
 
               <p
                 style={{
-                  color: '#d6d3d1',
+                  color: 'rgba(245, 231, 223, 0.78)',
                   fontSize: '0.96rem',
                   lineHeight: 1.7,
-                  maxWidth: '320px',
+                  maxWidth: '330px',
+                  margin: 0,
                 }}
               >
                 {archetype.desc}
@@ -709,7 +771,7 @@ export function FonlioWrappedStory({
             </div>
           )}
 
-          {/* SLIDE 5: Luxury Shareable Genesis Card (Styled like Fonlio's VIP Card) */}
+          {/* SLIDE 5: Luxury Shareable Genesis Card */}
           {currentSlide === 5 && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%' }}>
               <span
@@ -719,6 +781,10 @@ export function FonlioWrappedStory({
                   textTransform: 'uppercase',
                   color: '#b9ff00',
                   fontWeight: 800,
+                  padding: '5px 14px',
+                  borderRadius: '999px',
+                  background: 'rgba(185, 255, 0, 0.12)',
+                  border: '1px solid rgba(185, 255, 0, 0.35)',
                 }}
               >
                 THẺ BẢO CHỨNG GENESIS
@@ -731,9 +797,9 @@ export function FonlioWrappedStory({
                   width: '100%',
                   padding: '24px 20px',
                   borderRadius: '24px',
-                  background: 'linear-gradient(145deg, #242222 0%, #171515 100%)',
+                  background: 'linear-gradient(145deg, #221f1f 0%, #131111 100%)',
                   border: '1px solid rgba(185, 255, 0, 0.45)',
-                  boxShadow: '0 16px 45px rgba(0, 0, 0, 0.8), 0 0 30px rgba(185, 255, 0, 0.25)',
+                  boxShadow: '0 24px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(185, 255, 0, 0.22)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -758,7 +824,7 @@ export function FonlioWrappedStory({
                 <UserAvatar src={candidate?.avatarUrl} name={displayName} size={58} />
 
                 <div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.01em' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f5e7df', letterSpacing: '-0.01em' }}>
                     {displayName}
                   </div>
                   <div style={{ fontSize: '0.82rem', color: archetype.accent, fontWeight: 800, marginTop: '2px' }}>
@@ -772,33 +838,33 @@ export function FonlioWrappedStory({
                     gridTemplateColumns: '1fr 1fr 1fr',
                     gap: '8px',
                     width: '100%',
-                    background: 'rgba(35, 33, 33, 0.7)',
+                    background: 'rgba(32, 28, 28, 0.8)',
                     padding: '12px',
                     borderRadius: '16px',
-                    border: '1px solid rgba(245, 231, 223, 0.08)',
+                    border: '1px solid rgba(245, 231, 223, 0.1)',
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: '0.7rem', color: '#78716c', fontWeight: 700 }}>Dự án</div>
-                    <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#b9ff00' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'rgba(245, 231, 223, 0.55)', fontWeight: 700 }}>Dự án</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#b9ff00' }}>
                       {experiences.length}
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '0.7rem', color: '#78716c', fontWeight: 700 }}>Điểm RS</div>
-                    <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#2dd4bf' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'rgba(245, 231, 223, 0.55)', fontWeight: 700 }}>Điểm RS</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#2dd4bf' }}>
                       {candidate?.reputationScore || 75}
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '0.7rem', color: '#78716c', fontWeight: 700 }}>Cấp độ</div>
-                    <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#f59e0b' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'rgba(245, 231, 223, 0.55)', fontWeight: 700 }}>Cấp độ</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#ff6b4a' }}>
                       Lv.{candidate?.currentLevel || 1}
                     </div>
                   </div>
                 </div>
 
-                <div style={{ fontSize: '0.76rem', color: '#78716c', fontWeight: 600 }}>
+                <div style={{ fontSize: '0.76rem', color: 'rgba(245, 231, 223, 0.5)', fontWeight: 600 }}>
                   fonlio.online/p/{candidate?.publicSlug || 'profile'}
                 </div>
               </div>
@@ -813,7 +879,7 @@ export function FonlioWrappedStory({
                     padding: '13px 16px',
                     borderRadius: '14px',
                     background: copied ? '#10b981' : '#b9ff00',
-                    color: '#141313',
+                    color: '#121111',
                     border: 'none',
                     fontWeight: 800,
                     fontSize: '0.88rem',
@@ -823,7 +889,7 @@ export function FonlioWrappedStory({
                     justifyContent: 'center',
                     gap: '8px',
                     transition: 'all 0.2s ease',
-                    boxShadow: '0 4px 18px rgba(185, 255, 0, 0.35)',
+                    boxShadow: '0 6px 20px rgba(185, 255, 0, 0.35)',
                   }}
                 >
                   {copied ? <Check size={16} /> : <Copy size={16} />}
@@ -838,10 +904,11 @@ export function FonlioWrappedStory({
                     borderRadius: '14px',
                     background: 'rgba(245, 231, 223, 0.08)',
                     color: '#f5e7df',
-                    border: '1px solid rgba(245, 231, 223, 0.16)',
+                    border: '1px solid rgba(245, 231, 223, 0.18)',
                     fontWeight: 700,
                     fontSize: '0.88rem',
                     cursor: 'pointer',
+                    transition: 'background 0.2s',
                   }}
                 >
                   Vào 3D
@@ -855,13 +922,13 @@ export function FonlioWrappedStory({
         <div
           style={{
             padding: '14px 22px',
-            borderTop: '1px solid rgba(245, 231, 223, 0.08)',
+            borderTop: '1px solid rgba(245, 231, 223, 0.1)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             zIndex: 30,
             fontSize: '0.82rem',
-            color: '#78716c',
+            color: 'rgba(245, 231, 223, 0.6)',
             fontWeight: 600,
           }}
         >
@@ -872,7 +939,7 @@ export function FonlioWrappedStory({
             style={{
               background: 'none',
               border: 'none',
-              color: currentSlide === 0 ? '#44403c' : '#d6d3d1',
+              color: currentSlide === 0 ? 'rgba(245, 231, 223, 0.2)' : '#f5e7df',
               cursor: currentSlide === 0 ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -892,7 +959,7 @@ export function FonlioWrappedStory({
             style={{
               background: 'none',
               border: 'none',
-              color: currentSlide === totalSlides - 1 ? '#b9ff00' : '#d6d3d1',
+              color: currentSlide === totalSlides - 1 ? '#b9ff00' : '#f5e7df',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',

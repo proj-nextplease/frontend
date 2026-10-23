@@ -162,409 +162,1025 @@
   filter: drop-shadow(0 0 22px rgba(185, 255, 0, 0.7)) drop-shadow(0 0 44px rgba(45, 212, 191, 0.45)) !important;
 }
 
-/* FONLIO LUXURY WAITLIST EMBED IN FOOTER */
+/* ==========================================================================
+   FONLIO UNIVERSE FOOTER & LUXURY DIRECTORY DECK
+   ========================================================================== */
 .next-footer {
   height: auto !important;
-  min-height: calc(88vh - 18px) !important;
+  min-height: calc(75vh - 18px) !important;
   max-height: none !important;
   z-index: 10 !important;
   display: flex !important;
   align-items: center !important;
+  position: absolute !important;
+  bottom: 18px !important;
+  left: 18px !important;
+  right: 18px !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
 }
+
 .next-section__svg {
   z-index: 1 !important;
 }
+
+.next-footer__background {
+  background-position: center !important;
+  background-size: cover !important;
+  position: absolute !important;
+  inset: 0 !important;
+}
+
 .next-footer__content {
   width: 100% !important;
   box-sizing: border-box !important;
-  padding: clamp(24px, 3vw, 44px) clamp(24px, 3.8vw, 64px) !important;
+  padding: clamp(36px, 4.5vw, 72px) clamp(24px, 4vw, 64px) !important;
   align-items: center !important;
   display: flex !important;
+  position: relative !important;
+  z-index: 2 !important;
 }
+
 .next-footer__inner {
   width: 100% !important;
-  max-width: 1260px !important;
+  max-width: 1280px !important;
   margin: 0 auto !important;
-  display: grid !important;
-  grid-template-columns: minmax(360px, 1fr) minmax(460px, 580px) !important;
-  grid-template-rows: auto auto !important;
-  grid-template-areas:
-    "main card"
-    "nav  card" !important;
-  column-gap: clamp(36px, 4.5vw, 68px) !important;
-  row-gap: 28px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
   align-items: center !important;
+  gap: clamp(36px, 5vw, 72px) !important;
+  flex-wrap: wrap !important;
 }
+
 .next-footer__main {
-  grid-area: main !important;
+  flex: 1 1 480px !important;
+  max-width: 580px !important;
+  min-width: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 16px !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
+  gap: 20px !important;
   padding: 0 !important;
 }
+
+/* Badge */
+.universe-footer-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 15px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.38) !important;
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: #120e20 !important;
+  width: fit-content !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+}
+
+.universe-footer-badge__dot {
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  box-shadow: 0 0 10px #10b981 !important;
+  display: inline-block !important;
+  animation: fonlioPulseDot 2s infinite ease-in-out !important;
+}
+
+@keyframes fonlioPulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+/* Headline */
 .next-footer__headline {
-  font-size: clamp(26px, 2.5vw, 42px) !important;
-  line-height: 1.18 !important;
-  letter-spacing: -0.02em !important;
+  font-family: CabinetGrotesk-Variable, CabinetGrotesk-Bold, sans-serif !important;
+  font-size: clamp(34px, 4vw, 56px) !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.025em !important;
   margin: 0 !important;
   color: #120e20 !important;
+  font-weight: 700 !important;
 }
+
 .next-footer__headline span {
   display: inline !important;
   white-space: normal !important;
 }
-.next-footer__meta {
-  font-size: 13px !important;
-  gap: 16px !important;
-  flex-wrap: wrap !important;
-  color: rgba(18, 14, 32, 0.7) !important;
+
+.next-footer__headline-accent {
+  display: inline-block !important;
+  background: linear-gradient(135deg, #120e20 20%, #4a154b 60%, #ff6b4a 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
 }
-.next-footer__nav {
-  grid-area: nav !important;
-  display: flex !important;
-  flex-direction: row !important;
-  gap: clamp(32px, 4vw, 56px) !important;
-  align-items: flex-start !important;
-  padding-top: 14px !important;
-  border-top: 1px solid rgba(18, 14, 32, 0.1) !important;
-}
-.next-footer__proof {
-  font-family: Satoshi-Variable, sans-serif;
-  font-size: clamp(14px, 1.1vw, 18px);
-  color: #34d399;
-  letter-spacing: 0.02em;
-  font-weight: 500;
-}
-.fonlio-waitlist-card {
-  grid-area: card !important;
-  width: 100% !important;
-  max-width: 580px !important;
-  box-sizing: border-box !important;
-  background: rgba(255, 255, 255, 0.28) !important;
-  border: 1px solid rgba(255, 255, 255, 0.65) !important;
-  box-shadow: 0 24px 50px -12px rgba(35, 12, 55, 0.16), 
-              0 0 0 1px rgba(255, 255, 255, 0.4) inset,
-              0 8px 24px rgba(255, 255, 255, 0.15) !important;
-  backdrop-filter: blur(36px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
-  border-radius: 20px !important;
-  padding: 22px 24px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  position: relative !important;
-  overflow: hidden !important;
-  color: #120e20 !important;
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  max-height: calc(88vh - 40px) !important;
-  overflow-y: auto !important;
-  scrollbar-width: thin !important;
-  scrollbar-color: rgba(18, 14, 32, 0.25) transparent !important;
+
+/* Lead text */
+.next-footer__lead {
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: clamp(14px, 1.05vw, 16px) !important;
+  line-height: 1.65 !important;
+  color: rgba(18, 14, 32, 0.8) !important;
+  max-width: 490px !important;
   margin: 0 !important;
+  font-weight: 400 !important;
 }
-.fonlio-waitlist-card::before {
-  content: '' !important;
-  position: absolute !important;
-  top: -80px !important;
-  right: -80px !important;
-  width: 200px !important;
-  height: 200px !important;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%) !important;
-  pointer-events: none !important;
+
+/* Action CTA buttons */
+.next-footer__actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  flex-wrap: wrap !important;
+  margin-top: 4px !important;
 }
-.fonlio-card-badge {
+
+.universe-cta-btn {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 5px !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.1em !important;
-  color: #120e20 !important;
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  background: rgba(255, 255, 255, 0.5) !important;
-  border: 1px solid rgba(255, 255, 255, 0.75) !important;
-  padding: 4px 12px !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  padding: 13px 26px !important;
   border-radius: 999px !important;
-  margin-bottom: 8px !important;
-  width: fit-content !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border: none !important;
+  outline: none !important;
+  box-sizing: border-box !important;
 }
-.fonlio-card-title {
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-size: 21px !important;
-  font-weight: 800 !important;
-  margin: 0 0 4px 0 !important;
-  line-height: 1.25 !important;
+
+.universe-cta-btn--lime {
+  background: #b9ff00 !important;
+  color: #121111 !important;
+  box-shadow: 0 10px 28px -6px rgba(185, 255, 0, 0.55),
+              0 0 0 1px rgba(185, 255, 0, 0.35) inset !important;
+}
+
+.universe-cta-btn--lime:hover {
+  background: #c6ff1a !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 16px 36px -4px rgba(185, 255, 0, 0.75),
+              0 0 0 1px rgba(185, 255, 0, 0.5) inset !important;
+}
+
+.universe-cta-btn--lime:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+.universe-cta-btn--shimmer {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.universe-cta-btn--shimmer::after {
+  content: "" !important;
+  position: absolute !important;
+  top: -50% !important;
+  left: -60% !important;
+  width: 40% !important;
+  height: 200% !important;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 100%
+  ) !important;
+  transform: rotate(25deg) !important;
+  pointer-events: none !important;
+  animation: universeBtnLaser 3.2s infinite ease-in-out !important;
+}
+
+@keyframes universeBtnLaser {
+  0%, 40% { left: -60%; }
+  75%, 100% { left: 160%; }
+}
+
+.universe-cta-btn--outline {
+  background: rgba(255, 255, 255, 0.45) !important;
   color: #120e20 !important;
-  letter-spacing: -0.02em !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
 }
-.fonlio-card-subtitle {
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+
+.universe-cta-btn--outline:hover {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.95) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 22px rgba(18, 14, 32, 0.08) !important;
+}
+
+.universe-cta-btn--outline:active {
+  transform: translateY(0) !important;
+}
+
+/* Footer Meta */
+.next-footer__meta {
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
   font-size: 12.5px !important;
-  color: rgba(18, 14, 32, 0.75) !important;
-  margin: 0 0 12px 0 !important;
-  line-height: 1.45 !important;
+  color: rgba(18, 14, 32, 0.65) !important;
+  margin-top: 8px !important;
 }
-.fonlio-form-row {
-  display: flex !important;
-  gap: 12px !important;
-  margin-bottom: 9px !important;
-}
-.fonlio-field {
+
+/* ==========================================================================
+   RIGHT DECK: LUXURY FROSTED DIRECTORY
+   ========================================================================== */
+.next-footer__deck {
+  flex: 1 1 440px !important;
+  max-width: 520px !important;
+  min-width: 320px !important;
+  background: rgba(255, 255, 255, 0.32) !important;
+  backdrop-filter: blur(40px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  border-radius: 28px !important;
+  padding: clamp(28px, 3.2vw, 36px) clamp(24px, 3vw, 36px) !important;
+  box-shadow: 0 28px 60px -15px rgba(35, 12, 55, 0.16),
+              0 0 0 1px rgba(255, 255, 255, 0.45) inset,
+              0 10px 30px rgba(255, 255, 255, 0.2) !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 5px !important;
-  margin-bottom: 9px !important;
-  flex: 1 !important;
-  min-width: 0 !important;
-}
-.fonlio-field label {
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-size: 10.5px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
-  color: rgba(18, 14, 32, 0.85) !important;
-  white-space: nowrap !important;
+  gap: 24px !important;
+  position: relative !important;
   overflow: hidden !important;
-  text-overflow: ellipsis !important;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease !important;
 }
-.fonlio-input {
-  background: rgba(255, 255, 255, 0.5) !important;
-  border: 1px solid rgba(255, 255, 255, 0.7) !important;
-  border-radius: 10px !important;
-  height: 38px !important;
-  padding: 8px 12px !important;
-  color: #120e20 !important;
-  font-size: 13.5px !important;
-  font-weight: 500 !important;
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  outline: none !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.7) !important;
-  box-sizing: border-box !important;
-  width: 100% !important;
-  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s !important;
+
+.next-footer__deck:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 36px 72px -12px rgba(35, 12, 55, 0.22),
+              0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+              0 14px 36px rgba(255, 255, 255, 0.25) !important;
 }
-.fonlio-input::placeholder {
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  color: rgba(18, 14, 32, 0.45) !important;
+
+.next-footer__deck::before {
+  content: "" !important;
+  position: absolute !important;
+  top: -60px !important;
+  right: -60px !important;
+  width: 180px !important;
+  height: 180px !important;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0%, transparent 70%) !important;
+  pointer-events: none !important;
 }
-.fonlio-input:focus {
-  background: rgba(255, 255, 255, 0.85) !important;
-  border-color: #120e20 !important;
-  box-shadow: 0 0 0 3px rgba(18, 14, 32, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-}
-.fonlio-select {
-  background: rgba(255, 255, 255, 0.5) !important;
-  border: 1px solid rgba(255, 255, 255, 0.7) !important;
-  border-radius: 10px !important;
-  height: 38px !important;
-  padding: 8px 32px 8px 12px !important;
-  color: #120e20 !important;
-  font-size: 13.5px !important;
-  font-weight: 500 !important;
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  outline: none !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.7) !important;
-  box-sizing: border-box !important;
-  width: 100% !important;
-  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s !important;
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23120e20' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
-  background-repeat: no-repeat !important;
-  background-position: right 10px center !important;
-  cursor: pointer !important;
-}
-.fonlio-select:focus {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  border-color: #120e20 !important;
-  box-shadow: 0 0 0 3px rgba(18, 14, 32, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-}
-.fonlio-select option {
-  background: #ffffff !important;
-  color: #120e20 !important;
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-size: 14px !important;
-}
-.fonlio-pills {
+
+.next-footer__columns {
   display: grid !important;
-  grid-template-columns: repeat(2, 1fr) !important;
-  gap: 8px !important;
-  width: 100% !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 28px !important;
 }
-.fonlio-pill {
-  cursor: pointer !important;
-  background: rgba(255, 255, 255, 0.4) !important;
-  border: 1px solid rgba(255, 255, 255, 0.65) !important;
-  color: rgba(18, 14, 32, 0.85) !important;
-  padding: 6px 10px !important;
-  border-radius: 999px !important;
-  font-size: 11.5px !important;
-  font-weight: 500 !important;
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
-  user-select: none !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+
+.next-footer__col {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.next-footer__col-title {
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: rgba(18, 14, 32, 0.55) !important;
+  margin-bottom: 14px !important;
+}
+
+.next-footer__links {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 11px !important;
+}
+
+.next-footer__links li {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.next-footer__links li a {
   display: flex !important;
   align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  white-space: nowrap !important;
-  box-sizing: border-box !important;
-}
-.fonlio-pill:hover {
-  background: rgba(255, 255, 255, 0.75) !important;
+  justify-content: space-between !important;
+  text-decoration: none !important;
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
   color: #120e20 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative !important;
+}
+
+.next-footer__links li a:hover {
+  color: #ff6b4a !important;
+  transform: translateX(3px) !important;
+}
+
+.next-footer__link-static {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: rgba(18, 14, 32, 0.85) !important;
+}
+
+.next-footer__link-tag {
+  font-family: "Be Vietnam Pro", sans-serif !important;
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  padding: 2px 7px !important;
+  border-radius: 999px !important;
+  background: #b9ff00 !important;
+  color: #121111 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.3 !important;
+}
+
+.next-footer__link-tag--green {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Bottom contact & socials inside deck */
+.next-footer__deck-contact {
+  padding-top: 18px !important;
+  border-top: 1px solid rgba(18, 14, 32, 0.12) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  flex-wrap: wrap !important;
+}
+
+.next-footer__deck-items {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.next-footer__deck-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  font-family: "Be Vietnam Pro", -apple-system, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #120e20 !important;
+  text-decoration: none !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.next-footer__deck-item svg {
+  color: #120e20 !important;
+  opacity: 0.8 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.next-footer__deck-item:hover {
+  color: #ff6b4a !important;
   transform: translateY(-1px) !important;
 }
-.fonlio-pill.is-active {
-  background: #120e20 !important;
-  border-color: #120e20 !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
-  box-shadow: 0 4px 14px rgba(18, 14, 32, 0.22) !important;
+
+.next-footer__deck-item:hover svg {
+  color: #ff6b4a !important;
+  opacity: 1 !important;
+  transform: scale(1.12) !important;
 }
-.fonlio-consent {
+
+.next-footer__deck-sep {
+  color: rgba(18, 14, 32, 0.3) !important;
+  font-size: 11px !important;
+  user-select: none !important;
+}
+
+.next-footer__deck-socials {
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
-  font-size: 11.5px !important;
-  font-weight: 500 !important;
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  color: rgba(18, 14, 32, 0.85) !important;
-  cursor: pointer !important;
-  line-height: 1.35 !important;
-  user-select: none !important;
-  margin-bottom: 10px !important;
-}
-.fonlio-consent input[type="checkbox"] {
-  width: 15px !important;
-  height: 15px !important;
-  margin: 0 !important;
-  cursor: pointer !important;
-  accent-color: #120e20 !important;
   flex-shrink: 0 !important;
 }
-.fonlio-submit-btn {
-  cursor: pointer !important;
-  width: 100% !important;
-  margin-top: 4px !important;
-  height: 44px !important;
-  padding: 11px 18px !important;
-  background: #120e20 !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 11px !important;
-  color: #ffffff !important;
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-size: 13.5px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.03em !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-  box-shadow: 0 10px 24px rgba(18, 14, 32, 0.25) !important;
-  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1) !important;
-}
-.fonlio-submit-btn:hover {
-  transform: translateY(-2px) !important;
-  background: linear-gradient(135deg, #ff6b4a 0%, #9b7cff 100%) !important;
-  box-shadow: 0 14px 30px rgba(255, 107, 74, 0.38) !important;
-}
-.fonlio-submit-btn:active {
-  transform: translateY(1px) !important;
-}
-.fonlio-success-view {
-  text-align: center;
-  padding: 36px 20px 28px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-}
-.fonlio-success-icon-wrap {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1.5px solid rgba(16, 185, 129, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 18px;
-  box-shadow: 0 0 24px rgba(16, 185, 129, 0.2);
-  animation: fonlio-success-pop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-@keyframes fonlio-success-pop {
-  0% { transform: scale(0.6); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-.fonlio-success-title {
-  font-family: "Be Vietnam Pro", sans-serif !important;
-  font-size: 22px;
-  font-weight: 700;
-  color: #120e20;
-  margin: 0 0 10px 0;
-  letter-spacing: -0.01em;
-}
-.fonlio-success-desc {
-  font-family: "Be Vietnam Pro", sans-serif !important;
-  font-size: 14px;
-  line-height: 1.6;
-  color: rgba(18, 14, 32, 0.75);
-  max-width: 400px;
-  margin: 0;
-}
-.fonlio-reset-btn {
-  background: rgba(18, 14, 32, 0.08);
-  border: 1px solid rgba(18, 14, 32, 0.15);
-  color: #120e20;
-  font-family: "Be Vietnam Pro", sans-serif !important;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 9px 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.fonlio-reset-btn:hover {
-  background: #120e20;
-  color: #ffffff;
-  transform: translateY(-1px);
-}
+
 @media (max-width: 960px) {
   .next-footer {
     height: auto !important;
-    min-height: 90vh !important;
+    min-height: 85vh !important;
     position: relative !important;
   }
   .next-footer__inner {
-    display: flex !important;
     flex-direction: column !important;
-    gap: 32px !important;
+    align-items: stretch !important;
+    gap: 36px !important;
   }
-  .fonlio-waitlist-card {
+  .next-footer__main {
     max-width: 100% !important;
-    flex: 1 1 100% !important;
-    padding: 20px 18px !important;
   }
-  .fonlio-form-row {
-    flex-direction: column !important;
-    gap: 0 !important;
+  .next-footer__deck {
+    max-width: 100% !important;
   }
-  .fonlio-pills {
-    grid-template-columns: 1fr !important;
-  }
-  .next-footer__nav {
-    flex-direction: column !important;
-    gap: 20px !important;
-  }
+}
+
+/* ==========================================================================
+   UNIVERSE STORY WRAPPED MODAL
+   ========================================================================== */
+.universe-wrapped-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 100000 !important;
+  background: #090808 !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  user-select: none !important;
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  opacity: 0 !important;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.universe-wrapped-backdrop.is-open {
+  display: flex !important;
+  opacity: 1 !important;
+}
+
+.universe-wrapped-aura {
+  position: absolute !important;
+  inset: 0 !important;
+  background: 
+    radial-gradient(circle at 18% 18%, rgba(255, 107, 74, 0.28) 0%, transparent 48%),
+    radial-gradient(circle at 82% 25%, rgba(155, 124, 255, 0.32) 0%, transparent 52%),
+    radial-gradient(circle at 50% 88%, rgba(185, 255, 0, 0.18) 0%, transparent 58%),
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.1) 0%, transparent 60%),
+    #0a0808 !important;
+  pointer-events: none !important;
+}
+
+.universe-wrapped-card {
+  width: 100% !important;
+  max-width: 460px !important;
+  height: 100% !important;
+  max-height: 840px !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: 10 !important;
+  background: rgba(18, 16, 16, 0.92) !important;
+  backdrop-filter: blur(40px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(190%) !important;
+  border: 1px solid rgba(245, 231, 223, 0.18) !important;
+  border-radius: 32px !important;
+  overflow: hidden !important;
+  box-shadow: 0 32px 90px -10px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(245, 231, 223, 0.12) inset, 0 0 50px rgba(185, 255, 0, 0.14) !important;
+}
+
+.universe-wrapped-bars {
+  position: absolute !important;
+  top: 18px !important;
+  left: 18px !important;
+  right: 18px !important;
+  display: flex !important;
+  gap: 6px !important;
+  z-index: 30 !important;
+}
+
+.universe-wrapped-bar {
+  flex: 1 !important;
+  height: 3.5px !important;
+  background: rgba(245, 231, 223, 0.18) !important;
+  border-radius: 99px !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+}
+
+.universe-wrapped-bar-fill {
+  height: 100% !important;
+  width: 0% !important;
+  background: #b9ff00 !important;
+  box-shadow: 0 0 12px #b9ff00 !important;
+  transition: width 0.05s linear !important;
+}
+
+.universe-wrapped-header {
+  position: absolute !important;
+  top: 30px !important;
+  left: 20px !important;
+  right: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  z-index: 30 !important;
+}
+
+.universe-wrapped-user {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.universe-wrapped-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: #1e1b1b !important;
+  border: 1.5px solid #b9ff00 !important;
+  color: #f5e7df !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+}
+
+.universe-wrapped-name {
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  color: #f5e7df !important;
+  line-height: 1.2 !important;
+}
+
+.universe-wrapped-tag {
+  font-size: 0.72rem !important;
+  color: #b9ff00 !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+}
+
+.universe-wrapped-controls {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.universe-wrapped-ctrl-btn {
+  background: rgba(245, 231, 223, 0.08) !important;
+  border: 1px solid rgba(245, 231, 223, 0.16) !important;
+  color: #f5e7df !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: background 0.2s !important;
+}
+
+.universe-wrapped-ctrl-btn:hover {
+  background: rgba(245, 231, 223, 0.18) !important;
+}
+
+.universe-wrapped-tap-left {
+  position: absolute !important;
+  left: 0 !important;
+  top: 70px !important;
+  bottom: 70px !important;
+  width: 35% !important;
+  z-index: 20 !important;
+  cursor: pointer !important;
+}
+
+.universe-wrapped-tap-right {
+  position: absolute !important;
+  right: 0 !important;
+  top: 70px !important;
+  bottom: 70px !important;
+  width: 35% !important;
+  z-index: 20 !important;
+  cursor: pointer !important;
+}
+
+.universe-wrapped-body {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  padding: 70px 32px 32px !important;
+  text-align: center !important;
+  position: relative !important;
+  z-index: 15 !important;
+}
+
+.universe-wrapped-slide {
+  display: none !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 18px !important;
+  animation: npWrappedPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.universe-wrapped-slide.is-active {
+  display: flex !important;
+}
+
+.universe-wrapped-orb {
+  width: 104px !important;
+  height: 104px !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 35% 30%, #b9ff00 0%, #ff6b4a 60%, #9b7cff 100%) !important;
+  box-shadow: 0 0 50px rgba(185, 255, 0, 0.5), 0 0 80px rgba(255, 107, 74, 0.35) !important;
+  animation: npGlowLime 2.6s infinite ease-in-out !important;
+  margin-bottom: 6px !important;
+}
+
+.universe-wrapped-badge {
+  font-size: 0.76rem !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  font-weight: 800 !important;
+  padding: 5px 14px !important;
+  border-radius: 999px !important;
+}
+
+.universe-wrapped-badge--lime {
+  color: #b9ff00 !important;
+  background: rgba(185, 255, 0, 0.1) !important;
+  border: 1px solid rgba(185, 255, 0, 0.3) !important;
+}
+
+.universe-wrapped-badge--violet {
+  color: #9b7cff !important;
+  background: rgba(155, 124, 255, 0.12) !important;
+  border: 1px solid rgba(155, 124, 255, 0.3) !important;
+}
+
+.universe-wrapped-badge--coral {
+  color: #ff6b4a !important;
+  background: rgba(255, 107, 74, 0.12) !important;
+  border: 1px solid rgba(255, 107, 74, 0.3) !important;
+}
+
+.universe-wrapped-title {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  font-size: 2.25rem !important;
+  font-weight: 800 !important;
+  color: #f5e7df !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
+  letter-spacing: -0.03em !important;
+}
+
+.universe-wrapped-subtitle {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  font-size: 1.95rem !important;
+  font-weight: 800 !important;
+  color: #f5e7df !important;
+  margin: 0 !important;
+  letter-spacing: -0.025em !important;
+}
+
+.universe-wrapped-desc {
+  color: rgba(245, 231, 223, 0.72) !important;
+  font-size: 0.96rem !important;
+  line-height: 1.65 !important;
+  max-width: 340px !important;
+  margin: 0 !important;
+}
+
+.universe-wrapped-start-btn {
+  font-size: 0.84rem !important;
+  color: #121111 !important;
+  font-weight: 800 !important;
+  margin-top: 10px !important;
+  padding: 10px 22px !important;
+  border-radius: 999px !important;
+  background: #b9ff00 !important;
+  border: none !important;
+  box-shadow: 0 10px 26px -4px rgba(185, 255, 0, 0.55) !important;
+  cursor: pointer !important;
+  transition: transform 0.2s, background 0.2s !important;
+}
+
+.universe-wrapped-start-btn:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  background: #c6ff1a !important;
+}
+
+.universe-wrapped-counter {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  font-size: 5.6rem !important;
+  font-weight: 900 !important;
+  color: #b9ff00 !important;
+  line-height: 1 !important;
+  text-shadow: 0 0 45px rgba(185, 255, 0, 0.65) !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -0.04em !important;
+}
+
+.universe-wrapped-counter-label {
+  font-size: 1.05rem !important;
+  color: #f5e7df !important;
+  font-weight: 700 !important;
+}
+
+.universe-wrapped-stats-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+  width: 100% !important;
+  margin-top: 8px !important;
+}
+
+.universe-wrapped-stat-card {
+  padding: 16px !important;
+  border-radius: 20px !important;
+  background: rgba(28, 25, 25, 0.75) !important;
+  border: 1px solid rgba(245, 231, 223, 0.14) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.universe-wrapped-stat-label {
+  font-size: 0.72rem !important;
+  color: rgba(245, 231, 223, 0.6) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.universe-wrapped-stat-val {
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  margin-top: 6px !important;
+}
+
+.universe-wrapped-stat-val--coral {
+  color: #ff6b4a !important;
+}
+
+.universe-wrapped-stat-val--lime {
+  color: #b9ff00 !important;
+}
+
+.universe-wrapped-star-card {
+  width: 100% !important;
+  padding: 24px 22px !important;
+  border-radius: 24px !important;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 107, 74, 0.18) 0%, rgba(24, 21, 21, 0.95) 85%) !important;
+  border: 1px solid rgba(255, 107, 74, 0.35) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), 0 0 35px rgba(255, 107, 74, 0.18) !important;
+  box-sizing: border-box !important;
+}
+
+.universe-wrapped-star-title {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  font-size: 1.4rem !important;
+  font-weight: 800 !important;
+  color: #f5e7df !important;
+  margin-bottom: 6px !important;
+}
+
+.universe-wrapped-star-org {
+  font-size: 0.92rem !important;
+  color: #9b7cff !important;
+  font-weight: 700 !important;
+  margin-bottom: 14px !important;
+}
+
+.universe-wrapped-star-desc {
+  font-size: 0.88rem !important;
+  color: rgba(245, 231, 223, 0.75) !important;
+  line-height: 1.65 !important;
+  margin: 0 0 18px !important;
+}
+
+.universe-wrapped-star-tags {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.universe-wrapped-star-tag {
+  padding: 6px 14px !important;
+  border-radius: 999px !important;
+  font-size: 0.8rem !important;
+  font-weight: 800 !important;
+}
+
+.universe-wrapped-star-tag--coral {
+  background: rgba(255, 107, 74, 0.18) !important;
+  border: 1px solid rgba(255, 107, 74, 0.35) !important;
+  color: #ff6b4a !important;
+}
+
+.universe-wrapped-star-tag--green {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #10b981 !important;
+}
+
+.universe-wrapped-chips {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  margin-top: 10px !important;
+}
+
+.universe-wrapped-chip {
+  padding: 11px 20px !important;
+  border-radius: 16px !important;
+  background: rgba(155, 124, 255, 0.12) !important;
+  border: 1px solid rgba(155, 124, 255, 0.32) !important;
+  color: #f5e7df !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  box-shadow: 0 6px 20px rgba(155, 124, 255, 0.1) !important;
+}
+
+.universe-wrapped-archetype-title {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', -apple-system, sans-serif !important;
+  font-size: 2.15rem !important;
+  font-weight: 900 !important;
+  color: #f5e7df !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.03em !important;
+  text-shadow: 0 0 35px rgba(45, 212, 191, 0.6) !important;
+  margin: 0 !important;
+}
+
+.universe-wrapped-archetype-sub {
+  font-size: 0.95rem !important;
+  color: #2dd4bf !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+}
+
+.universe-wrapped-archetype-ring {
+  width: 78px !important;
+  height: 78px !important;
+  border-radius: 50% !important;
+  border: 2px dashed #2dd4bf !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 8px 0 !important;
+  box-shadow: 0 0 30px rgba(45, 212, 191, 0.3) !important;
+}
+
+.universe-wrapped-vip-card {
+  width: 100% !important;
+  padding: 24px 20px !important;
+  border-radius: 24px !important;
+  background: linear-gradient(145deg, #221f1f 0%, #131111 100%) !important;
+  border: 1px solid rgba(185, 255, 0, 0.45) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(185, 255, 0, 0.22) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 12px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.universe-wrapped-vip-avatar {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 50% !important;
+  background: #2a2525 !important;
+  border: 2px solid #b9ff00 !important;
+  color: #f5e7df !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 22px !important;
+  font-weight: 800 !important;
+}
+
+.universe-wrapped-vip-name {
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  color: #f5e7df !important;
+  letter-spacing: -0.01em !important;
+}
+
+.universe-wrapped-vip-role {
+  font-size: 0.82rem !important;
+  color: #b9ff00 !important;
+  font-weight: 800 !important;
+}
+
+.universe-wrapped-vip-stats {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 8px !important;
+  width: 100% !important;
+  background: rgba(32, 28, 28, 0.8) !important;
+  padding: 12px !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(245, 231, 223, 0.1) !important;
+  box-sizing: border-box !important;
+}
+
+.universe-wrapped-vip-stat-lbl {
+  font-size: 0.7rem !important;
+  color: rgba(245, 231, 223, 0.55) !important;
+  font-weight: 700 !important;
+}
+
+.universe-wrapped-vip-stat-num {
+  font-size: 1.2rem !important;
+  font-weight: 900 !important;
+}
+
+.universe-wrapped-vip-stat-num--lime { color: #b9ff00 !important; }
+.universe-wrapped-vip-stat-num--teal { color: #2dd4bf !important; }
+.universe-wrapped-vip-stat-num--coral { color: #ff6b4a !important; }
+
+.universe-wrapped-vip-slug {
+  font-size: 0.76rem !important;
+  color: rgba(245, 231, 223, 0.5) !important;
+  font-weight: 600 !important;
+}
+
+.universe-wrapped-share-actions {
+  display: flex !important;
+  gap: 10px !important;
+  width: 100% !important;
+  margin-top: 6px !important;
+}
+
+.universe-wrapped-share-btn {
+  flex: 1 !important;
+  padding: 13px 16px !important;
+  border-radius: 14px !important;
+  background: #b9ff00 !important;
+  color: #121111 !important;
+  border: none !important;
+  font-weight: 800 !important;
+  font-size: 0.88rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 6px 20px rgba(185, 255, 0, 0.35) !important;
+}
+
+.universe-wrapped-share-btn:hover {
+  background: #c6ff1a !important;
+  transform: translateY(-1px) !important;
+}
+
+.universe-wrapped-close-btn {
+  padding: 13px 18px !important;
+  border-radius: 14px !important;
+  background: rgba(245, 231, 223, 0.08) !important;
+  color: #f5e7df !important;
+  border: 1px solid rgba(245, 231, 223, 0.18) !important;
+  font-weight: 700 !important;
+  font-size: 0.88rem !important;
+  cursor: pointer !important;
+  transition: background 0.2s !important;
+}
+
+.universe-wrapped-close-btn:hover {
+  background: rgba(245, 231, 223, 0.18) !important;
+}
+
+.universe-wrapped-footer {
+  padding: 14px 22px !important;
+  border-top: 1px solid rgba(245, 231, 223, 0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  z-index: 30 !important;
+  font-size: 0.82rem !important;
+  color: rgba(245, 231, 223, 0.6) !important;
+  font-weight: 600 !important;
+}
+
+.universe-wrapped-nav-btn {
+  background: none !important;
+  border: none !important;
+  color: #f5e7df !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  padding: 4px 8px !important;
+  transition: color 0.2s !important;
+}
+
+.universe-wrapped-nav-btn:hover {
+  color: #b9ff00 !important;
+}
+
+.universe-wrapped-nav-btn--next {
+  color: #b9ff00 !important;
+  font-weight: 800 !important;
 }
 
 /* ==========================================================================
@@ -1373,7 +1989,7 @@ html:lang(vi) .toolkit__subtitle,
         <button
           type="button"
           class="universe-header-cta"
-          onclick="window.parent.postMessage({ type: 'OPEN_WRAPPED' }, '*')"
+          onclick="window.triggerWrapped()"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           <span>Cuốn phim Wrapped</span>
@@ -2197,24 +2813,29 @@ html:lang(vi) .toolkit__subtitle,
               <div class="next-footer__content">
                 <div class="next-footer__inner">
                   <div class="next-footer__main">
-                    <p class="next-footer__headline">
+                    <div class="universe-footer-badge">
+                      <span class="universe-footer-badge__dot"></span>
+                      <span>HỒ SƠ SỐ • LIVING PROOF VERIFIED</span>
+                    </div>
+
+                    <h2 class="next-footer__headline">
                       <span>Tỏa sáng cùng</span><br />
                       <span>Minh chứng sống</span><br />
-                      <span style="color: #120e20;">Vũ Trụ Fonlio</span>
-                    </p>
+                      <span class="next-footer__headline-accent">Vũ Trụ Fonlio.</span>
+                    </h2>
 
-                    <p style="color: rgba(18, 14, 32, 0.78); font-size: 15px; line-height: 1.6; margin: 0; max-width: 520px; font-weight: 500;">
+                    <p class="next-footer__lead">
                       Mọi ký ức của bạn từ dự án sinh viên, hoạt động ngoại khóa đến giải thưởng công nghệ đều trở thành minh chứng sống (Living Proof) thuyết phục nhất với nhà tuyển dụng.
                     </p>
 
-                    <div style="display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap;">
+                    <div class="next-footer__actions">
                       <button
                         type="button"
-                        class="universe-cta-btn universe-cta-btn--lime"
-                        onclick="window.parent.postMessage({ type: 'OPEN_WRAPPED' }, '*')"
+                        class="universe-cta-btn universe-cta-btn--lime universe-cta-btn--shimmer"
+                        onclick="window.triggerWrapped()"
                       >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        <span>Xem Story Wrapped</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span>Khởi Chiếu Story Wrapped</span>
                       </button>
                       <button
                         type="button"
@@ -2225,37 +2846,92 @@ html:lang(vi) .toolkit__subtitle,
                       </button>
                     </div>
 
-                    <div class="next-footer__meta" style="margin-top: 24px;">
+                    <div class="next-footer__meta">
                       <p>© 2026 FONLIO — Living Portfolio &amp; Hồ Sơ Năng Lực Sinh Viên</p>
                     </div>
                   </div>
 
-                  <div
-                    class="next-footer__nav np-footer-contact-bar"
-                    aria-label="Liên hệ và mạng xã hội FONLIO"
-                  >
-                    <div class="np-footer-contact-info">
-                      <a class="np-footer-contact-item" href="mailto:fonlioofficial@gmail.com" title="Email FONLIO">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
-                        <span>fonlioofficial@gmail.com</span>
-                      </a>
-                      <span class="np-footer-contact-sep">•</span>
-                      <a class="np-footer-contact-item" href="tel:0981362340" title="Hotline FONLIO">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                        <span>0981 362 340</span>
-                      </a>
+                  <div class="next-footer__deck">
+                    <div class="next-footer__columns">
+                      <div class="next-footer__col">
+                        <div class="next-footer__col-title">VŨ TRỤ FONLIO</div>
+                        <ul class="next-footer__links">
+                          <li>
+                            <a href="javascript:void(0)" onclick="window.triggerWrapped()">
+                              <span>Cuốn phim Wrapped</span>
+                              <span class="next-footer__link-tag">HOT</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a href="#toolkit">
+                              <span>Bộ công cụ Kỹ năng</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a href="#parcours">
+                              <span>Hành trình Thực chiến</span>
+                            </a>
+                          </li>
+                          <li>
+                            <a href="javascript:void(0)" onclick="window.parent.postMessage({ type: 'NAVIGATE_DASHBOARD' }, '*')">
+                              <span>Bàn làm việc (Dashboard)</span>
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div class="next-footer__col">
+                        <div class="next-footer__col-title">HỆ SINH THÁI</div>
+                        <ul class="next-footer__links">
+                          <li>
+                            <span class="next-footer__link-static">
+                              <span>50+ Đối tác Tuyển dụng</span>
+                            </span>
+                          </li>
+                          <li>
+                            <span class="next-footer__link-static">
+                              <span>Fonlio Trust Engine</span>
+                              <span class="next-footer__link-tag next-footer__link-tag--green">SECURED</span>
+                            </span>
+                          </li>
+                          <li>
+                            <span class="next-footer__link-static">
+                              <span>Cộng đồng Sinh viên CLB</span>
+                            </span>
+                          </li>
+                          <li>
+                            <span class="next-footer__link-static">
+                              <span>Chuẩn hóa Living Proof</span>
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
                     </div>
 
-                    <div class="np-footer-socials" aria-label="Mạng xã hội FONLIO">
-                      <a class="np-footer-social-btn" href="https://www.facebook.com/profile.php?id=61594934129474" target="_blank" rel="noopener noreferrer" title="Facebook">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
-                      </a>
-                      <a class="np-footer-social-btn" href="https://www.instagram.com/fonlioofficial/" target="_blank" rel="noopener noreferrer" title="Instagram">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>
-                      </a>
-                      <a class="np-footer-social-btn" href="https://www.tiktok.com/@fonlio.official" target="_blank" rel="noopener noreferrer" title="TikTok">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.5 6.27 6.27 0 0 0 1.95-4.5V8.69a8.18 8.18 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-.95-.12z" /></svg>
-                      </a>
+                    <div class="next-footer__deck-contact">
+                      <div class="next-footer__deck-items">
+                        <a class="next-footer__deck-item" href="mailto:fonlioofficial@gmail.com" title="Email FONLIO">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+                          <span>fonlioofficial@gmail.com</span>
+                        </a>
+                        <span class="next-footer__deck-sep">•</span>
+                        <a class="next-footer__deck-item" href="tel:0981362340" title="Hotline FONLIO">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                          <span>0981 362 340</span>
+                        </a>
+                      </div>
+
+                      <div class="next-footer__deck-socials">
+                        <a class="np-footer-social-btn" href="https://www.facebook.com/profile.php?id=61594934129474" target="_blank" rel="noopener noreferrer" title="Facebook">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                        </a>
+                        <a class="np-footer-social-btn" href="https://www.instagram.com/fonlioofficial/" target="_blank" rel="noopener noreferrer" title="Instagram">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>
+                        </a>
+                        <a class="np-footer-social-btn" href="https://www.tiktok.com/@fonlio.official" target="_blank" rel="noopener noreferrer" title="TikTok">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.5 6.27 6.27 0 0 0 1.95-4.5V8.69a8.18 8.18 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-.95-.12z" /></svg>
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2264,6 +2940,152 @@ html:lang(vi) .toolkit__subtitle,
           </div>
         </div>
       </section>
+
+      <!-- NATIVE UNIVERSE WRAPPED STORY MODAL -->
+      <div id="fonlioWrappedModal" class="universe-wrapped-backdrop" onclick="if(event.target===this) window.closeWrappedModal()">
+        <div class="universe-wrapped-aura" aria-hidden="true"></div>
+        <div class="universe-wrapped-card" onclick="event.stopPropagation()">
+          <!-- Progress Bars -->
+          <div class="universe-wrapped-bars" id="wrappedBars">
+            <div class="universe-wrapped-bar"><div class="universe-wrapped-bar-fill"></div></div>
+            <div class="universe-wrapped-bar"><div class="universe-wrapped-bar-fill"></div></div>
+            <div class="universe-wrapped-bar"><div class="universe-wrapped-bar-fill"></div></div>
+            <div class="universe-wrapped-bar"><div class="universe-wrapped-bar-fill"></div></div>
+            <div class="universe-wrapped-bar"><div class="universe-wrapped-bar-fill"></div></div>
+            <div class="universe-wrapped-bar"><div class="universe-wrapped-bar-fill"></div></div>
+          </div>
+
+          <!-- Header -->
+          <div class="universe-wrapped-header">
+            <div class="universe-wrapped-user">
+              <div class="universe-wrapped-avatar" id="wrappedAvatar">P</div>
+              <div>
+                <div class="universe-wrapped-name js-candidate-name">Tài Phát</div>
+                <div class="universe-wrapped-tag">FONLIO WRAPPED ✦ 2026</div>
+              </div>
+            </div>
+            <div class="universe-wrapped-controls">
+              <button type="button" class="universe-wrapped-ctrl-btn" onclick="window.toggleWrappedPlay()" id="wrappedPlayBtn" title="Tạm dừng / Tiếp tục">
+                <svg id="wrappedPauseIcon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                <svg id="wrappedPlayIcon" style="display:none;" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button type="button" class="universe-wrapped-ctrl-btn" onclick="window.closeWrappedModal()" title="Đóng">✕</button>
+            </div>
+          </div>
+
+          <!-- Tap Navigation Zones -->
+          <div class="universe-wrapped-tap-left" onclick="window.prevWrappedSlide()"></div>
+          <div class="universe-wrapped-tap-right" onclick="window.nextWrappedSlide()"></div>
+
+          <!-- Slides Container -->
+          <div class="universe-wrapped-body" id="wrappedBody">
+            <!-- Slide 0: Welcome -->
+            <div class="universe-wrapped-slide is-active" data-slide="0">
+              <div class="universe-wrapped-orb"></div>
+              <span class="universe-wrapped-badge universe-wrapped-badge--lime">HÀNH TRÌNH THỰC CHIẾN • LIVING PROOF</span>
+              <h2 class="universe-wrapped-title">Mỗi dự án là một vì sao thắp sáng.</h2>
+              <p class="universe-wrapped-desc">Chào <strong class="js-candidate-name">Tài Phát</strong>, hãy cùng chiêm ngưỡng những bước tiến thực chiến mà bạn đã tôi luyện suốt thời gian qua.</p>
+              <button type="button" class="universe-wrapped-start-btn" onclick="window.nextWrappedSlide()">Khám phá ngay ✦</button>
+            </div>
+
+            <!-- Slide 1: Numbers -->
+            <div class="universe-wrapped-slide" data-slide="1">
+              <span class="universe-wrapped-badge universe-wrapped-badge--violet">DẤU ẤN VŨ TRỤ</span>
+              <h2 class="universe-wrapped-subtitle">Bạn đã tôi luyện</h2>
+              <div class="universe-wrapped-counter js-candidate-count">6</div>
+              <div class="universe-wrapped-counter-label">Ký ức &amp; Cột mốc thực chiến</div>
+              <div class="universe-wrapped-stats-grid">
+                <div class="universe-wrapped-stat-card">
+                  <div class="universe-wrapped-stat-label">Kinh nghiệm tích lũy</div>
+                  <div class="universe-wrapped-stat-val universe-wrapped-stat-val--coral"><span class="js-candidate-exp">2,250</span> EXP</div>
+                </div>
+                <div class="universe-wrapped-stat-card">
+                  <div class="universe-wrapped-stat-label">Điểm tín nhiệm RS</div>
+                  <div class="universe-wrapped-stat-val universe-wrapped-stat-val--lime"><span class="js-candidate-rs">85</span>/100</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 2: Brightest Star -->
+            <div class="universe-wrapped-slide" data-slide="2">
+              <span class="universe-wrapped-badge universe-wrapped-badge--coral">DỰ ÁN SÁNG GIÁ NHẤT</span>
+              <h2 class="universe-wrapped-subtitle">Dấu ấn bứt phá của bạn</h2>
+              <div class="universe-wrapped-star-card">
+                <div class="universe-wrapped-star-title" id="wrappedStarTitle">NextGen Tech Hackathon</div>
+                <div class="universe-wrapped-star-org" id="wrappedStarOrg">Khoa Công nghệ Thông tin</div>
+                <p class="universe-wrapped-star-desc" id="wrappedStarDesc">Dẫn dắt đội ngũ 4 thành viên phát triển ứng dụng AI, giành Giải Nhất chung cuộc sau 48 giờ thi liên tục.</p>
+                <div class="universe-wrapped-star-tags">
+                  <span class="universe-wrapped-star-tag universe-wrapped-star-tag--coral">✦ +500 EXP</span>
+                  <span class="universe-wrapped-star-tag universe-wrapped-star-tag--green">✓ Bảo chứng Living Proof</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 3: Skills -->
+            <div class="universe-wrapped-slide" data-slide="3">
+              <span class="universe-wrapped-badge universe-wrapped-badge--violet">VŨ KHÍ THỰC CHIẾN</span>
+              <h2 class="universe-wrapped-subtitle">Chòm sao năng lực</h2>
+              <p class="universe-wrapped-desc">Những kỹ năng vững chắc nhất bạn đã rèn luyện qua từng kỳ đồ án và dự án thực.</p>
+              <div class="universe-wrapped-chips" id="wrappedSkillsContainer">
+                <div class="universe-wrapped-chip">✦ UI/UX Design</div>
+                <div class="universe-wrapped-chip">✦ ReactJS</div>
+                <div class="universe-wrapped-chip">✦ Figma</div>
+                <div class="universe-wrapped-chip">✦ TypeScript</div>
+                <div class="universe-wrapped-chip">✦ NodeJS</div>
+              </div>
+            </div>
+
+            <!-- Slide 4: Archetype -->
+            <div class="universe-wrapped-slide" data-slide="4">
+              <span class="universe-wrapped-badge universe-wrapped-badge--lime">BẢN SẮC CỦA BẠN</span>
+              <h2 class="universe-wrapped-archetype-title">KIẾN TRÚC SƯ HỆ THỐNG</h2>
+              <div class="universe-wrapped-archetype-sub">[The Master Architect]</div>
+              <div class="universe-wrapped-archetype-ring">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              </div>
+              <p class="universe-wrapped-desc">Tư duy logic sắc bén, đào sâu bản chất và luôn xây dựng những giải pháp bền bỉ.</p>
+            </div>
+
+            <!-- Slide 5: VIP Genesis Card -->
+            <div class="universe-wrapped-slide" data-slide="5">
+              <span class="universe-wrapped-badge universe-wrapped-badge--lime">THẺ BẢO CHỨNG GENESIS</span>
+              <div class="universe-wrapped-vip-card">
+                <div class="universe-wrapped-vip-avatar" id="wrappedVipAvatar">P</div>
+                <div class="universe-wrapped-vip-name js-candidate-name">Tài Phát</div>
+                <div class="universe-wrapped-vip-role">KIẾN TRÚC SƯ HỆ THỐNG</div>
+                <div class="universe-wrapped-vip-stats">
+                  <div>
+                    <div class="universe-wrapped-vip-stat-lbl">Dự án</div>
+                    <div class="universe-wrapped-vip-stat-num universe-wrapped-vip-stat-num--lime js-candidate-count">6</div>
+                  </div>
+                  <div>
+                    <div class="universe-wrapped-vip-stat-lbl">Điểm RS</div>
+                    <div class="universe-wrapped-vip-stat-num universe-wrapped-vip-stat-num--teal js-candidate-rs">85</div>
+                  </div>
+                  <div>
+                    <div class="universe-wrapped-vip-stat-lbl">Cấp độ</div>
+                    <div class="universe-wrapped-vip-stat-num universe-wrapped-vip-stat-num--coral">Lv.2</div>
+                  </div>
+                </div>
+                <div class="universe-wrapped-vip-slug">fonlio.online/p/tai-phat</div>
+              </div>
+              <div class="universe-wrapped-share-actions">
+                <button type="button" class="universe-wrapped-share-btn" onclick="window.copyWrappedShare(this)">
+                  <span>Chia sẻ hành trình</span>
+                </button>
+                <button type="button" class="universe-wrapped-close-btn" onclick="window.closeWrappedModal()">Vào 3D</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Navigation -->
+          <div class="universe-wrapped-footer">
+            <button type="button" class="universe-wrapped-nav-btn" id="wrappedPrevBtn" onclick="window.prevWrappedSlide()">← Trước</button>
+            <span class="universe-wrapped-counter-text" id="wrappedCounterText">1 / 6</span>
+            <button type="button" class="universe-wrapped-nav-btn universe-wrapped-nav-btn--next" id="wrappedNextBtn" onclick="window.nextWrappedSlide()">Tiếp →</button>
+          </div>
+        </div>
+      </div>
     </main>
   
 <script>
@@ -2865,6 +3687,148 @@ html:lang(vi) .toolkit__subtitle,
     }
   });
 
+  /* ==========================================================================
+     UNIVERSE STORY WRAPPED MODAL CONTROLLER
+     ========================================================================== */
+  let curWrappedSlide = 0;
+  const totalWrappedSlides = 6;
+  let wrappedTimer = null;
+  let isWrappedPaused = false;
+  let wrappedProgress = 0;
+  const wrappedDuration = 6000;
+
+  function updateWrappedSlide(idx) {
+    curWrappedSlide = (idx + totalWrappedSlides) % totalWrappedSlides;
+    wrappedProgress = 0;
+    document.querySelectorAll('.universe-wrapped-slide').forEach((s, i) => {
+      s.classList.toggle('is-active', i === curWrappedSlide);
+    });
+    const counterText = document.getElementById('wrappedCounterText');
+    if (counterText) counterText.textContent = (curWrappedSlide + 1) + ' / ' + totalWrappedSlides;
+    const nextBtn = document.getElementById('wrappedNextBtn');
+    if (nextBtn) nextBtn.textContent = curWrappedSlide === totalWrappedSlides - 1 ? 'Hoàn tất ✓' : 'Tiếp →';
+    updateWrappedBars();
+  }
+
+  function updateWrappedBars() {
+    const bars = document.querySelectorAll('.universe-wrapped-bar-fill');
+    bars.forEach((b, i) => {
+      if (i < curWrappedSlide) b.style.width = '100%';
+      else if (i === curWrappedSlide) b.style.width = wrappedProgress + '%';
+      else b.style.width = '0%';
+    });
+  }
+
+  function startWrappedTimer() {
+    clearInterval(wrappedTimer);
+    if (isWrappedPaused) return;
+    const step = (50 / wrappedDuration) * 100;
+    wrappedTimer = setInterval(() => {
+      wrappedProgress += step;
+      if (wrappedProgress >= 100) {
+        if (curWrappedSlide < totalWrappedSlides - 1) {
+          updateWrappedSlide(curWrappedSlide + 1);
+        } else {
+          isWrappedPaused = true;
+          clearInterval(wrappedTimer);
+        }
+      }
+      updateWrappedBars();
+    }, 50);
+  }
+
+  window.openWrappedModal = function() {
+    const modal = document.getElementById('fonlioWrappedModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      requestAnimationFrame(() => modal.classList.add('is-open'));
+      isWrappedPaused = false;
+      updateWrappedSlide(0);
+      startWrappedTimer();
+    }
+  };
+
+  window.closeWrappedModal = function() {
+    const modal = document.getElementById('fonlioWrappedModal');
+    if (modal) {
+      modal.classList.remove('is-open');
+      clearInterval(wrappedTimer);
+      setTimeout(() => { modal.style.display = 'none'; }, 350);
+    }
+  };
+
+  window.nextWrappedSlide = function() {
+    if (curWrappedSlide < totalWrappedSlides - 1) {
+      updateWrappedSlide(curWrappedSlide + 1);
+      startWrappedTimer();
+    } else {
+      window.closeWrappedModal();
+    }
+  };
+
+  window.prevWrappedSlide = function() {
+    if (curWrappedSlide > 0) {
+      updateWrappedSlide(curWrappedSlide - 1);
+      startWrappedTimer();
+    }
+  };
+
+  window.toggleWrappedPlay = function() {
+    isWrappedPaused = !isWrappedPaused;
+    const pauseIcon = document.getElementById('wrappedPauseIcon');
+    const playIcon = document.getElementById('wrappedPlayIcon');
+    if (pauseIcon && playIcon) {
+      pauseIcon.style.display = isWrappedPaused ? 'none' : 'block';
+      playIcon.style.display = isWrappedPaused ? 'block' : 'none';
+    }
+    if (!isWrappedPaused) startWrappedTimer();
+    else clearInterval(wrappedTimer);
+  };
+
+  window.copyWrappedShare = function(btn) {
+    if (btn) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '✓ Đã sao chép link!';
+      btn.style.background = '#10b981';
+      setTimeout(() => {
+        btn.innerHTML = orig;
+        btn.style.background = '#b9ff00';
+      }, 2500);
+    }
+  };
+
+  window.triggerWrapped = function() {
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'OPEN_WRAPPED' }, '*');
+    } else {
+      window.openWrappedModal();
+    }
+  };
+
+  // Keyboard controls: ESC to close, Left/Right arrow to navigate
+  window.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('fonlioWrappedModal');
+    if (!modal || !modal.classList.contains('is-open')) return;
+    if (e.key === 'Escape') window.closeWrappedModal();
+    if (e.key === 'ArrowRight') window.nextWrappedSlide();
+    if (e.key === 'ArrowLeft') window.prevWrappedSlide();
+    if (e.key === ' ') {
+      e.preventDefault();
+      window.toggleWrappedPlay();
+    }
+  });
+
+  // Handle actions when viewed directly without parent iframe
+  window.addEventListener('message', (evt) => {
+    if (window.parent === window) {
+      if (evt.data?.type === 'OPEN_WRAPPED') {
+        window.openWrappedModal();
+      } else if (evt.data?.type === 'NAVIGATE_DASHBOARD') {
+        window.location.href = '/candidates/dashboard/overview';
+      }
+    }
+  });
+
   if (window.location.search.includes('testnow') || window.location.search.includes('test')) {
     window.renderCandidateSkillsOnly(['UI/UX Design', 'ReactJS', 'Figma', 'TypeScript', 'NodeJS'], [
       { name: 'UI/UX Design', category: 'Thiết kế trải nghiệm', proficiencyLevel: 'EXPERT' },
@@ -2873,6 +3837,10 @@ html:lang(vi) .toolkit__subtitle,
       { name: 'TypeScript', category: 'Type Safety & Architecture', proficiencyLevel: 'INTERMEDIATE' },
       { name: 'NodeJS', category: 'Backend & RESTful API', proficiencyLevel: 'ADVANCED' }
     ]);
+  }
+
+  if (window.location.search.includes('openWrapped') || window.location.search.includes('wrapped')) {
+    setTimeout(() => { window.openWrappedModal(); }, 600);
   }
 })();
 </script>
