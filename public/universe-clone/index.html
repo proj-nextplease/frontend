@@ -3234,9 +3234,7 @@ html:lang(vi) .toolkit__subtitle,
     const frontSub = document.querySelector('.toolkit__subtitle--front');
     if (frontSub) frontSub.textContent = 'Kĩ năng của bạn';
 
-    // Optimize pin-height for candidate skills so it doesn't scroll endlessly
-    const pinH = document.querySelector('.toolkit__pin-height');
-    if (pinH) pinH.style.height = '180vh';
+
 
     // Build ordered list of skill items
     const userSkills = [];
@@ -3279,10 +3277,16 @@ html:lang(vi) .toolkit__subtitle,
     // Get all slots in Wheel 1 (frontend)
     const frontendSlots = Array.from(document.querySelectorAll('.toolkit__wheel--frontend .toolkit__slot:not(.toolkit__slot--transition)'));
     
-    // Hide Wheel 2 completely
-    const artWheel = document.querySelector('.toolkit__wheel--art-direction');
+    // In Wheel 2, hide template cards (slots 0-6) but preserve transition canvas (slot 7)
+    const artSlots = document.querySelectorAll('.toolkit__wheel--art-direction .toolkit__slot');
+    artSlots.forEach(slot => {
+      if (!slot.querySelector('.toolkit-card--transition')) {
+        slot.style.display = 'none';
+      } else {
+        slot.style.display = '';
+      }
+    });
     const artSubtitle = document.querySelector('.toolkit__subtitle--art');
-    if (artWheel) artWheel.style.display = 'none';
     if (artSubtitle) artSubtitle.style.display = 'none';
 
     // Populate each slot with user's actual skill
@@ -3411,6 +3415,16 @@ html:lang(vi) .toolkit__subtitle,
       }
     }
   });
+
+  if (window.location.search.includes('testnow') || window.location.search.includes('test')) {
+    window.renderCandidateSkillsOnly(['UI/UX Design', 'ReactJS', 'Figma', 'TypeScript', 'NodeJS'], [
+      { name: 'UI/UX Design', category: 'Thiết kế trải nghiệm', proficiencyLevel: 'EXPERT' },
+      { name: 'ReactJS', category: 'Frontend Web App', proficiencyLevel: 'ADVANCED' },
+      { name: 'Figma', category: 'Design System & UI', proficiencyLevel: 'ADVANCED' },
+      { name: 'TypeScript', category: 'Type Safety & Architecture', proficiencyLevel: 'INTERMEDIATE' },
+      { name: 'NodeJS', category: 'Backend & RESTful API', proficiencyLevel: 'ADVANCED' }
+    ]);
+  }
 })();
 </script>
 
