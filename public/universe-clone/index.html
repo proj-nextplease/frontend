@@ -1242,6 +1242,62 @@ html:lang(vi) .toolkit__subtitle,
 }
 
 /* ==========================================================================
+   SINGLE-WHEEL SYSTEM & POSITIONING ELEVATION (OPTION 1)
+   Eliminate empty 2nd deck, center candidate cards directly under subtitle
+   ========================================================================== */
+.toolkit__header {
+  top: 10vh !important;
+}
+.toolkit__subtitle--art {
+  display: none !important;
+}
+.toolkit__wheel--art-direction .toolkit__slot:not(:has(.toolkit-card--transition)) {
+  display: none !important;
+}
+.toolkit__wheel {
+  top: 42vh !important;
+}
+.toolkit__wheel--frontend::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50vw;
+  height: 50vw;
+  max-width: 600px;
+  max-height: 600px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.14) 0%, rgba(185, 255, 0, 0.06) 40%, transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+}
+@media (width >= 1025px) {
+  .toolkit__header {
+    top: 9vh !important;
+  }
+  .toolkit__wheel {
+    top: 40vh !important;
+  }
+}
+@media (width >= 601px) and (height <= 1000px) {
+  .toolkit__header {
+    top: 8vh !important;
+  }
+  .toolkit__wheel {
+    top: 38vh !important;
+  }
+}
+@media (max-width: 600px) {
+  .toolkit__header {
+    top: 6svh !important;
+  }
+  .toolkit__wheel {
+    top: 44svh !important;
+  }
+}
+
+/* ==========================================================================
    ICONIC TOOLKIT CARDS & CANDIDATE REAL PROOF SYSTEM
    ========================================================================== */
 .toolkit-card {
