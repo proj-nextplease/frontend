@@ -2414,8 +2414,8 @@ html:lang(vi) .toolkit__subtitle,
                   </div>
                   <img
                     class="toolkit-card__motion"
-                    src="home/toolkit/frontend/vi/vuejs.svg"
-                    data-i18n-attr="src:home.toolkitAssets.frontend.vue"
+                    src="/universe-clone/home/toolkit/frontend/vi/vuejs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.vuejs"
                     alt="Vue.js"
                   />
                 </div>
@@ -2433,8 +2433,8 @@ html:lang(vi) .toolkit__subtitle,
                   </div>
                   <img
                     class="toolkit-card__motion"
-                    src="home/toolkit/frontend/vi/threejs.svg"
-                    data-i18n-attr="src:home.toolkitAssets.frontend.three"
+                    src="/universe-clone/home/toolkit/frontend/vi/threejs.svg"
+                    data-i18n-attr="src:home.toolkitAssets.frontend.threejs"
                     alt="three.js"
                   />
                 </div>
@@ -2731,6 +2731,33 @@ html:lang(vi) .toolkit__subtitle,
               <button type="button" class="modal-btn-action" onclick="window.closeSkillModal()">
                 <span>Đã hiểu</span>
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPTION 1: FLOATING CURSOR PREVIEW CARD (Direct child of body, unconstrained by section transforms) -->
+      <div id="projectCursorPreview" class="project-cursor-preview" aria-hidden="true">
+        <div class="project-preview-inner">
+          <div class="project-preview-media">
+            <img id="projectPreviewImg" class="project-preview-img" src="/universe-clone/projects/01-fpt-green-week.jpg" alt="" />
+            <div class="project-preview-media-overlay"></div>
+            <div class="project-preview-badge">
+              <span class="preview-badge-dot" id="projectPreviewDot"></span>
+              <span id="projectPreviewBadgeText">HOẠT ĐỘNG SỰ KIỆN</span>
+            </div>
+            <div class="project-preview-metric" id="projectPreviewMetric">
+              1,200 SV THAM GIA
+            </div>
+          </div>
+          <div class="project-preview-info">
+            <div class="project-preview-role-wrap">
+              <span class="project-preview-role-label">VAI TRÒ THỰC CHIẾN</span>
+              <div class="project-preview-role" id="projectPreviewRole">Trưởng Ban Tổ Chức</div>
+            </div>
+            <div class="project-preview-status">
+              <span class="preview-sparkle">✦</span>
+              <span>Xác thực 100%</span>
             </div>
           </div>
         </div>
@@ -3234,6 +3261,97 @@ html:lang(vi) .toolkit__subtitle,
       desc: 'Sáng tạo bộ nhận diện thương hiệu, thiết kế logo, typography ấn phẩm và đồ họa vector độ phân giải vô hạn.',
       exp: 380,
       competencies: ['Vector Illustration', 'Brand Identity & Logo', 'Typography Design', 'SVG Asset Export']
+    },
+    'vue': {
+      name: 'Vue.js',
+      cat: 'FRAMEWORK GIAO DIỆN',
+      pillText: 'Framework web',
+      bg: '#4CBB88',
+      textColor: '#FFFFFF',
+      pillBg: '#415366',
+      pillColor: '#FFFFFF',
+      svg: '/universe-clone/home/toolkit/frontend/vi/vuejs.svg',
+      desc: 'Framework giao diện với cú pháp dễ tiếp cận, hệ thống reactivity mạnh mẽ và công cụ Composition API hiện đại.',
+      exp: 420,
+      competencies: ['Composition API', 'Vue Router & Pinia', 'Reactivity System', 'Component Design']
+    },
+    'vuejs': {
+      name: 'Vue.js',
+      cat: 'FRAMEWORK GIAO DIỆN',
+      pillText: 'Framework web',
+      bg: '#4CBB88',
+      textColor: '#FFFFFF',
+      pillBg: '#415366',
+      pillColor: '#FFFFFF',
+      svg: '/universe-clone/home/toolkit/frontend/vi/vuejs.svg',
+      desc: 'Framework giao diện với cú pháp dễ tiếp cận, hệ thống reactivity mạnh mẽ và công cụ Composition API hiện đại.',
+      exp: 420,
+      competencies: ['Composition API', 'Vue Router & Pinia', 'Reactivity System', 'Component Design']
+    },
+    'vue.js': {
+      name: 'Vue.js',
+      cat: 'FRAMEWORK GIAO DIỆN',
+      pillText: 'Framework web',
+      bg: '#4CBB88',
+      textColor: '#FFFFFF',
+      pillBg: '#415366',
+      pillColor: '#FFFFFF',
+      svg: '/universe-clone/home/toolkit/frontend/vi/vuejs.svg',
+      desc: 'Framework giao diện với cú pháp dễ tiếp cận, hệ thống reactivity mạnh mẽ và công cụ Composition API hiện đại.',
+      exp: 420,
+      competencies: ['Composition API', 'Vue Router & Pinia', 'Reactivity System', 'Component Design']
+    },
+    'three': {
+      name: 'three.js',
+      cat: 'ĐỒ HỌA 3D WEB',
+      pillText: 'Đồ họa 3D',
+      bg: '#FFFFFF',
+      textColor: '#000000',
+      pillBg: '#000000',
+      pillColor: '#FFFFFF',
+      svg: '/universe-clone/home/toolkit/frontend/vi/threejs.svg',
+      desc: 'Thư viện dựng hình 3D trên nền tảng WebGL, kết xuất mô hình khối, vật lý không gian và hiệu ứng thị giác tương tác mượt mà.',
+      exp: 450,
+      competencies: ['WebGL Shaders', 'Scene & Camera', 'Lighting & PBR Materials', 'Interactive 3D Mesh']
+    },
+    'threejs': {
+      name: 'three.js',
+      cat: 'ĐỒ HỌA 3D WEB',
+      pillText: 'Đồ họa 3D',
+      bg: '#FFFFFF',
+      textColor: '#000000',
+      pillBg: '#000000',
+      pillColor: '#FFFFFF',
+      svg: '/universe-clone/home/toolkit/frontend/vi/threejs.svg',
+      desc: 'Thư viện dựng hình 3D trên nền tảng WebGL, kết xuất mô hình khối, vật lý không gian và hiệu ứng thị giác tương tác mượt mà.',
+      exp: 450,
+      competencies: ['WebGL Shaders', 'Scene & Camera', 'Lighting & PBR Materials', 'Interactive 3D Mesh']
+    },
+    'three.js': {
+      name: 'three.js',
+      cat: 'ĐỒ HỌA 3D WEB',
+      pillText: 'Đồ họa 3D',
+      bg: '#FFFFFF',
+      textColor: '#000000',
+      pillBg: '#000000',
+      pillColor: '#FFFFFF',
+      svg: '/universe-clone/home/toolkit/frontend/vi/threejs.svg',
+      desc: 'Thư viện dựng hình 3D trên nền tảng WebGL, kết xuất mô hình khối, vật lý không gian và hiệu ứng thị giác tương tác mượt mà.',
+      exp: 450,
+      competencies: ['WebGL Shaders', 'Scene & Camera', 'Lighting & PBR Materials', 'Interactive 3D Mesh']
+    },
+    'gsap': {
+      name: 'GSAP',
+      cat: 'THƯ VIỆN CHUYỂN ĐỘNG',
+      pillText: 'Chuyển động web',
+      bg: '#0E1719',
+      textColor: '#0AE448',
+      pillBg: '#0AE448',
+      pillColor: '#0E1719',
+      svg: '/universe-clone/home/toolkit/frontend/vi/gsap.svg',
+      desc: 'Tiêu chuẩn công nghiệp cho chuyển động web cao cấp, điều khiển Timeline, ScrollTrigger và hiệu ứng đàn hồi sống động.',
+      exp: 440,
+      competencies: ['Timeline Sequencing', 'ScrollTrigger Parallax', 'Physics & Easing', 'Micro-interactions']
     }
   };
 
@@ -3534,33 +3652,7 @@ html:lang(vi) .toolkit__subtitle,
     ]);
   }
 })();
-
-<!-- OPTION 1: FLOATING CURSOR PREVIEW CARD (Placed before scripts) -->
-<div id="projectCursorPreview" class="project-cursor-preview" aria-hidden="true">
-  <div class="project-preview-inner">
-    <div class="project-preview-media">
-      <img id="projectPreviewImg" class="project-preview-img" src="/universe-clone/projects/01-fpt-green-week.jpg" alt="" />
-      <div class="project-preview-media-overlay"></div>
-      <div class="project-preview-badge">
-        <span class="preview-badge-dot" id="projectPreviewDot"></span>
-        <span id="projectPreviewBadgeText">HOẠT ĐỘNG SỰ KIỆN</span>
-      </div>
-      <div class="project-preview-metric" id="projectPreviewMetric">
-        1,200 SV THAM GIA
-      </div>
-    </div>
-    <div class="project-preview-info">
-      <div class="project-preview-role-wrap">
-        <span class="project-preview-role-label">VAI TRÒ THỰC CHIẾN</span>
-        <div class="project-preview-role" id="projectPreviewRole">Trưởng Ban Tổ Chức</div>
-      </div>
-      <div class="project-preview-status">
-        <span class="preview-sparkle">✦</span>
-        <span>Xác thực 100%</span>
-      </div>
-    </div>
-  </div>
-</div>
+</script>
 
 <script>
 /* ==========================================================================
@@ -3651,15 +3743,20 @@ html:lang(vi) .toolkit__subtitle,
       const cardW = 330;
       const cardH = 240;
 
-      let targetX = mouseX + 28;
-      let targetY = mouseY - 110;
+      // Safe fallback if mouse coordinates haven't been captured yet
+      const safeMouseX = mouseX > 0 ? mouseX : window.innerWidth / 2;
+      const safeMouseY = mouseY > 0 ? mouseY : window.innerHeight / 2;
+
+      let targetX = safeMouseX + 28;
+      let targetY = safeMouseY - 110;
 
       // Flip left if hitting right screen edge
       if (targetX + cardW > window.innerWidth - 16) {
-        targetX = mouseX - cardW - 28;
+        targetX = safeMouseX - cardW - 28;
       }
 
-      // Keep within vertical bounds
+      // Keep within viewport bounds
+      if (targetX < 16) targetX = 16;
       if (targetY < 20) {
         targetY = 20;
       } else if (targetY + cardH > window.innerHeight - 20) {
@@ -3699,18 +3796,27 @@ html:lang(vi) .toolkit__subtitle,
       mouseX = e.clientX;
       mouseY = e.clientY;
 
+      if (isHovering && !e.target.closest('.projects')) {
+        deactivateAll();
+      }
+
       if (isHovering && !rafId) {
         rafId = requestAnimationFrame(updateFollower);
       }
     }, { passive: true });
 
-    function activateMilestone(link) {
-      if (activeLink === link) return;
-      activeLink = link;
+    function activateMilestone(link, e) {
+      if (e) {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      }
 
       const links = Array.from(list.querySelectorAll('.projects__link'));
       let dataIdx = link.dataset.milestoneIndex !== undefined ? parseInt(link.dataset.milestoneIndex, 10) : links.indexOf(link);
       if (isNaN(dataIdx) || dataIdx < 0) dataIdx = 0;
+
+      if (activeLink === link && isHovering) return;
+      activeLink = link;
 
       const data = MILESTONE_DATA[dataIdx] || MILESTONE_DATA[0];
 
@@ -3729,9 +3835,9 @@ html:lang(vi) .toolkit__subtitle,
       }
       role.textContent = data.role;
 
-      // Snap position immediately on first hover
-      if (currentX < 0) {
-        const { targetX, targetY } = getTargetPos();
+      // Snap position immediately on first hover or far jump
+      const { targetX, targetY } = getTargetPos();
+      if (currentX < 0 || Math.abs(currentX - targetX) > 400) {
         currentX = targetX;
         currentY = targetY;
         preview.style.left = `${currentX}px`;
@@ -3761,9 +3867,18 @@ html:lang(vi) .toolkit__subtitle,
     list.addEventListener('mouseover', (e) => {
       const link = e.target.closest('.projects__link');
       if (link) {
-        activateMilestone(link);
+        activateMilestone(link, e);
       }
     });
+
+    list.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      const link = e.target.closest('.projects__link');
+      if (link) {
+        activateMilestone(link, e);
+      }
+    }, { passive: true });
 
     list.addEventListener('mouseleave', () => {
       deactivateAll();
@@ -3772,9 +3887,7 @@ html:lang(vi) .toolkit__subtitle,
     // Also attach to individual links as explicit fallback
     list.querySelectorAll('.projects__link').forEach(link => {
       link.addEventListener('mouseenter', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        activateMilestone(link);
+        activateMilestone(link, e);
       });
       link.addEventListener('mouseleave', () => {
         if (activeLink === link) {
