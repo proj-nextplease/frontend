@@ -2561,33 +2561,6 @@ html:lang(vi) .toolkit__subtitle,
         </div>
       </div>
 
-      <!-- OPTION 1: FLOATING CURSOR PREVIEW CARD (Direct child of body, unconstrained by section transforms) -->
-      <div id="projectCursorPreview" class="project-cursor-preview" aria-hidden="true">
-        <div class="project-preview-inner">
-          <div class="project-preview-media">
-            <img id="projectPreviewImg" class="project-preview-img" src="/universe-clone/projects/01-fpt-green-week.jpg" alt="" />
-            <div class="project-preview-media-overlay"></div>
-            <div class="project-preview-badge">
-              <span class="preview-badge-dot" id="projectPreviewDot"></span>
-              <span id="projectPreviewBadgeText">HOẠT ĐỘNG SỰ KIỆN</span>
-            </div>
-            <div class="project-preview-metric" id="projectPreviewMetric">
-              1,200 SV THAM GIA
-            </div>
-          </div>
-          <div class="project-preview-info">
-            <div class="project-preview-role-wrap">
-              <span class="project-preview-role-label">VAI TRÒ THỰC CHIẾN</span>
-              <div class="project-preview-role" id="projectPreviewRole">Trưởng Ban Tổ Chức</div>
-            </div>
-            <div class="project-preview-status">
-              <span class="preview-sparkle">✦</span>
-              <span id="projectPreviewStatusText">Xác thực 100%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
 <!-------- PROJECTS SECTION -------->
       <section class="projects" id="projects">
         <div class="projects__pin-height">
@@ -2597,50 +2570,56 @@ html:lang(vi) .toolkit__subtitle,
             <nav class="projects__list" aria-label="Cột mốc thực chiến của ứng viên">
               <a
                 class="projects__link"
-                href="#contact"
+                href="#projects"
                 data-milestone-index="0"
+                data-type="JOB"
               >
-                01 / Tuần lễ Xanh trường ĐH FPT — 1,200 SV tham gia
+                01 / UI/UX Designer Frontend — Shopee Vietnam • ⭐ 5.0
               </a>
 
               <a
                 class="projects__link"
-                href="#contact"
+                href="#projects"
                 data-milestone-index="1"
+                data-type="EXPERIENCE"
               >
-                02 / 60s Sài Gòn — Viral Video 850,000 Views
+                02 / Hệ thống Quản lý Điểm danh QR — CLB Phần Mềm • +450 EXP
               </a>
 
               <a
                 class="projects__link"
-                href="#contact"
+                href="#projects"
                 data-milestone-index="2"
+                data-type="EXPERIENCE"
               >
-                03 / NextGen Tech Hackathon — Giải Nhất Toàn Quốc
+                03 / NextGen Tech Hackathon — Khoa CNTT • Giải Nhất Toàn Quốc
               </a>
 
               <a
                 class="projects__link"
-                href="#contact"
+                href="#projects"
                 data-milestone-index="3"
+                data-type="EXPERIENCE"
               >
-                04 / Hệ thống Quản lý Điểm danh QR — CLB Phần mềm
+                04 / 60s Sài Gòn — Viral Video — Media Thực Chiến • 850,000 Views
               </a>
 
               <a
                 class="projects__link"
-                href="#contact"
+                href="#projects"
                 data-milestone-index="4"
+                data-type="CREDENTIAL"
               >
-                05 / Bộ Nhận diện Thương hiệu Sinh viên — 3 Startup
+                05 / AWS Certified Cloud Practitioner — Amazon Web Services • 2025
               </a>
 
               <a
-                class="projects__link"
-                href="#contact"
+                class="projects__link projects__link--cta"
+                href="#projects"
                 data-milestone-index="5"
+                data-type="CTA"
               >
-                06 / Báo Cáo Năng Lực Living Proof — Đạt Chuẩn 100%
+                + / Mở khóa cột mốc tiếp theo — Thêm đồ án hoặc nhận việc trên Fonlio
               </a>
             </nav>
           </div>
@@ -3967,6 +3946,33 @@ html:lang(vi) .toolkit__subtitle,
   }
 })();
 </script>
+
+<!-- AUTHENTIC LIVING PROOF FLOATING CURSOR PREVIEW CARD (Direct child of body, never clipped by section transforms) -->
+<div id="projectCursorPreview" class="project-cursor-preview" aria-hidden="true">
+  <div class="project-preview-inner">
+    <div class="project-preview-media">
+      <img id="projectPreviewImg" class="project-preview-img" src="/universe-clone/projects/06-living-proof.jpg" alt="" />
+      <div class="project-preview-media-overlay"></div>
+      <div class="project-preview-badge">
+        <span class="preview-badge-dot" id="projectPreviewDot"></span>
+        <span id="projectPreviewBadgeText">JOB THỰC CHIẾN • FONLIO</span>
+      </div>
+      <div class="project-preview-metric" id="projectPreviewMetric">
+        ⭐ 5.0 (DOANH NGHIỆP ĐÁNH GIÁ)
+      </div>
+    </div>
+    <div class="project-preview-info">
+      <div class="project-preview-role-wrap">
+        <span class="project-preview-role-label">VAI TRÒ THỰC CHIẾN</span>
+        <div class="project-preview-role" id="projectPreviewRole">Freelance UI Engineer</div>
+      </div>
+      <div class="project-preview-status">
+        <span class="preview-sparkle">✦</span>
+        <span id="projectPreviewStatusText">Doanh nghiệp chứng thực</span>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
