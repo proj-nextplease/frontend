@@ -1243,19 +1243,30 @@ html:lang(vi) .toolkit__subtitle,
 
 /* ==========================================================================
    SINGLE-WHEEL SYSTEM & POSITIONING ELEVATION (OPTION 1)
-   Eliminate empty 2nd deck, center candidate cards directly under subtitle
+   Eliminate empty 2nd deck, eliminate empty black void, center candidate cards
    ========================================================================== */
+.toolkit__pin-height {
+  height: 280vh !important;
+}
 .toolkit__header {
   top: 10vh !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+.toolkit__subtitle-wrap {
+  height: 3.2em !important;
+  margin-top: 1.5vh !important;
+  position: relative !important;
+  overflow: hidden !important;
 }
 .toolkit__subtitle--art {
   display: none !important;
 }
-.toolkit__wheel--art-direction .toolkit__slot:not(:has(.toolkit-card--transition)) {
+.toolkit__wheel--art-direction {
   display: none !important;
 }
 .toolkit__wheel {
-  top: 42vh !important;
+  top: 48vh !important;
 }
 .toolkit__wheel--frontend::before {
   content: '';
@@ -1272,12 +1283,20 @@ html:lang(vi) .toolkit__subtitle,
   pointer-events: none;
   z-index: 0;
 }
+.toolkit__slot--zoom {
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 1000;
+}
+.toolkit__slot--zoom.is-visible {
+  visibility: visible !important;
+}
 @media (width >= 1025px) {
   .toolkit__header {
     top: 9vh !important;
   }
   .toolkit__wheel {
-    top: 40vh !important;
+    top: 48vh !important;
   }
 }
 @media (width >= 601px) and (height <= 1000px) {
@@ -1285,7 +1304,7 @@ html:lang(vi) .toolkit__subtitle,
     top: 8vh !important;
   }
   .toolkit__wheel {
-    top: 38vh !important;
+    top: 46vh !important;
   }
 }
 @media (max-width: 600px) {
@@ -1293,7 +1312,7 @@ html:lang(vi) .toolkit__subtitle,
     top: 6svh !important;
   }
   .toolkit__wheel {
-    top: 44svh !important;
+    top: 46svh !important;
   }
 }
 
@@ -1696,15 +1715,16 @@ html:lang(vi) .toolkit__subtitle,
 
 /* CRISP INLINE SVG / DOM CARD FACE */
 .toolkit-card-vector-face {
-  width: 100%;
-  height: 100%;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
   aspect-ratio: 295 / 417;
   border-radius: 22.6px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  position: relative;
   overflow: hidden;
   user-select: none;
   box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.5);
@@ -2372,12 +2392,19 @@ html:lang(vi) .toolkit__subtitle,
                       />
                     </div>
                   </div>
+              <!-- Slot 9: Single-Wheel Zoom Transition to #projects -->
+              <div class="toolkit__slot toolkit__slot--zoom">
+                <div class="toolkit-card toolkit-card--transition">
+                  <canvas
+                    class="toolkit-card__cream-reveal toolkit-card__reveal-canvas toolkit-card__motion"
+                    aria-hidden="true"
+                  ></canvas>
                 </div>
               </div>
             </div>
 
-            <!-- Art direction deck: Creative, Leadership & Design -->
-            <div class="toolkit__wheel toolkit__wheel--art-direction">
+            <!-- Art direction deck: Creative, Leadership & Design (Eliminated in Option 1) -->
+            <div class="toolkit__wheel toolkit__wheel--art-direction" style="display: none !important;">
               <!-- Slot 0: Figma -->
               <div class="toolkit__slot" data-slot-index="0" data-wheel="art">
                 <div class="toolkit-card toolkit-card--figma" data-skill-name="Figma" data-skill-cat="THIẾT KẾ GIAO DIỆN" data-skill-desc="Công cụ thiết kế UI/UX hàng đầu, quản lý Design System, tương tác prototype và phối hợp thời gian thực với lập trình viên." data-skill-level="Thành thạo (Advanced)">
@@ -3330,18 +3357,12 @@ html:lang(vi) .toolkit__subtitle,
 
     if (userSkills.length === 0) return;
 
-    // Get all slots in Wheel 1 (frontend)
-    const frontendSlots = Array.from(document.querySelectorAll('.toolkit__wheel--frontend .toolkit__slot:not(.toolkit__slot--transition)'));
+    // Get all slots in Wheel 1 (frontend) excluding transitions
+    const frontendSlots = Array.from(document.querySelectorAll('.toolkit__wheel--frontend .toolkit__slot:not(.toolkit__slot--transition):not(.toolkit__slot--zoom)'));
     
-    // In Wheel 2, hide template cards (slots 0-6) but preserve transition canvas (slot 7)
-    const artSlots = document.querySelectorAll('.toolkit__wheel--art-direction .toolkit__slot');
-    artSlots.forEach(slot => {
-      if (!slot.querySelector('.toolkit-card--transition')) {
-        slot.style.display = 'none';
-      } else {
-        slot.style.display = '';
-      }
-    });
+    // Completely hide Wheel 2 (Option 1 single-deck architecture)
+    const artWheel = document.querySelector('.toolkit__wheel--art-direction');
+    if (artWheel) artWheel.style.display = 'none';
     const artSubtitle = document.querySelector('.toolkit__subtitle--art');
     if (artSubtitle) artSubtitle.style.display = 'none';
 
@@ -3349,6 +3370,7 @@ html:lang(vi) .toolkit__subtitle,
     frontendSlots.forEach((slot, index) => {
       if (index < userSkills.length) {
         slot.style.display = '';
+        slot.classList.add('is-visible');
         const card = slot.querySelector('.toolkit-card');
         if (!card) return;
 
@@ -3396,10 +3418,11 @@ html:lang(vi) .toolkit__subtitle,
       } else {
         // HIDE ALL UNUSED TEMPLATE SLOTS!
         slot.style.display = 'none';
+        slot.classList.remove('is-visible');
       }
     });
 
-    // Hide transition flip slot if candidate has fewer cards than wheel length
+    // Hide transition flip slot
     const flipSlot = document.querySelector('.toolkit__slot--transition');
     if (flipSlot) flipSlot.style.display = 'none';
   };
