@@ -3535,10 +3535,38 @@ html:lang(vi) .toolkit__subtitle,
   }
 })();
 
+<!-- OPTION 1: FLOATING CURSOR PREVIEW CARD (Placed before scripts) -->
+<div id="projectCursorPreview" class="project-cursor-preview" aria-hidden="true">
+  <div class="project-preview-inner">
+    <div class="project-preview-media">
+      <img id="projectPreviewImg" class="project-preview-img" src="projects/01-fpt-green-week.jpg" alt="" />
+      <div class="project-preview-media-overlay"></div>
+      <div class="project-preview-badge">
+        <span class="preview-badge-dot" id="projectPreviewDot"></span>
+        <span id="projectPreviewBadgeText">HOẠT ĐỘNG SỰ KIỆN</span>
+      </div>
+      <div class="project-preview-metric" id="projectPreviewMetric">
+        1,200 SV THAM GIA
+      </div>
+    </div>
+    <div class="project-preview-info">
+      <div class="project-preview-role-wrap">
+        <span class="project-preview-role-label">VAI TRÒ THỰC CHIẾN</span>
+        <div class="project-preview-role" id="projectPreviewRole">Trưởng Ban Tổ Chức</div>
+      </div>
+      <div class="project-preview-status">
+        <span class="preview-sparkle">✦</span>
+        <span>Xác thực 100%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
 /* ==========================================================================
    OPTION 1: FLOATING MAGNETIC CURSOR PREVIEW FOR MILESTONES
    ========================================================================== */
-(function initProjectCursorPreview() {
+(function setupMilestonePreview() {
   const MILESTONE_DATA = [
     {
       image: 'projects/01-fpt-green-week.jpg',
@@ -3590,89 +3618,103 @@ html:lang(vi) .toolkit__subtitle,
     }
   ];
 
-  const preview = document.getElementById('projectCursorPreview');
-  const previewImg = document.getElementById('projectPreviewImg');
-  const badgeText = document.getElementById('projectPreviewBadgeText');
-  const badgeDot = document.getElementById('projectPreviewDot');
-  const metric = document.getElementById('projectPreviewMetric');
-  const role = document.getElementById('projectPreviewRole');
-  const list = document.querySelector('.projects__list');
-  const links = document.querySelectorAll('.projects__link');
+  function init() {
+    const preview = document.getElementById('projectCursorPreview');
+    const previewImg = document.getElementById('projectPreviewImg');
+    const badgeText = document.getElementById('projectPreviewBadgeText');
+    const badgeDot = document.getElementById('projectPreviewDot');
+    const metric = document.getElementById('projectPreviewMetric');
+    const role = document.getElementById('projectPreviewRole');
+    const list = document.querySelector('.projects__list');
 
-  if (!preview || !list || !links.length) return;
-
-  // Preload preview images
-  MILESTONE_DATA.forEach(item => {
-    const img = new Image();
-    img.src = item.image;
-  });
-
-  let mouseX = -500;
-  let mouseY = -500;
-  let currentX = -500;
-  let currentY = -500;
-  let isHovering = false;
-  let rafId = null;
-
-  function updateFollower() {
-    if (!isHovering && !preview.classList.contains('is-active')) {
-      rafId = null;
+    if (!preview || !list) {
+      console.warn('[Fonlio] Milestone preview elements not found, retrying...');
+      setTimeout(init, 200);
       return;
     }
 
-    const cardW = 330;
-    const cardH = 240;
+    // Preload images for instant zero-latency hover
+    MILESTONE_DATA.forEach(item => {
+      const img = new Image();
+      img.src = item.image;
+    });
 
-    let targetX = mouseX + 28;
-    let targetY = mouseY - 110;
+    let mouseX = -500;
+    let mouseY = -500;
+    let currentX = -500;
+    let currentY = -500;
+    let isHovering = false;
+    let rafId = null;
+    let activeLink = null;
 
-    // Flip to left if hitting right viewport edge
-    if (targetX + cardW > window.innerWidth - 16) {
-      targetX = mouseX - cardW - 28;
+    function getTargetPos() {
+      const cardW = 330;
+      const cardH = 240;
+
+      let targetX = mouseX + 28;
+      let targetY = mouseY - 110;
+
+      // Flip left if hitting right screen edge
+      if (targetX + cardW > window.innerWidth - 16) {
+        targetX = mouseX - cardW - 28;
+      }
+
+      // Keep within vertical bounds
+      if (targetY < 20) {
+        targetY = 20;
+      } else if (targetY + cardH > window.innerHeight - 20) {
+        targetY = window.innerHeight - cardH - 20;
+      }
+
+      return { targetX, targetY };
     }
 
-    // Keep card within viewport top/bottom
-    if (targetY < 24) {
-      targetY = 24;
-    } else if (targetY + cardH > window.innerHeight - 24) {
-      targetY = window.innerHeight - cardH - 24;
-    }
+    function updateFollower() {
+      if (!isHovering && !preview.classList.contains('is-active')) {
+        rafId = null;
+        return;
+      }
 
-    // Smooth Lerp damping
-    currentX += (targetX - currentX) * 0.16;
-    currentY += (targetY - currentY) * 0.16;
+      const { targetX, targetY } = getTargetPos();
 
-    // Subtle dynamic tilt on horizontal velocity
-    const vx = (targetX - currentX) * 0.05;
-    const tilt = Math.max(-8, Math.min(8, vx));
+      // Smooth Lerp damping
+      currentX += (targetX - currentX) * 0.18;
+      currentY += (targetY - currentY) * 0.18;
 
-    preview.style.left = `${currentX}px`;
-    preview.style.top = `${currentY}px`;
-    if (isHovering) {
-      preview.style.transform = `scale(1) rotate(${tilt}deg)`;
-    } else {
-      preview.style.transform = `scale(0.85) rotate(-3deg)`;
-    }
+      const vx = (targetX - currentX) * 0.05;
+      const tilt = Math.max(-8, Math.min(8, vx));
 
-    rafId = requestAnimationFrame(updateFollower);
-  }
+      preview.style.left = `${currentX}px`;
+      preview.style.top = `${currentY}px`;
+      if (isHovering) {
+        preview.style.transform = `scale(1) rotate(${tilt}deg)`;
+      } else {
+        preview.style.transform = `scale(0.85) rotate(-3deg)`;
+      }
 
-  window.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-
-    if (isHovering && !rafId) {
       rafId = requestAnimationFrame(updateFollower);
     }
-  }, { passive: true });
 
-  links.forEach((link, idx) => {
-    const dataIdx = link.dataset.milestoneIndex !== undefined ? parseInt(link.dataset.milestoneIndex, 10) : idx;
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
 
-    link.addEventListener('mouseenter', () => {
-      const data = MILESTONE_DATA[dataIdx];
-      if (!data) return;
+      if (isHovering && !rafId) {
+        rafId = requestAnimationFrame(updateFollower);
+      }
+    }, { passive: true });
 
+    function activateMilestone(link) {
+      if (activeLink === link) return;
+      activeLink = link;
+
+      const links = Array.from(list.querySelectorAll('.projects__link'));
+      let dataIdx = link.dataset.milestoneIndex !== undefined ? parseInt(link.dataset.milestoneIndex, 10) : links.indexOf(link);
+      if (isNaN(dataIdx) || dataIdx < 0) dataIdx = 0;
+
+      const data = MILESTONE_DATA[dataIdx] || MILESTONE_DATA[0];
+
+      // Update card content
       previewImg.src = data.image;
       badgeText.textContent = data.category;
       if (badgeDot) {
@@ -3687,6 +3729,15 @@ html:lang(vi) .toolkit__subtitle,
       }
       role.textContent = data.role;
 
+      // Snap position immediately on first hover
+      if (currentX < 0) {
+        const { targetX, targetY } = getTargetPos();
+        currentX = targetX;
+        currentY = targetY;
+        preview.style.left = `${currentX}px`;
+        preview.style.top = `${currentY}px`;
+      }
+
       isHovering = true;
       list.classList.add('is-hovering');
       links.forEach(l => l.classList.remove('is-active'));
@@ -3696,48 +3747,52 @@ html:lang(vi) .toolkit__subtitle,
       if (!rafId) {
         rafId = requestAnimationFrame(updateFollower);
       }
+    }
+
+    function deactivateAll() {
+      isHovering = false;
+      activeLink = null;
+      list.classList.remove('is-hovering');
+      list.querySelectorAll('.projects__link').forEach(l => l.classList.remove('is-active'));
+      preview.classList.remove('is-active');
+    }
+
+    // Event Delegation on list ensures 100% reliable capture even if spans inside links re-render
+    list.addEventListener('mouseover', (e) => {
+      const link = e.target.closest('.projects__link');
+      if (link) {
+        activateMilestone(link);
+      }
     });
 
-    link.addEventListener('mouseleave', () => {
-      link.classList.remove('is-active');
+    list.addEventListener('mouseleave', () => {
+      deactivateAll();
     });
-  });
 
-  list.addEventListener('mouseleave', () => {
-    isHovering = false;
-    list.classList.remove('is-hovering');
-    links.forEach(l => l.classList.remove('is-active'));
-    preview.classList.remove('is-active');
-  });
+    // Also attach to individual links as explicit fallback
+    list.querySelectorAll('.projects__link').forEach(link => {
+      link.addEventListener('mouseenter', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        activateMilestone(link);
+      });
+      link.addEventListener('mouseleave', () => {
+        if (activeLink === link) {
+          link.classList.remove('is-active');
+        }
+      });
+    });
+
+    console.log('[Fonlio] Milestone Cursor Preview initialized successfully with 6 projects!');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
 </script>
-
-<!-- OPTION 1: FLOATING CURSOR PREVIEW CARD -->
-<div id="projectCursorPreview" class="project-cursor-preview" aria-hidden="true">
-  <div class="project-preview-inner">
-    <div class="project-preview-media">
-      <img id="projectPreviewImg" class="project-preview-img" src="projects/01-fpt-green-week.jpg" alt="" />
-      <div class="project-preview-media-overlay"></div>
-      <div class="project-preview-badge">
-        <span class="preview-badge-dot" id="projectPreviewDot"></span>
-        <span id="projectPreviewBadgeText">HOẠT ĐỘNG SỰ KIỆN</span>
-      </div>
-      <div class="project-preview-metric" id="projectPreviewMetric">
-        1,200 SV THAM GIA
-      </div>
-    </div>
-    <div class="project-preview-info">
-      <div class="project-preview-role-wrap">
-        <span class="project-preview-role-label">VAI TRÒ THỰC CHIẾN</span>
-        <div class="project-preview-role" id="projectPreviewRole">Trưởng Ban Tổ Chức</div>
-      </div>
-      <div class="project-preview-status">
-        <span class="preview-sparkle">✦</span>
-        <span>Xác thực 100%</span>
-      </div>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
