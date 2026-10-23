@@ -121,6 +121,8 @@ export function CandidateUniversePage() {
         const idx = typeof event.data?.payload?.memoryIndex === 'number' ? event.data.payload.memoryIndex : 0;
         setSelectedMemoryIndex(idx);
         setIsSpotlightOpen(true);
+      } else if (event.data?.type === 'NAVIGATE_HOME') {
+        navigate('/');
       } else if (event.data?.type === 'NAVIGATE_DASHBOARD') {
         navigate('/candidates/dashboard/overview');
       } else if (event.data?.type === 'NAVIGATE_PORTFOLIO_EDIT') {
