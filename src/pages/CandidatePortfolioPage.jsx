@@ -985,59 +985,9 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             textAlign: 'center'
           }}>
             {isEditing
-              ? 'Hồ sơ và Proof of Work của bạn đã được cập nhật thành công trên hệ thống fonlio.'
-              : 'Hồ sơ và Proof of Work của bạn đã được ghi nhận chính thức trên hệ thống fonlio. Bạn đã sẵn sàng để khám phá các cơ hội nghề nghiệp.'}
+              ? 'Hồ sơ đã được lưu thành công vào bản nháp. Để cập nhật các thay đổi mới này lên website công khai gửi nhà tuyển dụng, hãy chọn "Cập nhật website (1.000 Điểm)" trên Bảng điều khiển.'
+              : 'Hồ sơ đã được lưu thành công vào bản nháp. Bạn có thể xuất bản website chính thức bất cứ lúc nào trên Bảng điều khiển.'}
           </p>
-
-          {serverPortfolio?.publicSlug && (
-            <div style={{
-              background: 'rgba(16, 185, 129, 0.08)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
-              borderRadius: '16px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'left',
-            }}>
-              <div style={{ fontSize: '0.84rem', color: '#10b981', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Globe size={16} /> Link Website cá nhân của bạn:
-              </div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '8px',
-                background: 'rgba(0,0,0,0.25)',
-                padding: '8px 12px',
-                borderRadius: '8px',
-                marginBottom: '10px',
-              }}>
-                <span style={{ fontSize: '0.86rem', color: '#fff', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {`${window.location.origin}/p/${serverPortfolio.publicSlug}`}
-                </span>
-                <button
-                  type="button"
-                  className="button secondary-button"
-                  style={{ padding: '6px 12px', fontSize: '0.78rem', flexShrink: 0, gap: '4px' }}
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/p/${serverPortfolio.publicSlug}`);
-                    setCopiedSuccessLink(true);
-                    setTimeout(() => setCopiedSuccessLink(false), 2000);
-                  }}
-                >
-                  <Copy size={13} />
-                  {copiedSuccessLink ? 'Đã sao chép' : 'Sao chép link'}
-                </button>
-              </div>
-              <a
-                href={`/p/${serverPortfolio.publicSlug}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{ fontSize: '0.8rem', color: '#10b981', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-              >
-                <ExternalLink size={13} /> Mở xem website độc lập ở tab mới
-              </a>
-            </div>
-          )}
 
           {/* Nói trước là trang sắp tự chuyển. */}
           <p className="pf-success-redirect" aria-live="polite">
@@ -1780,24 +1730,12 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             <div className="form-section-heading">
               <Globe size={22} color="#10b981" />
               <div>
-                <h2 style={{ color: '#10b981' }}>Website Portfolio cá nhân (/p/:slug)</h2>
+                <h2 style={{ color: '#10b981' }}>Website Portfolio công khai (/p/:slug)</h2>
                 <p>
-                  Sau khi lưu, bạn có thể xuất website với đường link riêng dạng <code>fonlio.vn/p/{serverPortfolio?.publicSlug || 'ten-ban'}</code> để gửi kèm trong CV hoặc LinkedIn.
+                  Hồ sơ sau khi lưu sẽ được lưu trữ an toàn trong bản nháp. Bạn có thể xuất bản hoặc cập nhật lên website công khai bất kỳ lúc nào trên Bảng điều khiển.
                 </p>
               </div>
             </div>
-            {serverPortfolio?.publicSlug && (
-              <a
-                href={`/p/${serverPortfolio.publicSlug}`}
-                target="_blank"
-                rel="noreferrer"
-                className="button secondary-button preview-open-button"
-                style={{ textDecoration: 'none' }}
-              >
-                <ExternalLink size={16} />
-                Xem link riêng
-              </a>
-            )}
           </div>
 
           <div className="portfolio-submit-panel">

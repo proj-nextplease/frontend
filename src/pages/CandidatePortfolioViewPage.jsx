@@ -47,33 +47,43 @@ export function CandidatePortfolioViewPage() {
     );
   }
 
-  return (
-    <>
-      {!profile.isExported && (
+  if (!profile.isExported) {
+    return (
+      <div className="fom-page fom-page-state" style={{ textAlign: 'center', padding: '60px 20px', minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 9999,
-          background: 'rgba(234, 179, 8, 0.95)',
-          color: '#1a1a1a',
-          padding: '8px 16px',
-          textAlign: 'center',
-          fontSize: '0.82rem',
-          fontWeight: 700,
-          backdropFilter: 'blur(8px)',
+          width: '72px',
+          height: '72px',
+          borderRadius: '50%',
+          background: 'rgba(234, 179, 8, 0.12)',
+          border: '1px solid rgba(234, 179, 8, 0.3)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '8px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+          margin: '0 auto 20px',
+          color: '#facc15'
         }}>
-          <Sparkles size={15} />
-          <span>Bản xem trước Portfolio · Chưa xuất bản thành website chính thức (Phí xuất bản: 1.000 Điểm)</span>
+          <LockKeyhole size={32} />
         </div>
-      )}
-      <VerifiedPassport profile={profile} isDraft={!profile.isExported} />
-    </>
-  );
+        <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: '0 0 10px', color: '#fff' }}>
+          Website Portfolio chưa xuất bản
+        </h2>
+        <p style={{ maxWidth: '460px', lineHeight: 1.6, color: 'rgba(255,255,255,0.7)', margin: '0 auto 24px', fontSize: '0.92rem' }}>
+          Hồ sơ này hiện đang ở chế độ bản nháp nội bộ và chưa được chủ sở hữu xuất bản ra website công khai.
+        </p>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <a
+            href="/candidates/dashboard/overview"
+            className="button primary-button"
+            style={{ textDecoration: 'none', padding: '10px 22px', fontSize: '0.9rem', fontWeight: 700 }}
+          >
+            Về Bảng điều khiển để Xuất website
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return <VerifiedPassport profile={profile} isDraft={false} />;
 }
 
 /**
