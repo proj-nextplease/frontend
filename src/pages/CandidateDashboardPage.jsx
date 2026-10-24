@@ -43,6 +43,7 @@ import {
   ShoppingBag, Globe, Coins,
 } from 'lucide-react';
 import { getMyPortfolio, updateMySlug, exportPortfolioWebsite } from '../api/portfolioApi.js';
+import { VerifiedPassport } from './CandidatePortfolioViewPage.jsx';
 import { UserAvatar } from '../components/UserAvatar.jsx';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
@@ -950,6 +951,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   // Portfolio Website Export states
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [exportResult, setExportResult] = useState(null);
   const [exportError, setExportError] = useState('');
@@ -1943,9 +1945,19 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         setWallet(prev => prev ? { ...prev, npBalance: res.balanceAfter } : prev);
       }
       if (res?.publicSlug) {
-        setPortfolio(prev => prev ? { ...prev, publicSlug: res.publicSlug, isPublic: true } : prev);
+        setPortfolio(prev => prev ? { ...prev, publicSlug: res.publicSlug, isPublic: true, isExported: true } : prev);
       }
-      showToast('success', 'Xuất bản website portfolio thành công!');
+      // Tự động sao chép link website ngay khi xuất thành công!
+      const fullUrl = res?.publicUrl?.startsWith('http')
+        ? res.publicUrl
+        : `${window.location.origin}${res?.publicUrl || `/p/${res?.publicSlug || portfolio?.publicSlug}`}`;
+      try {
+        await navigator.clipboard.writeText(fullUrl);
+        setCopiedExportUrl(true);
+        showToast('success', 'Xuất bản website thành công và đã tự động sao chép link!');
+      } catch {
+        showToast('success', 'Xuất bản website portfolio thành công!');
+      }
       getWallet().then(w => setWallet(w)).catch(() => {});
     } catch (err) {
       setExportError(err.message || 'Xuất bản website thất bại. Vui lòng thử lại.');
@@ -2408,25 +2420,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       >
                         <Globe size={15} /> Xuất website (1.000 Điểm)
                       </button>
-                      <a
-                        href={portfolio?.publicSlug ? `/p/${portfolio.publicSlug}` : '#'}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="np-pp-btn"
-                        title="Xem trước giao diện Portfolio"
-                        style={{ textDecoration: 'none' }}
-                      >
-                        <Eye size={15} /> Xem thử
-                      </a>
                       <button
                         type="button"
                         className="np-pp-btn"
-                        onClick={handleCopyPortfolioLink}
-                        disabled={copyLinkStatus === 'copying'}
-                        title="Sao chép link Portfolio để chia sẻ"
+                        onClick={() => setShowPreviewModal(true)}
+                        title="Xem trước giao diện Portfolio trong popup"
                       >
-                        <Copy size={15} />
-                        {copyLinkStatus === 'done' ? 'Đã sao chép' : copyLinkStatus === 'error' ? 'Lỗi, thử lại' : 'Sao chép link'}
+                        <Eye size={15} /> Xem thử
                       </button>
                     </>
                   )}
@@ -4827,6 +4827,86 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Preview Portfolio Modal (Popup tại chỗ) ─── */}
+      {showPreviewModal && (
+        <div className="glass-modal-overlay" onClick={() => setShowPreviewModal(false)} style={{ zIndex: 12000, padding: '16px' }}>
+          <div
+            className="glass-modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '1120px',
+              width: '100%',
+              height: '92vh',
+              maxHeight: '940px',
+              padding: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              borderRadius: '24px',
+              overflow: 'hidden',
+              background: '#0b0f14',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.85)',
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '14px 22px',
+              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(255,255,255,0.03)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Eye size={18} color="#34d399" />
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#fff' }}>
+                  Bản xem trước Portfolio
+                </h3>
+                <span style={{
+                  fontSize: '0.72rem',
+                  padding: '2px 9px',
+                  borderRadius: '999px',
+                  background: 'rgba(234, 179, 8, 0.15)',
+                  color: '#facc15',
+                  border: '1px solid rgba(234, 179, 8, 0.3)',
+                  fontWeight: 700,
+                }}>
+                  Xem trước tại chỗ
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="button primary-button"
+                  style={{ padding: '6px 14px', fontSize: '0.82rem', gap: '6px' }}
+                  onClick={() => {
+                    setShowPreviewModal(false);
+                    setExportError('');
+                    setExportResult(null);
+                    setShowExportModal(true);
+                  }}
+                >
+                  <Globe size={14} /> Xuất website (1.000 Điểm)
+                </button>
+                <button
+                  type="button"
+                  className="button secondary-button"
+                  style={{ padding: '6px 12px', fontSize: '0.82rem' }}
+                  onClick={() => setShowPreviewModal(false)}
+                >
+                  <X size={16} /> Đóng
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: render VerifiedPassport */}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              <VerifiedPassport profile={portfolio} isDraft />
             </div>
           </div>
         </div>
