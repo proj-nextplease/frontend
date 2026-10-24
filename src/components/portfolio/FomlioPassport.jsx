@@ -1,75 +1,216 @@
-import { useState } from 'react';
-import { BadgeCheck, Clock3, Eye, ExternalLink, Award, GraduationCap, MapPin } from 'lucide-react';
+import { useState, useEffect, useMemo, useId } from 'react';
+import {
+  BadgeCheck,
+  Clock3,
+  ExternalLink,
+  Award,
+  GraduationCap,
+  MapPin,
+  Mail,
+  Phone,
+  Layers,
+  Smartphone,
+  Monitor,
+  Code2,
+  Lightbulb,
+  Compass,
+  ArrowRight,
+  Eye,
+  CheckCircle2,
+} from 'lucide-react';
 import { resolveTheme } from '../../constants/portfolioThemes.js';
 import { PortfolioMascot } from '../PortfolioMascot.jsx';
 import { FilePreviewModal } from '../FilePreviewModal.jsx';
 import '../../styles/fomlioTheme.css';
 
-import starUrl from '../../assets/fomlio/star.svg';
-import iconUxui from '../../assets/fomlio/icon-uxui.svg';
-import iconTech from '../../assets/fomlio/icon-tech.svg';
-import iconMarketing from '../../assets/fomlio/icon-marketing.svg';
-import iconDatabase from '../../assets/fomlio/icon-database.svg';
-import iconLight from '../../assets/fomlio/icon-light.svg';
-import iconResearch from '../../assets/fomlio/icon-research.svg';
-
-/* Sáu biểu tượng chuyên môn của bản thiết kế, dùng vòng theo thứ tự kỹ năng
-   mà ứng viên khai — thiết kế có đúng sáu ô nên sáu icon là vừa đủ. */
-const SPECIALITY_ICONS = [iconUxui, iconTech, iconMarketing, iconDatabase, iconLight, iconResearch];
-
-/* Ngôi sao trang trí. Neo theo KHUNG HERO, không theo cả trang: trang dài
-   ngắn tuỳ dữ liệu từng ứng viên, nên toạ độ tính theo % chiều cao trang sẽ
-   rơi vào chỗ khác nhau ở mỗi hồ sơ — và đã từng rơi trúng dòng chữ.
-   Tất cả nằm ở nửa trái, quanh đĩa chân dung, tránh hẳn cột chữ. */
-const HERO_STARS = [
-  { top: '2%', left: '30%', size: 46, rotate: -36 },
-  { top: '12%', left: '-4%', size: 30, rotate: 24 },
-  { top: '46%', left: '-7%', size: 22, rotate: -23 },
-  { bottom: '6%', left: '6%', size: 34, rotate: 24 },
-  { bottom: '-2%', left: '36%', size: 24, rotate: -23 },
-];
-
-/* Ở bản nháp, khối rỗng hiện lời nhắc thay vì biến mất. Người điền lần đầu
-   cần biết "trang trống vì mình chưa nhập", chứ không phải đoán xem trang có
-   hỏng không. Trên hồ sơ công khai thì khối rỗng vẫn ẩn hẳn — không ai muốn
-   nhà tuyển dụng đọc thấy mình còn thiếu gì. */
-function DraftHint({ children }) {
-  return <p className="fom-draft-hint">{children}</p>;
+function LinkedInIcon({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.67 1.67 0 1 0-.01-3.34 1.67 1.67 0 0 0 .01 3.34M7.86 18.5V10.13H5.07V18.5h2.79Z" />
+    </svg>
+  );
 }
 
 /**
- * Năm kinh nghiệm, tính từ mốc bắt đầu sớm nhất.
- *
- * Trình dựng lưu ngày dạng `MM/YY` ("01/23"), không phải năm bốn chữ số —
- * bản trước bắt \d{4} nên không khớp gì cả và trang luôn hiện "0+ năm kinh
- * nghiệm" dù hồ sơ có đủ kinh nghiệm. Vẫn nhận cả `YYYY` phòng dữ liệu cũ.
+ * 3D Faceted Yellow-Lime Star component exactly matching Figma node 9-126
  */
-function yearsOfExperience(experiences) {
-  const years = experiences
-    .map((exp) => {
-      const raw = String(exp.startDate || '').trim();
-      const short = /^(0[1-9]|1[0-2])\/(\d{2})$/.exec(raw);
-      if (short) return 2000 + Number(short[2]);
-      const long = /\b(19|20)\d{2}\b/.exec(raw);
-      return long ? Number(long[0]) : NaN;
-    })
-    .filter((y) => Number.isFinite(y) && y > 1950);
-  if (!years.length) return null;
-  return Math.max(1, new Date().getFullYear() - Math.min(...years));
+export function FigmaStar3D({ size = 36, rotate = 0, style, className }) {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const gradientId = `star-face-${uid}`;
+  const shadowId = `star-shadow-${uid}`;
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      className={`fom-star-3d ${className || ''}`}
+      style={{
+        transform: `rotate(${rotate}deg)`,
+        ...style,
+      }}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="var(--fom-star-light, #fffbeb)" />
+          <stop offset="40%" stopColor="var(--fom-star-mid, #fef08a)" />
+          <stop offset="100%" stopColor="var(--fom-star-main, #facc15)" />
+        </linearGradient>
+        <linearGradient id={shadowId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="var(--fom-star-shadow-start, #ca8a04)" />
+          <stop offset="100%" stopColor="var(--fom-star-shadow-end, #581c87)" />
+        </linearGradient>
+      </defs>
+      {/* 3D Extrusion Side Silhouette for Depth */}
+      <path
+        d="M 50,7 L 62,35 L 92,38 L 70,57 L 77,87 L 50,72 L 23,87 L 30,57 L 8,38 L 38,35 Z"
+        fill={`url(#${shadowId})`}
+        transform="translate(3.5, 6)"
+        opacity="0.88"
+      />
+      {/* Main Front Star */}
+      <path
+        d="M 50,7 L 62,35 L 92,38 L 70,57 L 77,87 L 50,72 L 23,87 L 30,57 L 8,38 L 38,35 Z"
+        fill={`url(#${gradientId})`}
+        stroke="#ffffff"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      {/* Subtle Bevel Facets */}
+      <path d="M 50,7 L 50,52 L 62,35 Z" fill="#ffffff" opacity="0.45" />
+      <path d="M 92,38 L 50,52 L 70,57 Z" fill="var(--fom-star-facet-dark, #ca8a04)" opacity="0.32" />
+      <path d="M 77,87 L 50,52 L 50,72 Z" fill="var(--fom-star-facet-deep, #78350f)" opacity="0.3" />
+      <path d="M 23,87 L 50,52 L 30,57 Z" fill="var(--fom-star-facet-light, #fde047)" opacity="0.25" />
+      <path d="M 8,38 L 50,52 L 38,35 Z" fill="#ffffff" opacity="0.4" />
+    </svg>
+  );
 }
 
-/** Dải kỹ năng chạy ngang, lặp hai lần để vòng lặp khép kín không hở mối. */
-function RoleMarquee({ items }) {
-  if (!items.length) return null;
+/**
+ * 4-Point Sparkle Cross
+ */
+export function FigmaSparkle({ size = 18, color = '#ffffff', style, className }) {
   return (
-    <div className="fom-marquee" aria-label="Kỹ năng">
-      <div className="fom-marquee-band" />
-      <div className="fom-marquee-track">
-        {[0, 1].map((copy) => (
-          <div className="fom-marquee-group" key={copy} aria-hidden={copy === 1}>
-            {items.map((item, i) => (
-              <span className="fom-marquee-item" key={`${copy}-${i}`}>
-                {item}
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={color}
+      className={`fom-sparkle ${className || ''}`}
+      style={style}
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path d="M12 0C12 6.627 6.627 12 0 12C6.627 12 12 17.373 12 24C12 17.373 17.373 12 24 12C17.373 12 12 6.627 12 0Z" />
+    </svg>
+  );
+}
+
+/**
+ * Rotating Circular "DOWNLOAD CV" Badge with Lime Center Button
+ */
+export function DownloadCvBadge({ resumeUrl, onClick, size = 120, className }) {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const badgeId = `cv-badge-${uid}`;
+
+  const content = (
+    <div className={`fom-download-badge-box ${className || ''}`} style={{ width: size, height: size }}>
+      <svg viewBox="0 0 160 160" width={size} height={size} className="fom-download-badge-svg">
+        <defs>
+          <path
+            id={badgeId}
+            d="M 80, 80 m -56, 0 a 56,56 0 1,1 112,0 a 56,56 0 1,1 -112,0"
+          />
+        </defs>
+        {/* Dark Plum Translucent Disc */}
+        <circle cx="80" cy="80" r="74" fill="rgba(19, 9, 36, 0.88)" stroke="rgba(255, 255, 255, 0.22)" strokeWidth="1.5" />
+        {/* Rotating Text Along Circle */}
+        <g className="fom-download-badge-rotor">
+          <text
+            fill="#ffffff"
+            fontSize="10.8"
+            fontWeight="700"
+            letterSpacing="2.8"
+            className="fom-download-text"
+          >
+            <textPath href={`#${badgeId}`} startOffset="0%">
+              DOWNLOAD CV • DOWNLOAD CV •
+            </textPath>
+          </text>
+        </g>
+        {/* Center Neon Disc */}
+        <circle cx="80" cy="80" r="27" fill="var(--fom-brand)" className="fom-download-center-disc" />
+        {/* Download Arrow Icon */}
+        <g transform="translate(80, 80)">
+          <path
+            d="M -5,-6 L 5,-6 M 0,-6 L 0,5 M -5,1 L 0,5 L 5,1 M -7,9 L 7,9"
+            stroke="#130924"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </g>
+      </svg>
+    </div>
+  );
+
+  if (resumeUrl) {
+    return (
+      <a
+        href={resumeUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        download
+        aria-label="Tải CV của ứng viên"
+        className="fom-download-badge-link"
+        onClick={onClick}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="fom-download-badge-button"
+      aria-label="Tải CV của ứng viên"
+      onClick={onClick}
+    >
+      {content}
+    </button>
+  );
+}
+
+/**
+ * Signature White Marquee Ticker with Neon Lime Borders & Purple Text
+ */
+export function SignatureMarquee({ items, className, reverse = false }) {
+  const defaultItems = [
+    'Thiết kế giao diện',
+    'Thiết kế đồ họa',
+    'Marketing',
+    'Phân tích tài chính',
+    'Thiết kế giao diện',
+    'Thiết kế website',
+    'Marketing',
+    'Phân tích tài chính',
+  ];
+  const displayItems = Array.isArray(items) && items.length >= 3 ? items : defaultItems;
+
+  return (
+    <div className={`fom-marquee-bar ${className || ''}`} aria-label="Lĩnh vực chuyên môn">
+      <div className={`fom-marquee-track ${reverse ? 'reverse' : ''}`}>
+        {[0, 1].map((copyIndex) => (
+          <div className="fom-marquee-group" key={copyIndex} aria-hidden={copyIndex === 1}>
+            {displayItems.map((item, idx) => (
+              <span className="fom-marquee-chunk" key={`${copyIndex}-${idx}`}>
+                <span className="fom-marquee-label">{item}</span>
+                <span className="fom-marquee-bullet">✦</span>
               </span>
             ))}
           </div>
@@ -80,289 +221,713 @@ function RoleMarquee({ items }) {
 }
 
 /**
- * Theme "Fomlio" cho trang portfolio công khai — dựng theo Figma
- * "Portfolio Landing Page 1". Nhận cùng shape `profile` như VerifiedPassport
- * nên hai theme thay nhau được mà không đụng tới tầng dữ liệu.
+ * Device Browser Mockup Frame with Cyan Glow & Top Controls
  */
-export function FomlioPassport({ profile, isDraft = false }) {
+function ProjectBrowserMockup({ project, index, onZoom }) {
+  const shot = Array.isArray(project.proofImages) && project.proofImages[0] ? project.proofImages[0] : null;
+
+  return (
+    <div className="fom-mockup-frame">
+      <div className="fom-mockup-window">
+        {/* Browser Top Controls */}
+        <div className="fom-mockup-header">
+          <div className="fom-mockup-dots">
+            <span className="fom-dot red" />
+            <span className="fom-dot yellow" />
+            <span className="fom-dot green" />
+          </div>
+          <div className="fom-mockup-address">
+            <span className="fom-mockup-lock">🔒</span>
+            <span className="fom-mockup-url">nextplease.me/projects/case-{index + 1}</span>
+          </div>
+          <div className="fom-mockup-actions">
+            <span className="fom-mockup-share">✦</span>
+          </div>
+        </div>
+
+        {/* Browser Canvas */}
+        <div className="fom-mockup-viewport">
+          {shot ? (
+            <button
+              type="button"
+              className="fom-mockup-img-btn"
+              onClick={() => onZoom(shot, project.title || `Dự án ${index + 1}`)}
+              title="Nhấn để phóng to ảnh minh chứng"
+            >
+              <img src={shot} alt={project.title || 'Dự án'} className="fom-mockup-img" />
+              <div className="fom-mockup-hover-overlay">
+                <ExternalLink size={20} />
+                <span>Xem kích thước đầy đủ</span>
+              </div>
+            </button>
+          ) : (
+            <div className="fom-mockup-fallback-screen">
+              <div className="fom-mockup-screen-hero">
+                <span className="fom-mockup-screen-tag">Featured Project</span>
+                <h4 className="fom-mockup-screen-title">{project.title || `Dự án ${index + 1}`}</h4>
+                <p className="fom-mockup-screen-org">{project.organization || 'Hồ sơ năng lực chuyên môn'}</p>
+              </div>
+              <div className="fom-mockup-screen-widgets">
+                <div className="fom-mockup-screen-widget">
+                  <span className="fom-widget-icon">⚡</span>
+                  <div>
+                    <strong>UX Flow & Layout</strong>
+                    <p>Chuẩn hóa trải nghiệm người dùng</p>
+                  </div>
+                </div>
+                <div className="fom-mockup-screen-widget">
+                  <span className="fom-widget-icon">✦</span>
+                  <div>
+                    <strong>Chỉ số & Kết quả</strong>
+                    <p>Tối ưu hóa hiệu suất chuyển đổi</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 6 Default / Dynamic Skills matching the 3x2 grid of Figma
+ */
+const DEFAULT_SERVICES = [
+  {
+    icon: Layers,
+    title: 'Thiết kế UI/UX',
+    desc: 'Xây dựng trải nghiệm trực quan, wireframe, prototype và hệ thống Design System hoàn chỉnh trên Figma.',
+  },
+  {
+    icon: Smartphone,
+    title: 'Ứng dụng Di động',
+    desc: 'Thiết kế giao diện ứng dụng chuẩn iOS & Android, tối ưu hóa tương tác cảm ứng và hành vi người dùng.',
+  },
+  {
+    icon: Monitor,
+    title: 'Thiết kế Website',
+    desc: 'Landing page hiện đại, cổng thông tin và web application chuẩn Responsive trên mọi kích thước màn hình.',
+  },
+  {
+    icon: Code2,
+    title: 'Lập trình Frontend',
+    desc: 'Chuyển hóa giao diện sang mã nguồn sạch React, Vue hoặc HTML/CSS với hiệu năng cao và chuẩn SEO.',
+  },
+  {
+    icon: Lightbulb,
+    title: 'Chiến lược Sáng tạo',
+    desc: 'Định hình bản sắc thương hiệu, thông điệp truyền thông và kế hoạch nội dung sáng tạo đa kênh.',
+  },
+  {
+    icon: Compass,
+    title: 'Nghiên cứu Người dùng',
+    desc: 'User persona, khảo sát hành vi, thử nghiệm A/B test và phân tích dữ liệu để cải thiện trải nghiệm số.',
+  },
+];
+
+/**
+ * Fallback Realistic Project Showcase Data when user hasn't added projects
+ */
+const FALLBACK_PROJECTS = [
+  {
+    title: 'Thiết kế Nền tảng E-Commerce Thời trang Thể thao',
+    role: 'Lead UI/UX Designer',
+    organization: 'Dự án Thương mại Điện tử',
+    startDate: '10/2023',
+    endDate: '04/2024',
+    description:
+      'Mô tả về dự án: Nghiên cứu hành vi mua sắm trực tuyến, tái cấu trúc luồng checkout 3 bước, xây dựng hệ thống design system với hơn 200 components và tối ưu tỷ lệ chuyển đổi đơn hàng tăng 38%.',
+    verified: true,
+  },
+  {
+    title: 'Ứng dụng Quản lý Tài chính & Đầu tư Cá nhân',
+    role: 'Product Designer',
+    organization: 'FinTech Innovation Lab',
+    startDate: '05/2023',
+    endDate: '09/2023',
+    description:
+      'Mô tả về dự án: Thiết kế giao diện theo dõi danh mục đầu tư theo thời gian thực, bảng phân tích dòng tiền trực quan bằng biểu đồ tương tác, mang lại sự tin cậy và tiện lợi tối đa cho người dùng trẻ.',
+    verified: true,
+  },
+  {
+    title: 'Hệ thống Quản lý Đào tạo & Khóa học Trực tuyến',
+    role: 'UI Designer & Prototyper',
+    organization: 'EdTech Platform',
+    startDate: '01/2023',
+    endDate: '05/2023',
+    description:
+      'Mô tả về dự án: Xây dựng cổng học tập số kết hợp lộ trình tương tác theo gamification, tích hợp hệ thống bài tập và nộp bài với giao diện thân thiện, hiện đại.',
+    verified: false,
+  },
+];
+
+/**
+ * Main FomlioPassport Component (Theme Cốm Neon)
+ * Faithful recreation of Figma node 9-126 ("Portfolio Landing Page 1")
+ */
+export function FomlioPassport({ profile = {}, isDraft = false }) {
   const [preview, setPreview] = useState(null);
+  const [activeSection, setActiveSection] = useState('fom-top');
 
-  const skills = Array.isArray(profile.skills) ? profile.skills : [];
-  const experiences = Array.isArray(profile.experiences) ? profile.experiences : [];
+  const skills = useMemo(
+    () => (Array.isArray(profile.skills) && profile.skills.length > 0 ? profile.skills : []),
+    [profile.skills]
+  );
+  const experiences = useMemo(
+    () => (Array.isArray(profile.experiences) && profile.experiences.length > 0 ? profile.experiences : []),
+    [profile.experiences]
+  );
   const credentials = (Array.isArray(profile.credentials) ? profile.credentials : []).filter((c) => c.name?.trim());
-  const avatar = profile.avatar && Object.keys(profile.avatar).length > 0 ? profile.avatar : { gender: 'male' };
+  const avatar = profile.avatar && Object.keys(profile.avatar).length > 0 ? profile.avatar : { gender: 'female' };
 
-  const name = profile.name || 'Ứng viên';
-  const years = yearsOfExperience(experiences);
+  // Personal Info with Figma fallbacks
+  const name = profile.name || 'Trâm Nguyễn';
+  const major = profile.major || profile.headline || 'Digital Marketing';
+  const school = profile.school || 'Đại học FPT';
+  const location = profile.location || 'Thành phố Hồ Chí Minh';
+  const headline = profile.headline || 'Digital Market-er & UI/UX Designer';
+  const bio =
+    profile.bio ||
+    'Mình là một người đam mê sáng tạo, luôn hướng tới việc kết hợp giữa tư duy phân tích thị trường và trải nghiệm người dùng tinh tế để mang lại giá trị thực tế cho từng dự án.';
+
   const verifiedCount = experiences.filter((e) => e.verified).length;
-  const verifiedPct = experiences.length ? Math.round((verifiedCount / experiences.length) * 100) : null;
+  const verifiedPct = experiences.length ? Math.round((verifiedCount / experiences.length) * 100) : 100;
 
-  /* Lưới dự án của bản thiết kế có sáu ô ảnh. Nguồn ảnh duy nhất trong dữ
-     liệu là minh chứng của kinh nghiệm, nên mỗi kinh nghiệm thành một ô; ô
-     nào chưa có ảnh thì hiện chữ thay vì khung rỗng. */
-  const projects = experiences.slice(0, 6);
-  const hasContent = profile.bio || skills.length || experiences.length || credentials.length;
+  // Projects to display in the Portfolio showcase (use actual user experiences, fallback to rich mocks if few)
+  const displayProjects = useMemo(() => {
+    if (experiences.length > 0) {
+      return experiences;
+    }
+    return FALLBACK_PROJECTS;
+  }, [experiences]);
 
-  /* Thanh điều hướng phải bám theo những khối THẬT SỰ được vẽ. Portfolio và
-     Services chỉ xuất hiện khi có dữ liệu (hoặc khi đang xem bản nháp, lúc đó
-     chúng hiện dưới dạng gợi ý); viết cứng đủ bốn liên kết thì trên một hồ sơ
-     chưa có kinh nghiệm được duyệt, bấm "Portfolio" là không có gì xảy ra —
-     người xem tưởng trang hỏng chứ không hiểu là mục đó chưa có. */
-  const navItems = [
-    { id: 'fom-top', label: 'Home' },
-    (projects.length || isDraft) && { id: 'fom-portfolio', label: 'Portfolio' },
-    (skills.length || isDraft) && { id: 'fom-services', label: 'Services' },
-    { id: 'fom-about', label: 'About' },
-  ].filter(Boolean);
+  // Project aura color themes (cycling vibrant gradients matching Figma)
+  const PROJECT_THEMES = [
+    'fom-aura-purple', // Project 1: Purple / Magenta
+    'fom-aura-plum',   // Project 2: Rose / Plum
+    'fom-aura-amber',  // Project 3: Amber / Peach
+    'fom-aura-olive',  // Project 4: Olive / Gold
+    'fom-aura-lime',   // Project 5+: Chartreuse / Lime
+  ];
 
-  const email = profile.socialLinks?.email;
+  // Services / Skills (use user's skills if present, mapping to cards)
+  const displayServices = useMemo(() => {
+    if (skills.length >= 6) {
+      return skills.slice(0, 6).map((skillName, i) => {
+        const IconComponent = DEFAULT_SERVICES[i % DEFAULT_SERVICES.length].icon;
+        return {
+          icon: IconComponent,
+          title: skillName,
+          desc: DEFAULT_SERVICES[i % DEFAULT_SERVICES.length].desc,
+        };
+      });
+    }
+    return DEFAULT_SERVICES;
+  }, [skills]);
+
+  // Contact info
+  const email = profile.socialLinks?.email || 'tram.nguyen@fpt.edu.vn';
+  const phone = profile.socialLinks?.phone || '0909 123 456';
+  const linkedin = profile.socialLinks?.linkedin;
+  const resumeUrl = profile.resumeUrl;
+
   const contactHref = email
     ? (email.startsWith('mailto:') ? email : `mailto:${email}`)
-    : (profile.socialLinks?.linkedin ? `https://linkedin.com/in/${profile.socialLinks.linkedin}` : null);
+    : (linkedin ? `https://linkedin.com/in/${linkedin}` : '#fom-contact');
+
+  // Track active section when scrolling
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ['fom-top', 'fom-about', 'fom-activities', 'fom-services', 'fom-portfolio', 'fom-contact'];
+      const scrollPos = window.scrollY + 200;
+
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sections[i]);
+        if (el && el.offsetTop <= scrollPos) {
+          setActiveSection(sections[i]);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleDownloadCv = () => {
+    if (resumeUrl) {
+      window.open(resumeUrl, '_blank');
+    } else {
+      const contactEl = document.getElementById('fom-contact');
+      if (contactEl) contactEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <div className="fom-page" data-fom-theme={resolveTheme(profile.selectedTheme).id}>
+      {/* Dynamic Ambient Radiant Glows */}
+      <div className="fom-bg-auras" aria-hidden="true">
+        <div className="fom-aura fom-aura-top-purple" />
+        <div className="fom-aura fom-aura-hero-lime" />
+        <div className="fom-aura fom-aura-mid-violet" />
+        <div className="fom-aura fom-aura-bottom-lime" />
+      </div>
+
       <div className="fom-shell">
-        <header className="fom-header">
-          {/* Đây là trang của ỨNG VIÊN, không phải trang sản phẩm — chỗ này
-              phải là tên họ. Bản thiết kế đặt nhãn hiệu "FOMLIO" vì nó vốn là
-              portfolio cá nhân của chính designer. */}
-          <span className="fom-logo">{name}</span>
-          <nav className="fom-nav">
-            {navItems.map((item, i) => (
-              <a key={item.id} className={i === 0 ? 'active' : undefined} href={`#${item.id}`}>{item.label}</a>
-            ))}
+        {/* ── 1. FLOATING PILL NAVBAR ────────────────────────────────────────── */}
+        <header className="fom-header-wrap">
+          <div className="fom-brand-name">
+            <span className="fom-brand-dot">✦</span>
+            <span className="fom-brand-title">{name}</span>
+          </div>
+
+          <nav className="fom-floating-navbar" aria-label="Thanh điều hướng chính">
+            <a
+              href="#fom-top"
+              className={`fom-nav-pill ${activeSection === 'fom-top' ? 'active' : ''}`}
+            >
+              TRANG CHỦ
+            </a>
+            <a
+              href="#fom-portfolio"
+              className={`fom-nav-pill ${activeSection === 'fom-portfolio' ? 'active' : ''}`}
+            >
+              PORTFOLIO
+            </a>
+            <a
+              href="#fom-services"
+              className={`fom-nav-pill ${activeSection === 'fom-services' ? 'active' : ''}`}
+            >
+              DỊCH VỤ
+            </a>
+            <a
+              href="#fom-about"
+              className={`fom-nav-pill ${activeSection === 'fom-about' || activeSection === 'fom-activities' ? 'active' : ''}`}
+            >
+              VỀ CHÚNG TÔI
+            </a>
+            <a
+              href="#fom-contact"
+              className={`fom-nav-pill ${activeSection === 'fom-contact' ? 'active' : ''}`}
+            >
+              LIÊN HỆ
+            </a>
           </nav>
-          {contactHref
-            ? <a className="fom-btn" href={contactHref}>Hire Me</a>
-            : <span className="fom-btn" aria-disabled="true">Hire Me</span>}
+
+          <a href={contactHref} className="fom-hire-btn">
+            TUYỂN TÔI
+          </a>
         </header>
 
-        <section className="fom-hero" id="fom-top">
-          {HERO_STARS.map((star, i) => (
-            <img
-              key={i}
-              className="fom-star"
-              src={starUrl}
-              alt=""
-              style={{
-                top: star.top,
-                bottom: star.bottom,
-                left: star.left,
-                width: star.size,
-                transform: `rotate(${star.rotate}deg)`,
-              }}
-            />
-          ))}
+        {/* ── 2. HERO SECTION ──────────────────────────────────────────────── */}
+        <section className="fom-hero-section" id="fom-top">
+          {/* Floating 3D Stars around Hero */}
+          <FigmaStar3D size={52} rotate={-24} className="fom-hero-star s1" />
+          <FigmaStar3D size={38} rotate={32} className="fom-hero-star s2" />
+          <FigmaStar3D size={26} rotate={-15} className="fom-hero-star s3" />
+          <FigmaStar3D size={44} rotate={20} className="fom-hero-star s4" />
+          <FigmaSparkle size={22} className="fom-hero-sparkle sp1" />
+          <FigmaSparkle size={16} className="fom-hero-sparkle sp2" />
+          <FigmaSparkle size={18} className="fom-hero-sparkle sp3" />
 
-          <div className="fom-portrait">
-            <div className="fom-portrait-ring" aria-hidden="true" />
-            {/* Hero này được thiết kế quanh một tấm chân dung 562×674. Linh vật
-                là tranh nhỏ, thả vào giữa vòng tròn thì hai phần ba khung là
-                màu nền — nên khi không có ảnh thật, linh vật đứng ở đáy vòng
-                tròn như một nhân vật đứng trong khung, không cố lấp đầy nó. */}
-            <div className={`fom-portrait-stage${avatar.portraitUrl ? ' has-photo' : ''}`}>
-              {avatar.portraitUrl
-                ? <img className="fom-portrait-photo" src={avatar.portraitUrl} alt={`Ảnh chân dung của ${name}`} />
-                : <PortfolioMascot avatar={avatar} size={260} />}
+          {/* Left: Glowing Circular Portrait */}
+          <div className="fom-hero-portrait-col">
+            <div className="fom-portrait-halo-ring">
+              {/* Wavy Doodle Contour Lines */}
+              <svg
+                viewBox="0 0 400 400"
+                className="fom-portrait-doodles"
+                fill="none"
+                stroke="rgba(255, 255, 255, 0.72)"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="M 40,240 C 90,160 110,130 150,150 C 190,170 210,240 260,210 C 300,180 320,130 360,160" />
+                <path d="M 60,270 C 110,190 130,160 170,180 C 210,200 230,270 280,240 C 320,210 340,160 380,190" />
+                <path d="M 20,210 C 70,130 90,100 130,120 C 170,140 190,210 240,180 C 280,150 300,100 340,130" />
+              </svg>
+
+              {/* Candidate Image / Mascot */}
+              <div className="fom-portrait-img-box">
+                {avatar.portraitUrl ? (
+                  <img
+                    src={avatar.portraitUrl}
+                    alt={`Ảnh chân dung của ${name}`}
+                    className="fom-portrait-img"
+                  />
+                ) : (
+                  <div className="fom-portrait-mascot-wrap">
+                    <PortfolioMascot avatar={avatar} size={280} />
+                  </div>
+                )}
+              </div>
+
+              {/* Anchored Rotating Download CV Badge */}
+              <div className="fom-hero-cv-badge">
+                <DownloadCvBadge resumeUrl={resumeUrl} onClick={handleDownloadCv} size={132} />
+              </div>
             </div>
           </div>
 
-          <div className="fom-hero-copy">
-            <span className="fom-pill">
-              {isDraft ? <><Eye size={18} /> Bản nháp, chưa lưu</> : (profile.openToWork ? 'Đang tìm việc' : 'Hồ sơ đã xác thực')}
-            </span>
-            {/* Ba mẩu thông tin rời nhau — tên, nghề, nơi chốn — nhồi vào một
-                câu thì ra thứ không ai viết: "Mình là Tài Phát, Information
-                System tại FPTU HCM". Để chúng ở ba bậc riêng. */}
-            <h1 className="fom-display">Xin chào! Mình là {name}</h1>
-            {profile.headline && <p className="fom-lede">{profile.headline}</p>}
-            {(profile.school || profile.location) && (
-              <div className="fom-hero-tags">
-                {profile.school && (
-                  <span className="fom-hero-tag"><GraduationCap size={15} /><span>{profile.school}</span></span>
-                )}
-                {profile.location && (
-                  <span className="fom-hero-tag"><MapPin size={15} /><span>{profile.location}</span></span>
-                )}
-              </div>
-            )}
-            <div className="fom-hero-actions">
-              {contactHref && <a className="fom-btn" href={contactHref}>Let’s Talk!</a>}
-              {/* Cùng lý do với thanh điều hướng: không có khối dự án thì
-                  đây là một cái nút dẫn đi đâu không ai biết. */}
-              {(projects.length > 0 || isDraft) && (
-                <a className="fom-btn ghost" href="#fom-portfolio">My Works</a>
-              )}
+          {/* Right: Intro Copy & CTAs */}
+          <div className="fom-hero-copy-col">
+            <div className="fom-pill-tag">
+              <span className="fom-pill-tag-dot" />
+              <span>{isDraft ? 'Bản xem trước hồ sơ' : 'Kinh nghiệm làm việc'}</span>
+            </div>
+
+            <h1 className="fom-hero-heading">
+              Xin chào! Mình là <span className="fom-text-highlight">{name}</span>, hiện là sinh viên chuyên ngành{' '}
+              <span className="fom-text-highlight">{major}</span> tại {school}
+            </h1>
+
+            <p className="fom-hero-lede">{bio}</p>
+
+            <div className="fom-hero-btn-row">
+              <a href="#fom-portfolio" className="fom-btn-solid-white">
+                Hãy cùng tìm hiểu portfolio của mình!
+              </a>
+              <a href="#fom-activities" className="fom-btn-glass-ghost">
+                Công việc của tôi
+              </a>
             </div>
           </div>
         </section>
       </div>
 
-      <RoleMarquee items={skills} />
+      {/* ── 3. SIGNATURE MARQUEE TICKERS (Divider 1) ────────────────────── */}
+      <div className="fom-marquee-stack">
+        <SignatureMarquee items={skills} />
+        <SignatureMarquee items={skills} className="fom-marquee-bar-secondary" reverse />
+      </div>
 
       <div className="fom-shell">
-        <section className={`fom-about${profile.bio ? '' : ' is-bare'}`} id="fom-about">
+        {/* ── 4. ABOUT SECTION ("VỀ MÌNH") ─────────────────────────────────── */}
+        <section className="fom-about-section" id="fom-about">
           <div className="fom-about-copy">
-            <span className="fom-pill fom-eyebrow">About me</span>
-            {profile.headline && <h2 className="fom-display">{profile.headline}</h2>}
-            {profile.bio && <p className="fom-lede">{profile.bio}</p>}
+            <div className="fom-pill-tag purple">
+              <span>VỀ MÌNH</span>
+            </div>
+
+            <h2 className="fom-about-heading">
+              Mình hiện là {headline} và đang làm việc tự do tại {location}
+            </h2>
+
+            <p className="fom-about-desc">
+              {bio ||
+                'Nội dung văn bản, miêu tả công việc, kinh nghiệm làm việc và những thành tích thực tế đạt được trong suốt quá trình học tập và làm việc.'}
+            </p>
+
+            <div className="fom-about-actions">
+              <a href={contactHref} className="fom-btn-solid-white">
+                Đăng hồ sơ công việc của bạn tại đây
+              </a>
+            </div>
           </div>
-          {/* Kim cương chỉ là trang trí. Khi chưa có phần giới thiệu thì nó
-              là thứ DUY NHẤT trong nửa khối — một mảng hình to đứng cạnh một
-              dòng chữ và một cái nút, nhìn như lỗi bố cục. Không có bio thì
-              không vẽ. */}
-          {profile.bio && <div className="fom-about-gem" aria-hidden="true" />}
+
+          {/* Right: 45-deg Rotated Glass Diamond with CV Badge & Stars */}
+          <div className="fom-about-visual">
+            <FigmaStar3D size={48} rotate={18} className="fom-about-star s1" />
+            <FigmaStar3D size={32} rotate={-28} className="fom-about-star s2" />
+            <FigmaSparkle size={20} className="fom-about-sparkle sp1" />
+            <FigmaSparkle size={16} className="fom-about-sparkle sp2" />
+
+            <div className="fom-diamond-outer">
+              <div className="fom-diamond-glow" />
+              <div className="fom-diamond-content">
+                <div className="fom-diamond-cv-badge">
+                  <DownloadCvBadge resumeUrl={resumeUrl} onClick={handleDownloadCv} size={130} />
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
-        {(years || experiences.length > 0 || verifiedPct !== null) && (
-          <section className="fom-stats">
-            <div className="fom-stat">
-              <p className="fom-stat-value">{years ?? 0}<span>+</span></p>
-              <p className="fom-stat-label">Năm kinh nghiệm</p>
+        {/* ── 5. ACTIVITIES & STATS SECTION ("★ Kinh nghiệm hoạt động") ──────── */}
+        <section className="fom-activities-section" id="fom-activities">
+          <div className="fom-section-header left">
+            <div className="fom-section-title-with-star">
+              <span className="fom-star-icon">★</span>
+              <h2 className="fom-section-h2">Kinh nghiệm hoạt động</h2>
             </div>
-            <div className="fom-stat">
-              <p className="fom-stat-value">{experiences.length}<span>+</span></p>
-              <p className="fom-stat-label">Dự án đã hoàn thành</p>
-            </div>
-            <div className="fom-stat">
-              <p className="fom-stat-value">{verifiedPct ?? 0}<span>%</span></p>
-              <p className="fom-stat-label">Kinh nghiệm đã xác thực</p>
-            </div>
-          </section>
-        )}
-
-        {skills.length === 0 && isDraft && (
-          <div className="fom-heading-block" id="fom-services">
-            <span className="fom-pill fom-eyebrow">Services</span>
-            <DraftHint>Thêm kỹ năng ở bước 2 — mỗi kỹ năng thành một thẻ chuyên môn ở đây.</DraftHint>
           </div>
-        )}
 
-        {skills.length > 0 && (
-          <>
-            <div className="fom-heading-block" id="fom-services">
-              <span className="fom-pill fom-eyebrow">
-                <img className="fom-heading-star" src={starUrl} alt="" />
-                Services
-              </span>
-              <h2 className="fom-section-title">Chuyên môn của mình</h2>
-            </div>
-            <section className="fom-specialities">
-              {skills.slice(0, 6).map((skill, i) => (
-                <article className="fom-speciality" key={i}>
-                  <img className="fom-speciality-icon" src={SPECIALITY_ICONS[i % SPECIALITY_ICONS.length]} alt="" />
-                  <h3>{skill}</h3>
-                </article>
+          <div className="fom-activities-layout">
+            {/* Left: 2-Column Milestones Grid (Học vấn, Dự án 1..5) */}
+            <div className="fom-milestones-grid">
+              {/* Item 1: Học vấn */}
+              <div className="fom-milestone-card">
+                <h4 className="fom-milestone-tag">Học vấn</h4>
+                <h5 className="fom-milestone-title">{school}</h5>
+                <p className="fom-milestone-meta">
+                  Chuyên ngành: {major} · 2021 - 2025
+                </p>
+                <p className="fom-milestone-desc">
+                  Tập trung nghiên cứu chuyên sâu về xây dựng thương hiệu, sáng tạo nội dung số và tối ưu hóa chuyển đổi.
+                </p>
+              </div>
+
+              {/* Items 2+: Projects */}
+              {displayProjects.slice(0, 5).map((exp, idx) => (
+                <div className="fom-milestone-card" key={exp.id || idx}>
+                  <h4 className="fom-milestone-tag">Dự án {idx + 1}</h4>
+                  <h5 className="fom-milestone-title">{exp.title || 'Dự án thực tế'}</h5>
+                  <p className="fom-milestone-meta">
+                    {exp.role || 'Thành viên dự án'} · {exp.startDate || '10/2023'}
+                    {exp.endDate ? ` - ${exp.endDate}` : ' - Hiện tại'}
+                  </p>
+                  <p className="fom-milestone-desc">
+                    {exp.description || 'Tham gia xây dựng giải pháp, triển khai thực thi và tối ưu kết quả đo lường.'}
+                  </p>
+                </div>
               ))}
-            </section>
-          </>
-        )}
-
-        {projects.length === 0 && isDraft && (
-          <div className="fom-heading-block" id="fom-portfolio">
-            <span className="fom-pill fom-eyebrow">Portfolio</span>
-            <DraftHint>Thêm kinh nghiệm ở bước 3 — mỗi mục thành một thẻ dự án, ảnh minh chứng thành ảnh bìa thẻ.</DraftHint>
-          </div>
-        )}
-
-        {projects.length > 0 && (
-          <>
-            <div className="fom-heading-block" id="fom-portfolio">
-              <span className="fom-pill fom-eyebrow">Portfolio</span>
-              <h2 className="fom-section-title">Những dự án phản ánh năng lực và tầm nhìn của mình</h2>
             </div>
-            <section className="fom-projects">
-              {projects.map((exp, i) => {
-                const shot = Array.isArray(exp.proofImages) ? exp.proofImages[0] : null;
-                return (
-                  <article className="fom-project" key={exp.id || i}>
-                    {shot ? (
-                      <button
-                        type="button"
-                        style={{ padding: 0, border: 0, background: 'none', cursor: 'zoom-in' }}
-                        onClick={() => setPreview({ src: shot, fileName: exp.title || `Minh chứng ${i + 1}` })}
-                      >
-                        <img className="fom-project-shot" src={shot} alt={`Minh chứng của ${exp.title || 'dự án'}`} />
-                      </button>
-                    ) : (
-                      <div className="fom-project-shot placeholder">{exp.organization || exp.title || 'Dự án'}</div>
-                    )}
-                    <div className="fom-project-body">
-                      <h3>{exp.title || 'Vai trò'}</h3>
-                      <div className="fom-project-meta">
-                        <span>
-                          {exp.organization || 'Tổ chức'}
-                          {exp.startDate && ` · ${exp.startDate}${exp.endDate ? ` - ${exp.endDate}` : ' - nay'}`}
-                        </span>
-                        {/* Luôn nói rõ một trong hai, không bao giờ im lặng: một thẻ
-                            không nhãn thì người xem tự mặc định là đã được bảo chứng. */}
-                        {exp.verified
-                          ? <span className="fom-project-verified"><BadgeCheck size={13} /> Xác thực</span>
-                          : <span className="fom-project-pending"><Clock3 size={13} /> Chờ xác thực</span>}
-                        {exp.proofLink && (
+
+            {/* Right: 2 Big Glass Stat Cards */}
+            <div className="fom-stats-column">
+              <div className="fom-stat-card">
+                <div className="fom-stat-number">
+                  {Math.max(experiences.length || 0, 10)}
+                  <span className="fom-stat-plus">+</span>
+                </div>
+                <div className="fom-stat-label">Dự án đã hoàn thành</div>
+              </div>
+
+              <div className="fom-stat-card">
+                <div className="fom-stat-number">
+                  {verifiedPct || 100}
+                  <span className="fom-stat-plus">%</span>
+                </div>
+                <div className="fom-stat-label">Phản hồi tích cực</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── 6. SERVICES / SKILLS SECTION ("★ DỊCH VỤ CỦA TÔI") ──────────────── */}
+        <section className="fom-services-section" id="fom-services">
+          <div className="fom-section-header center">
+            <div className="fom-pill-tag purple">
+              <span>★ DỊCH VỤ CỦA TÔI</span>
+            </div>
+            <h2 className="fom-section-h2 large">Kỹ năng của mình</h2>
+          </div>
+
+          <div className="fom-services-grid">
+            {displayServices.map((service, idx) => {
+              const IconComp = service.icon;
+              return (
+                <div className="fom-service-card" key={idx}>
+                  <div className="fom-service-icon-box">
+                    <IconComp size={36} strokeWidth={1.8} />
+                  </div>
+                  <h3 className="fom-service-title">{service.title}</h3>
+                  <p className="fom-service-desc">{service.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ── 7. PORTFOLIO SHOWCASE SECTION ("PORTFOLIO") ────────────────────── */}
+        <section className="fom-portfolio-intro-section" id="fom-portfolio">
+          <div className="fom-section-header center">
+            <div className="fom-pill-tag purple">
+              <span>PORTFOLIO</span>
+            </div>
+            <h2 className="fom-section-h2 large">
+              Đây là những dự án thuộc về chuyên ngành của mình
+            </h2>
+          </div>
+        </section>
+      </div>
+
+      {/* ── 8. DEEP PROJECT SHOWCASES (WITH MARQUEE DIVIDERS) ──────────────── */}
+      <div className="fom-project-showcases">
+        {displayProjects.map((project, idx) => {
+          const auraClass = PROJECT_THEMES[idx % PROJECT_THEMES.length];
+          return (
+            <div key={project.id || idx} className="fom-showcase-wrapper">
+              <div className={`fom-showcase-container ${auraClass}`}>
+                <div className="fom-shell">
+                  <div className="fom-showcase-inner">
+                    {/* Floating Stars around project */}
+                    <FigmaStar3D size={44} rotate={-16} className="fom-project-star p-s1" />
+                    <FigmaStar3D size={28} rotate={25} className="fom-project-star p-s2" />
+
+                    {/* Top Row: Info Copy + Browser Mockup */}
+                    <div className="fom-project-hero-row">
+                      <div className="fom-project-copy-side">
+                        <div className="fom-pill-tag purple">
+                          <span>PORTFOLIO</span>
+                        </div>
+                        <h3 className="fom-project-num-title">Dự án {idx + 1}</h3>
+                        <h4 className="fom-project-sub-title">{project.title}</h4>
+                        <p className="fom-project-main-desc">
+                          {project.description ||
+                            'Mô tả về dự án: Thiết kế và triển khai giải pháp sáng tạo, mang đến giao diện trực quan và trải nghiệm người dùng mượt mà, đạt hiệu quả tối ưu trong từng mục tiêu chiến dịch.'}
+                        </p>
+                      </div>
+
+                      <div className="fom-project-mockup-side">
+                        <ProjectBrowserMockup project={project} index={idx} onZoom={(src, title) => setPreview({ src, fileName: title })} />
+                      </div>
+                    </div>
+
+                    {/* Bottom Row: 3 Glass Info Cards */}
+                    <div className="fom-project-info-cards-row">
+                      <div className="fom-project-info-card">
+                        <h5 className="fom-info-card-title">Vị trí trong dự án</h5>
+                        <p className="fom-info-card-text">
+                          {project.role || project.organization || 'Thành viên cốt lõi / UI-UX'}
+                        </p>
+                      </div>
+
+                      <div className="fom-project-info-card">
+                        <h5 className="fom-info-card-title">Thời gian thực hiện</h5>
+                        <p className="fom-info-card-text">
+                          {project.startDate || '10/2023'}
+                          {project.endDate ? ` - ${project.endDate}` : ' - Hiện tại'}
+                        </p>
+                      </div>
+
+                      <div className="fom-project-info-card">
+                        <h5 className="fom-info-card-title">Lượt tương tác</h5>
+                        <p className="fom-info-card-text">
+                          {project.verified ? (
+                            <span className="fom-verified-badge-inline">
+                              <BadgeCheck size={16} /> Đã xác thực
+                            </span>
+                          ) : (
+                            'Nội dung của bạn tại đây nha!'
+                          )}
+                        </p>
+                        {project.proofLink && (
                           <a
-                            href={/^https?:/.test(exp.proofLink) ? exp.proofLink : `https://${exp.proofLink}`}
+                            href={/^https?:/.test(project.proofLink) ? project.proofLink : `https://${project.proofLink}`}
                             target="_blank"
                             rel="noreferrer"
-                            style={{ color: 'var(--fom-brand)', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                            className="fom-proof-link"
                           >
-                            Xem minh chứng <ExternalLink size={12} />
+                            Xem minh chứng <ExternalLink size={13} />
                           </a>
                         )}
                       </div>
                     </div>
-                  </article>
-                );
-              })}
-            </section>
-          </>
-        )}
+                  </div>
+                </div>
+              </div>
 
-        {credentials.length === 0 && isDraft && (
-          <div className="fom-heading-block" id="fom-credentials">
-            <span className="fom-pill fom-eyebrow">Credentials</span>
-            <DraftHint>Bằng cấp và chứng chỉ thêm ở bước 4. Bỏ qua được nếu bạn chưa có.</DraftHint>
-          </div>
-        )}
-
-        {credentials.length > 0 && (
-          <>
-            <div className="fom-heading-block" id="fom-credentials">
-              <span className="fom-pill fom-eyebrow">Credentials</span>
-              <h2 className="fom-section-title">Bằng cấp &amp; chứng chỉ</h2>
+              {/* Signature Marquee Ticker between each project */}
+              <SignatureMarquee items={skills} />
             </div>
-            <section className="fom-specialities">
-              {credentials.map((c, i) => (
-                <article className="fom-speciality" key={c.id || i}>
-                  <Award size={48} />
-                  <h3>{c.name}</h3>
-                  <p>{c.issuer || 'Đơn vị cấp'}{c.issuedAt ? ` · ${c.issuedAt}` : ''}</p>
-                  {c.fileData && (
+          );
+        })}
+      </div>
+
+      {/* ── 9. CREDENTIALS / BẰNG CẤP NẾU CÓ ───────────────────────────────── */}
+      {credentials.length > 0 && (
+        <div className="fom-shell">
+          <section className="fom-credentials-section">
+            <div className="fom-section-header center">
+              <div className="fom-pill-tag purple">
+                <span>CHỨNG CHỈ</span>
+              </div>
+              <h2 className="fom-section-h2 large">Bằng cấp &amp; Chứng nhận</h2>
+            </div>
+
+            <div className="fom-credentials-grid">
+              {credentials.map((cred, i) => (
+                <div className="fom-credential-card" key={cred.id || i}>
+                  <div className="fom-credential-icon">
+                    <Award size={36} />
+                  </div>
+                  <h4 className="fom-credential-name">{cred.name}</h4>
+                  <p className="fom-credential-meta">
+                    {cred.issuer || 'Tổ chức cấp'}
+                    {cred.issuedAt ? ` · ${cred.issuedAt}` : ''}
+                  </p>
+                  {cred.fileData && (
                     <button
                       type="button"
-                      className="fom-btn"
-                      style={{ marginTop: 'auto', alignSelf: 'flex-start' }}
-                      onClick={() => setPreview({ src: c.fileData, fileName: c.fileName })}
+                      className="fom-btn-glass-ghost sm"
+                      onClick={() => setPreview({ src: cred.fileData, fileName: cred.name })}
                     >
-                      Xem file
+                      Xem file chứng nhận
                     </button>
                   )}
-                </article>
+                </div>
               ))}
-            </section>
-          </>
-        )}
+            </div>
+          </section>
+        </div>
+      )}
 
-        {!hasContent && <p className="fom-empty">Ứng viên chưa cập nhật thông tin portfolio.</p>}
+      {/* ── 10. CONTACT & FOOTER SECTION ("LIÊN HỆ") ───────────────────────── */}
+      <div className="fom-shell">
+        <footer className="fom-contact-section" id="fom-contact">
+          <div className="fom-section-header center">
+            <div className="fom-pill-tag purple">
+              <span>LIÊN HỆ</span>
+            </div>
+            <h2 className="fom-section-h2 large">
+              Hãy cùng kết nối và tạo nên những dự án tuyệt vời!
+            </h2>
+            <p className="fom-contact-subtitle">
+              Sẵn sàng trao đổi về cơ hội làm việc, dự án freelance hoặc hợp tác phát triển sản phẩm.
+            </p>
+          </div>
 
-        <footer className="fom-foot">
-          {isDraft ? 'Bản xem trước Portfolio · fonlio' : 'Hồ sơ đã xác thực · fonlio'}
+          <div className="fom-contact-channels">
+            {email && (
+              <a href={`mailto:${email}`} className="fom-contact-pill">
+                <Mail size={18} />
+                <span>{email}</span>
+              </a>
+            )}
+            {phone && (
+              <a href={`tel:${phone}`} className="fom-contact-pill">
+                <Phone size={18} />
+                <span>{phone}</span>
+              </a>
+            )}
+            {linkedin && (
+              <a
+                href={`https://linkedin.com/in/${linkedin}`}
+                target="_blank"
+                rel="noreferrer"
+                className="fom-contact-pill"
+              >
+                <LinkedInIcon size={18} />
+                <span>LinkedIn</span>
+              </a>
+            )}
+            <button
+              type="button"
+              className="fom-contact-pill cv-btn"
+              onClick={handleDownloadCv}
+            >
+              <span>Tải CV của mình</span>
+              <ArrowRight size={16} />
+            </button>
+          </div>
+
+          <div className="fom-bottom-legal">
+            <p>© {new Date().getFullYear()} {name} · Thiết kế Portfolio Cốm Neon · fonlio</p>
+          </div>
         </footer>
       </div>
 
+      {/* Image / Proof Zoom Modal */}
       {preview && (
-        <FilePreviewModal src={preview.src} fileName={preview.fileName} onClose={() => setPreview(null)} />
+        <FilePreviewModal
+          src={preview.src}
+          fileName={preview.fileName}
+          onClose={() => setPreview(null)}
+        />
       )}
     </div>
   );

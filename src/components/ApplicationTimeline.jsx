@@ -13,7 +13,8 @@ const JOB_STEPS = [
   { key: 'SUBMITTED', label: 'Đã nộp', desc: 'Đơn của bạn đã được gửi tới nhà tuyển dụng.' },
   { key: 'VIEWED', label: 'Đã xem', desc: 'Nhà tuyển dụng đã xem hồ sơ của bạn.' },
   { key: 'SHORTLISTED', label: 'Vào vòng tiếp', desc: 'Bạn được đưa vào danh sách tiềm năng.' },
-  { key: 'ACCEPTED', label: 'Chấp thuận', desc: 'Chúc mừng! Bạn đã được chấp nhận.' },
+  { key: 'OFFERED', label: 'Mời nhận việc', desc: 'Nhà tuyển dụng đã gửi lời mời nhận việc tới bạn.' },
+  { key: 'ACCEPTED', label: 'Đã nhận việc', desc: 'Chúc mừng! Bạn đã xác nhận nhận công việc.' },
   { key: 'COMPLETED', label: 'Hoàn thành', desc: 'Công việc đã hoàn thành — điểm thưởng đã được cộng.' },
 ];
 
@@ -29,7 +30,7 @@ export function ApplicationTimeline({ status, isQuest = false }) {
   const current = (status || 'SUBMITTED').toUpperCase();
   const steps = isQuest ? QUEST_STEPS : JOB_STEPS;
 
-  const negative = current === 'REJECTED' || current === 'WITHDRAWN';
+  const negative = current === 'REJECTED' || current === 'WITHDRAWN' || current === 'OFFER_DECLINED';
   const currentIndex = steps.findIndex((s) => s.key === current);
 
   // Rows to render: the positive path up to the current step, or (for a
@@ -40,7 +41,9 @@ export function ApplicationTimeline({ status, isQuest = false }) {
     rows.push(
       current === 'REJECTED'
         ? { key: 'REJECTED', label: 'Từ chối', desc: 'Rất tiếc, đơn của bạn chưa phù hợp lần này.', state: 'rejected' }
-        : { key: 'WITHDRAWN', label: 'Đã rút đơn', desc: 'Bạn đã rút đơn ứng tuyển này.', state: 'withdrawn' },
+        : current === 'OFFER_DECLINED'
+          ? { key: 'OFFER_DECLINED', label: 'Đã từ chối lời mời', desc: 'Bạn đã từ chối lời mời nhận việc này.', state: 'withdrawn' }
+          : { key: 'WITHDRAWN', label: 'Đã rút đơn', desc: 'Bạn đã rút đơn ứng tuyển này.', state: 'withdrawn' },
     );
   } else {
     steps.forEach((s, i) => {

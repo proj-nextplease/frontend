@@ -17,7 +17,7 @@ function timeAgo(iso) {
  * In-app notification bell. Self-contained: polls every 30s, shows an unread
  * badge and a dropdown of recent notifications. accent defaults to candidate red.
  */
-export function NotificationBell({ accent = '#e5533f', style, buttonStyle }) {
+export function NotificationBell({ accent = '#e5533f', style, buttonStyle, onNavigate, onNotificationLoaded }) {
   const [items, setItems] = useState([]);
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
@@ -26,8 +26,13 @@ export function NotificationBell({ accent = '#e5533f', style, buttonStyle }) {
   async function load() {
     try {
       const data = await getNotifications();
-      setItems(data.items || []);
-      setUnread(data.unreadCount || 0);
+      const notifList = data.items || [];
+      const unreadCount = data.unreadCount || 0;
+      setItems(notifList);
+      setUnread(unreadCount);
+      if (typeof onNotificationLoaded === 'function') {
+        onNotificationLoaded(notifList, unreadCount);
+      }
     } catch {
       /* silent — bell must never break the page */
     }
@@ -37,7 +42,7 @@ export function NotificationBell({ accent = '#e5533f', style, buttonStyle }) {
     // load() is async — state updates happen after the await, not synchronously.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
-    const t = setInterval(load, 30000);
+    const t = setInterval(load, 12000);
     return () => clearInterval(t);
   }, []);
 
@@ -58,7 +63,13 @@ export function NotificationBell({ accent = '#e5533f', style, buttonStyle }) {
     }
     if (n.link) {
       setOpen(false);
-      window.open(n.link, '_blank', 'noopener');
+      if (typeof onNavigate === 'function' && n.link.startsWith('/')) {
+        onNavigate(n.link);
+      } else if (n.link.startsWith('/')) {
+        window.location.assign(n.link);
+      } else {
+        window.open(n.link, '_blank', 'noopener');
+      }
     }
   }
 
@@ -87,9 +98,22 @@ export function NotificationBell({ accent = '#e5533f', style, buttonStyle }) {
       </button>
 
       {open && (
-        <div style={{ position: 'absolute', top: buttonStyle?.height ? `${parseInt(buttonStyle.height) + 8}px` : '52px', right: 0, width: '360px', maxWidth: 'calc(100vw - 48px)', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '16px', boxShadow: '0 20px 50px rgba(15,23,42,0.18)', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid var(--line)' }}>
-            <strong style={{ fontSize: '0.95rem', color: 'var(--ink)' }}>Thông báo</strong>
+        <div style={{
+          position: 'absolute',
+          top: buttonStyle?.height ? `${parseInt(buttonStyle.height) + 8}px` : '52px',
+          right: 0,
+          width: '380px',
+          maxWidth: 'calc(100vw - 48px)',
+          background: 'var(--surface, #0f172a)',
+          border: '1px solid var(--line, rgba(255,255,255,0.12))',
+          borderRadius: '16px',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(139, 92, 246, 0.15)',
+          overflow: 'hidden',
+          zIndex: 99999,
+          color: 'var(--ink, #f8fafc)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid var(--line, rgba(255,255,255,0.08))' }}>
+            <strong style={{ fontSize: '0.95rem', color: 'var(--ink, #f8fafc)' }}>Thông báo</strong>
             {unread > 0 && (
               <button type="button" onClick={handleMarkAll}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', fontWeight: '700', color: accent, background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -99,22 +123,46 @@ export function NotificationBell({ accent = '#e5533f', style, buttonStyle }) {
           </div>
           <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             {items.length === 0 ? (
-              <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--muted)' }}>
+              <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--muted, #94a3b8)' }}>
                 <Inbox size={26} style={{ marginBottom: '8px', opacity: 0.6 }} />
                 <p style={{ margin: 0, fontSize: '0.86rem', fontWeight: '600' }}>Chưa có thông báo nào</p>
               </div>
             ) : (
-              items.map((n) => (
-                <button key={n.id} type="button" onClick={() => handleOpenItem(n)}
-                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '13px 16px', border: 'none', borderBottom: '1px solid var(--line)', background: n.isRead ? 'var(--surface)' : 'rgba(229,83,63,0.05)', cursor: n.link ? 'pointer' : 'default' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {!n.isRead && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: accent, flexShrink: 0 }} />}
-                    <strong style={{ fontSize: '0.86rem', color: 'var(--ink)' }}>{n.title}</strong>
-                  </div>
-                  {n.body && <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--muted)', lineHeight: 1.5 }}>{n.body}</p>}
-                  <span style={{ fontSize: '0.72rem', color: 'var(--muted)', fontWeight: '600' }}>{timeAgo(n.createdAt)}</span>
-                </button>
-              ))
+              items.map((n) => {
+                const isOffer = n.title?.includes('Lời mời') || n.title?.includes('tuyển dụng') || n.type === 'COMPANY_INVITATION';
+                return (
+                  <button key={n.id} type="button" onClick={() => handleOpenItem(n)}
+                    style={{
+                      display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', border: 'none',
+                      borderBottom: '1px solid var(--line, rgba(255,255,255,0.06))',
+                      background: !n.isRead ? (isOffer ? 'rgba(139, 92, 246, 0.14)' : 'rgba(229,83,63,0.08)') : 'transparent',
+                      cursor: n.link ? 'pointer' : 'default',
+                      transition: 'background 0.15s',
+                    }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      {!n.isRead && (
+                        <span style={{
+                          width: '8px', height: '8px', borderRadius: '50%',
+                          background: isOffer ? '#a855f7' : accent,
+                          flexShrink: 0, marginTop: '5px'
+                        }} />
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                          <strong style={{ fontSize: '0.86rem', color: isOffer ? '#c084fc' : 'var(--ink, #f8fafc)' }}>{n.title}</strong>
+                          {isOffer && (
+                            <span style={{ fontSize: '0.68rem', fontWeight: 800, padding: '2px 6px', borderRadius: '6px', background: 'rgba(139,92,246,0.22)', color: '#c084fc' }}>
+                              Lời mời
+                            </span>
+                          )}
+                        </div>
+                        {n.body && <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--muted, #94a3b8)', lineHeight: 1.5 }}>{n.body}</p>}
+                        <span style={{ fontSize: '0.72rem', color: 'var(--muted, #64748b)', fontWeight: '600', display: 'inline-block', marginTop: '4px' }}>{timeAgo(n.createdAt)}</span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
         </div>

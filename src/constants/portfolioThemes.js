@@ -21,8 +21,8 @@ export const PORTFOLIO_THEMES = [
   {
     id: 'NHO_NEON',
     name: 'Nho Neon',
-    hint: 'Nền tím, điểm cốm',
-    colorBox: ['#7b3aec', '#cbf748'],
+    hint: 'Xanh hoàng gia, cốm neon & trắng (Figma 10-129)',
+    colorBox: ['#160ae6', '#cbf748'],
   },
 ];
 

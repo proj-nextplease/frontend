@@ -59,7 +59,7 @@ export function WaitlistPage() {
       <iframe
         ref={iframeRef}
         id="fonlioWaitlistFrame"
-        src={`/waitlist-clone/index.html?v=19&apiUrl=${encodeURIComponent(apiBaseUrl)}`}
+        src={`/waitlist-clone/index.html?v=21&apiUrl=${encodeURIComponent(apiBaseUrl)}`}
         title="FONLIO — Living Portfolio & Bảo chứng năng lực sinh viên"
         onLoad={() => setLoaded(true)}
         style={{

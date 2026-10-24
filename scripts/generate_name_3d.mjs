@@ -68,8 +68,7 @@ const exporter = new GLTFExporter();
 const gltf = await exporter.parseAsync(scene, { binary: true });
 const glbBuffer = Buffer.from(gltf);
 
-// Write to both paths used by waitlist and universe
-fs.writeFileSync('public/waitlist-clone/home/hero/logo-ximitech.glb', glbBuffer);
+// Write only to universe-clone paths (waitlist-clone always keeps the official Fonlio website logo)
 fs.writeFileSync('public/universe-clone/home/hero/logo-ximitech.glb', glbBuffer);
 fs.writeFileSync('public/universe-clone/home/hero/logo-candidate.glb', glbBuffer);
 

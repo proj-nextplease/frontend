@@ -11,6 +11,7 @@ import { clearMyProfileCache, useMyProfile } from '../../lib/useMyProfile.js';
 import { resetSavedJobs } from '../../lib/savedJobs.js';
 import { supabase } from '../../services/supabaseClient.js';
 import { BrandWordmark } from '../BrandWordmark.jsx';
+import { NotificationBell } from '../NotificationBell.jsx';
 import logoapp1 from '../../assets/logoapp1.png';
 /* Menu tài khoản mặc bảng màu neon của sản phẩm, không mặc bảng emerald cũ
    còn sót trong file này. Nhập dưới bí danh vì thanh header vẫn cần bộ màu
@@ -480,7 +481,28 @@ export function SiteHeader({ overlay = false, pinned = true }) {
               </button>
 
               {signedIn ? (
-                <div className="nph-acct" ref={menuRef}>
+                <>
+                  <NotificationBell
+                    accent="#a855f7"
+                    style={{ position: 'relative', top: 'auto', right: 'auto', zIndex: 'auto' }}
+                    buttonStyle={{
+                      width: '34px',
+                      height: '34px',
+                      borderRadius: '50%',
+                      background: scrolled ? 'rgba(0,0,0,0.05)' : 'rgba(255, 255, 255, 0.1)',
+                      border: scrolled ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255, 255, 255, 0.2)',
+                      color: 'inherit',
+                      boxShadow: 'none',
+                    }}
+                    onNavigate={(link) => {
+                      if (link.startsWith('/')) {
+                        navigate(link);
+                      } else {
+                        window.location.href = link;
+                      }
+                    }}
+                  />
+                  <div className="nph-acct" ref={menuRef}>
                   <button
                     type="button"
                     className="nph-acct-btn"
@@ -541,6 +563,7 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                     </div>
                   )}
                 </div>
+              </>
               ) : (
                 <button type="button" className="nph-btn nph-btn-solid" onClick={() => openLoginModal('candidate')}>
                   Đăng nhập

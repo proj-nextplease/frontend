@@ -21,11 +21,13 @@ const TYPE_LABELS = {
   REWARD: 'Nhận thưởng',
   SPEND: 'Chi tiêu',
   PURCHASE: 'Chi tiêu',
-  TOPUP: 'Nạp NP',
-  REFUND: 'Hoàn NP',
+  TOPUP: 'Nạp Điểm',
+  REFUND: 'Hoàn Điểm',
+  JOB_ACCEPTANCE_FEE: 'Phí nhận việc có trả lương',
+  PORTFOLIO_EXPORT_FEE: 'Phí xuất Portfolio thành website',
   BOOST: 'Đẩy đơn ứng tuyển',
-  SUBSCRIPTION: 'Gói trả phí',
-  PREMIUM_PURCHASE: 'Mua Premium Pass',
+  SUBSCRIPTION: 'Gói dịch vụ',
+  PREMIUM_PURCHASE: 'Dịch vụ nâng cao',
   ITEM_PURCHASE: 'Mua vật phẩm',
   ADJUSTMENT: 'Điều chỉnh',
 };
@@ -80,7 +82,7 @@ export function WalletHistory({ transactions, loading }) {
         <p className="np-wallet-history-empty">Đang tải…</p>
       ) : rows.length === 0 ? (
         <p className="np-wallet-history-empty">
-          Chưa có giao dịch nào. Nạp NP hoặc hoàn thành nhiệm vụ để bắt đầu.
+          Chưa có giao dịch nào. Nạp Điểm hoặc hoàn thành nhiệm vụ để bắt đầu.
         </p>
       ) : (
         <ul className="np-wallet-history-list">
@@ -98,13 +100,13 @@ export function WalletHistory({ transactions, loading }) {
                 <div className="np-wallet-history-main">
                   <span className="np-wallet-history-label">{label(tx)}</span>
                   <span className="np-wallet-history-meta">
-                    {date ? `${date} · ` : ''}còn {balance.toLocaleString('vi-VN')} NP
+                    {date ? `${date} · ` : ''}còn {balance.toLocaleString('vi-VN')} Điểm
                   </span>
                 </div>
                 {/* Khoản chi dùng màu chữ thường, không phải màu cảnh báo:
                     tiêu NP là việc người dùng chủ động làm, không phải lỗi. */}
                 <span className={`np-wallet-history-amount${gain ? ' is-gain' : ''}`}>
-                  {gain ? '+' : '−'}{Math.abs(amount).toLocaleString('vi-VN')}
+                  {gain ? '+' : '−'}{Math.abs(amount).toLocaleString('vi-VN')} Điểm
                 </span>
               </li>
             );

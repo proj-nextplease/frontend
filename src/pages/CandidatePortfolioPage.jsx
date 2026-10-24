@@ -32,6 +32,8 @@ import {
   Link2,
   Globe,
   Mail,
+  Copy,
+  ExternalLink,
 } from 'lucide-react';
 import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
@@ -980,12 +982,11 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             textAlign: 'center'
           }}>
             {isEditing
-              ? 'Hồ sơ và Proof of Work của bạn đã được cập nhật thành công trên hệ thống fonlio.'
-              : 'Hồ sơ và Proof of Work của bạn đã được ghi nhận chính thức trên hệ thống fonlio. Bạn đã sẵn sàng để khám phá các cơ hội nghề nghiệp.'}
+              ? 'Hồ sơ đã được lưu thành công vào bản nháp. Để cập nhật các thay đổi mới này lên website công khai gửi nhà tuyển dụng, hãy chọn "Cập nhật website (1.000 Điểm)" trên Bảng điều khiển.'
+              : 'Hồ sơ đã được lưu thành công vào bản nháp. Bạn có thể xuất bản website chính thức bất cứ lúc nào trên Bảng điều khiển.'}
           </p>
 
-          {/* Nói trước là trang sắp tự chuyển. Không nói thì cú nhảy sau 2 giây
-              đọc ra như trang tự ý bỏ đi. */}
+          {/* Nói trước là trang sắp tự chuyển. */}
           <p className="pf-success-redirect" aria-live="polite">
             {openedAsOnboardingTab
               ? 'Đang đóng tab này, bạn quay lại trang đang xem nhé…'
@@ -1720,6 +1721,18 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               <Eye size={18} />
               Xem trước
             </button>
+          </div>
+
+          <div className="portfolio-preview-action-panel" style={{ marginTop: '14px', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+            <div className="form-section-heading">
+              <Globe size={22} color="#10b981" />
+              <div>
+                <h2 style={{ color: '#10b981' }}>Website Portfolio công khai (/p/:slug)</h2>
+                <p>
+                  Hồ sơ sau khi lưu sẽ được lưu trữ an toàn trong bản nháp. Bạn có thể xuất bản hoặc cập nhật lên website công khai bất kỳ lúc nào trên Bảng điều khiển.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="portfolio-submit-panel">

@@ -10,8 +10,8 @@ import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { NeonBloom } from '../components/NeonBloom.jsx';
 import { getJobDetail } from '../api/jobApi.js';
-import { applyToJob } from '../api/applicationApi.js';
-import { applyToQuest } from '../api/questApi.js';
+import { applyToJob, getMyApplications } from '../api/applicationApi.js';
+import { applyToQuest, getMyQuestApplications } from '../api/questApi.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { loadJobs } from '../api/jobsCache.js';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
@@ -219,6 +219,7 @@ export function JobDetailPage() {
   const [applyLoading, setApplyLoading] = useState(false);
   const [applyError, setApplyError] = useState('');
   const [applySuccess, setApplySuccess] = useState('');
+  const [hasApplied, setHasApplied] = useState(false);
 
   const [showShare, setShowShare] = useState(false);
   const [showFullCompanyBio, setShowFullCompanyBio] = useState(false);
@@ -242,6 +243,18 @@ export function JobDetailPage() {
     load();
     if (getStoredToken()) {
       getMyPortfolio().then(setPortfolio).catch(() => {});
+      Promise.allSettled([
+        getMyApplications(),
+        getMyQuestApplications(),
+      ]).then(([appsRes, questsRes]) => {
+        const apps = appsRes.status === 'fulfilled' && Array.isArray(appsRes.value) ? appsRes.value : [];
+        const questApps = questsRes.status === 'fulfilled' && Array.isArray(questsRes.value) ? questsRes.value : [];
+        const alreadyInJobs = apps.some((a) => String(a.job_id || a.jobId) === String(id) && a.status !== 'WITHDRAWN');
+        const alreadyInQuests = questApps.some((qa) => String(qa.questId || qa.id) === String(id) && qa.status !== 'WITHDRAWN');
+        if (alreadyInJobs || alreadyInQuests) {
+          setHasApplied(true);
+        }
+      }).catch(() => {});
     }
 
     // Load recommendations
@@ -284,13 +297,20 @@ export function JobDetailPage() {
         await applyToJob(id, coverNote, answersPayload);
       }
       setApplySuccess('Nộp đơn thành công! Nhà tuyển dụng sẽ xem xét hồ sơ của bạn.');
+      setHasApplied(true);
       setShowApplyModal(false);
     } catch (err) {
       const code = err.errorCode;
-      if (code === 'RS_TOO_LOW') setApplyError('RS của bạn chưa đủ để ứng tuyển vị trí này.');
-      else if (code === 'PREMIUM_REQUIRED') setApplyError('Vị trí này yêu cầu tài khoản Premium Pass.');
-      else if (code === 'ALREADY_APPLIED') setApplyError('Bạn đã ứng tuyển vị trí này rồi.');
-      else setApplyError(err.message || 'Không thể nộp đơn. Vui lòng thử lại.');
+      if (code === 'ALREADY_APPLIED') {
+        setHasApplied(true);
+        setApplyError('Bạn đã ứng tuyển vị trí này rồi.');
+      } else if (code === 'RS_TOO_LOW') {
+        setApplyError('RS của bạn chưa đủ để ứng tuyển vị trí này.');
+      } else if (code === 'PREMIUM_REQUIRED') {
+        setApplyError('Vị trí này yêu cầu tài khoản Premium Pass.');
+      } else {
+        setApplyError(err.message || 'Không thể nộp đơn. Vui lòng thử lại.');
+      }
     } finally {
       setApplyLoading(false);
     }
@@ -329,20 +349,7 @@ export function JobDetailPage() {
   }
 
   const isQuest = job.postType === 'QUEST' || isQuestPage;
-  const isPremium = Boolean(
-    job.requiresPremium === true ||
-    job.requiresPremium === 'true' ||
-    job.requiresPremium === 1 ||
-    job.requiresPremium === 't' ||
-    job.isPremium === true ||
-    job.isPremium === 'true' ||
-    job.requires_premium === true ||
-    job.requires_premium === 'true' ||
-    job.requires_premium === 't' ||
-    job.requires_premium === 1 ||
-    job.premiumRequired === true ||
-    job.tier === 'PREMIUM'
-  );
+  const isPremium = false; // Discontinued: all jobs are free to apply per candidate point model
   const rs = portfolio?.reputationScore || 0;
   const isLocked = rs < (job.minReqRs || 0);
   const typeLabel = JOB_TYPE_LABELS[job.jobType] || job.jobType || (isQuest ? 'Quest sinh viên' : 'Toàn thời gian');
@@ -561,6 +568,10 @@ export function JobDetailPage() {
               {applySuccess ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 22px', borderRadius: '999px', background: `rgba(${NEON_RGB}, 0.12)`, border: `1px solid rgba(${NEON_RGB}, 0.35)`, color: EMERALD, fontSize: '0.92rem', fontWeight: 800, boxShadow: GLOW_SM }}>
                   <CheckCircle2 size={18} /> {applySuccess}
+                </div>
+              ) : hasApplied ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '13px 24px', borderRadius: '999px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.35)', color: '#34d399', fontSize: '0.95rem', fontWeight: 700 }}>
+                  <CheckCircle2 size={18} /> Bạn đã ứng tuyển vị trí này
                 </div>
               ) : (
                 <button

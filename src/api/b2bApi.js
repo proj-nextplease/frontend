@@ -178,3 +178,19 @@ export async function provisionCompany(data) {
   return response.data.data;
 }
 
+export async function getMyPendingInvitations() {
+  const response = await httpClient.get('/company/my-pending-invitations');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải lời mời tham gia tổ chức.');
+  }
+  return response.data.data;
+}
+
+export async function acceptDirectInvitation(invitationId) {
+  const response = await httpClient.post(`/company/invitations/${invitationId}/accept-direct`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Chấp nhận lời mời thất bại.');
+  }
+  return response.data.data;
+}
+

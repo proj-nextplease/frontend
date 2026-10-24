@@ -1,968 +1,1948 @@
 /* ──────────────────────────────────────────────────────────────────────────
-   Theme Fomlio — giao diện portfolio công khai của ứng viên.
-
-   Nguồn: Figma "Portfolio Landing Page 1" (file sBPmEd5bj6MQ3ZWNrkUfvW,
-   node 2:13, khung 1728×5893). Token lấy từ Figma variables, KHÔNG phải
-   DESIGN.md: theme này cố tình nằm ngoài hệ emerald/đen của nextplease,
-   vì nó là bộ mặt của ứng viên chứ không phải của sản phẩm.
-
-   Tất cả selector nằm dưới .fom-page nên không rò ra phần còn lại của app.
+   Theme Fomlio (Cốm Neon) — Giao diện Portfolio công khai của ứng viên.
+   Dựng theo chuẩn thiết kế Figma "PORTFOLIO-TEMP", Node 9-126 (Portfolio Landing Page 1).
    ────────────────────────────────────────────────────────────────────────── */
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap');
+
 .fom-page {
-  /* Figma variables */
-  --fom-brand: #cbf748;        /* Primary Brand */
-  --fom-secondary: #7b3aec;    /* Secondary — chữ trên dải Role trắng */
-  --fom-ink: #000000;          /* Foundation */
-  --fom-white: #ffffff;        /* Header & Footer / White Color */
+  /* Brand Tokens - Figma Node 9-126 */
+  --fom-brand: #cbf748;         /* Neon Lime / Cốm Neon */
+  --fom-brand-glow: rgba(203, 247, 72, 0.45);
+  --fom-secondary: #7b3aec;     /* Secondary Purple */
+  --fom-secondary-dark: #6b21a8;/* Rich Deep Purple */
+  --fom-ink: #0d021b;           /* Deep Midnight Foundation */
+  --fom-bg: #130924;            /* Main Dark Plum Canvas */
+  --fom-white: #ffffff;
+  --fom-black: #000000;
 
-  /* Lớp kính: bản thiết kế dùng đúng hai công thức này, không thêm bớt */
-  --fom-glass: rgba(255, 255, 255, 0.2);
-  --fom-glass-line: #ffffff;
-  --fom-panel: rgba(255, 255, 255, 0.08);
-  --fom-panel-line: rgba(255, 255, 255, 0.12);
-  --fom-blur: 12px;
-
-  --fom-container: 1140px;     /* 1728 - 294×2 */
-  --fom-radius-card: 24px;
-  --fom-radius-shot: 50px;
-  --fom-radius-pill: 50px;
+  /* Glassmorphism Formulas */
+  --fom-glass-bg: rgba(255, 255, 255, 0.08);
+  --fom-glass-border: rgba(255, 255, 255, 0.18);
+  --fom-glass-blur: 16px;
+  --fom-card-radius: 24px;
+  --fom-pill-radius: 9999px;
 
   position: relative;
   min-height: 100vh;
   margin: 0;
-  padding: 0 0 80px;
-  background: var(--fom-ink);
+  padding: 0 0 100px;
+  background-color: var(--fom-bg);
   color: var(--fom-white);
-  font-family: 'DM Sans', 'Be Vietnam Pro', system-ui, sans-serif;
+  font-family: 'DM Sans', 'Poppins', system-ui, sans-serif;
   overflow-x: clip;
 }
 
-/* Quầng sáng nền. Bản Figma đặt một ảnh PNG 4083×7215 phủ cả trang; ở đây
-   dựng lại bằng gradient — cùng hình ảnh, nhẹ hơn ~930KB và không vỡ khi
-   trang dài ngắn khác nhau tuỳ dữ liệu ứng viên. */
-.fom-page::before {
-  content: '';
+/* Inherit colors for typography inside page */
+.fom-page h1,
+.fom-page h2,
+.fom-page h3,
+.fom-page h4,
+.fom-page h5,
+.fom-page p,
+.fom-page span {
+  color: inherit;
+}
+
+.fom-shell {
+  width: min(1200px, calc(100% - 48px));
+  margin-inline: auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* ── AMBIENT RADIANT BACKGROUND AURAS ──────────────────────────────────── */
+
+.fom-bg-auras {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    /* Tâm quầng sáng, nóng nhất ở giữa trang */
-    radial-gradient(68% 40% at 50% 46%, rgba(203, 247, 72, 0.95) 0%, rgba(203, 247, 72, 0.55) 48%, rgba(203, 247, 72, 0) 80%),
-    /* Dải dọc đen → lime → đen, trải theo chiều dài thật của trang */
-    linear-gradient(180deg,
-      #000000 0%,
-      #000000 12%,
-      rgba(78, 112, 14, 0.85) 23%,
-      rgba(140, 190, 32, 0.92) 40%,
-      rgba(140, 190, 32, 0.92) 60%,
-      rgba(68, 100, 12, 0.85) 77%,
-      #000000 90%,
-      #000000 100%),
-    var(--fom-ink);
-}
-
-.fom-page > * { position: relative; z-index: 1; }
-
-/* Cùng bẫy Astryx như `.portfolio-page` trong index.css: màu chữ của h1..h4
-   được đặt bằng light-dark() qua adopted stylesheet, nên máy nào để dark mode
-   thì mọi tiêu đề thành #fafafa — kể cả tiêu đề nằm trong thẻ chuyên môn nền
-   sáng, thành chữ trắng trên nền lime. Ép thừa kế lại để mỗi khối tự quyết
-   màu chữ của mình.
-
-   KHÔNG đưa `a` vào danh sách: `.fom-page a` (0,1,1) thắng `.fom-btn` (0,1,0),
-   nên mọi nút dạng liên kết sẽ thành chữ trắng trên nền trắng. */
-.fom-page h1, .fom-page h2, .fom-page h3, .fom-page h4,
-.fom-page p, .fom-page li { color: inherit; }
-
-.fom-shell {
-  width: min(var(--fom-container), calc(100% - 48px));
-  margin-inline: auto;
-}
-
-/* ── Chữ ──────────────────────────────────────────────────────────────── */
-
-.fom-display {           /* Big Heading — Poppins SemiBold 40 */
-  font-family: 'Poppins', system-ui, sans-serif;
-  font-weight: 600;
-  font-size: clamp(28px, 2.4vw, 40px);
-  line-height: 1.22;
-  margin: 0;
-}
-
-.fom-section-title {     /* Tiêu đề khối — 64px trong thiết kế */
-  font-family: 'Poppins', system-ui, sans-serif;
-  font-weight: 600;
-  font-size: clamp(34px, 4vw, 64px);
-  line-height: 1.16;
-  text-align: center;
-  margin: 0;
-  max-width: 742px;
-}
-
-.fom-lede {              /* Body 24 */
-  font-size: clamp(16px, 1.4vw, 24px);
-  line-height: 1.5;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.86);
-}
-
-/* ── Pill / nút ───────────────────────────────────────────────────────── */
-
-.fom-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border: 1px solid var(--fom-glass-line);
-  border-radius: var(--fom-radius-pill);
-  background: var(--fom-glass);
-  backdrop-filter: blur(var(--fom-blur));
-  font-family: 'Poppins', system-ui, sans-serif;
-  font-weight: 500;
-  font-size: clamp(16px, 1.8vw, 20px);
-  line-height: 1;
-  color: var(--fom-white);
-}
-
-.fom-pill.fom-eyebrow {
-  font-size: clamp(18px, 2vw, 32px);
-  padding: 10px 24px;
-  text-transform: uppercase;
-}
-
-
-.fom-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 11px 44px;
-  border: 0;
-  border-radius: var(--fom-radius-pill);
-  background: var(--fom-white);
-  color: var(--fom-ink);
-  font-family: 'Poppins', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 20px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-}
-
-.fom-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35); }
-
-.fom-btn.lg { font-size: clamp(18px, 1.5vw, 24px); padding: 17px 48px; }
-
-.fom-btn.ghost {
-  padding: 11px 24px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  /* Nền trắng của .fom-btn phải bị xoá hẳn, nếu không lớp gradient mờ bên
-     trên chỉ phủ lên nó và nút vẫn trắng đặc, nuốt mất chữ trắng. */
-  background-color: transparent;
-  background-image: linear-gradient(171.6deg, rgba(255, 255, 255, 0.12) 16.8%, rgba(255, 255, 255, 0.08) 85.4%);
-  backdrop-filter: blur(var(--fom-blur));
-  color: var(--fom-white);
-  font-family: 'DM Sans', sans-serif;
-}
-
-/* ── Thanh điều hướng ─────────────────────────────────────────────────── */
-
-.fom-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding-top: 45px;
-}
-
-/* Tên ứng viên đứng chỗ nhãn hiệu. Chữ thay vì ảnh nên không phải lo ảnh vỡ
-   ở màn retina, và tự co theo tên dài ngắn. */
-.fom-logo {
-  font-family: 'Poppins', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: clamp(17px, 1.5vw, 21px);
-  letter-spacing: -0.01em;
-  color: var(--fom-brand);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 34ch;
-}
-
-.fom-nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  border: 1px solid var(--fom-glass-line);
-  border-radius: var(--fom-radius-pill);
-  background: var(--fom-glass);
-  backdrop-filter: blur(var(--fom-blur));
-}
-
-.fom-nav a {
-  padding: 9px 20px;
-  border-radius: var(--fom-radius-pill);
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 20px;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: var(--fom-white);
-  white-space: nowrap;
-}
-
-.fom-nav a.active { background: var(--fom-white); color: var(--fom-ink); }
-
-/* ── Hero ─────────────────────────────────────────────────────────────────
-   Bản Figma dựng hero quanh một tấm chân dung 562×674 lấp kín vòng tròn.
-   Sản phẩm này phần lớn dùng linh vật — một bức tranh nhỏ — nên bố cục phải
-   chịu được cả hai mà không bên nào trông như lỗi:
-     - Khung chân dung là HÌNH VUÔNG chứ không phải 562/674. Tỉ lệ dọc là của
-       tấm ảnh người thật; ép linh vật vào đó thì thừa ra một mảng nền cao
-       bằng nửa khung.
-     - Đĩa lime dựng bằng CSS, không dùng ring.svg của Figma: file đó có tâm
-       tối vì trong thiết kế nó luôn bị tấm ảnh che. Dùng với linh vật thì lộ
-       ra một lỗ đen giữa đĩa.
-     - Chữ canh TRÁI, không canh phải như Figma. Tiếng Việt dấu nhiều và tên
-       trường/địa chỉ dài, canh phải cho ra mép trái răng cưa rất khó đọc; và
-       canh trái thì bản xếp dọc trên điện thoại không phải đổi gì. */
-
-.fom-hero {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
-  align-items: center;
-  gap: clamp(32px, 5vw, 72px);
-  padding: clamp(48px, 7vw, 96px) 0 clamp(32px, 4vw, 56px);
-}
-
-.fom-hero-copy {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: clamp(14px, 1.6vw, 22px);
-  min-width: 0;
-}
-
-.fom-hero-copy .fom-display { max-width: 18ch; }
-.fom-hero-copy .fom-lede { max-width: 42ch; }
-
-/* Trường học và nơi ở thành hai viên riêng. Nối bằng dấu chấm giữa thì ra
-   một dòng dài loằng ngoằng, mà địa chỉ đầy đủ thì gần như luôn dài. */
-/* max-width phải đặt ở ĐÂY nữa: trong flex-column với align-items:center,
-   con có width:auto = rộng theo nội dung, nên nếu chỉ kẹp viên con thì hộp
-   chứa vẫn phình ra bằng chuỗi dài nhất. */
-.fom-hero-tags { display: flex; flex-wrap: wrap; gap: 8px; max-width: 100%; }
-
-.fom-hero-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  max-width: 100%;
-  /* Flex item mặc định không co nhỏ hơn nội dung, nên nếu thiếu dòng này thì
-     ellipsis của <span> bên trong không bao giờ chạy và địa chỉ dài tràn ra
-     ngoài màn hình điện thoại. */
-  min-width: 0;
-  padding: 7px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: var(--fom-radius-pill);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 14px;
-  line-height: 1.3;
-}
-.fom-hero-tag span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fom-hero-tag svg { flex: none; }
-
-.fom-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; max-width: 100%; }
-
-/* ── Khung chân dung ──────────────────────────────────────────────────── */
-
-.fom-portrait {
-  position: relative;
-  aspect-ratio: 1;
-  width: 100%;
-  isolation: isolate;
-}
-
-/* Đĩa lime + quầng sáng, một lớp duy nhất. */
-.fom-portrait-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 44%,
-      #d7fb66 0%,
-      #cbf748 52%,
-      rgba(203, 247, 72, 0.55) 68%,
-      rgba(203, 247, 72, 0.18) 80%,
-      rgba(203, 247, 72, 0) 92%);
-}
-
-.fom-portrait-stage {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: end center;
-  /* Linh vật/ảnh đứng trên đáy đĩa, chừa 8% để nó không chạm mép. */
-  padding-bottom: 8%;
-}
-
-/* Linh vật là tranh có độ phân giải cố định — không phóng to cho lấp đầy đĩa,
-   phóng lên là vỡ. Nó đứng trong khung, không lấp khung. */
-.fom-portrait-stage > :not(.fom-portrait-photo) {
-  max-width: 74%;
-  height: auto;
-}
-
-/* Có ảnh thì CANH GIỮA, không phải stretch.
-   `place-items: stretch` cộng với kích thước tường minh là một mâu thuẫn:
-   trình duyệt bỏ stretch và rơi về `start`, tức dồn ảnh lên góc trên-trái
-   trong khi đĩa lime vẫn chiếm trọn khung — ảnh lệch hẳn khỏi tâm đĩa. */
-.fom-portrait-stage.has-photo { place-items: center; padding: 0; }
-
-.fom-portrait-photo {
-  /* 86% để vành lime phía sau lộ đều một vòng quanh ảnh. Dùng aspect-ratio
-     chứ không đặt width/height lệch nhau: 86%/94% cộng `border-radius: 50%`
-     cho ra hình BẦU DỤC, không khớp với đĩa tròn phía sau. */
-  width: 86%;
-  aspect-ratio: 1;
-  height: auto;
-  object-fit: cover;
-  object-position: top center;
-  border-radius: 50%;
-}
-
-
-/* ── Dải Role chạy ngang ──────────────────────────────────────────────── */
-
-.fom-marquee {
-  position: relative;
-  margin: 40px 0;
-  padding: 1px 0;
-  background: var(--fom-brand);
-  height: 110px;
-  display: flex;
-  align-items: center;
+  z-index: 0;
   overflow: hidden;
 }
 
-/* Dải trắng nghiêng 1° nằm đè lên dải lime — đúng hai lớp của bản thiết kế. */
-.fom-marquee-band {
+.fom-aura {
   position: absolute;
-  left: -1%;
-  width: 102%;
-  height: 80px;
-  background: var(--fom-white);
-  transform: rotate(-1deg);
-}
-
-.fom-marquee-track {
-  position: relative;
-  display: flex;
-  width: max-content;
-  gap: 40px;
-  transform: rotate(-1deg);
-  animation: fom-marquee 26s linear infinite;
-}
-
-.fom-marquee-group { display: flex; gap: 40px; padding-right: 40px; }
-
-/* Dấu chấm ngăn giữa các kỹ năng, thay cho con dấu nhãn hiệu bé xíu trước
-   đây — ở cỡ 35px nó chỉ còn là một vệt mờ không ai đọc ra. */
-.fom-marquee-item::before {
-  content: '';
-  width: 7px;
-  height: 7px;
   border-radius: 50%;
-  background: currentColor;
-  flex: none;
+  filter: blur(120px);
+  opacity: 0.6;
 }
 
-.fom-marquee-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  font-family: 'Poppins', system-ui, sans-serif;
-  font-weight: 500;
-  font-size: 20px;
-  line-height: 20px;
-  color: var(--fom-secondary);
-  white-space: nowrap;
+.fom-aura-top-purple {
+  top: -150px;
+  left: 20%;
+  width: 700px;
+  height: 600px;
+  background: radial-gradient(circle, #7b3aec 0%, rgba(123, 58, 236, 0) 70%);
 }
 
-@keyframes fom-marquee { to { transform: rotate(-1deg) translateX(-50%); } }
-
-@media (prefers-reduced-motion: reduce) {}
-
-/* ── About ────────────────────────────────────────────────────────────── */
-
-/* Không có đoạn giới thiệu thì khối co về một cột và canh giữa, thay vì để
-   một nửa trống. */
-.fom-about.is-bare { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; padding: 72px 0; }
-.fom-about.is-bare .fom-about-copy { align-items: center; }
-
-.fom-about {
-  display: grid;
-  grid-template-columns: minmax(0, 462px) minmax(0, 598px);
-  justify-content: space-between;
-  align-items: center;
-  gap: 80px;
-  padding: 100px 0;
+.fom-aura-hero-lime {
+  top: 180px;
+  left: -100px;
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(203, 247, 72, 0.35) 0%, rgba(203, 247, 72, 0) 70%);
 }
 
-.fom-about-copy { display: flex; flex-direction: column; gap: 30px; align-items: flex-start; }
-
-/* Khối kim cương gradient bên phải — hình vuông xoay 42.53° của bản thiết kế. */
-.fom-about-gem {
-  position: relative;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
+.fom-aura-mid-violet {
+  top: 1800px;
+  right: -100px;
+  width: 650px;
+  height: 650px;
+  background: radial-gradient(circle, #6b21a8 0%, rgba(107, 33, 168, 0) 70%);
 }
 
-.fom-about-gem::before {
-  content: '';
-  /* 70.8% là tỉ lệ lấy nguyên từ Figma, nơi khối About luôn có đoạn giới
-     thiệu dài cân lại. Thu còn một nửa để nó là điểm nhấn chứ không phải
-     nhân vật chính. */
-  width: 52%;
-  aspect-ratio: 1;
-  transform: rotate(-42.53deg);
-  background-image: linear-gradient(45.13deg, rgb(203, 247, 72) 6.18%, rgba(217, 217, 217, 0) 73.1%);
+.fom-aura-bottom-lime {
+  bottom: 800px;
+  left: 10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(203, 247, 72, 0.28) 0%, rgba(203, 247, 72, 0) 70%);
 }
 
-/* ── Chỉ số ───────────────────────────────────────────────────────────── */
+/* ── 3D STARS & SPARKLES ──────────────────────────────────────────────── */
 
-.fom-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 30px;
-}
-
-.fom-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  min-height: 180px;
-  padding: 30px 22px 29px;
-  border: 1px solid var(--fom-panel-line);
-  border-radius: var(--fom-radius-card);
-  background: var(--fom-panel);
-  backdrop-filter: blur(var(--fom-blur));
-  text-align: center;
-}
-
-.fom-stat-value {
-  font-family: 'Poppins', system-ui, sans-serif;
-  font-weight: 700;
-  font-size: clamp(44px, 4.3vw, 70px);
-  line-height: 1;
-  margin: 0;
-}
-
-.fom-stat-value span { color: var(--fom-brand); }
-
-.fom-stat-label {
-  font-family: 'Poppins', system-ui, sans-serif;
-  font-weight: 500;
-  font-size: clamp(18px, 2vw, 32px);
-  line-height: 1.2;
-  margin: 0;
-}
-
-/* ── Khối tiêu đề giữa trang ──────────────────────────────────────────── */
-
-.fom-heading-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  padding: 100px 0 56px;
-}
-
-.fom-heading-star { width: 27px; height: 26px; }
-
-/* ── Thẻ chuyên môn ───────────────────────────────────────────────────── */
-
-.fom-specialities {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 31px;
-}
-
-.fom-speciality {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-height: 347px;
-  padding: 30px 22px 29px;
-  border: 1px solid var(--fom-glass-line);
-  border-radius: var(--fom-radius-card);
-  background: var(--fom-glass);
-  backdrop-filter: blur(var(--fom-blur));
-  color: var(--fom-ink);
-}
-
-.fom-speciality-icon { width: 60px; height: 60px; object-fit: contain; object-position: left center; }
-
-.fom-speciality h3 {
-  font-family: 'Poppins', system-ui, sans-serif;
-  font-weight: 500;
-  font-size: clamp(22px, 2.1vw, 32px);
-  line-height: 1.2;
-  margin: 12px 0 0;
-  word-break: break-word;
-}
-
-.fom-speciality p {
-  font-size: 16px;
-  line-height: 1.45;
-  margin: 0;
-  color: rgba(0, 0, 0, 0.78);
-}
-
-/* ── Lưới dự án ───────────────────────────────────────────────────────── */
-
-.fom-projects {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 40px 30px;
-}
-
-.fom-project {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 23px 24px 24px;
-  border: 2px solid var(--fom-white);
-  border-radius: var(--fom-radius-shot);
-  background: rgba(217, 217, 217, 0.08);
-}
-
-.fom-project-shot {
-  aspect-ratio: 508 / 336;
-  width: 100%;
-  border: 2px solid var(--fom-white);
-  border-radius: var(--fom-radius-shot);
-  object-fit: cover;
-  display: block;
-  background: rgba(0, 0, 0, 0.35);
-}
-
-.fom-project-shot.placeholder {
-  display: grid;
-  place-items: center;
-  font-family: 'Poppins', system-ui, sans-serif;
-  font-weight: 600;
-  font-size: clamp(20px, 2.4vw, 34px);
-  color: var(--fom-brand);
-  text-align: center;
-  padding: 24px;
-}
-
-.fom-project-body { padding: 0 12px 8px; }
-
-.fom-project h3 {
-  font-family: 'Poppins', system-ui, sans-serif;
-  font-weight: 600;
-  font-size: clamp(18px, 1.7vw, 26px);
-  line-height: 1.25;
-  margin: 0 0 6px;
-}
-
-.fom-project-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.fom-project-verified {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--fom-brand);
-  color: var(--fom-ink);
-  font-weight: 700;
-  font-size: 13px;
-}
-
-/* Nhãn trung tính, cố ý nhạt hơn huy hiệu xác thực: đây là trạng thái
-   chờ, không phải một thành tích. */
-.fom-project-pending {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.72);
-  font-weight: 700;
-  font-size: 13px;
-}
-
-/* ── Ngôi sao trang trí ───────────────────────────────────────────────── */
-
-.fom-star {
+.fom-star-3d {
   position: absolute;
   pointer-events: none;
   user-select: none;
-  z-index: 0;
-  opacity: 0.9;
-  filter: drop-shadow(0 0 10px rgba(203, 247, 72, 0.55));
+  z-index: 3;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 16px rgba(203, 247, 72, 0.4));
+  animation: fom-star-float 6s ease-in-out infinite;
 }
 
-/* ── Rỗng / chân trang ────────────────────────────────────────────────── */
-
-.fom-empty {
-  text-align: center;
-  padding: 80px 0;
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.72);
+.fom-sparkle {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  z-index: 3;
+  animation: fom-sparkle-pulse 3.5s ease-in-out infinite;
 }
 
-.fom-foot {
+@keyframes fom-star-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(4deg);
+  }
+}
+
+@keyframes fom-sparkle-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* ── 1. FLOATING PILL NAVBAR ─────────────────────────────────────────── */
+
+.fom-header-wrap {
   display: flex;
-  justify-content: center;
-  padding-top: 48px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.55);
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px 0 20px;
+  gap: 20px;
+  position: relative;
+  z-index: 20;
 }
 
-/* ── Màn hẹp ──────────────────────────────────────────────────────────────
-   Ba ngưỡng, mỗi ngưỡng gỡ một thứ hỏng cụ thể chứ không chỉ "thu nhỏ lại":
-     1024 — hai cột hero không còn đủ chỗ cho cột chữ 42ch.
-      860 — thanh điều hướng ngang bắt đầu gãy dòng.
-      560 — đĩa chân dung và nút CV phải nhỏ hẳn, lưới về một cột. */
-
-@media (max-width: 1024px) {
-  .fom-hero {
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: center;
-    text-align: center;
-    padding-top: clamp(32px, 6vw, 56px);
-  }
-  /* Chữ lên trên: trên màn hẹp người đọc cần biết đây là ai trước khi nhìn
-     ảnh, và đĩa chân dung cao gần bằng cả màn hình. */
-  /* `justify-items: center` biến item lưới thành rộng-theo-nội-dung, nên cột
-     chữ phình ra bằng viên địa chỉ dài nhất và tràn khỏi màn hình. Ép đúng
-     bề ngang cột thì max-width/ellipsis bên trong mới có tác dụng. */
-  .fom-hero-copy { order: -1; align-items: center; width: 100%; }
-  .fom-hero-copy .fom-display,
-  .fom-hero-copy .fom-lede { max-width: 32ch; }
-  .fom-hero-tags, .fom-hero-actions { justify-content: center; }
-
-  /* Khoá bề ngang đĩa, nếu không nó nở hết cột và đẩy nhân vật xuống tận
-     đáy màn hình. */
-  .fom-portrait { width: min(340px, 72vw); }
-
-  /* Sao trang trí bỏ hẳn: cột hẹp lại thì chúng rơi trúng chữ. */
-  .fom-star { display: none; }
-
-  .fom-about { grid-template-columns: minmax(0, 1fr); gap: 36px; padding: 64px 0; }
-  .fom-about-gem { display: none; }
-  .fom-specialities { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fom-brand-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+  color: var(--fom-brand);
+  min-width: 140px;
 }
 
-@media (max-width: 860px) {
-  .fom-header { flex-wrap: wrap; row-gap: 14px; padding-top: 28px; }
-  /* Thanh điều hướng ngang gãy thành hai hàng trước khi vỡ — cho nó cuộn
-     ngang thay vì xuống dòng, và nút "Hire Me" giữ nguyên một dòng. */
-  .fom-nav {
-    order: 3;
-    width: 100%;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    scrollbar-width: none;
-  }
-  .fom-nav::-webkit-scrollbar { display: none; }
-  .fom-btn { white-space: nowrap; }
+.fom-brand-dot {
+  color: var(--fom-brand);
+  font-size: 1.25rem;
+  line-height: 1;
 }
 
-@media (max-width: 560px) {
-  .fom-shell { width: calc(100% - 32px); }
-  .fom-portrait { width: min(260px, 74vw); }
-  .fom-stats { grid-template-columns: minmax(0, 1fr); }
-  .fom-specialities { grid-template-columns: minmax(0, 1fr); }
-  .fom-projects { grid-template-columns: minmax(0, 1fr); }
-  .fom-speciality { min-height: 0; }
-  .fom-project { padding: 16px; border-radius: 28px; }
-  .fom-project-shot { border-radius: 24px; }
-  .fom-heading-block { padding: 56px 0 32px; }
-  .fom-marquee { height: 86px; margin: 28px 0; }
-  .fom-marquee-band { height: 64px; }
+.fom-brand-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 20ch;
 }
 
-/* ── Bản in ───────────────────────────────────────────────────────────── */
-
-@media print {.fom-page { background: #fff !important; color: #111 !important; padding: 0 24px !important; }
-  .fom-display, .fom-section-title, .fom-lede, .fom-stat-value, .fom-stat-label, .fom-project h3 { color: #111 !important; }
-  .fom-stat, .fom-speciality, .fom-project {
-    background: #fff !important;
-    border-color: #d4d4d4 !important;
-    backdrop-filter: none !important;
-    break-inside: avoid;
-  }
-  .fom-speciality { color: #111 !important; }
+.fom-floating-navbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--fom-glass-bg);
+  border: 1px solid var(--fom-glass-border);
+  backdrop-filter: blur(var(--fom-glass-blur));
+  border-radius: var(--fom-pill-radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
-/* ── Gợi ý ở bản nháp ────────────────────────────────────────────────────- */
-
-.fom-draft-hint {
-  max-width: 54ch;
-  margin: 0;
-  padding: 14px 18px;
-  border: 1px dashed rgba(255, 255, 255, 0.4);
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.22);
-  color: rgba(255, 255, 255, 0.86);
-  font-size: 15px;
-  line-height: 1.5;
-  text-align: center;
+.fom-nav-pill {
+  padding: 10px 22px;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fom-white);
+  text-decoration: none;
+  border-radius: var(--fom-pill-radius);
+  transition: all 0.22s ease;
+  white-space: nowrap;
 }
 
-/* ── Đèn rọi khối đang sửa ───────────────────────────────────────────────-
-   Chỉ một vành sáng, không làm mờ phần còn lại: làm mờ cả trang thì người
-   dùng mất luôn ngữ cảnh "khối này nằm ở đâu trong trang". */
-
-.fom-spotlight {
-  outline: 2px solid var(--fom-brand);
-  outline-offset: 10px;
-  border-radius: 12px;
-  animation: fom-spotlight-in 0.45s ease;
-}
-
-@keyframes fom-spotlight-in {
-  from { outline-color: transparent; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fom-spotlight { animation: none; }
-}
-
-/* ── Màn chờ / màn lỗi ────────────────────────────────────────────────────
-   Cùng nền, cùng chữ với trang hồ sơ, để lúc tải xong không có cú chớp từ
-   nền sáng sang nền tối. */
-
-.fom-page-state {
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 16px;
-  min-height: 100dvh;
-  padding: 24px;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.86);
-}
-
-.fom-page-state p { margin: 0; font-size: 1.05rem; }
-.fom-page-state svg { color: var(--fom-brand); }
-
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Giao diện "Nho Neon".
-
-   Nguồn: Figma file agCrKhG2mWK3pbwdVkkJvN, node 10:129 ("Portfolio Landing
-   Page 2", khung 1728×5893). Đây KHÔNG phải bản đổi màu của Landing Page 1:
-   hero xếp dọc và canh giữa, khối About đảo bên, thẻ dự án đổ nền đặc. Nên
-   khối này ghi đè cả bố cục, không chỉ biến màu — nhưng vẫn chỉ là ghi đè,
-   mọi quy tắc nền vẫn nằm ở phần chung phía trên.
-
-   HAI CHỖ CỐ Ý LÀM KHÁC BẢN THIẾT KẾ, cả hai đều vì bản mock không gặp dữ
-   liệu thật:
-
-   1. Nền. Figma cho nền chuyển dần tới #e7d5ef ở đáy trang — gần như trắng.
-      Chữ trắng trên nền đó chỉ còn tương phản 1.39:1 (AA cần 4.5:1), tức
-      không đọc được. Mock không lộ ra vì nửa dưới của nó gần như trống;
-      portfolio thật có chữ tới tận chân trang. Gradient ở đây dừng tại
-      #9b4dde (4.66:1) rồi giữ nguyên.
-
-   2. Chữ vẫn canh TRÁI ở khối About, không canh phải như Figma. Lý do y hệt
-      ghi chú ở hero bản gốc: tiếng Việt dấu nhiều, tên trường và địa chỉ
-      dài, canh phải cho ra mép trái răng cưa rất khó đọc. Chỉ đảo BÊN của
-      ảnh và chữ cho đúng thiết kế, không đảo cách canh dòng.
-   ────────────────────────────────────────────────────────────────────────── */
-
-.fom-page[data-fom-theme='NHO_NEON'] {
-  --fom-brand: #cbf748;        /* Primary Brand */
-  --fom-secondary: #7b3aec;    /* Secondary */
-  --fom-support: #6accc3;      /* Supporting */
-  --fom-mark: #c31dff;         /* Mark */
-  --fom-ink: #2a0a55;
-  --fom-white: #ffffff;
-
-  /* Nền tím đã sáng sẵn; giữ nguyên 0.08/0.12 của bản nền đen thì các thẻ
-     chìm mất, nên lớp kính ở đây đậm hơn. */
-  --fom-glass: rgba(255, 255, 255, 0.18);
-  --fom-panel: rgba(42, 10, 85, 0.34);
-  --fom-panel-line: rgba(255, 255, 255, 0.24);
-}
-
-.fom-page[data-fom-theme='NHO_NEON']::before {
-  background:
-    radial-gradient(68% 40% at 50% 46%, rgba(154, 77, 222, 0.92) 0%, rgba(123, 58, 236, 0.5) 48%, rgba(123, 58, 236, 0) 80%),
-    linear-gradient(180deg,
-      #000000 0%, #000000 10%, #1a0236 22%, #451078 34%,
-      #772fb7 46%, #9b4dde 58%, #9b4dde 100%),
-    #9b4dde;
-}
-
-/* ── Thanh điều hướng: viên đang chọn và nút Hire Me đổ cốm, chữ tím ──── */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-nav a.active,
-.fom-page[data-fom-theme='NHO_NEON'] .fom-btn {
-  background: var(--fom-brand);
-  color: var(--fom-secondary);
-}
-
-.fom-page[data-fom-theme='NHO_NEON'] .fom-btn.ghost {
-  background-color: transparent;
+.fom-nav-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
   color: var(--fom-white);
 }
 
-/* ── Hero: một cột, canh giữa, chân dung nằm DƯỚI phần chữ ────────────── */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-hero {
-  grid-template-columns: minmax(0, 1fr);
-  justify-items: center;
-  gap: clamp(28px, 4vw, 56px);
+.fom-nav-pill.active {
+  background: var(--fom-white);
+  color: var(--fom-black);
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
 }
 
-/* Phần chữ lên trước bằng `order` chứ không đổi thứ tự trong JSX: hai giao
-   diện dùng chung một component, đổi DOM là bản Cốm Neon cũng đổi theo. */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-copy {
-  order: -1;
+.fom-hire-btn {
+  display: inline-flex;
   align-items: center;
-  text-align: center;
+  justify-content: center;
+  padding: 12px 32px;
+  background: var(--fom-white);
+  color: var(--fom-black);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: var(--fom-pill-radius);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
 }
 
-.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-copy .fom-display { max-width: 24ch; }
-
-.fom-page[data-fom-theme='NHO_NEON'] .fom-portrait {
-  width: min(520px, 82vw);
+.fom-hire-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(255, 255, 255, 0.35);
 }
 
-/* Ba vành trăng khuyết hai bên chân dung (Ellipse 6–11 của Figma). Dựng
-   bằng một SVG nội tuyến thay vì sáu thẻ trang trí trong JSX: chúng thuần
-   trang trí, không đáng để bản Cốm Neon phải gánh thêm sáu node rỗng. */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-hero::before,
-.fom-page[data-fom-theme='NHO_NEON'] .fom-hero::after {
-  content: '';
+/* ── 2. HERO SECTION ─────────────────────────────────────────────────── */
+
+.fom-hero-section {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(360px, 480px) 1fr;
+  align-items: center;
+  gap: clamp(40px, 6vw, 80px);
+  padding: clamp(40px, 6vw, 80px) 0 clamp(40px, 5vw, 70px);
+  z-index: 2;
+}
+
+/* Hero Stars placement */
+.fom-hero-star.s1 { top: 4%; left: 34%; }
+.fom-hero-star.s2 { top: 14%; left: -2%; }
+.fom-hero-star.s3 { top: 58%; left: -4%; }
+.fom-hero-star.s4 { top: 8%; right: -2%; }
+.fom-hero-sparkle.sp1 { top: 20%; left: 45%; }
+.fom-hero-sparkle.sp2 { bottom: 18%; left: 6%; }
+.fom-hero-sparkle.sp3 { top: 48%; right: 2%; }
+
+/* Left: Portrait Circle with Halo */
+.fom-hero-portrait-col {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.fom-portrait-halo-ring {
+  position: relative;
+  width: min(440px, 86vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(203, 247, 72, 0.95) 0%,
+    rgba(203, 247, 72, 0.75) 45%,
+    rgba(203, 247, 72, 0.25) 65%,
+    rgba(203, 247, 72, 0) 75%
+  );
+  box-shadow: 0 0 80px rgba(203, 247, 72, 0.4);
+  display: grid;
+  place-items: center;
+}
+
+.fom-portrait-doodles {
   position: absolute;
-  bottom: 4%;
-  width: clamp(120px, 21vw, 360px);
-  aspect-ratio: 360 / 410;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 410'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='1' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%237b3aec'/%3E%3Cstop offset='1' stop-color='%23ffffff'/%3E%3C/linearGradient%3E%3Cmask id='a'%3E%3Ccircle cx='170' cy='240' r='168' fill='%23fff'/%3E%3Ccircle cx='298' cy='196' r='168' fill='%23000'/%3E%3C/mask%3E%3Cmask id='b'%3E%3Ccircle cx='150' cy='196' r='124' fill='%23fff'/%3E%3Ccircle cx='245' cy='163' r='124' fill='%23000'/%3E%3C/mask%3E%3Cmask id='c'%3E%3Ccircle cx='128' cy='150' r='80' fill='%23fff'/%3E%3Ccircle cx='189' cy='129' r='80' fill='%23000'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='360' height='410' fill='url(%23g)' mask='url(%23a)'/%3E%3Crect width='360' height='410' fill='url(%23g)' mask='url(%23b)'/%3E%3Crect width='360' height='410' fill='url(%23g)' mask='url(%23c)'/%3E%3C/svg%3E");
+  z-index: 1;
 }
 
-.fom-page[data-fom-theme='NHO_NEON'] .fom-hero::before { left: 0; }
-/* Bên phải là ảnh LẬT, đúng như Figma đặt hai cụm đối xứng qua chân dung. */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-hero::after { right: 0; transform: scaleX(-1); }
-
-/* Dưới 900px chân dung đã chiếm gần hết bề ngang; để nguyên thì hai vành
-   trăng nằm đè lên mặt người. */
-@media (max-width: 900px) {
-  .fom-page[data-fom-theme='NHO_NEON'] .fom-hero::before,
-  .fom-page[data-fom-theme='NHO_NEON'] .fom-hero::after { display: none; }
+.fom-portrait-img-box {
+  position: relative;
+  width: 82%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 2;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
 }
 
-/* ── Chân dung: đĩa tím thay đĩa cốm ─────────────────────────────────── */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-portrait-ring {
-  background:
-    radial-gradient(circle at 50% 44%,
-      #a86bf5 0%, #8b4ae8 52%,
-      rgba(139, 74, 232, 0.55) 68%,
-      rgba(139, 74, 232, 0.18) 80%,
-      rgba(139, 74, 232, 0) 92%);
+.fom-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
 }
 
-/* ── Dải kỹ năng: ngoài ngọc, dải nghiêng tím, chữ trắng (5.74:1) ─────── */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee { background: var(--fom-support); }
-.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-band { background: var(--fom-secondary); }
-.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-item { color: var(--fom-white); }
-
-/* ── About: ảnh bên TRÁI, chữ bên phải ───────────────────────────────── */
-/* Phải kẹp trong `min-width` và `:not(.is-bare)`, nếu không nó đè mất hai
-   quy tắc chung mà nó chỉ định biến tấu:
-
-   - `.fom-about.is-bare` (0,2,0) gom về MỘT cột khi hồ sơ chưa có phần giới
-     thiệu — lúc đó khối kim cương không được vẽ. Quy tắc dưới đây có
-     (0,2,1) nên thắng, và cột duy nhất còn lại bị nhét vào ô 598px bên
-     trái: viên "About me" lệch hẳn sang trái thay vì nằm giữa.
-   - Media query ở 1024px cũng gom về một cột, nhưng độ ưu tiên không phụ
-     thuộc media query, nên nếu không kẹp thì máy tính bảng vẫn hai cột. */
-@media (min-width: 1025px) {
-  .fom-page[data-fom-theme='NHO_NEON'] .fom-about:not(.is-bare) {
-    grid-template-columns: minmax(0, 598px) minmax(0, 462px);
-  }
-
-  .fom-page[data-fom-theme='NHO_NEON'] .fom-about:not(.is-bare) .fom-about-copy { order: 2; }
-  .fom-page[data-fom-theme='NHO_NEON'] .fom-about:not(.is-bare) .fom-about-gem { order: 1; }
+.fom-portrait-mascot-wrap {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: rgba(19, 9, 36, 0.6);
 }
 
-/* Khối trang trí đổi sang tím cho khớp nền; mảng cốm to ở đây sẽ tranh mất
-   vai trò điểm nhấn của hàng thẻ số liệu ngay bên dưới. */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-about-gem::before {
-  background-image: linear-gradient(45.13deg, rgb(168, 107, 245) 6.18%, rgba(217, 217, 217, 0) 73.1%);
+.fom-hero-cv-badge {
+  position: absolute;
+  bottom: 0px;
+  right: -10px;
+  z-index: 10;
 }
 
-/* ── Mọi viên tiêu đề (ABOUT ME, SERVICES, PORTFOLIO, CREDENTIALS): nền
-      tím, chữ cốm — 4.63:1. Nhắm `.fom-eyebrow` chứ không nhắm riêng
-      `.fom-heading-block`, vì viên ABOUT ME nằm trong khối About. ────── */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-eyebrow {
-  background: var(--fom-secondary);
-  border-color: transparent;
+/* Right: Copy & CTAs */
+.fom-hero-copy-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
+}
+
+.fom-pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  backdrop-filter: blur(var(--fom-glass-blur));
+  border-radius: var(--fom-pill-radius);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--fom-white);
+}
+
+.fom-pill-tag.purple {
+  background: rgba(107, 33, 168, 0.35);
+  border-color: rgba(168, 85, 247, 0.4);
+  color: var(--fom-white);
+  padding: 9px 24px;
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.fom-pill-tag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--fom-brand);
+  box-shadow: 0 0 10px var(--fom-brand);
+}
+
+.fom-hero-heading {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 3.2vw, 3.35rem);
+  line-height: 1.25;
+  margin: 0;
+  color: var(--fom-white);
+}
+
+.fom-text-highlight {
   color: var(--fom-brand);
 }
 
-/* ── Thẻ số liệu và thẻ chuyên môn: nền CỐM ĐẶC ──────────────────────── */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-stat,
-.fom-page[data-fom-theme='NHO_NEON'] .fom-speciality {
-  background: var(--fom-brand);
-  border-color: transparent;
-  backdrop-filter: none;
-  color: var(--fom-ink);
+.fom-hero-lede {
+  font-size: clamp(1rem, 1.25vw, 1.25rem);
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0;
+  max-width: 58ch;
 }
 
-/* Dấu "+" và "%" lấy màu Mark của Figma. 3.43:1 trên nền cốm — dưới ngưỡng
-   4.5 nhưng đây là chữ 44–70px, ngưỡng chữ lớn là 3.0, nên đạt. Chỉ dùng
-   cho đúng ký tự đó; phần số vẫn là tím đậm 13.3:1. */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-stat-value span { color: var(--fom-mark); }
-.fom-page[data-fom-theme='NHO_NEON'] .fom-speciality p { color: rgba(42, 10, 85, 0.82); }
-
-/* ── Thẻ dự án: khung cốm đặc bọc ảnh chụp ───────────────────────────── */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-project {
-  background: var(--fom-brand);
-  border-color: transparent;
-  color: var(--fom-ink);
+.fom-hero-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
 }
 
-.fom-page[data-fom-theme='NHO_NEON'] .fom-project-shot {
-  border-color: rgba(42, 10, 85, 0.25);
-  background: rgba(42, 10, 85, 0.12);
+.fom-btn-solid-white {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 34px;
+  background: var(--fom-white);
+  color: var(--fom-black);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: var(--fom-pill-radius);
+  box-shadow: 0 6px 24px rgba(255, 255, 255, 0.25);
+  transition: all 0.22s ease;
+  white-space: nowrap;
 }
 
-.fom-page[data-fom-theme='NHO_NEON'] .fom-project-shot.placeholder { color: var(--fom-secondary); }
-.fom-page[data-fom-theme='NHO_NEON'] .fom-project-meta { color: rgba(42, 10, 85, 0.78); }
+.fom-btn-solid-white:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(255, 255, 255, 0.4);
+}
 
-/* Hai nhãn trạng thái phải đổi theo thẻ: nền cốm nên huy hiệu cốm sẽ biến
-   mất, còn nhãn chờ dùng trắng-mờ thì gần như vô hình. */
-.fom-page[data-fom-theme='NHO_NEON'] .fom-project-verified {
-  background: var(--fom-secondary);
+.fom-btn-glass-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  backdrop-filter: blur(var(--fom-glass-blur));
+  color: var(--fom-white);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--fom-pill-radius);
+  transition: all 0.22s ease;
+  white-space: nowrap;
+}
+
+.fom-btn-glass-ghost:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.55);
+  transform: translateY(-2px);
+}
+
+.fom-btn-glass-ghost.sm {
+  padding: 8px 18px;
+  font-size: 0.85rem;
+}
+
+/* ── ROTATING DOWNLOAD CV BADGE ───────────────────────────────────────── */
+
+.fom-download-badge-wrap,
+.fom-download-badge-box {
+  position: relative;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fom-download-badge-wrap:hover,
+.fom-download-badge-box:hover {
+  transform: scale(1.08);
+}
+
+.fom-download-badge-rotor {
+  animation: fom-badge-spin 18s linear infinite;
+  transform-origin: 80px 80px;
+}
+
+@keyframes fom-badge-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fom-download-center-disc {
+  transition: filter 0.2s ease;
+}
+
+.fom-download-badge-box:hover .fom-download-center-disc {
+  filter: drop-shadow(0 0 14px var(--fom-brand));
+}
+
+.fom-download-badge-button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* ── 3. SIGNATURE WHITE MARQUEE TICKER ───────────────────────────────── */
+
+.fom-marquee-bar {
+  position: relative;
+  width: 100vw;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  height: 64px;
+  background: var(--fom-white);
+  border-top: 3px solid var(--fom-brand);
+  border-bottom: 3px solid var(--fom-brand);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(203, 247, 72, 0.35);
+  z-index: 10;
+  user-select: none;
+}
+
+.fom-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: fom-marquee-scroll 24s linear infinite;
+}
+
+.fom-marquee-group {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding-right: 32px;
+}
+
+.fom-marquee-chunk {
+  display: inline-flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.fom-marquee-label {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  color: var(--fom-secondary-dark);
+  white-space: nowrap;
+}
+
+.fom-marquee-bullet {
+  color: var(--fom-secondary);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+@keyframes fom-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes fom-marquee-scroll-reverse {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.fom-marquee-track.reverse {
+  animation: fom-marquee-scroll-reverse 24s linear infinite;
+}
+
+.fom-marquee-stack {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.fom-marquee-bar-secondary {
+  display: none;
+}
+
+/* ── 4. ABOUT SECTION ("VỀ MÌNH") ─────────────────────────────────────── */
+
+.fom-about-section {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 460px);
+  align-items: center;
+  gap: clamp(40px, 6vw, 80px);
+  padding: clamp(60px, 8vw, 110px) 0 clamp(40px, 6vw, 80px);
+}
+
+.fom-about-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.fom-about-heading {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.85rem, 2.8vw, 2.75rem);
+  line-height: 1.3;
+  margin: 0;
   color: var(--fom-white);
 }
 
-.fom-page[data-fom-theme='NHO_NEON'] .fom-project-pending {
-  background: rgba(42, 10, 85, 0.14);
-  color: rgba(42, 10, 85, 0.86);
+.fom-about-desc {
+  font-size: clamp(1rem, 1.2vw, 1.18rem);
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0;
+  max-width: 54ch;
+}
+
+.fom-about-actions {
+  margin-top: 8px;
+}
+
+/* Right: 45-deg Diamond Graphic */
+.fom-about-visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 400px;
+}
+
+.fom-about-star.s1 { top: -4%; right: 10%; }
+.fom-about-star.s2 { bottom: 12%; left: -6%; }
+.fom-about-sparkle.sp1 { top: 12%; left: 8%; }
+.fom-about-sparkle.sp2 { bottom: 20%; right: -2%; }
+
+.fom-diamond-outer {
+  position: relative;
+  width: 270px;
+  height: 270px;
+  transform: rotate(45deg);
+  border-radius: 40px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(107, 33, 168, 0.35) 50%,
+    rgba(203, 247, 72, 0.28) 100%
+  );
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 60px rgba(107, 33, 168, 0.45), 0 0 40px rgba(203, 247, 72, 0.25);
+  display: grid;
+  place-items: center;
+}
+
+.fom-diamond-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 100% 100%, rgba(203, 247, 72, 0.5) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.fom-diamond-content {
+  /* Counter-rotate content inside diamond */
+  transform: rotate(-45deg);
+  display: grid;
+  place-items: center;
+}
+
+/* ── 5. ACTIVITIES & STATS SECTION ("★ Kinh nghiệm hoạt động") ───────── */
+
+.fom-activities-section {
+  padding: clamp(50px, 6vw, 90px) 0;
+}
+
+.fom-section-header.left {
+  text-align: left;
+  margin-bottom: 40px;
+}
+
+.fom-section-header.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  margin-bottom: 50px;
+}
+
+.fom-section-title-with-star {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.fom-star-icon {
+  color: var(--fom-brand);
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.fom-section-h2 {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.85rem, 2.8vw, 2.75rem);
+  line-height: 1.25;
+  margin: 0;
+  color: var(--fom-white);
+}
+
+.fom-section-h2.large {
+  font-size: clamp(2rem, 3.4vw, 3.25rem);
+  max-width: 24ch;
+}
+
+.fom-activities-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+  gap: clamp(32px, 5vw, 64px);
+  align-items: start;
+}
+
+/* Left: Milestones Grid (2 columns) */
+.fom-milestones-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 24px;
+}
+
+.fom-milestone-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fom-milestone-tag {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--fom-brand);
+  margin: 0;
+}
+
+.fom-milestone-title {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--fom-white);
+  margin: 0;
+}
+
+.fom-milestone-meta {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+}
+
+.fom-milestone-desc {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 4px 0 0;
+}
+
+/* Right: 2 Big Glass Stat Cards */
+.fom-stats-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.fom-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 28px;
+  background: var(--fom-glass-bg);
+  border: 1px solid var(--fom-glass-border);
+  backdrop-filter: blur(var(--fom-glass-blur));
+  border-radius: var(--fom-card-radius);
+  text-align: center;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.fom-stat-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(203, 247, 72, 0.45);
+}
+
+.fom-stat-number {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(3.2rem, 4.5vw, 4.5rem);
+  line-height: 1;
+  color: var(--fom-white);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.fom-stat-plus {
+  color: var(--fom-brand);
+}
+
+.fom-stat-label {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: var(--fom-white);
+  margin-top: 12px;
+}
+
+/* ── 6. SERVICES / SKILLS SECTION ("★ DỊCH VỤ CỦA TÔI") ──────────────── */
+
+.fom-services-section {
+  padding: clamp(60px, 7vw, 100px) 0 clamp(40px, 5vw, 70px);
+}
+
+.fom-services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.fom-service-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 36px 28px;
+  background: var(--fom-glass-bg);
+  border: 1px solid var(--fom-glass-border);
+  backdrop-filter: blur(var(--fom-glass-blur));
+  border-radius: var(--fom-card-radius);
+  transition: all 0.25s ease;
+}
+
+.fom-service-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(203, 247, 72, 0.45);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(203, 247, 72, 0.15);
+}
+
+.fom-service-icon-box {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: grid;
+  place-items: center;
+  color: var(--fom-brand);
+  margin-bottom: 6px;
+}
+
+.fom-service-title {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: var(--fom-white);
+  margin: 0;
+}
+
+.fom-service-desc {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+/* ── 7. PORTFOLIO SHOWCASE SECTION ───────────────────────────────────── */
+
+.fom-portfolio-intro-section {
+  padding: clamp(60px, 8vw, 100px) 0 clamp(30px, 4vw, 50px);
+}
+
+.fom-project-showcases {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.fom-showcase-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Expansive Themed Aura Container */
+.fom-showcase-container {
+  position: relative;
+  width: 100%;
+  padding: clamp(60px, 8vw, 100px) 0;
+  transition: background 0.3s ease;
+}
+
+/* 5 Aura Cyclic Palettes from Figma */
+.fom-showcase-container.fom-aura-purple {
+  background: radial-gradient(circle at 75% 45%, rgba(168, 36, 214, 0.45) 0%, rgba(30, 8, 50, 0.96) 65%);
+}
+
+.fom-showcase-container.fom-aura-plum {
+  background: radial-gradient(circle at 75% 45%, rgba(192, 132, 252, 0.38) 0%, rgba(45, 10, 70, 0.96) 65%);
+}
+
+.fom-showcase-container.fom-aura-amber {
+  background: radial-gradient(circle at 75% 45%, rgba(251, 146, 60, 0.35) 0%, rgba(55, 18, 30, 0.96) 65%);
+}
+
+.fom-showcase-container.fom-aura-olive {
+  background: radial-gradient(circle at 75% 45%, rgba(234, 179, 8, 0.35) 0%, rgba(40, 35, 10, 0.96) 65%);
+}
+
+.fom-showcase-container.fom-aura-lime {
+  background: radial-gradient(circle at 75% 45%, rgba(203, 247, 72, 0.45) 0%, rgba(20, 35, 10, 0.96) 65%);
+}
+
+.fom-showcase-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(40px, 5vw, 64px);
+}
+
+.fom-project-star.p-s1 { top: 2%; left: -3%; }
+.fom-project-star.p-s2 { top: 18%; right: -2%; }
+
+/* Top Row: Copy & Mockup */
+.fom-project-hero-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(380px, 1.25fr);
+  align-items: center;
+  gap: clamp(36px, 5vw, 64px);
+}
+
+.fom-project-copy-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.fom-project-num-title {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 4.2vw, 4.2rem);
+  line-height: 1.1;
+  margin: 0;
+  color: var(--fom-white);
+}
+
+.fom-project-sub-title {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.2rem, 1.6vw, 1.55rem);
+  line-height: 1.35;
+  margin: 0;
+  color: var(--fom-brand);
+}
+
+.fom-project-main-desc {
+  font-size: clamp(0.98rem, 1.15vw, 1.12rem);
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.84);
+  margin: 8px 0 0;
+  max-width: 52ch;
+}
+
+/* Device Browser Mockup with Cyan Glow */
+.fom-mockup-frame {
+  position: relative;
+  border-radius: 28px;
+  padding: 12px;
+  border: 2px solid rgba(34, 211, 238, 0.85);
+  box-shadow: 0 0 35px rgba(34, 211, 238, 0.28), 0 16px 48px rgba(0, 0, 0, 0.45);
+  background: rgba(19, 9, 36, 0.4);
+  backdrop-filter: blur(12px);
+}
+
+.fom-mockup-window {
+  border-radius: 20px;
+  overflow: hidden;
+  background: #0d021b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+}
+
+.fom-mockup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 12px;
+}
+
+.fom-mockup-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fom-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.fom-dot.red { background: #ef4444; }
+.fom-dot.yellow { background: #eab308; }
+.fom-dot.green { background: #22c55e; }
+
+.fom-mockup-address {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: monospace;
+}
+
+.fom-mockup-actions {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+}
+
+.fom-mockup-viewport {
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  position: relative;
+  background: #0f051d;
+  overflow: hidden;
+}
+
+.fom-mockup-img-btn {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  position: relative;
+  display: block;
+}
+
+.fom-mockup-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.fom-mockup-img-btn:hover .fom-mockup-img {
+  transform: scale(1.03);
+}
+
+.fom-mockup-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--fom-white);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.fom-mockup-img-btn:hover .fom-mockup-hover-overlay {
+  opacity: 1;
+}
+
+/* Fallback screen inside browser when user hasn't uploaded proof image */
+.fom-mockup-fallback-screen {
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #1e0b38 0%, #0d021b 100%);
+}
+
+.fom-mockup-screen-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(203, 247, 72, 0.16);
+  border: 1px solid rgba(203, 247, 72, 0.4);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--fom-brand);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.fom-mockup-screen-title {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--fom-white);
+  margin: 0 0 4px;
+}
+
+.fom-mockup-screen-org {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+
+.fom-mockup-screen-widgets {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.fom-mockup-screen-widget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+}
+
+.fom-widget-icon {
+  font-size: 1.2rem;
+  color: var(--fom-brand);
+}
+
+.fom-mockup-screen-widget strong {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--fom-white);
+}
+
+.fom-mockup-screen-widget p {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+/* Bottom Row: 3 Glass Info Cards */
+.fom-project-info-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.fom-project-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 30px 24px;
+  background: var(--fom-glass-bg);
+  border: 1px solid var(--fom-glass-border);
+  backdrop-filter: blur(var(--fom-glass-blur));
+  border-radius: var(--fom-card-radius);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.fom-project-info-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.fom-info-card-title {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--fom-white);
+  margin: 0;
+}
+
+.fom-info-card-text {
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+.fom-verified-badge-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: var(--fom-brand);
+  color: var(--fom-black);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.fom-proof-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--fom-brand);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.fom-proof-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* ── 9. CREDENTIALS SECTION ───────────────────────────────────────────── */
+
+.fom-credentials-section {
+  padding: clamp(50px, 7vw, 90px) 0;
+}
+
+.fom-credentials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.fom-credential-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 30px 24px;
+  background: var(--fom-glass-bg);
+  border: 1px solid var(--fom-glass-border);
+  backdrop-filter: blur(var(--fom-glass-blur));
+  border-radius: var(--fom-card-radius);
+  color: var(--fom-white);
+}
+
+.fom-credential-icon {
+  color: var(--fom-brand);
+}
+
+.fom-credential-name {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.fom-credential-meta {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+}
+
+/* ── 10. CONTACT & FOOTER SECTION ("LIÊN HỆ") ────────────────────────── */
+
+.fom-contact-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(70px, 9vw, 120px) 0 30px;
+  text-align: center;
+}
+
+.fom-contact-subtitle {
+  font-size: clamp(1rem, 1.25vw, 1.2rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 52ch;
+  margin: 0 auto;
+}
+
+.fom-contact-channels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin: 40px 0 60px;
+}
+
+.fom-contact-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 26px;
+  background: var(--fom-glass-bg);
+  border: 1px solid var(--fom-glass-border);
+  backdrop-filter: blur(var(--fom-glass-blur));
+  border-radius: var(--fom-pill-radius);
+  color: var(--fom-white);
+  text-decoration: none;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.22s ease;
+  cursor: pointer;
+}
+
+.fom-contact-pill:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(203, 247, 72, 0.45);
+  transform: translateY(-2px);
+}
+
+.fom-contact-pill.cv-btn {
+  background: var(--fom-brand);
+  color: var(--fom-black);
+  border-color: var(--fom-brand);
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(203, 247, 72, 0.35);
+}
+
+.fom-contact-pill.cv-btn:hover {
+  background: #d7fb66;
+  box-shadow: 0 8px 28px rgba(203, 247, 72, 0.5);
+}
+
+.fom-bottom-legal {
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  width: 100%;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ── RESPONSIVE BREAKPOINTS ───────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .fom-hero-section {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    gap: 48px;
+  }
+
+  .fom-hero-copy-col {
+    align-items: center;
+    text-align: center;
+  }
+
+  .fom-hero-btn-row {
+    justify-content: center;
+  }
+
+  .fom-about-section {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    gap: 50px;
+  }
+
+  .fom-about-copy {
+    align-items: center;
+    text-align: center;
+  }
+
+  .fom-activities-layout {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .fom-stats-column {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .fom-services-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .fom-project-hero-row {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .fom-project-copy-side {
+    align-items: center;
+    text-align: center;
+  }
+
+  .fom-project-main-desc {
+    max-width: 100%;
+  }
+
+  .fom-project-info-cards-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .fom-header-wrap {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .fom-brand-name {
+    order: 1;
+  }
+
+  .fom-hire-btn {
+    order: 2;
+  }
+
+  .fom-floating-navbar {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 6px;
+    scrollbar-width: none;
+  }
+
+  .fom-floating-navbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .fom-milestones-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fom-stats-column {
+    grid-template-columns: 1fr;
+  }
+
+  .fom-services-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fom-project-info-cards-row {
+    grid-template-columns: 1fr;
+  }
+
+  .fom-credentials-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fom-marquee-bar {
+    height: 52px;
+  }
+
+  .fom-marquee-label {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .fom-shell {
+    width: calc(100% - 32px);
+  }
+
+  .fom-portrait-halo-ring {
+    width: min(320px, 86vw);
+  }
+
+  .fom-diamond-outer {
+    width: 220px;
+    height: 220px;
+  }
+
+  .fom-hero-btn-row {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .fom-btn-solid-white,
+  .fom-btn-glass-ghost {
+    width: 100%;
+  }
+
+  .fom-contact-channels {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .fom-contact-pill {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Theme Nho Neon (Royal Cobalt Blue & Acid Lime) — Figma Node 10-129
+   "Portfolio Landing Page 2"
+   ────────────────────────────────────────────────────────────────────────── */
+
+.fom-page[data-fom-theme='NHO_NEON'] {
+  /* Brand Tokens - Figma Node 10-129 (Portfolio Landing Page 2) */
+  --fom-brand: #cbf748;              /* Electric Acid Neon Lime */
+  --fom-brand-glow: rgba(203, 247, 72, 0.55);
+  --fom-royal-blue: #160ae6;         /* Royal Electric Cobalt Blue */
+  --fom-secondary: #00f0ff;          /* Vibrant Electric Cyan */
+  --fom-secondary-dark: #000000;     /* Pitch Black for Marquee text */
+  --fom-ink: #07034a;                /* Deep Cobalt Ink */
+  --fom-bg: #1408b8;                 /* Royal Electric Blue Canvas Background */
+  --fom-white: #ffffff;
+  --fom-black: #000000;
+
+  /* 3D Star Colors in Node 10-129 (Sunny Lime-Yellow Front with Deep Cobalt Shadow) */
+  --fom-star-light: #ffffff;
+  --fom-star-mid: #e4ff6b;
+  --fom-star-main: #cbf748;
+  --fom-star-shadow-start: #84cc16;
+  --fom-star-shadow-end: #0c0580;
+  --fom-star-facet-dark: #65a30d;
+  --fom-star-facet-deep: #3f6212;
+  --fom-star-facet-light: #f7fee7;
+
+  background-color: var(--fom-bg);
+}
+
+/* 3D Star Glow in Nho Neon */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-star-3d {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 16px rgba(203, 247, 72, 0.6));
+}
+
+/* ── AMBIENT RADIANT BACKGROUND AURAS IN NHO NEON ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-aura-top-purple {
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.4) 0%, rgba(0, 240, 255, 0) 70%);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-aura-hero-lime {
+  background: radial-gradient(circle, rgba(203, 247, 72, 0.45) 0%, rgba(203, 247, 72, 0) 70%);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-aura-mid-violet {
+  background: radial-gradient(circle, rgba(22, 10, 230, 0.65) 0%, rgba(22, 10, 230, 0) 70%);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-aura-bottom-lime {
+  background: radial-gradient(circle, rgba(203, 247, 72, 0.35) 0%, rgba(203, 247, 72, 0) 70%);
+}
+
+/* ── NAVBAR & HEADER ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-brand-name {
+  color: #ffffff;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-brand-dot {
+  color: #cbf748;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-floating-navbar {
+  background: rgba(14, 6, 150, 0.85);
+  border-color: rgba(203, 247, 72, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 10, 180, 0.4), 0 0 18px rgba(203, 247, 72, 0.15);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-floating-navbar .fom-nav-pill {
+  color: #ffffff;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-floating-navbar .fom-nav-pill.active {
+  background: #cbf748;
+  color: #000000;
+  font-weight: 800;
+  box-shadow: 0 4px 18px rgba(203, 247, 72, 0.5);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hire-btn {
+  background: #cbf748;
+  color: #000000;
+  font-weight: 800;
+  box-shadow: 0 6px 22px rgba(203, 247, 72, 0.45);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hire-btn:hover {
+  background: #d9f99d;
+  box-shadow: 0 10px 30px rgba(203, 247, 72, 0.65);
+}
+
+/* ── HERO SECTION ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-portrait-halo-ring {
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(203, 247, 72, 0.98) 0%,
+    rgba(203, 247, 72, 0.8) 42%,
+    rgba(132, 204, 22, 0.35) 65%,
+    rgba(132, 204, 22, 0) 75%
+  );
+  box-shadow: 0 0 95px rgba(203, 247, 72, 0.5);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-pill-tag {
+  background: rgba(203, 247, 72, 0.14);
+  border-color: rgba(203, 247, 72, 0.5);
+  color: #cbf748;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-pill-tag-dot {
+  background: #cbf748;
+  box-shadow: 0 0 12px #cbf748;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-text-highlight {
+  color: #cbf748;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-btn-row .fom-btn-solid-white {
+  background: #cbf748;
+  color: #000000;
+  font-weight: 800;
+  box-shadow: 0 6px 24px rgba(203, 247, 72, 0.4);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-btn-row .fom-btn-solid-white:hover {
+  background: #d9f99d;
+  box-shadow: 0 10px 32px rgba(203, 247, 72, 0.6);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-btn-row .fom-btn-glass-ghost {
+  border-color: rgba(203, 247, 72, 0.55);
+  color: #ffffff;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-btn-row .fom-btn-glass-ghost:hover {
+  border-color: #cbf748;
+  background: rgba(203, 247, 72, 0.16);
+  color: #cbf748;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-download-badge-box:hover .fom-download-center-disc {
+  filter: drop-shadow(0 0 16px #cbf748);
+}
+
+/* ── SIGNATURE NEON LIME MARQUEE TICKER ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-bar {
+  background: #cbf748;
+  border-top: 3px solid #000000;
+  border-bottom: 3px solid #000000;
+  box-shadow: 0 4px 24px rgba(203, 247, 72, 0.4);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-label {
+  color: #000000;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-bullet {
+  color: #000000;
+  font-weight: 900;
+}
+
+/* Double Marquee Stack (Hero divider in Node 10-129) */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-bar-secondary {
+  display: flex;
+  background: #00f0ff;
+  border-top: none;
+  border-bottom: 3px solid #000000;
+  box-shadow: 0 4px 20px rgba(0, 240, 255, 0.35);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-bar-secondary .fom-marquee-label {
+  color: #160ae6;
+  font-weight: 900;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-bar-secondary .fom-marquee-bullet {
+  color: #160ae6;
+  font-weight: 900;
+}
+
+/* ── ABOUT SECTION ("VỀ MÌNH") - CRISP WHITE CANVAS CARD ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-about-section {
+  background: #ffffff;
+  border-radius: 36px;
+  padding: clamp(50px, 7vw, 90px) clamp(30px, 5vw, 70px);
+  margin: 40px 0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  color: #160ae6;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-about-section .fom-about-heading {
+  color: #160ae6;
+  font-weight: 800;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-about-section .fom-about-desc {
+  color: #1e1b4b;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-about-section .fom-pill-tag.purple {
+  background: #cbf748;
+  border-color: #000000;
+  border-width: 2.5px;
+  border-style: dashed;
+  color: #000000;
+  font-weight: 900;
+  border-radius: 999px;
+  padding: 8px 28px;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-about-section .fom-btn-solid-white {
+  background: #160ae6;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(22, 10, 230, 0.35);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-about-section .fom-btn-solid-white:hover {
+  background: #0011ff;
+  box-shadow: 0 10px 28px rgba(0, 17, 255, 0.5);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-diamond-outer {
+  background: linear-gradient(
+    135deg,
+    rgba(22, 10, 230, 0.95) 0%,
+    rgba(14, 6, 170, 0.9) 100%
+  );
+  border: 2px solid #cbf748;
+  box-shadow: 0 0 60px rgba(0, 17, 255, 0.4), 0 0 30px rgba(203, 247, 72, 0.4);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-diamond-glow {
+  background: radial-gradient(circle at 100% 100%, rgba(203, 247, 72, 0.6) 0%, transparent 60%);
+}
+
+/* ── ACTIVITIES & STATS ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-star-icon {
+  color: #cbf748;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-milestone-tag {
+  color: #cbf748;
+  font-weight: 800;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-stat-card {
+  background: rgba(10, 4, 120, 0.55);
+  border-color: rgba(203, 247, 72, 0.35);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-stat-card:hover {
+  border-color: #cbf748;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 24px rgba(203, 247, 72, 0.3);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-stat-plus {
+  color: #cbf748;
+}
+
+/* ── SERVICES / SKILLS ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-service-card {
+  background: rgba(12, 5, 140, 0.6);
+  border-color: rgba(203, 247, 72, 0.25);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-service-card:hover {
+  border-color: #cbf748;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 28px rgba(203, 247, 72, 0.35);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-service-icon-box {
+  background: rgba(203, 247, 72, 0.15);
+  border-color: rgba(203, 247, 72, 0.4);
+  color: #cbf748;
+}
+
+/* ── PORTFOLIO PILL BADGE ("PORFOLIO" DASHED LIME PILL) ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-portfolio-intro-section .fom-pill-tag.purple,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-container .fom-pill-tag.purple {
+  background: #cbf748;
+  border: 2.5px dashed #000000;
+  color: #000000;
+  font-weight: 900;
+  font-size: 1.15rem;
+  letter-spacing: 0.12em;
+  padding: 8px 32px;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+/* ── ALTERNATING PORTFOLIO PROJECT SHOWCASES (FIGMA NODE 10-129) ── */
+
+/* Odd Projects: 1, 3, 5 - Royal Electric Blue */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(odd) .fom-showcase-container {
+  background: #160ae6;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(odd) .fom-project-num-title {
+  color: #ffffff;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(odd) .fom-project-sub-title {
+  color: #cbf748;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(odd) .fom-project-main-desc {
+  color: #f8fafc;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(odd) .fom-mockup-frame {
+  border: 2px solid rgba(0, 240, 255, 0.85);
+  box-shadow: 0 0 35px rgba(0, 240, 255, 0.35), 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+/* Project 1 Info cards (translucent icy blue) */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(1) .fom-project-info-card {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(1) .fom-info-card-title {
+  color: #ffffff;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(1) .fom-info-card-text {
+  color: #f8fafc;
+}
+
+/* Projects 3 and 5 Info cards (Bright Neon Lime with Black Text - Figma Node 10-129) */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(3) .fom-project-info-card,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(5) .fom-project-info-card,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(4n+3) .fom-project-info-card {
+  background: #cbf748;
+  border: 1.5px solid #cbf748;
+  color: #000000;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(3) .fom-info-card-title,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(5) .fom-info-card-title,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(4n+3) .fom-info-card-title {
+  color: #000000;
+  font-weight: 800;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(3) .fom-info-card-text,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(5) .fom-info-card-text,
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(4n+3) .fom-info-card-text {
+  color: #000000;
+  font-weight: 500;
+}
+
+/* Even Projects (2, 4, 6 - Stark White Paper Canvas - Figma Node 10-129) */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(even) .fom-showcase-container {
+  background: #ffffff;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(even) .fom-project-num-title {
+  color: #160ae6;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(even) .fom-project-sub-title {
+  color: #0011ff;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(even) .fom-project-main-desc {
+  color: #1e1b4b;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(even) .fom-mockup-frame {
+  border: 2px solid #160ae6;
+  box-shadow: 0 0 32px rgba(22, 10, 230, 0.2), 0 16px 40px rgba(0, 0, 0, 0.12);
+  background: rgba(22, 10, 230, 0.05);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(even) .fom-project-info-card {
+  background: #f8fafc;
+  border: 1.5px solid rgba(22, 10, 230, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(even) .fom-info-card-title {
+  color: #160ae6;
+  font-weight: 800;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(even) .fom-info-card-text {
+  color: #1e1b4b;
+}
+
+/* Project Elements in Nho Neon */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-mockup-screen-tag {
+  background: rgba(203, 247, 72, 0.18);
+  border-color: rgba(203, 247, 72, 0.5);
+  color: #cbf748;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-widget-icon {
+  color: #cbf748;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-verified-badge-inline {
+  background: #cbf748;
+  color: #000000;
+  font-weight: 800;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-proof-link {
+  color: #cbf748;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-wrapper:nth-child(even) .fom-proof-link {
+  color: #160ae6;
+}
+
+/* ── CREDENTIALS SECTION ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-credential-card {
+  background: rgba(12, 5, 140, 0.65);
+  border-color: rgba(203, 247, 72, 0.3);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-credential-icon {
+  color: #cbf748;
+}
+
+/* ── CONTACT & FOOTER ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-contact-section .fom-pill-tag.purple {
+  background: #cbf748;
+  border: 2.5px dashed #000000;
+  color: #000000;
+  font-weight: 900;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-contact-pill {
+  background: rgba(14, 6, 150, 0.7);
+  border-color: rgba(203, 247, 72, 0.4);
+  color: #ffffff;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-contact-pill:hover {
+  border-color: #cbf748;
+  background: rgba(203, 247, 72, 0.18);
+  color: #cbf748;
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-contact-pill.cv-btn {
+  background: #cbf748;
+  border-color: #cbf748;
+  color: #000000;
+  font-weight: 800;
+  box-shadow: 0 4px 20px rgba(203, 247, 72, 0.45);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-contact-pill.cv-btn:hover {
+  background: #d9f99d;
+  box-shadow: 0 8px 28px rgba(203, 247, 72, 0.65);
 }

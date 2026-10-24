@@ -25,3 +25,22 @@ export async function withdrawApplication(applicationId) {
   }
   return response.data.data;
 }
+
+export async function acceptApplicationOffer(applicationId) {
+  const response = await httpClient.post(`/me/applications/${applicationId}/accept-offer`);
+  if (!response.data?.success) {
+    const err = new Error(response.data?.message || 'Xác nhận nhận việc thất bại.');
+    err.errorCode = response.data?.errorCode || null;
+    throw err;
+  }
+  return response.data.data;
+}
+
+export async function declineApplicationOffer(applicationId, reason = '') {
+  const response = await httpClient.post(`/me/applications/${applicationId}/decline-offer`, { reason });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Từ chối lời mời thất bại.');
+  }
+  return response.data.data;
+}
+

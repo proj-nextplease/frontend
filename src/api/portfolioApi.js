@@ -44,3 +44,15 @@ export async function acceptLegalConsent(version) {
   }
   return response.data;
 }
+
+/** Xuất Portfolio thành website công khai trực tuyến (phí 1.000 Điểm). */
+export async function exportPortfolioWebsite() {
+  const response = await httpClient.post('/profiles/me/export-website');
+  if (!response.data?.success) {
+    const err = new Error(response.data?.message || 'Xuất Portfolio thành website thất bại.');
+    err.errorCode = response.data?.errorCode || null;
+    throw err;
+  }
+  return response.data.data;
+}
+

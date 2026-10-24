@@ -91,8 +91,8 @@ const TAB_BY_ROUTE = ALL_TABS.reduce((acc, tab) => {
 }, {});
 
 /* ─── CandidatesView ─────────────────────────────────────────────────────── */
-const STATUS_LABEL = { SUBMITTED: 'Đã nộp', APPLIED: 'Đã nộp', VIEWED: 'Đã xem', SHORTLISTED: 'Vào vòng tiếp', ACCEPTED: 'Chấp nhận', APPROVED: 'Chấp nhận', REJECTED: 'Từ chối', WITHDRAWN: 'Rút đơn', COMPLETED: 'Hoàn thành' };
-const STATUS_COLOR = { SUBMITTED: '#6366f1', APPLIED: '#6366f1', VIEWED: '#0284c7', SHORTLISTED: '#d97706', ACCEPTED: '#16a34a', APPROVED: '#16a34a', REJECTED: '#dc2626', WITHDRAWN: '#9ca3af', COMPLETED: '#7c3aed' };
+const STATUS_LABEL = { SUBMITTED: 'Đã nộp', APPLIED: 'Đã nộp', VIEWED: 'Đã xem', SHORTLISTED: 'Vào vòng tiếp', OFFERED: 'Đã gửi lời mời', ACCEPTED: 'Đã nhận việc', OFFER_DECLINED: 'Ứng viên từ chối', APPROVED: 'Chấp nhận', REJECTED: 'Từ chối', WITHDRAWN: 'Rút đơn', COMPLETED: 'Hoàn thành' };
+const STATUS_COLOR = { SUBMITTED: '#6366f1', APPLIED: '#6366f1', VIEWED: '#0284c7', SHORTLISTED: '#d97706', OFFERED: '#8b5cf6', ACCEPTED: '#16a34a', OFFER_DECLINED: '#6b7280', APPROVED: '#16a34a', REJECTED: '#dc2626', WITHDRAWN: '#9ca3af', COMPLETED: '#7c3aed' };
 
 function CandidatesView() {
   const [postings, setPostings] = useState([]);
@@ -655,7 +655,7 @@ function CandidatesView() {
 
               {/* Actions */}
               <div className="np-di">
-              {selectedApplicant.status !== 'REJECTED' && selectedApplicant.status !== 'WITHDRAWN' && selectedApplicant.status !== 'COMPLETED' ? (
+              {selectedApplicant.status !== 'REJECTED' && selectedApplicant.status !== 'WITHDRAWN' && selectedApplicant.status !== 'OFFER_DECLINED' && selectedApplicant.status !== 'COMPLETED' ? (
                 showRejectInput ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <input placeholder="Lý do từ chối..." value={rejectReason} onChange={e => setRejectReason(e.target.value)}
@@ -670,29 +670,52 @@ function CandidatesView() {
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {selectedApplicant.status !== 'ACCEPTED' && selectedApplicant.status !== 'APPROVED' && (
-                      <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', width: '100%' }} disabled={!!actionLoading}
-                        onClick={() => handleAction(selectedApplicant.id, 'ACCEPTED')}>
-                        <Check size={14} /> Chấp nhận ứng viên
-                      </button>
-                    )}
-                    {isQuest && selectedApplicant.status === 'ACCEPTED' && (
-                      <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', background: 'var(--p-navy)', width: '100%' }} disabled={!!actionLoading}
-                        onClick={() => handleAction(selectedApplicant.id, 'COMPLETED')}>
-                        <Award size={14} /> Đánh dấu hoàn thành (+EXP)
-                      </button>
-                    )}
-                    {!isQuest && selectedApplicant.status !== 'ACCEPTED' && selectedApplicant.status !== 'SHORTLISTED' && (
-                      <button className="button secondary-button" style={{ fontSize: '0.86rem', gap: '6px', width: '100%' }} disabled={!!actionLoading}
-                        onClick={() => handleAction(selectedApplicant.id, 'SHORTLISTED')}>
-                        <Star size={14} /> Đưa vào danh sách ngắn
-                      </button>
-                    )}
-                    {!isQuest && selectedApplicant.status === 'ACCEPTED' && (
-                      <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', background: 'var(--p-navy)', width: '100%' }} disabled={!!actionLoading}
-                        onClick={() => handleAction(selectedApplicant.id, 'COMPLETED')}>
-                        <Award size={14} /> Đánh dấu hoàn thành (+EXP)
-                      </button>
+                    {isQuest ? (
+                      <>
+                        {selectedApplicant.status !== 'ACCEPTED' && (
+                          <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', width: '100%' }} disabled={!!actionLoading}
+                            onClick={() => handleAction(selectedApplicant.id, 'ACCEPTED')}>
+                            <Check size={14} /> Chấp nhận tham gia Quest
+                          </button>
+                        )}
+                        {selectedApplicant.status === 'ACCEPTED' && (
+                          <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', background: 'var(--p-navy)', width: '100%' }} disabled={!!actionLoading}
+                            onClick={() => handleAction(selectedApplicant.id, 'COMPLETED')}>
+                            <Award size={14} /> Đánh dấu hoàn thành (+EXP)
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {selectedApplicant.status === 'OFFERED' ? (
+                          <div style={{ padding: '10px 14px', borderRadius: '10px', background: 'rgba(139, 92, 246, 0.1)', color: '#7c3aed', fontSize: '0.84rem', fontWeight: '600', textAlign: 'center', border: '1px solid rgba(139, 92, 246, 0.25)' }}>
+                            Đã gửi lời mời nhận việc. Đang chờ ứng viên xác nhận.
+                          </div>
+                        ) : selectedApplicant.status === 'ACCEPTED' ? (
+                          <>
+                            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(22, 163, 74, 0.1)', color: '#16a34a', fontSize: '0.84rem', fontWeight: '700', textAlign: 'center', border: '1px solid rgba(22, 163, 74, 0.25)' }}>
+                              Ứng viên đã xác nhận nhận việc!
+                            </div>
+                            <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', background: 'var(--p-navy)', width: '100%' }} disabled={!!actionLoading}
+                              onClick={() => handleAction(selectedApplicant.id, 'COMPLETED')}>
+                              <Award size={14} /> Đánh dấu hoàn thành (+EXP)
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button className="button primary-button" style={{ fontSize: '0.86rem', gap: '6px', width: '100%' }} disabled={!!actionLoading}
+                              onClick={() => handleAction(selectedApplicant.id, 'OFFERED')}>
+                              <Check size={14} /> Tuyển dụng (Gửi lời mời nhận việc)
+                            </button>
+                            {selectedApplicant.status !== 'SHORTLISTED' && (
+                              <button className="button secondary-button" style={{ fontSize: '0.86rem', gap: '6px', width: '100%' }} disabled={!!actionLoading}
+                                onClick={() => handleAction(selectedApplicant.id, 'SHORTLISTED')}>
+                                <Star size={14} /> Đưa vào danh sách ngắn
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </>
                     )}
                     <button className="button danger-button" style={{ fontSize: '0.86rem', width: '100%' }} disabled={!!actionLoading} onClick={() => setShowRejectInput(true)}>
                       Từ chối ứng viên
@@ -705,6 +728,12 @@ function CandidatesView() {
                   questApplicationId={isQuest ? selectedApplicant.id : null}
                   accent={accent}
                 />
+              ) : selectedApplicant.status === 'OFFER_DECLINED' ? (
+                <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.08)', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: '#b91c1c', fontWeight: 600 }}>
+                    Ứng viên đã từ chối lời mời nhận việc.
+                  </p>
+                </div>
               ) : (
                 <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--p-surface-soft)', textAlign: 'center' }}>
                   <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--p-muted)', fontStyle: 'italic' }}>

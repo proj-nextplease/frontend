@@ -6,6 +6,7 @@ import { AppRouter } from './routes/AppRouter.jsx';
 import { ThemeProvider } from './lib/themeContext.jsx';
 import { AuthModalProvider } from './context/AuthModalContext.jsx';
 import { ConsentGuard } from './components/ConsentGuard.jsx';
+import { GlobalCandidateOfferPush } from './components/GlobalCandidateOfferPush.jsx';
 
 export default function App() {
   return (
@@ -14,6 +15,8 @@ export default function App() {
         <LinkProvider component={Link}>
           <AuthModalProvider>
             <AppRouter />
+            {/* Lắng nghe lời mời toàn cục: thông báo đẩy trên mọi trang web */}
+            <GlobalCandidateOfferPush />
             {/* Đặt ngoài router: điều kiện chặn là "tài khoản chưa đồng ý",
                 không phụ thuộc đang ở route nào. */}
             <ConsentGuard />
@@ -23,3 +26,4 @@ export default function App() {
     </ThemeProvider>
   );
 }
+
