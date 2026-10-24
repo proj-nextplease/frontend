@@ -830,11 +830,11 @@ export function JobsPage() {
     const pParam = parseInt(searchParams.get('page') || '1', 10);
     const validPage = Number.isFinite(pParam) && pParam > 0 ? pParam : 1;
     if (validPage !== page) {
-      setPage(validPage);
+      setTimeout(() => setPage(validPage), 0);
     }
     const previewParam = searchParams.get('preview') || null;
     if (previewParam !== selectedId) {
-      setSelectedId(previewParam);
+      setTimeout(() => setSelectedId(previewParam), 0);
     }
   }, [searchParams]);
 
@@ -859,7 +859,7 @@ export function JobsPage() {
     const targetPage = Math.floor(idx / PAGE_SIZE) + 1;
     const hasExplicitPage = searchParams.has('page');
     if (!hasExplicitPage && targetPage !== page) {
-      setPage(targetPage);
+      setTimeout(() => setPage(targetPage), 0);
       setSearchParams((prev) => {
         const p = new URLSearchParams(prev);
         if (targetPage > 1) p.set('page', String(targetPage));

@@ -102,7 +102,9 @@ export function GlobalCandidateOfferPush() {
 
   useEffect(() => {
     // Initial check
-    checkOffersAndInvites();
+    const initialTimer = setTimeout(() => {
+      checkOffersAndInvites();
+    }, 0);
 
     // Request desktop notification permission gently
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -113,7 +115,10 @@ export function GlobalCandidateOfferPush() {
 
     // Poll every 15 seconds
     const interval = setInterval(checkOffersAndInvites, 15000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+    };
   }, [location.pathname]);
 
   const activeOffers = offers.filter((o) => !dismissedOfferIds.includes(`job_${o.id}`));

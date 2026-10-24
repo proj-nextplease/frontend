@@ -66,7 +66,7 @@ export function NotificationBell({ accent = '#e5533f', style, buttonStyle, onNav
       if (typeof onNavigate === 'function' && n.link.startsWith('/')) {
         onNavigate(n.link);
       } else if (n.link.startsWith('/')) {
-        window.location.href = n.link;
+        window.location.assign(n.link);
       } else {
         window.open(n.link, '_blank', 'noopener');
       }

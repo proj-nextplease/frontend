@@ -49,7 +49,6 @@ import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
 import { ApplicationTimeline } from '../components/ApplicationTimeline.jsx';
 import { InlineStatusTimeline } from '../components/InlineStatusTimeline.jsx';
-import { getMyUserId } from '../api/accountApi.js';
 import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
 import { getJobs, getCompanies, getCompanyDetail, getJobDetail, getFollowedCompanyIds, followCompany, unfollowCompany, getSavedJobs } from '../api/jobApi.js';
 import { useSavedJobs } from '../lib/savedJobs.js';
@@ -897,27 +896,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
-  // Copy Portfolio share link (Overview hero) — fetch the app_users id lazily
-  // on first click rather than on every dashboard load, since it's only
-  // needed for this one action.
-  const [copyLinkStatus, setCopyLinkStatus] = useState('idle'); // idle | copying | done | error
-  async function handleCopyPortfolioLink() {
-    setCopyLinkStatus('copying');
-    try {
-      // Ưu tiên link chữ (/p/phat-nguyen); chỉ rơi về link UUID nếu hồ sơ
-      // chưa kịp có slug — backend sinh slug ngay lần đọc hồ sơ đầu tiên.
-      const shareUrl = portfolio?.publicSlug
-        ? `${window.location.origin}/p/${portfolio.publicSlug}`
-        : `${window.location.origin}/portfolio/view/${await getMyUserId()}`;
-      await navigator.clipboard.writeText(shareUrl);
-      setCopyLinkStatus('done');
-    } catch {
-      setCopyLinkStatus('error');
-    } finally {
-      setTimeout(() => setCopyLinkStatus('idle'), 2200);
-    }
-  }
-
   // "Tải lại" button shown on every tab except Overview and the Portfolio
   // editor (per 2026-07-07 feedback — those two already have their own
   // reload/save affordances). Bumping refreshKey re-runs the fetch effects
@@ -960,7 +938,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   // Organization & Offer Invitation states
   const [pendingOrgInvites, setPendingOrgInvites] = useState([]);
-  const [dismissedPush, setDismissedPush] = useState(false);
   const [acceptingOrgInviteId, setAcceptingOrgInviteId] = useState(null);
   const lastNotifiedOfferIdRef = useRef(null);
 

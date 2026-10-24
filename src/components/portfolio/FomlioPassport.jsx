@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useId } from 'react';
 import {
   BadgeCheck,
   Clock3,
@@ -35,8 +35,9 @@ function LinkedInIcon({ size = 18 }) {
  * 3D Faceted Yellow-Lime Star component exactly matching Figma node 9-126
  */
 export function FigmaStar3D({ size = 36, rotate = 0, style, className }) {
-  const gradientId = useMemo(() => `star-face-${Math.random().toString(36).slice(2, 7)}`, []);
-  const shadowId = useMemo(() => `star-shadow-${Math.random().toString(36).slice(2, 7)}`, []);
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const gradientId = `star-face-${uid}`;
+  const shadowId = `star-shadow-${uid}`;
 
   return (
     <svg
@@ -112,7 +113,8 @@ export function FigmaSparkle({ size = 18, color = '#ffffff', style, className })
  * Rotating Circular "DOWNLOAD CV" Badge with Lime Center Button
  */
 export function DownloadCvBadge({ resumeUrl, onClick, size = 120, className }) {
-  const badgeId = useMemo(() => `cv-badge-${Math.random().toString(36).slice(2, 7)}`, []);
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const badgeId = `cv-badge-${uid}`;
 
   const content = (
     <div className={`fom-download-badge-box ${className || ''}`} style={{ width: size, height: size }}>
@@ -369,8 +371,14 @@ export function FomlioPassport({ profile = {}, isDraft = false }) {
   const [preview, setPreview] = useState(null);
   const [activeSection, setActiveSection] = useState('fom-top');
 
-  const skills = Array.isArray(profile.skills) && profile.skills.length > 0 ? profile.skills : [];
-  const experiences = Array.isArray(profile.experiences) && profile.experiences.length > 0 ? profile.experiences : [];
+  const skills = useMemo(
+    () => (Array.isArray(profile.skills) && profile.skills.length > 0 ? profile.skills : []),
+    [profile.skills]
+  );
+  const experiences = useMemo(
+    () => (Array.isArray(profile.experiences) && profile.experiences.length > 0 ? profile.experiences : []),
+    [profile.experiences]
+  );
   const credentials = (Array.isArray(profile.credentials) ? profile.credentials : []).filter((c) => c.name?.trim());
   const avatar = profile.avatar && Object.keys(profile.avatar).length > 0 ? profile.avatar : { gender: 'female' };
 

@@ -215,8 +215,6 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     () => new URLSearchParams(window.location.search).get(ONBOARDING_TAB_FLAG) === '1',
   );
   const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
-  const [serverPortfolio, setServerPortfolio] = useState(null);
-  const [copiedSuccessLink, setCopiedSuccessLink] = useState(false);
 
   /* Sau khi lưu xong thì tự đưa người dùng về khu vực ứng viên.
      Trước đó màn "Thành công" là ngõ cụt: nó báo xong việc rồi bắt bấm thêm
@@ -303,7 +301,6 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         setIsLoading(true);
         const data = await getMyPortfolio();
         if (data) {
-          setServerPortfolio(data);
           if (data.onboardingCompleted && !isEditing) {
             navigate('/candidates/dashboard');
             return;
