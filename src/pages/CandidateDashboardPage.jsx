@@ -1878,6 +1878,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       setApplySuccessMsg(successMsg);
       showToast('success', successMsg);
       getWallet().then(w => setWallet(w)).catch(() => {});
+      getMyApplications().then(data => setAppliedJobs(data || [])).catch(() => {});
     } catch (err) {
       setOfferActionError(err.message || 'Không thể xác nhận nhận việc. Vui lòng thử lại.');
       showToast('error', err.message || 'Không thể xác nhận nhận việc.');
@@ -1900,6 +1901,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           setAppliedJobs(prev => prev.map(a => a.id === app.id ? { ...a, status: 'OFFER_DECLINED' } : a));
           setApplySuccessMsg('Bạn đã từ chối lời mời nhận việc.');
           showToast('success', 'Bạn đã từ chối lời mời nhận việc.');
+          getMyApplications().then(data => setAppliedJobs(data || [])).catch(() => {});
         } catch (err) {
           setOfferActionError(err.message || 'Không thể từ chối lời mời. Vui lòng thử lại.');
           showToast('error', err.message || 'Không thể từ chối lời mời.');
