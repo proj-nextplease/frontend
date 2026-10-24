@@ -187,7 +187,7 @@ export function DownloadCvBadge({ resumeUrl, onClick, size = 120, className }) {
 /**
  * Signature White Marquee Ticker with Neon Lime Borders & Purple Text
  */
-export function SignatureMarquee({ items }) {
+export function SignatureMarquee({ items, className, reverse = false }) {
   const defaultItems = [
     'Thiết kế giao diện',
     'Thiết kế đồ họa',
@@ -201,8 +201,8 @@ export function SignatureMarquee({ items }) {
   const displayItems = Array.isArray(items) && items.length >= 3 ? items : defaultItems;
 
   return (
-    <div className="fom-marquee-bar" aria-label="Lĩnh vực chuyên môn">
-      <div className="fom-marquee-track">
+    <div className={`fom-marquee-bar ${className || ''}`} aria-label="Lĩnh vực chuyên môn">
+      <div className={`fom-marquee-track ${reverse ? 'reverse' : ''}`}>
         {[0, 1].map((copyIndex) => (
           <div className="fom-marquee-group" key={copyIndex} aria-hidden={copyIndex === 1}>
             {displayItems.map((item, idx) => (
@@ -590,8 +590,11 @@ export function FomlioPassport({ profile = {}, isDraft = false }) {
         </section>
       </div>
 
-      {/* ── 3. SIGNATURE WHITE MARQUEE TICKER (Divider 1) ────────────────────── */}
-      <SignatureMarquee items={skills} />
+      {/* ── 3. SIGNATURE MARQUEE TICKERS (Divider 1) ────────────────────── */}
+      <div className="fom-marquee-stack">
+        <SignatureMarquee items={skills} />
+        <SignatureMarquee items={skills} className="fom-marquee-bar-secondary" reverse />
+      </div>
 
       <div className="fom-shell">
         {/* ── 4. ABOUT SECTION ("VỀ MÌNH") ─────────────────────────────────── */}
