@@ -29,6 +29,8 @@ function readPortfolioDraft() {
  */
 export function CandidatePortfolioPreviewPage() {
   const draft = useMemo(() => readPortfolioDraft(), []);
+  const urlParams = useMemo(() => new URLSearchParams(window.location.search), []);
+  const themeOverride = urlParams.get('theme')?.toUpperCase();
 
   if (!draft) {
     const demoProfile = toPassportProfile({
@@ -39,7 +41,7 @@ export function CandidatePortfolioPreviewPage() {
         school: 'Đại học FPT',
         location: 'Thành phố Hồ Chí Minh',
         bio: 'Mình là một người đam mê sáng tạo, luôn hướng tới việc kết hợp giữa tư duy phân tích thị trường và trải nghiệm người dùng tinh tế để mang lại giá trị thực tế cho từng dự án.',
-        selectedTheme: 'FOMLIO',
+        selectedTheme: themeOverride || 'NHO_NEON',
         openToWork: true,
         socialLinks: {
           email: 'tram.nguyen@fpt.edu.vn',
@@ -94,7 +96,10 @@ export function CandidatePortfolioPreviewPage() {
   }
 
   const normalizedProfile = toPassportProfile({
-    profile: draft.profile || {},
+    profile: {
+      ...(draft.profile || {}),
+      ...(themeOverride ? { selectedTheme: themeOverride } : {}),
+    },
     avatar: draft.avatar || { gender: draft.gender || 'female' },
     experiences: draft.experiences,
     credentials: draft.credentials,

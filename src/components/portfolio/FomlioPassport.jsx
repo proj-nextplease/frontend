@@ -54,13 +54,13 @@ export function FigmaStar3D({ size = 36, rotate = 0, style, className }) {
     >
       <defs>
         <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fffbeb" />
-          <stop offset="40%" stopColor="#fef08a" />
-          <stop offset="100%" stopColor="#facc15" />
+          <stop offset="0%" stopColor="var(--fom-star-light, #fffbeb)" />
+          <stop offset="40%" stopColor="var(--fom-star-mid, #fef08a)" />
+          <stop offset="100%" stopColor="var(--fom-star-main, #facc15)" />
         </linearGradient>
         <linearGradient id={shadowId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#ca8a04" />
-          <stop offset="100%" stopColor="#581c87" />
+          <stop offset="0%" stopColor="var(--fom-star-shadow-start, #ca8a04)" />
+          <stop offset="100%" stopColor="var(--fom-star-shadow-end, #581c87)" />
         </linearGradient>
       </defs>
       {/* 3D Extrusion Side Silhouette for Depth */}
@@ -80,9 +80,9 @@ export function FigmaStar3D({ size = 36, rotate = 0, style, className }) {
       />
       {/* Subtle Bevel Facets */}
       <path d="M 50,7 L 50,52 L 62,35 Z" fill="#ffffff" opacity="0.45" />
-      <path d="M 92,38 L 50,52 L 70,57 Z" fill="#ca8a04" opacity="0.32" />
-      <path d="M 77,87 L 50,52 L 50,72 Z" fill="#78350f" opacity="0.3" />
-      <path d="M 23,87 L 50,52 L 30,57 Z" fill="#fde047" opacity="0.25" />
+      <path d="M 92,38 L 50,52 L 70,57 Z" fill="var(--fom-star-facet-dark, #ca8a04)" opacity="0.32" />
+      <path d="M 77,87 L 50,52 L 50,72 Z" fill="var(--fom-star-facet-deep, #78350f)" opacity="0.3" />
+      <path d="M 23,87 L 50,52 L 30,57 Z" fill="var(--fom-star-facet-light, #fde047)" opacity="0.25" />
       <path d="M 8,38 L 50,52 L 38,35 Z" fill="#ffffff" opacity="0.4" />
     </svg>
   );
@@ -139,8 +139,8 @@ export function DownloadCvBadge({ resumeUrl, onClick, size = 120, className }) {
             </textPath>
           </text>
         </g>
-        {/* Center Neon Lime Disc */}
-        <circle cx="80" cy="80" r="27" fill="#cbf748" className="fom-download-center-disc" />
+        {/* Center Neon Disc */}
+        <circle cx="80" cy="80" r="27" fill="var(--fom-brand)" className="fom-download-center-disc" />
         {/* Download Arrow Icon */}
         <g transform="translate(80, 80)">
           <path

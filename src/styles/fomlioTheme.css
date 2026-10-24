@@ -1463,37 +1463,260 @@
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Theme Nho Neon Override (data-fom-theme="NHO_NEON")
-   Preserved for multi-theme capability
+   Theme Nho Neon (Neon Grape / Orchid Magenta) — Figma Node 10-129
+   "Portfolio Landing Page 2"
    ────────────────────────────────────────────────────────────────────────── */
 
 .fom-page[data-fom-theme='NHO_NEON'] {
-  --fom-brand: #cbf748;
-  --fom-secondary: #7b3aec;
-  --fom-bg: #2a0a55;
+  /* Brand Tokens - Figma Node 10-129 */
+  --fom-brand: #d946ef;              /* Electric Grape / Neon Magenta */
+  --fom-brand-glow: rgba(217, 70, 239, 0.55);
+  --fom-secondary: #c084fc;          /* Light Lavender / Purple Orchid */
+  --fom-secondary-dark: #3b0764;     /* Deep Imperial Purple for Marquee */
+  --fom-ink: #090214;                /* Dark Obsidian Night */
+  --fom-bg: #140326;                 /* Royal Midnight Grape Canvas */
+  --fom-white: #ffffff;
+  --fom-black: #000000;
+
+  /* 3D Star Colors in Nho Neon (Lilac / Pastel Orchid Face + Deep Violet Facets) */
+  --fom-star-light: #fdf4ff;
+  --fom-star-mid: #f5d0fe;
+  --fom-star-main: #e879f9;
+  --fom-star-shadow-start: #c026d3;
+  --fom-star-shadow-end: #3b0764;
+  --fom-star-facet-dark: #c026d3;
+  --fom-star-facet-deep: #581c87;
+  --fom-star-facet-light: #f5d0fe;
+
+  background-color: var(--fom-bg);
 }
 
+/* 3D Star Glow in Nho Neon */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-star-3d {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 16px rgba(217, 70, 239, 0.5));
+}
+
+/* ── AMBIENT RADIANT BACKGROUND AURAS IN NHO NEON ── */
 .fom-page[data-fom-theme='NHO_NEON'] .fom-aura-top-purple {
-  background: radial-gradient(circle, #9b4dde 0%, rgba(155, 77, 222, 0) 70%);
+  background: radial-gradient(circle, #c026d3 0%, rgba(192, 38, 211, 0) 70%);
 }
 
-.fom-page[data-fom-theme='NHO_NEON'] .fom-portrait-halo-ring {
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(155, 77, 222, 0.95) 0%,
-    rgba(123, 58, 236, 0.75) 45%,
-    rgba(123, 58, 236, 0.25) 65%,
-    transparent 75%
-  );
-  box-shadow: 0 0 80px rgba(123, 58, 236, 0.5);
+.fom-page[data-fom-theme='NHO_NEON'] .fom-aura-hero-lime {
+  background: radial-gradient(circle, rgba(217, 70, 239, 0.45) 0%, rgba(217, 70, 239, 0) 70%);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-aura-mid-violet {
+  background: radial-gradient(circle, #7e22ce 0%, rgba(126, 34, 206, 0) 70%);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-aura-bottom-lime {
+  background: radial-gradient(circle, rgba(232, 121, 249, 0.35) 0%, rgba(232, 121, 249, 0) 70%);
+}
+
+/* ── NAVBAR & HEADER ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-brand-name {
+  color: var(--fom-brand);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-brand-dot {
+  color: var(--fom-brand);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-floating-navbar {
+  border-color: rgba(217, 70, 239, 0.3);
+  box-shadow: 0 8px 32px rgba(192, 38, 211, 0.2);
 }
 
 .fom-page[data-fom-theme='NHO_NEON'] .fom-floating-navbar .fom-nav-pill.active {
   background: var(--fom-brand);
-  color: var(--fom-secondary);
+  color: var(--fom-white);
+  box-shadow: 0 4px 18px rgba(217, 70, 239, 0.45);
 }
 
 .fom-page[data-fom-theme='NHO_NEON'] .fom-hire-btn {
   background: var(--fom-brand);
-  color: var(--fom-secondary);
+  color: var(--fom-white);
+  box-shadow: 0 6px 22px rgba(217, 70, 239, 0.38);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hire-btn:hover {
+  background: #e879f9;
+  box-shadow: 0 10px 30px rgba(217, 70, 239, 0.55);
+}
+
+/* ── HERO SECTION ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-portrait-halo-ring {
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(217, 70, 239, 0.95) 0%,
+    rgba(192, 38, 211, 0.75) 45%,
+    rgba(147, 51, 234, 0.3) 65%,
+    rgba(147, 51, 234, 0) 75%
+  );
+  box-shadow: 0 0 90px rgba(217, 70, 239, 0.45);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-text-highlight {
+  color: var(--fom-brand);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-pill-tag-dot {
+  background: var(--fom-brand);
+  box-shadow: 0 0 12px var(--fom-brand);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-btn-row .fom-btn-solid-white {
+  background: var(--fom-white);
+  color: #140326;
+  box-shadow: 0 6px 24px rgba(255, 255, 255, 0.3);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-btn-row .fom-btn-glass-ghost {
+  border-color: rgba(217, 70, 239, 0.45);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-hero-btn-row .fom-btn-glass-ghost:hover {
+  border-color: var(--fom-brand);
+  background: rgba(217, 70, 239, 0.18);
+}
+
+/* ── ROTATING CV BADGE ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-download-badge-box:hover .fom-download-center-disc {
+  filter: drop-shadow(0 0 16px var(--fom-brand));
+}
+
+/* ── SIGNATURE WHITE & GRAPE MARQUEE TICKER ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-bar {
+  border-top: 3px solid var(--fom-brand);
+  border-bottom: 3px solid var(--fom-brand);
+  box-shadow: 0 4px 24px rgba(217, 70, 239, 0.35);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-label {
+  color: var(--fom-secondary-dark);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-marquee-bullet {
+  color: var(--fom-brand);
+}
+
+/* ── ABOUT SECTION ("VỀ MÌNH") ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-pill-tag.purple {
+  background: rgba(147, 51, 234, 0.25);
+  border-color: rgba(217, 70, 239, 0.4);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-diamond-outer {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(147, 51, 234, 0.35) 50%,
+    rgba(217, 70, 239, 0.32) 100%
+  );
+  border: 1.5px solid rgba(217, 70, 239, 0.4);
+  box-shadow: 0 0 60px rgba(192, 38, 211, 0.45), 0 0 40px rgba(217, 70, 239, 0.3);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-diamond-glow {
+  background: radial-gradient(circle at 100% 100%, rgba(217, 70, 239, 0.55) 0%, transparent 60%);
+}
+
+/* ── ACTIVITIES & STATS ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-star-icon {
+  color: var(--fom-brand);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-milestone-tag {
+  color: var(--fom-brand);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-stat-card:hover {
+  border-color: rgba(217, 70, 239, 0.5);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-stat-plus {
+  color: var(--fom-brand);
+}
+
+/* ── SERVICES / SKILLS ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-service-card:hover {
+  border-color: rgba(217, 70, 239, 0.5);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 24px rgba(217, 70, 239, 0.25);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-service-icon-box {
+  background: rgba(217, 70, 239, 0.12);
+  border-color: rgba(217, 70, 239, 0.3);
+  color: var(--fom-brand);
+}
+
+/* ── PORTFOLIO PROJECT SHOWCASES ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-container.fom-aura-purple {
+  background: radial-gradient(circle at 75% 45%, rgba(217, 70, 239, 0.45) 0%, rgba(35, 5, 50, 0.96) 65%);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-container.fom-aura-plum {
+  background: radial-gradient(circle at 75% 45%, rgba(192, 132, 252, 0.42) 0%, rgba(40, 8, 55, 0.96) 65%);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-container.fom-aura-amber {
+  background: radial-gradient(circle at 75% 45%, rgba(244, 114, 182, 0.38) 0%, rgba(45, 10, 40, 0.96) 65%);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-container.fom-aura-olive {
+  background: radial-gradient(circle at 75% 45%, rgba(168, 85, 247, 0.38) 0%, rgba(25, 8, 45, 0.96) 65%);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-showcase-container.fom-aura-lime {
+  background: radial-gradient(circle at 75% 45%, rgba(232, 121, 249, 0.45) 0%, rgba(30, 5, 45, 0.96) 65%);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-project-sub-title {
+  color: var(--fom-brand);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-mockup-frame {
+  border: 2px solid rgba(232, 121, 249, 0.85);
+  box-shadow: 0 0 35px rgba(217, 70, 239, 0.32), 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-mockup-screen-tag {
+  background: rgba(217, 70, 239, 0.16);
+  border-color: rgba(217, 70, 239, 0.4);
+  color: var(--fom-brand);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-widget-icon {
+  color: var(--fom-brand);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-verified-badge-inline {
+  background: var(--fom-brand);
+  color: var(--fom-white);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-proof-link {
+  color: var(--fom-brand);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-credential-icon {
+  color: var(--fom-brand);
+}
+
+/* ── CONTACT & FOOTER ── */
+.fom-page[data-fom-theme='NHO_NEON'] .fom-contact-pill:hover {
+  border-color: rgba(217, 70, 239, 0.5);
+  background: rgba(217, 70, 239, 0.14);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-contact-pill.cv-btn {
+  background: var(--fom-brand);
+  border-color: var(--fom-brand);
+  color: var(--fom-white);
+  box-shadow: 0 4px 20px rgba(217, 70, 239, 0.4);
+}
+
+.fom-page[data-fom-theme='NHO_NEON'] .fom-contact-pill.cv-btn:hover {
+  background: #e879f9;
+  box-shadow: 0 8px 28px rgba(217, 70, 239, 0.6);
 }
