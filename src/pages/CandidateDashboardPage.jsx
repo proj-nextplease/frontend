@@ -670,7 +670,7 @@ export function CandidateContentSkeleton({ variant = 'overview' }) {
  * Hiển thị dạng "tên-miền/p/slug" thay vì ô nhập trống, để người dùng thấy
  * link của mình trông ra sao trước khi sửa — đây là thứ họ sẽ dán vào bio.
  */
-function PublicLinkEditor({ slug, onSaved, isExported }) {
+function PublicLinkEditor({ slug, onSaved, isExported, hasUnpublishedChanges }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(slug || '');
   const [status, setStatus] = useState({ type: 'idle', message: '' });
@@ -732,6 +732,47 @@ function PublicLinkEditor({ slug, onSaved, isExported }) {
             style={{ padding: '3px 10px', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.22)', background: 'transparent', color: 'rgba(255,255,255,0.8)', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}>
             Đổi
           </button>
+          {isExported && (
+            <a
+              href={`/p/${slug}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '3px 10px',
+                borderRadius: '999px',
+                border: '1px solid rgba(16, 185, 129, 0.4)',
+                background: 'rgba(16, 185, 129, 0.12)',
+                color: '#34d399',
+                fontWeight: 700,
+                fontSize: '0.75rem',
+                textDecoration: 'none',
+                cursor: 'pointer'
+              }}
+              title="Mở website công khai đang phát hành của bạn trong tab mới"
+            >
+              <ExternalLink size={12} /> Mở web
+            </a>
+          )}
+          {isExported && hasUnpublishedChanges && (
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontSize: '0.72rem',
+              color: '#facc15',
+              background: 'rgba(234, 179, 8, 0.15)',
+              border: '1px solid rgba(234, 179, 8, 0.3)',
+              padding: '2px 9px',
+              borderRadius: '999px',
+              fontWeight: 700
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#facc15', display: 'inline-block' }} />
+              Có thay đổi chưa cập nhật lên web
+            </span>
+          )}
         </div>
       )}
     </div>
@@ -1945,7 +1986,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
         setWallet(prev => prev ? { ...prev, npBalance: res.balanceAfter } : prev);
       }
       if (res?.publicSlug) {
-        setPortfolio(prev => prev ? { ...prev, publicSlug: res.publicSlug, isPublic: true, isExported: true } : prev);
+        setPortfolio(prev => prev ? {
+          ...prev,
+          publicSlug: res.publicSlug,
+          isPublic: true,
+          isExported: true,
+          hasUnpublishedChanges: false
+        } : prev);
       }
       // Tự động sao chép link website ngay khi xuất thành công!
       const fullUrl = res?.publicUrl?.startsWith('http')
@@ -1954,9 +2001,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       try {
         await navigator.clipboard.writeText(fullUrl);
         setCopiedExportUrl(true);
-        showToast('success', 'Xuất bản website thành công và đã tự động sao chép link!');
+        showToast('success', res?.isUpdate
+          ? 'Cập nhật website thành công và đã tự động sao chép link!'
+          : 'Xuất bản website thành công và đã tự động sao chép link!');
       } catch {
-        showToast('success', 'Xuất bản website portfolio thành công!');
+        showToast('success', res?.isUpdate
+          ? 'Cập nhật website portfolio thành công!'
+          : 'Xuất bản website portfolio thành công!');
       }
       getWallet().then(w => setWallet(w)).catch(() => {});
     } catch (err) {
@@ -2415,16 +2466,24 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         type="button"
                         className="np-pp-btn"
                         onClick={() => { setExportError(''); setExportResult(null); setShowExportModal(true); }}
-                        title="Xuất bản Portfolio thành website công khai chính thức (1.000 Điểm)"
+                        title={portfolio?.isExported ? "Cập nhật các thay đổi mới nhất từ bản nháp lên website công khai (1.000 Điểm)" : "Xuất bản Portfolio thành website công khai chính thức (1.000 Điểm)"}
                         style={{ border: '1px solid rgba(16, 185, 129, 0.45)', color: '#10b981' }}
                       >
-                        <Globe size={15} /> Xuất website (1.000 Điểm)
+                        {portfolio?.isExported ? (
+                          <>
+                            <RefreshCw size={15} /> Cập nhật website (1.000 Điểm)
+                          </>
+                        ) : (
+                          <>
+                            <Globe size={15} /> Xuất website (1.000 Điểm)
+                          </>
+                        )}
                       </button>
                       <button
                         type="button"
                         className="np-pp-btn"
                         onClick={() => setShowPreviewModal(true)}
-                        title="Xem trước giao diện Portfolio trong popup"
+                        title="Xem trước giao diện bản nháp Portfolio trong popup"
                       >
                         <Eye size={15} /> Xem thử
                       </button>
@@ -2435,6 +2494,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <PublicLinkEditor
                   slug={portfolio?.publicSlug}
                   onSaved={(next) => setPortfolio((prev) => (prev ? { ...prev, publicSlug: next } : prev))}
+                  isExported={portfolio?.isExported}
+                  hasUnpublishedChanges={portfolio?.hasUnpublishedChanges}
                 />
               </div>
 
@@ -4715,7 +4776,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           <div className="glass-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="glass-modal-header">
               <Globe size={20} color="#10b981" />
-              <h2>Xuất Portfolio thành Website</h2>
+              <h2>{portfolio?.isExported ? 'Cập nhật Website Portfolio' : 'Xuất Portfolio thành Website'}</h2>
             </div>
             <div className="glass-modal-body">
               {exportResult ? (
@@ -4723,9 +4784,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
                     <BadgeCheck size={32} />
                   </div>
-                  <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 800, color: 'var(--c-ink)' }}>Xuất bản Website thành công!</h3>
+                  <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 800, color: 'var(--c-ink)' }}>
+                    {exportResult.isUpdate ? 'Cập nhật Website thành công!' : 'Xuất bản Website thành công!'}
+                  </h3>
                   <p style={{ margin: '0 0 16px', fontSize: '0.88rem', color: 'var(--c-muted)', lineHeight: 1.5 }}>
-                    Portfolio của bạn đã được xuất bản ra đường dẫn công khai, sẵn sàng gửi tới nhà tuyển dụng.
+                    {exportResult.isUpdate
+                      ? 'Phiên bản mới nhất của Portfolio đã được triển khai lên website công khai và tự động sao chép link.'
+                      : 'Portfolio của bạn đã được xuất bản ra đường dẫn công khai, sẵn sàng gửi tới nhà tuyển dụng.'}
                   </p>
                   {(() => {
                     const fullExportUrl = exportResult.publicUrl?.startsWith('http')
@@ -4775,11 +4840,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               ) : (
                 <div>
                   <p style={{ margin: '0 0 16px', fontSize: '0.88rem', color: 'var(--c-muted)', lineHeight: 1.6 }}>
-                    Tính năng này đóng gói hồ sơ năng lực và các minh chứng Proof of Work của bạn thành một website chuyên nghiệp công khai có thể gửi ứng tuyển bất kỳ đâu.
+                    {portfolio?.isExported
+                      ? 'Bạn đang cập nhật các thông tin, kỹ năng và minh chứng mới nhất từ bản nháp lên link website công khai. Link website hiện tại của bạn sẽ hiển thị nội dung mới ngay sau khi xác nhận.'
+                      : 'Tính năng này đóng gói hồ sơ năng lực và các minh chứng Proof of Work của bạn thành một website chuyên nghiệp công khai có thể gửi ứng tuyển bất kỳ đâu.'}
                   </p>
                   <div style={{ background: 'var(--c-surface-soft)', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px', border: '1px solid var(--c-line)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.86rem' }}>
-                      <span style={{ color: 'var(--c-muted)' }}>Phí xuất bản:</span>
+                      <span style={{ color: 'var(--c-muted)' }}>Phí {portfolio?.isExported ? 'cập nhật snapshot:' : 'xuất bản:'}</span>
                       <strong style={{ color: 'var(--c-ink)' }}>1.000 Điểm / lần</strong>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.86rem' }}>
@@ -4813,7 +4880,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         disabled={exportLoading}
                         onClick={handleExportPortfolio}
                       >
-                        {exportLoading ? 'Đang xuất bản...' : 'Xác nhận xuất website (1.000 Điểm)'}
+                        {exportLoading ? 'Đang thực hiện...' : (portfolio?.isExported ? 'Xác nhận cập nhật website (1.000 Điểm)' : 'Xác nhận xuất website (1.000 Điểm)')}
                       </button>
                     )}
                     <button
@@ -4876,7 +4943,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   border: '1px solid rgba(234, 179, 8, 0.3)',
                   fontWeight: 700,
                 }}>
-                  Xem trước tại chỗ
+                  Xem trước bản nháp
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -4891,7 +4958,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     setShowExportModal(true);
                   }}
                 >
-                  <Globe size={14} /> Xuất website (1.000 Điểm)
+                  <Globe size={14} /> {portfolio?.isExported ? 'Cập nhật website (1.000 Điểm)' : 'Xuất website (1.000 Điểm)'}
                 </button>
                 <button
                   type="button"
