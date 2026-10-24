@@ -24,6 +24,12 @@ export const PORTFOLIO_THEMES = [
     hint: 'Xanh hoàng gia, cốm neon & trắng (Figma 10-129)',
     colorBox: ['#160ae6', '#cbf748'],
   },
+  {
+    id: 'LILAC_PASTEL',
+    name: 'Oải Hương Pastel',
+    hint: 'Tím pastel, hồng phấn & chữ nghệ thuật (Figma 10-132)',
+    colorBox: ['#ede4f7', '#fce7f3'],
+  },
 ];
 
 /** Giao diện dùng khi hồ sơ chưa chọn, hoặc ghi một mã không còn tồn tại. */

@@ -3,7 +3,7 @@
    Dựng theo chuẩn thiết kế Figma "PORTFOLIO-TEMP", Node 9-126 (Portfolio Landing Page 1).
    ────────────────────────────────────────────────────────────────────────── */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Dancing+Script:wght@500;600;700&display=swap');
 
 .fom-page {
   /* Brand Tokens - Figma Node 9-126 */
@@ -1946,3 +1946,519 @@
   background: #d9f99d;
   box-shadow: 0 8px 28px rgba(203, 247, 72, 0.65);
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Theme LILAC_PASTEL (Oải Hương Pastel) — Giao diện Portfolio công khai của ứng viên.
+   Dựng chuẩn xác theo thiết kế Figma "PORTFOLIO-TEMP", Node 10-132 (Column 4).
+   Tone màu pastel tím lavender & hồng phấn ấm áp, chữ nghệ thuật mềm mại.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] {
+  /* Brand Tokens - Figma Node 10-132 (Pastel Lilac & Blush Rose) */
+  --fom-brand: #a855f7;              /* Delicate Lilac Purple */
+  --fom-brand-glow: rgba(168, 85, 247, 0.35);
+  --fom-secondary: #f472b6;          /* Pastel Rose Blush */
+  --fom-secondary-dark: #db2777;     /* Deep Berry Rose */
+  --fom-ink: #1e1035;                /* Deep Plum Text */
+  --fom-bg: #f7f0fa;                 /* Soft Light Lavender-Lilac Canvas */
+  --fom-white: #ffffff;
+  --fom-black: #110826;
+
+  /* 3D Star Colors in Node 10-132 (Soft Pastel Gold with Lilac Shadows) */
+  --fom-star-light: #ffffff;
+  --fom-star-mid: #fef08a;
+  --fom-star-main: #fde047;
+  --fom-star-shadow-start: #f59e0b;
+  --fom-star-shadow-end: #c084fc;
+  --fom-star-facet-dark: #d97706;
+  --fom-star-facet-deep: #92400e;
+  --fom-star-facet-light: #fef9c3;
+
+  background-color: var(--fom-bg);
+  color: var(--fom-ink);
+}
+
+/* 3D Star Glow in Lilac Pastel */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-star-3d {
+  filter: drop-shadow(0 4px 10px rgba(107, 33, 168, 0.2)) drop-shadow(0 0 14px rgba(192, 132, 252, 0.45));
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-sparkle path {
+  fill: #a855f7;
+}
+
+/* ── AMBIENT RADIANT BACKGROUND AURAS IN LILAC PASTEL ── */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-aura-top-purple {
+  background: radial-gradient(circle, rgba(233, 213, 255, 0.8) 0%, rgba(247, 240, 250, 0) 70%);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-aura-hero-lime {
+  background: radial-gradient(circle, rgba(252, 231, 243, 0.75) 0%, rgba(247, 240, 250, 0) 70%);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-aura-mid-violet {
+  background: radial-gradient(circle, rgba(233, 213, 255, 0.65) 0%, rgba(247, 240, 250, 0) 70%);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-aura-bottom-lime {
+  background: radial-gradient(circle, rgba(252, 231, 243, 0.7) 0%, rgba(247, 240, 250, 0) 70%);
+}
+
+/* ── NAVBAR & HEADER IN LILAC PASTEL ── */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-brand-name {
+  color: #3b0764;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-brand-dot {
+  color: #ec4899;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-floating-navbar {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(192, 132, 252, 0.35);
+  box-shadow: 0 8px 30px rgba(107, 33, 168, 0.08);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-floating-navbar .fom-nav-pill {
+  color: #581c87;
+  font-weight: 600;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-floating-navbar .fom-nav-pill:hover {
+  color: #7e22ce;
+  background: rgba(243, 232, 255, 0.6);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-floating-navbar .fom-nav-pill.active {
+  background: #ede4f7;
+  color: #581c87;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.25);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hire-btn {
+  background: linear-gradient(135deg, #7e22ce 0%, #a855f7 100%);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 6px 20px rgba(126, 34, 206, 0.28);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hire-btn:hover {
+  background: linear-gradient(135deg, #6b21a8 0%, #9333ea 100%);
+  box-shadow: 0 8px 25px rgba(126, 34, 206, 0.4);
+}
+
+/* ── HERO SECTION IN LILAC PASTEL ── */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-portrait-halo-ring {
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(243, 232, 255, 0.98) 0%,
+    rgba(237, 228, 247, 0.88) 45%,
+    rgba(244, 114, 182, 0.35) 70%,
+    rgba(216, 180, 254, 0) 85%
+  );
+  box-shadow: 0 0 75px rgba(192, 132, 252, 0.4);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-portrait-doodles {
+  stroke: rgba(147, 51, 234, 0.45);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-download-badge-box .fom-download-center-disc {
+  background: #ede4f7;
+  border: 2px solid #c084fc;
+  color: #6b21a8;
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.25);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-download-badge-box text {
+  fill: #581c87;
+  font-weight: 700;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-pill-tag {
+  background: #ede4f7;
+  border-color: rgba(168, 85, 247, 0.35);
+  color: #6b21a8;
+  font-weight: 700;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-pill-tag-dot {
+  background: #ec4899;
+  box-shadow: 0 0 10px #ec4899;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-heading {
+  color: #1e1035;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-text-highlight {
+  color: #7e22ce;
+  text-decoration: underline wavy rgba(236, 72, 153, 0.4);
+  text-underline-offset: 6px;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-lede {
+  color: #4c3a5e;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-btn-row .fom-btn-solid-white {
+  background: #7e22ce;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(126, 34, 206, 0.28);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-btn-row .fom-btn-solid-white:hover {
+  background: #6b21a8;
+  box-shadow: 0 8px 26px rgba(126, 34, 206, 0.4);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-btn-row .fom-btn-glass-ghost {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(168, 85, 247, 0.4);
+  color: #581c87;
+  font-weight: 700;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-btn-row .fom-btn-glass-ghost:hover {
+  background: #ede4f7;
+  border-color: #a855f7;
+  color: #6b21a8;
+}
+
+/* ── DOUBLE MARQUEE RUNNING TICKERS IN LILAC PASTEL ── */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-bar {
+  background: #ede4f7;
+  border-top: 1.5px solid rgba(168, 85, 247, 0.3);
+  border-bottom: 1.5px solid rgba(168, 85, 247, 0.3);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-label {
+  color: #581c87;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-bullet {
+  color: #ec4899;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-bar-secondary {
+  background: #fce7f3;
+  border-top: 1.5px solid rgba(244, 114, 182, 0.35);
+  border-bottom: 1.5px solid rgba(244, 114, 182, 0.35);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-bar-secondary .fom-marquee-label {
+  color: #9d174d;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-bar-secondary .fom-marquee-bullet {
+  color: #7e22ce;
+}
+
+/* ── ABOUT ME SECTION IN LILAC PASTEL ── */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-about-section .fom-about-heading {
+  color: #1e1035;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-about-section .fom-about-desc {
+  color: #4c3a5e;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-about-section .fom-pill-tag.purple {
+  background: #ede4f7;
+  border: 1.5px solid rgba(168, 85, 247, 0.35);
+  color: #6b21a8;
+  font-weight: 700;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-about-section .fom-btn-solid-white {
+  background: #7e22ce;
+  color: #ffffff;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-diamond-outer {
+  background: linear-gradient(135deg, rgba(237, 228, 247, 0.95) 0%, rgba(252, 231, 243, 0.9) 100%);
+  border: 2px solid #c084fc;
+  box-shadow: 0 0 45px rgba(192, 132, 252, 0.35);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-diamond-glow {
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.35) 0%, rgba(192, 132, 252, 0) 70%);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-star-icon {
+  color: #7e22ce;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-milestone-tag {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  color: #581c87;
+}
+
+/* ── STATS & SERVICES IN LILAC PASTEL ── */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stat-card {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(168, 85, 247, 0.25);
+  box-shadow: 0 8px 24px rgba(147, 51, 234, 0.08);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stat-card:hover {
+  border-color: #a855f7;
+  box-shadow: 0 12px 32px rgba(168, 85, 247, 0.15);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stat-num {
+  color: #6b21a8;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stat-plus {
+  color: #db2777;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stat-desc {
+  color: #594a65;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-service-card {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1.5px solid rgba(168, 85, 247, 0.2);
+  box-shadow: 0 6px 20px rgba(147, 51, 234, 0.06);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-service-card:hover {
+  background: #ffffff;
+  border-color: #a855f7;
+  box-shadow: 0 12px 32px rgba(168, 85, 247, 0.15);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-service-icon-box {
+  background: #ede4f7;
+  color: #7e22ce;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-service-title {
+  color: #1e1035;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-service-desc {
+  color: #594a65;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-section-h2 {
+  color: #1e1035;
+}
+
+/* ── ALTERNATING PORTFOLIO PROJECT SHOWCASES (FIGMA NODE 10-132) ── */
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-portfolio-intro-section .fom-pill-tag.purple,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-container .fom-pill-tag.purple {
+  background: #ede4f7;
+  border: 1.5px solid rgba(168, 85, 247, 0.35);
+  color: #6b21a8;
+  font-weight: 700;
+}
+
+/* ODD PROJECTS (1, 3, 5, 7) - Soft Pastel Lavender (#ede4f7) */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(odd) .fom-showcase-container {
+  background: #ede4f7;
+  border-radius: 36px;
+  box-shadow: 0 12px 40px rgba(126, 34, 206, 0.08);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(odd) .fom-project-num-title {
+  font-family: 'Dancing Script', 'Alex Brush', cursive, sans-serif;
+  font-size: 3.6rem;
+  font-weight: 700;
+  color: #6b21a8;
+  line-height: 1.1;
+  margin: 0 0 6px;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(odd) .fom-project-sub-title {
+  color: #4a1d6d;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(odd) .fom-project-main-desc {
+  color: #4c3a5e;
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(odd) .fom-mockup-frame {
+  border: 2px solid rgba(147, 51, 234, 0.3);
+  box-shadow: 0 16px 40px rgba(126, 34, 206, 0.12);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(odd) .fom-project-info-card {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1.5px solid rgba(147, 51, 234, 0.22);
+  border-radius: 20px;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(odd) .fom-info-card-title {
+  color: #581c87;
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(odd) .fom-info-card-text {
+  color: #6b21a8;
+  font-size: 0.92rem;
+}
+
+/* EVEN PROJECTS (2, 4, 6) - Warm Pastel Blush Pink (#fce7f3) */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(even) .fom-showcase-container {
+  background: #fce7f3;
+  border-radius: 36px;
+  box-shadow: 0 12px 40px rgba(219, 39, 119, 0.08);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(even) .fom-project-num-title {
+  font-family: 'Dancing Script', 'Alex Brush', cursive, sans-serif;
+  font-size: 3.6rem;
+  font-weight: 700;
+  color: #db2777;
+  line-height: 1.1;
+  margin: 0 0 6px;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(even) .fom-project-sub-title {
+  color: #831843;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(even) .fom-project-main-desc {
+  color: #502838;
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(even) .fom-mockup-frame {
+  border: 2px solid rgba(244, 114, 182, 0.4);
+  box-shadow: 0 16px 40px rgba(219, 39, 119, 0.12);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(even) .fom-project-info-card {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1.5px solid rgba(219, 39, 119, 0.25);
+  border-radius: 20px;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(even) .fom-info-card-title {
+  color: #9d174d;
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(even) .fom-info-card-text {
+  color: #be185d;
+  font-size: 0.92rem;
+}
+
+/* Shared Project Elements in Lilac Pastel */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-verified-badge-inline {
+  background: #9333ea;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-proof-link {
+  color: #7e22ce;
+  font-weight: 600;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-wrapper:nth-child(even) .fom-proof-link {
+  color: #be185d;
+}
+
+/* Signature Marquee Dividers between projects in Lilac Pastel */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-project-showcases .fom-marquee-bar {
+  background: #f5ebfa;
+  border-top: 1.5px solid rgba(168, 85, 247, 0.2);
+  border-bottom: 1.5px solid rgba(168, 85, 247, 0.2);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-project-showcases .fom-marquee-label {
+  color: #581c87;
+  font-style: italic;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-project-showcases .fom-marquee-bullet {
+  color: #ec4899;
+}
+
+/* ── CREDENTIALS SECTION IN LILAC PASTEL ── */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-credential-card {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1.5px solid rgba(168, 85, 247, 0.22);
+  box-shadow: 0 6px 20px rgba(147, 51, 234, 0.06);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-credential-icon {
+  color: #7e22ce;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-credential-name {
+  color: #1e1035;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-credential-meta {
+  color: #594a65;
+}
+
+/* ── CONTACT & FOOTER IN LILAC PASTEL ── */
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-section .fom-pill-tag.purple {
+  background: #ede4f7;
+  border: 1.5px solid rgba(168, 85, 247, 0.35);
+  color: #6b21a8;
+  font-weight: 700;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-subtitle {
+  color: #4c3a5e;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-pill {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1.5px solid rgba(168, 85, 247, 0.3);
+  color: #581c87;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-pill:hover {
+  border-color: #a855f7;
+  background: #ede4f7;
+  color: #6b21a8;
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-pill.cv-btn {
+  background: linear-gradient(135deg, #7e22ce 0%, #a855f7 100%);
+  border-color: transparent;
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 4px 20px rgba(126, 34, 206, 0.28);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-pill.cv-btn:hover {
+  background: linear-gradient(135deg, #6b21a8 0%, #9333ea 100%);
+  box-shadow: 0 8px 28px rgba(126, 34, 206, 0.4);
+}
+
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-bottom-legal {
+  color: #6b5a7d;
+}
+
