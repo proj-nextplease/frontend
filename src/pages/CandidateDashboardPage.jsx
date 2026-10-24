@@ -2149,80 +2149,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               <span className="np-area-wallet-unit">Điểm</span>
               <Plus size={13} strokeWidth={2.6} />
             </button>
-            {/* Mặc định NotificationBell tự neo `position: fixed` ở góc trên
-                phải — di sản từ hồi khu vực này chưa có thanh điều hướng. Giờ
-                có SiteHeader rồi nên nó đè lên menu tài khoản; kéo về nằm
-                trong thanh tab. Dùng `relative` (không phải `static`) để bảng
-                thông báo vẫn neo đúng vào nút. Hai trang còn lại dùng component
-                này (BusinessPage, AdminB2bReview) vẫn giữ mặc định cũ. */}
-            <NotificationBell
-              accent={EMERALD_ACCENT}
-              onNavigate={(url) => {
-                if (url.includes('/applications')) {
-                  handleTabChange('MY_APPLICATIONS');
-                } else if (url.includes('/overview')) {
-                  handleTabChange('OVERVIEW');
-                } else if (url.startsWith('/')) {
-                  navigate(url);
-                }
-              }}
-              style={{ position: 'relative', top: 'auto', right: 'auto', zIndex: 'auto' }}
-              buttonStyle={{
-                width: '38px', height: '38px', borderRadius: '8px',
-                border: '1px solid rgba(255,255,255,0.2)', background: 'transparent',
-                boxShadow: 'none', color: 'rgba(233,247,242,0.62)',
-              }}
-            />
           </div>
         </div>
       </div>
 
       {/* ─── Main Workspace Content ─── */}
       <main className="candidate-portal-main">
-        {/* On-Screen Floating Push Alert for Job Offers & Org Invites */}
-        {totalActionableInvites > 0 && !dismissedPush && (
-          <div className="np-screen-push" role="alert">
-            <div className="np-screen-push-header">
-              <span className="np-screen-push-badge">
-                <Sparkles size={13} />
-                {offeredJobs.length > 0 ? 'Lời mời nhận việc mới' : 'Lời mời tổ chức mới'}
-              </span>
-            </div>
-            <h4 className="np-screen-push-title">
-              {offeredJobs.length > 0
-                ? `🎉 Bạn có ${offeredJobs.length} lời mời nhận việc đang chờ phản hồi!`
-                : `🏢 Bạn nhận được lời mời tham gia từ ${pendingOrgInvites[0]?.companyName || 'tổ chức'}!`}
-            </h4>
-            <p className="np-screen-push-body">
-              {offeredJobs.length > 0
-                ? `${offeredJobs[0].company_name || 'Doanh nghiệp'} đã gửi lời mời nhận việc cho vị trí "${offeredJobs[0].job_title}". Hãy kiểm tra chi tiết và phản hồi sớm!`
-                : `Bạn được mời tham gia tổ chức với vai trò ${pendingOrgInvites[0]?.nodeRole || 'Thành viên'}.`}
-            </p>
-            <div className="np-screen-push-actions">
-              <button
-                type="button"
-                className="np-screen-push-cta"
-                onClick={() => {
-                  if (offeredJobs.length > 0) {
-                    handleTabChange('MY_APPLICATIONS');
-                  } else {
-                    handleTabChange('OVERVIEW');
-                  }
-                  setDismissedPush(true);
-                }}
-              >
-                <Check size={14} /> Xem & Phản hồi ngay
-              </button>
-              <button
-                type="button"
-                className="np-screen-push-dismiss"
-                onClick={() => setDismissedPush(true)}
-              >
-                Để sau
-              </button>
-            </div>
-          </div>
-        )}
         {applySuccessMsg && (
           <div style={{
             background: 'var(--surface)',

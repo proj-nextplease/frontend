@@ -5,6 +5,7 @@ import { supabase } from '../../services/supabaseClient.js';
 import { getMyPortfolio } from '../../api/portfolioApi.js';
 import { logout } from '../../api/httpClient.js';
 import { BrandWordmark } from '../BrandWordmark.jsx';
+import { NotificationBell } from '../NotificationBell.jsx';
 
 export function Header() {
   const navigate = useNavigate();
@@ -121,61 +122,83 @@ export function Header() {
         </Link>
         <nav className="nav-links" aria-label="Primary navigation">
           {session && portfolio ? (
-            <div className="user-avatar-container" ref={dropdownRef}>
-              <button
-                className="user-avatar-btn"
-                onClick={() => setShowDropdown(!showDropdown)}
-                aria-label="User profile menu"
-                type="button"
-              >
-                {portfolio.name ? portfolio.name.charAt(0).toUpperCase() : 'U'}
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <NotificationBell
+                accent="#a855f7"
+                style={{ position: 'relative', top: 'auto', right: 'auto', zIndex: 'auto' }}
+                buttonStyle={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid var(--line, rgba(255, 255, 255, 0.15))',
+                  color: 'inherit',
+                  boxShadow: 'none',
+                }}
+                onNavigate={(link) => {
+                  if (link.startsWith('/')) {
+                    navigate(link);
+                  } else {
+                    window.location.href = link;
+                  }
+                }}
+              />
+              <div className="user-avatar-container" ref={dropdownRef}>
+                <button
+                  className="user-avatar-btn"
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  aria-label="User profile menu"
+                  type="button"
+                >
+                  {portfolio.name ? portfolio.name.charAt(0).toUpperCase() : 'U'}
+                </button>
 
-              {showDropdown && (
-                <div className="nav-dropdown-menu">
-                  <div className="dropdown-user-info">
-                    <span className="user-name">{portfolio.name || 'Ứng viên'}</span>
-                    <span className="user-school">{portfolio.school || 'Chưa cập nhật trường học'}</span>
-                    <span className="user-wallet">
-                      <WalletCards size={14} />
-                      {portfolio.npBalance !== undefined ? portfolio.npBalance.toLocaleString() : '0'} NP
-                    </span>
+                {showDropdown && (
+                  <div className="nav-dropdown-menu">
+                    <div className="dropdown-user-info">
+                      <span className="user-name">{portfolio.name || 'Ứng viên'}</span>
+                      <span className="user-school">{portfolio.school || 'Chưa cập nhật trường học'}</span>
+                      <span className="user-wallet">
+                        <WalletCards size={14} />
+                        {portfolio.npBalance !== undefined ? portfolio.npBalance.toLocaleString() : '0'} NP
+                      </span>
+                    </div>
+                    <div className="dropdown-divider" />
+                    
+                    <Link className="dropdown-item" to="/candidates/dashboard" onClick={() => setShowDropdown(false)}>
+                      <Compass size={16} />
+                      Bảng điều khiển
+                    </Link>
+
+                    {portfolio.onboardingCompleted ? (
+                      <Link className="dropdown-item" to="/portfolio/edit" onClick={() => setShowDropdown(false)}>
+                        <Sparkles size={16} />
+                        Chỉnh sửa Portfolio
+                      </Link>
+                    ) : (
+                      <Link className="dropdown-item" to="/portfolio" onClick={() => setShowDropdown(false)}>
+                        <Sparkles size={16} />
+                        Hoàn thiện Portfolio
+                      </Link>
+                    )}
+
+                    <button className="dropdown-item" onClick={openPortfolioPreview} type="button">
+                      <FileText size={16} />
+                      Xem trước Portfolio
+                    </button>
+
+                    <div className="dropdown-divider" />
+                    
+                    {/* Hành động là đăng xuất (icon LogOut, ô danger) nên nhãn phải
+                        nói đúng như vậy — nhãn cũ "Trở về trang chủ" khiến người
+                        dùng bị đăng xuất mà tưởng chỉ đang điều hướng. */}
+                    <button className="dropdown-item danger-action" onClick={handleLogout} type="button">
+                      <LogOut size={16} />
+                      Đăng xuất
+                    </button>
                   </div>
-                  <div className="dropdown-divider" />
-                  
-                  <Link className="dropdown-item" to="/candidates/dashboard" onClick={() => setShowDropdown(false)}>
-                    <Compass size={16} />
-                    Bảng điều khiển
-                  </Link>
-
-                  {portfolio.onboardingCompleted ? (
-                    <Link className="dropdown-item" to="/portfolio/edit" onClick={() => setShowDropdown(false)}>
-                      <Sparkles size={16} />
-                      Chỉnh sửa Portfolio
-                    </Link>
-                  ) : (
-                    <Link className="dropdown-item" to="/portfolio" onClick={() => setShowDropdown(false)}>
-                      <Sparkles size={16} />
-                      Hoàn thiện Portfolio
-                    </Link>
-                  )}
-
-                  <button className="dropdown-item" onClick={openPortfolioPreview} type="button">
-                    <FileText size={16} />
-                    Xem trước Portfolio
-                  </button>
-
-                  <div className="dropdown-divider" />
-                  
-                  {/* Hành động là đăng xuất (icon LogOut, ô danger) nên nhãn phải
-                      nói đúng như vậy — nhãn cũ "Trở về trang chủ" khiến người
-                      dùng bị đăng xuất mà tưởng chỉ đang điều hướng. */}
-                  <button className="dropdown-item danger-action" onClick={handleLogout} type="button">
-                    <LogOut size={16} />
-                    Đăng xuất
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ) : (
             <Link to="/#about">Về chúng tôi</Link>
