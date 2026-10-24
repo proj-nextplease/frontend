@@ -18760,3 +18760,209 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
   background: #d2ff4d;
   border-color: #d2ff4d;
 }
+
+/* ─── Screen Push Notifications & Offer Banners ─── */
+.np-screen-push {
+  position: fixed;
+  top: 78px;
+  right: 24px;
+  z-index: 99999;
+  max-width: 440px;
+  width: calc(100vw - 48px);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(168, 85, 247, 0.5);
+  border-radius: 20px;
+  padding: 18px 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 35px rgba(139, 92, 246, 0.35);
+  animation: npScreenPushIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes npScreenPushIn {
+  from { opacity: 0; transform: translateY(-24px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.np-screen-push-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.np-screen-push-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(99, 102, 241, 0.25));
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  color: #c084fc;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.np-screen-push-title {
+  margin: 0 0 6px;
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.35;
+}
+
+.np-screen-push-body {
+  margin: 0 0 14px;
+  font-size: 0.82rem;
+  color: rgba(233, 247, 242, 0.72);
+  line-height: 1.55;
+}
+
+.np-screen-push-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.np-screen-push-cta {
+  flex: 1;
+  padding: 9px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.4);
+}
+
+.np-screen-push-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(168, 85, 247, 0.6);
+}
+
+.np-screen-push-dismiss {
+  padding: 9px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(233, 247, 242, 0.65);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.np-screen-push-dismiss:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+/* ─── Navigation Tab Badge ─── */
+.np-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.55);
+}
+
+.np-tab-badge.pulse {
+  animation: npBadgePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes npBadgePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+  50% { transform: scale(1.12); box-shadow: 0 0 20px rgba(168, 85, 247, 0.9); }
+}
+
+/* ─── Subtab Pills ─── */
+.tab-pill-badge {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+.tab-pill-badge.offer-pulse {
+  animation: npBadgePulse 2s infinite;
+}
+
+.tab-pill-badge.success {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+/* ─── Pinned Offers Section ─── */
+.apptrack-pinned-offers {
+  margin-bottom: 24px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.75), rgba(15, 23, 42, 0.85));
+  border: 1.5px solid rgba(168, 85, 247, 0.45);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3), 0 0 30px rgba(139, 92, 246, 0.15);
+  padding: 20px 22px;
+}
+
+.apptrack-pinned-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.apptrack-pinned-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  color: #c084fc;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.apptrack-pinned-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.apptrack-pinned-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(168, 85, 247, 0.35);
+}
+

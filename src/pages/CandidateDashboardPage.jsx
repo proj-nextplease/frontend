@@ -55,6 +55,7 @@ import { useSavedJobs } from '../lib/savedJobs.js';
 import { getMyCredentialSubmissions, submitCredential } from '../api/credentialApi.js';
 import { applyToJob, getMyApplications, withdrawApplication, acceptApplicationOffer, declineApplicationOffer } from '../api/applicationApi.js';
 import { NotificationBell } from '../components/NotificationBell.jsx';
+import { getMyPendingInvitations, acceptDirectInvitation } from '../api/b2bApi.js';
 import { NeonBloom } from '../components/NeonBloom.jsx';
 import { INK, EMERALD, EMERALD_BRIGHT } from '../styles/neonPalette.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
@@ -915,6 +916,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [applyModalError, setApplyModalError] = useState('');
   const [applySuccessMsg, setApplySuccessMsg] = useState('');
 
+  // Organization & Offer Invitation states
+  const [pendingOrgInvites, setPendingOrgInvites] = useState([]);
+  const [dismissedPush, setDismissedPush] = useState(false);
+  const [acceptingOrgInviteId, setAcceptingOrgInviteId] = useState(null);
+  const lastNotifiedOfferIdRef = useRef(null);
+
   // Withdraw states
   const [withdrawingId, setWithdrawingId] = useState(null);
   const [withdrawError, setWithdrawError] = useState('');
@@ -956,6 +963,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [questApplications, setQuestApplications] = useState([]);
   const [questApplicationsLoading, setQuestApplicationsLoading] = useState(true);
   const [viewingApp, setViewingApp] = useState(null); // { app, isQuest } for the "Xem chi tiết" tracking modal
+
+  const offeredJobs = appliedJobs.filter(a => a.status === 'OFFERED');
+  const acceptedQuests = questApplications.filter(qa => qa.status === 'ACCEPTED');
+  const totalActionableInvites = offeredJobs.length + pendingOrgInvites.length;
   const [questApplyLoading, setQuestApplyLoading] = useState(false);
   const [questApplyError, setQuestApplyError] = useState('');
   const [questApplySuccess, setQuestApplySuccess] = useState('');
@@ -1509,6 +1520,37 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     return () => { isMounted = false; };
   }, [refreshKey]);
 
+  // Load pending organization / club invitations on mount
+  useEffect(() => {
+    let isMounted = true;
+    getMyPendingInvitations()
+      .then(data => { if (isMounted) setPendingOrgInvites(data || []); })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, [refreshKey]);
+
+  // System Web Push Notification for incoming job offers
+  useEffect(() => {
+    if (offeredJobs.length > 0) {
+      const topOffer = offeredJobs[0];
+      if (lastNotifiedOfferIdRef.current !== topOffer.id) {
+        lastNotifiedOfferIdRef.current = topOffer.id;
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+          if (Notification.permission === 'granted') {
+            try {
+              new Notification(`🎉 Lời mời nhận việc mới từ ${topOffer.company_name || 'Doanh nghiệp'}!`, {
+                body: `Vị trí: ${topOffer.job_title}. Bấm vào để xem và xác nhận nhận việc.`,
+                icon: topOffer.company_logo || '/favicon.ico',
+              });
+            } catch { /* ignore */ }
+          } else if (Notification.permission === 'default') {
+            Notification.requestPermission().catch(() => {});
+          }
+        }
+      }
+    }
+  }, [offeredJobs]);
+
   async function handleApplyToQuest() {
     if (!selectedQuestForApply) return;
     const qFields = selectedQuestForApply.formFields || [];
@@ -1868,6 +1910,20 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     });
   }
 
+  async function handleAcceptOrgInvite(invitationId) {
+    setAcceptingOrgInviteId(invitationId);
+    try {
+      const res = await acceptDirectInvitation(invitationId);
+      showToast('success', `Đã gia nhập ${res?.companyName || 'tổ chức'} thành công!`);
+      setPendingOrgInvites(prev => prev.filter(i => i.id !== invitationId));
+      setRefreshKey(k => k + 1);
+    } catch (err) {
+      showToast('error', err.message || 'Chấp nhận lời mời thất bại.');
+    } finally {
+      setAcceptingOrgInviteId(null);
+    }
+  }
+
   async function handleExportPortfolio() {
     const fee = wallet?.portfolioExportFeeNp || 1000;
     if ((wallet?.npBalance ?? 0) < fee) {
@@ -2050,19 +2106,27 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       <div className="np-area-bar">
         <div className="np-area-inner">
           <div className="np-area-tabs" role="tablist" aria-label="Khu vực của tôi" ref={areaTabsRef}>
-            {AREA_TABS.map((tab) => (
-              <button
-                key={tab.view}
-                type="button"
-                role="tab"
-                aria-selected={activeView === tab.view}
-                className={`np-area-tab${activeView === tab.view ? ' active' : ''}`}
-                onClick={() => handleTabChange(tab.view)}
-              >
-                <tab.icon size={17} strokeWidth={1.9} />
-                {tab.label}
-              </button>
-            ))}
+            {AREA_TABS.map((tab) => {
+              const badgeCount = tab.view === 'MY_APPLICATIONS' ? totalActionableInvites : 0;
+              return (
+                <button
+                  key={tab.view}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeView === tab.view}
+                  className={`np-area-tab${activeView === tab.view ? ' active' : ''}`}
+                  onClick={() => handleTabChange(tab.view)}
+                >
+                  <tab.icon size={17} strokeWidth={1.9} />
+                  {tab.label}
+                  {badgeCount > 0 && (
+                    <span className="np-tab-badge pulse">
+                      {badgeCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <div className="np-area-side">
@@ -2093,6 +2157,15 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 này (BusinessPage, AdminB2bReview) vẫn giữ mặc định cũ. */}
             <NotificationBell
               accent={EMERALD_ACCENT}
+              onNavigate={(url) => {
+                if (url.includes('/applications')) {
+                  handleTabChange('MY_APPLICATIONS');
+                } else if (url.includes('/overview')) {
+                  handleTabChange('OVERVIEW');
+                } else if (url.startsWith('/')) {
+                  navigate(url);
+                }
+              }}
               style={{ position: 'relative', top: 'auto', right: 'auto', zIndex: 'auto' }}
               buttonStyle={{
                 width: '38px', height: '38px', borderRadius: '8px',
@@ -2106,6 +2179,50 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
       {/* ─── Main Workspace Content ─── */}
       <main className="candidate-portal-main">
+        {/* On-Screen Floating Push Alert for Job Offers & Org Invites */}
+        {totalActionableInvites > 0 && !dismissedPush && (
+          <div className="np-screen-push" role="alert">
+            <div className="np-screen-push-header">
+              <span className="np-screen-push-badge">
+                <Sparkles size={13} />
+                {offeredJobs.length > 0 ? 'Lời mời nhận việc mới' : 'Lời mời tổ chức mới'}
+              </span>
+            </div>
+            <h4 className="np-screen-push-title">
+              {offeredJobs.length > 0
+                ? `🎉 Bạn có ${offeredJobs.length} lời mời nhận việc đang chờ phản hồi!`
+                : `🏢 Bạn nhận được lời mời tham gia từ ${pendingOrgInvites[0]?.companyName || 'tổ chức'}!`}
+            </h4>
+            <p className="np-screen-push-body">
+              {offeredJobs.length > 0
+                ? `${offeredJobs[0].company_name || 'Doanh nghiệp'} đã gửi lời mời nhận việc cho vị trí "${offeredJobs[0].job_title}". Hãy kiểm tra chi tiết và phản hồi sớm!`
+                : `Bạn được mời tham gia tổ chức với vai trò ${pendingOrgInvites[0]?.nodeRole || 'Thành viên'}.`}
+            </p>
+            <div className="np-screen-push-actions">
+              <button
+                type="button"
+                className="np-screen-push-cta"
+                onClick={() => {
+                  if (offeredJobs.length > 0) {
+                    handleTabChange('MY_APPLICATIONS');
+                  } else {
+                    handleTabChange('OVERVIEW');
+                  }
+                  setDismissedPush(true);
+                }}
+              >
+                <Check size={14} /> Xem & Phản hồi ngay
+              </button>
+              <button
+                type="button"
+                className="np-screen-push-dismiss"
+                onClick={() => setDismissedPush(true)}
+              >
+                Để sau
+              </button>
+            </div>
+          </div>
+        )}
         {applySuccessMsg && (
           <div style={{
             background: 'var(--surface)',
@@ -2184,6 +2301,121 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               .np-quest-claim.locked { background:var(--c-line); color:var(--c-muted); cursor:default; }
               @media (prefers-reduced-motion: reduce) { .np-streak-flame, .np-quest-card, .np-quest-claim.ready { animation:none !important; } }
             `}</style>
+            {/* ── LỜI MỜI NHẬN VIỆC & CƠ HỘI MỚI (OVERVIEW HERO) ── */}
+            {(offeredJobs.length > 0 || pendingOrgInvites.length > 0) && (
+              <section className="np-overview-offer-hero" style={{ marginTop: 'clamp(20px, 2.5vw, 32px)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span className="apptrack-pinned-badge">
+                      <Sparkles size={14} /> Lời mời mới ({totalActionableInvites})
+                    </span>
+                    <strong style={{ fontSize: '1.05rem', color: '#fff' }}>
+                      Cơ hội đang chờ bạn phản hồi
+                    </strong>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('MY_APPLICATIONS')}
+                    style={{ background: 'none', border: 'none', color: '#c084fc', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    Xem tất cả ứng tuyển <ArrowRight size={14} />
+                  </button>
+                </div>
+
+                {/* Job Offers */}
+                {offeredJobs.map((app) => (
+                  <div key={app.id} className="apptrack-pinned-card" style={{ borderColor: 'rgba(168, 85, 247, 0.45)', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(15, 23, 42, 0.6))' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <Building size={16} style={{ color: '#c084fc' }} />
+                          <strong style={{ color: '#fff', fontSize: '0.98rem' }}>{app.company_name || app.companyName || 'Doanh nghiệp'}</strong>
+                          <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '999px', background: 'rgba(168, 85, 247, 0.25)', color: '#d8b4fe', fontWeight: 700 }}>
+                            {JOB_TYPES.find(t => t.value === (app.job_type || app.jobType))?.label || 'Toàn thời gian'}
+                          </span>
+                        </div>
+                        <h3 style={{ margin: '0 0 6px', fontSize: '1.18rem', fontWeight: 800, color: '#f8fafc' }}>
+                          {app.job_title || app.title}
+                        </h3>
+                        <p style={{ margin: 0, fontSize: '0.84rem', color: 'rgba(233, 247, 242, 0.75)', lineHeight: 1.5 }}>
+                          {app.compensation && Number(app.compensation) > 0 ? (
+                            <>
+                              Thù lao: <strong style={{ color: '#34d399' }}>{Number(app.compensation).toLocaleString('vi-VN')} đ</strong> · Phí xác nhận nhận việc: <strong style={{ color: '#c084fc' }}>19.000 Điểm</strong> (chỉ trừ khi đồng ý thành công).
+                            </>
+                          ) : (
+                            <>
+                              Vị trí phi lợi nhuận / không thù lao · <strong style={{ color: '#34d399' }}>Miễn phí 0 Điểm</strong> khi xác nhận nhận việc.
+                            </>
+                          )}
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          className="button primary-button"
+                          style={{ fontSize: '0.86rem', padding: '9px 18px', gap: '6px' }}
+                          disabled={offerActionLoadingId === app.id}
+                          onClick={() => handleAcceptOffer(app)}
+                        >
+                          <Check size={15} />
+                          {offerActionLoadingId === app.id
+                            ? 'Đang xử lý...'
+                            : (app.compensation && Number(app.compensation) > 0 ? 'Đồng ý nhận việc (19.000 Điểm)' : 'Đồng ý nhận việc (Miễn phí)')}
+                        </button>
+                        <button
+                          type="button"
+                          className="button secondary-button"
+                          style={{ fontSize: '0.84rem', padding: '9px 14px' }}
+                          onClick={() => handleTabChange('MY_APPLICATIONS')}
+                        >
+                          Chi tiết
+                        </button>
+                        <button
+                          type="button"
+                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700, padding: '9px 10px' }}
+                          disabled={offerActionLoadingId === app.id}
+                          onClick={() => handleDeclineOffer(app)}
+                        >
+                          Từ chối
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Organization / Club Invitations */}
+                {pendingOrgInvites.map((invite) => (
+                  <div key={invite.id} className="apptrack-pinned-card" style={{ borderColor: 'rgba(59, 130, 246, 0.45)', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(15, 23, 42, 0.6))' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <Users size={16} style={{ color: '#60a5fa' }} />
+                          <strong style={{ color: '#fff', fontSize: '0.98rem' }}>{invite.companyName}</strong>
+                          <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '999px', background: 'rgba(59, 130, 246, 0.25)', color: '#93c5fd', fontWeight: 700 }}>
+                            {invite.companyType === 'CLUB' ? 'Câu lạc bộ' : 'Doanh nghiệp'}
+                          </span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '0.84rem', color: 'rgba(233, 247, 242, 0.75)' }}>
+                          Bạn được mời gia nhập tổ chức với vai trò <strong>{invite.nodeRole === 'OWNER' ? 'Chủ sở hữu' : invite.nodeRole === 'MANAGER' ? 'Quản lý' : 'Thành viên'}</strong>.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="button primary-button"
+                        style={{ fontSize: '0.84rem', padding: '8px 16px', gap: '6px' }}
+                        disabled={acceptingOrgInviteId === invite.id}
+                        onClick={() => handleAcceptOrgInvite(invite.id)}
+                      >
+                        <Check size={14} />
+                        {acceptingOrgInviteId === invite.id ? 'Đang tham gia...' : 'Chấp nhận gia nhập'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </section>
+            )}
+
             {/* ── HỘ CHIẾU NĂNG LỰC ──
                 Dựng như một tấm giấy tờ tuỳ thân, không phải khay widget.
                 Bản trước nhồi 5 việc vào một thẻ ngang: danh tính, cấp độ, ví,
@@ -2955,14 +3187,95 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
               <div className="apptrack-tabs">
                 {[
-                  { key: 'BUSINESS', icon: <Building size={15} />, label: 'Doanh nghiệp', count: appliedJobs.length },
-                  { key: 'CLUB', icon: <Zap size={15} />, label: 'CLB / Quest', count: questApplications.length },
+                  {
+                    key: 'BUSINESS',
+                    icon: <Building size={15} />,
+                    label: 'Doanh nghiệp',
+                    count: appliedJobs.length,
+                    pillBadge: offeredJobs.length > 0 ? `${offeredJobs.length} lời mời` : null,
+                    pillClass: 'tab-pill-badge offer-pulse',
+                  },
+                  {
+                    key: 'CLUB',
+                    icon: <Zap size={15} />,
+                    label: 'CLB / Quest',
+                    count: questApplications.length,
+                    pillBadge: acceptedQuests.length > 0 ? `${acceptedQuests.length} đã duyệt` : null,
+                    pillClass: 'tab-pill-badge success',
+                  },
                 ].map(tab => (
                   <button key={tab.key} type="button" onClick={() => setMyAppsTab(tab.key)} className={`apptrack-tab ${myAppsTab === tab.key ? 'active' : ''}`}>
-                    {tab.icon}{tab.label}<span className="apptrack-tab-count">{tab.count}</span>
+                    {tab.icon}{tab.label}
+                    <span className="apptrack-tab-count">{tab.count}</span>
+                    {tab.pillBadge && (
+                      <span className={tab.pillClass}>{tab.pillBadge}</span>
+                    )}
                   </button>
                 ))}
               </div>
+
+              {/* Pinned Pending Offers Section */}
+              {myAppsTab === 'BUSINESS' && offeredJobs.length > 0 && (
+                <div className="apptrack-pinned-offers">
+                  <div className="apptrack-pinned-head">
+                    <span className="apptrack-pinned-badge">
+                      <Sparkles size={14} /> Lời mời nhận việc đang chờ phản hồi ({offeredJobs.length})
+                    </span>
+                    <span style={{ fontSize: '0.8rem', color: 'rgba(233, 247, 242, 0.65)' }}>
+                      Doanh nghiệp đang chờ bạn xác nhận để hoàn tất thủ tục
+                    </span>
+                  </div>
+                  {offeredJobs.map((app) => (
+                    <div key={app.id} className="apptrack-pinned-card" style={{ borderColor: 'rgba(168, 85, 247, 0.5)', background: 'rgba(139, 92, 246, 0.12)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+                            <Building size={15} style={{ color: '#c084fc' }} />
+                            <strong style={{ fontSize: '1.05rem', color: '#fff' }}>{app.job_title || app.title}</strong>
+                            <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '999px', background: 'rgba(168, 85, 247, 0.25)', color: '#d8b4fe', fontWeight: 700 }}>
+                              {app.company_name || app.companyName}
+                            </span>
+                          </div>
+                          <p style={{ margin: 0, fontSize: '0.82rem', color: 'rgba(233, 247, 242, 0.75)' }}>
+                            {app.compensation && Number(app.compensation) > 0 ? (
+                              <>
+                                Thù lao: <strong style={{ color: '#34d399' }}>{Number(app.compensation).toLocaleString('vi-VN')} đ</strong> · Phí nhận việc: <strong style={{ color: '#c084fc' }}>19.000 Điểm</strong> (chỉ trừ khi đồng ý thành công).
+                              </>
+                            ) : (
+                              <>
+                                Vị trí phi lợi nhuận / không thù lao · <strong style={{ color: '#34d399' }}>Miễn phí 0 Điểm</strong> khi xác nhận.
+                              </>
+                            )}
+                          </p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            className="button primary-button"
+                            style={{ fontSize: '0.84rem', padding: '8px 16px', gap: '6px' }}
+                            disabled={offerActionLoadingId === app.id}
+                            onClick={() => handleAcceptOffer(app)}
+                          >
+                            <Check size={14} />
+                            {offerActionLoadingId === app.id
+                              ? 'Đang xử lý...'
+                              : (app.compensation && Number(app.compensation) > 0 ? 'Đồng ý nhận việc (19.000 Điểm)' : 'Đồng ý nhận việc (Miễn phí)')}
+                          </button>
+                          <button
+                            type="button"
+                            className="button secondary-button"
+                            style={{ fontSize: '0.84rem', padding: '8px 14px' }}
+                            disabled={offerActionLoadingId === app.id}
+                            onClick={() => handleDeclineOffer(app)}
+                          >
+                            Từ chối
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {withdrawError && (
                 <div className="apptrack-error">
