@@ -33,29 +33,47 @@ export function CandidatePortfolioViewPage() {
     );
   }
   if (error || !profile) {
-    const isDraft = error && (error.includes('bản nháp') || error.includes('riêng tư'));
     return (
       <div className="fom-page fom-page-state" style={{ textAlign: 'center', padding: '40px 20px' }}>
-        {isDraft ? (
-          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#facc15' }}>
-            <LockKeyhole size={30} />
-          </div>
-        ) : (
-          <Sparkles size={28} style={{ margin: '0 auto 16px', color: 'var(--c-muted)' }} />
-        )}
+        <Sparkles size={28} style={{ margin: '0 auto 16px', color: 'var(--c-muted)' }} />
         <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 8px', color: '#fff' }}>
-          {isDraft ? 'Portfolio đang ở chế độ bản nháp' : 'Không tìm thấy hồ sơ'}
+          Không tìm thấy hồ sơ
         </h2>
         <p style={{ maxWidth: '420px', lineHeight: 1.6, color: 'rgba(255,255,255,0.7)', margin: '0 auto 20px', fontSize: '0.9rem' }}>
-          {isDraft
-            ? 'Ứng viên chưa kích hoạt xuất bản Portfolio này ra website công khai. Vui lòng liên hệ trực tiếp ứng viên để nhận thông tin.'
-            : (error || 'Không tìm thấy hồ sơ.')}
+          {error || 'Không tìm thấy hồ sơ ứng viên.'}
         </p>
         <button type="button" className="fom-btn" onClick={() => window.close()}>Đóng tab</button>
       </div>
     );
   }
-  return <VerifiedPassport profile={profile} />;
+
+  return (
+    <>
+      {!profile.isExported && (
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 9999,
+          background: 'rgba(234, 179, 8, 0.95)',
+          color: '#1a1a1a',
+          padding: '8px 16px',
+          textAlign: 'center',
+          fontSize: '0.82rem',
+          fontWeight: 700,
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+        }}>
+          <Sparkles size={15} />
+          <span>Bản xem trước Portfolio · Chưa xuất bản thành website chính thức (Phí xuất bản: 1.000 Điểm)</span>
+        </div>
+      )}
+      <VerifiedPassport profile={profile} isDraft={!profile.isExported} />
+    </>
+  );
 }
 
 /**
