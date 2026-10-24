@@ -669,7 +669,7 @@ export function CandidateContentSkeleton({ variant = 'overview' }) {
  * Hiển thị dạng "tên-miền/p/slug" thay vì ô nhập trống, để người dùng thấy
  * link của mình trông ra sao trước khi sửa — đây là thứ họ sẽ dán vào bio.
  */
-function PublicLinkEditor({ slug, onSaved }) {
+function PublicLinkEditor({ slug, onSaved, isExported }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(slug || '');
   const [status, setStatus] = useState({ type: 'idle', message: '' });
@@ -724,13 +724,31 @@ function PublicLinkEditor({ slug, onSaved }) {
         </form>
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <Link2 size={14} style={{ color: 'rgba(255,255,255,0.5)' }} />
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px',
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            padding: '2px 9px',
+            borderRadius: '999px',
+            background: isExported ? 'rgba(16, 185, 129, 0.15)' : 'rgba(234, 179, 8, 0.14)',
+            color: isExported ? '#34d399' : '#facc15',
+            border: isExported ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(234, 179, 8, 0.35)',
+          }}>
+            {isExported ? <><Globe size={11} /> Đã xuất bản công khai</> : <><LockKeyhole size={11} /> Bản nháp (Chưa xuất bản)</>}
+          </span>
           <span style={{ color: 'rgba(255,255,255,0.55)' }}>{host}/p/</span>
           <span style={{ fontWeight: 800, color: '#fff' }}>{slug}</span>
           <button type="button" onClick={() => setEditing(true)}
             style={{ padding: '3px 10px', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.22)', background: 'transparent', color: 'rgba(255,255,255,0.8)', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}>
             Đổi
           </button>
+          {!isExported && (
+            <div style={{ width: '100%', fontSize: '0.76rem', color: 'rgba(255,255,255,0.48)', marginTop: '2px' }}>
+              💡 Link riêng đang ở chế độ bảo mật. Bấm <strong>"Xuất website (1.000 Điểm)"</strong> để công khai gửi nhà tuyển dụng.
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -2399,31 +2417,58 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   </Link>
                   {has3D && (
                     <>
-                      <button
-                        type="button"
-                        className="np-pp-btn"
-                        onClick={handleCopyPortfolioLink}
-                        disabled={copyLinkStatus === 'copying'}
-                        title="Sao chép link Portfolio công khai để chia sẻ"
-                      >
-                        <Copy size={15} />
-                        {copyLinkStatus === 'done' ? 'Đã sao chép' : copyLinkStatus === 'error' ? 'Lỗi, thử lại' : 'Sao chép link'}
-                      </button>
-                      <button
-                        type="button"
-                        className="np-pp-btn"
-                        onClick={() => { setExportError(''); setExportResult(null); setShowExportModal(true); }}
-                        title="Xuất bản Portfolio thành website công khai (1.000 Điểm)"
-                        style={{ border: '1px solid rgba(16, 185, 129, 0.45)', color: '#10b981' }}
-                      >
-                        <Globe size={15} /> Xuất website (1.000 Điểm)
-                      </button>
+                      {portfolio?.isPublic || portfolio?.isExported ? (
+                        <>
+                          <button
+                            type="button"
+                            className="np-pp-btn"
+                            onClick={handleCopyPortfolioLink}
+                            disabled={copyLinkStatus === 'copying'}
+                            title="Sao chép link Portfolio công khai để chia sẻ cho nhà tuyển dụng"
+                            style={{ border: '1px solid rgba(16, 185, 129, 0.55)', color: '#10b981', fontWeight: 700 }}
+                          >
+                            <Copy size={15} />
+                            {copyLinkStatus === 'done' ? 'Đã sao chép link' : copyLinkStatus === 'error' ? 'Lỗi, thử lại' : 'Sao chép link'}
+                          </button>
+                          <button
+                            type="button"
+                            className="np-pp-btn"
+                            onClick={() => { setExportError(''); setExportResult(null); setShowExportModal(true); }}
+                            title="Cập nhật xuất bản lại website (1.000 Điểm)"
+                          >
+                            <Globe size={15} /> Xuất lại (1.000 Điểm)
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="np-pp-btn"
+                            onClick={() => { setExportError(''); setExportResult(null); setShowExportModal(true); }}
+                            title="Xuất bản Portfolio thành website công khai để chia sẻ (1.000 Điểm)"
+                            style={{ border: '1px solid rgba(16, 185, 129, 0.65)', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', fontWeight: 700 }}
+                          >
+                            <Globe size={15} /> Xuất website (1.000 Điểm)
+                          </button>
+                          <a
+                            href={portfolio?.publicSlug ? `/p/${portfolio.publicSlug}` : '#'}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="np-pp-btn"
+                            title="Xem trước bản nháp (chỉ mình bạn xem được)"
+                            style={{ textDecoration: 'none' }}
+                          >
+                            <Eye size={15} /> Xem thử
+                          </a>
+                        </>
+                      )}
                     </>
                   )}
                 </div>
 
                 <PublicLinkEditor
                   slug={portfolio?.publicSlug}
+                  isExported={Boolean(portfolio?.isPublic || portfolio?.isExported)}
                   onSaved={(next) => setPortfolio((prev) => (prev ? { ...prev, publicSlug: next } : prev))}
                 />
               </div>

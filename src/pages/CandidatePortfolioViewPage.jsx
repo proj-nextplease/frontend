@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, LockKeyhole } from 'lucide-react';
 import { getPublicProfile, getPublicProfileBySlug } from '../api/portfolioApi.js';
 import { FomlioPassport } from '../components/portfolio/FomlioPassport.jsx';
 
@@ -33,9 +33,24 @@ export function CandidatePortfolioViewPage() {
     );
   }
   if (error || !profile) {
+    const isDraft = error && (error.includes('bản nháp') || error.includes('riêng tư'));
     return (
-      <div className="fom-page fom-page-state">
-        <p>{error || 'Không tìm thấy hồ sơ.'}</p>
+      <div className="fom-page fom-page-state" style={{ textAlign: 'center', padding: '40px 20px' }}>
+        {isDraft ? (
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#facc15' }}>
+            <LockKeyhole size={30} />
+          </div>
+        ) : (
+          <Sparkles size={28} style={{ margin: '0 auto 16px', color: 'var(--c-muted)' }} />
+        )}
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 8px', color: '#fff' }}>
+          {isDraft ? 'Portfolio đang ở chế độ bản nháp' : 'Không tìm thấy hồ sơ'}
+        </h2>
+        <p style={{ maxWidth: '420px', lineHeight: 1.6, color: 'rgba(255,255,255,0.7)', margin: '0 auto 20px', fontSize: '0.9rem' }}>
+          {isDraft
+            ? 'Ứng viên chưa kích hoạt xuất bản Portfolio này ra website công khai. Vui lòng liên hệ trực tiếp ứng viên để nhận thông tin.'
+            : (error || 'Không tìm thấy hồ sơ.')}
+        </p>
         <button type="button" className="fom-btn" onClick={() => window.close()}>Đóng tab</button>
       </div>
     );
