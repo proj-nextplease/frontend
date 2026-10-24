@@ -32,6 +32,8 @@ import {
   Link2,
   Globe,
   Mail,
+  Copy,
+  ExternalLink,
 } from 'lucide-react';
 import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
@@ -213,6 +215,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     () => new URLSearchParams(window.location.search).get(ONBOARDING_TAB_FLAG) === '1',
   );
   const [isSubmittedSuccessfully, setIsSubmittedSuccessfully] = useState(false);
+  const [serverPortfolio, setServerPortfolio] = useState(null);
+  const [copiedSuccessLink, setCopiedSuccessLink] = useState(false);
 
   /* Sau khi lưu xong thì tự đưa người dùng về khu vực ứng viên.
      Trước đó màn "Thành công" là ngõ cụt: nó báo xong việc rồi bắt bấm thêm
@@ -299,6 +303,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         setIsLoading(true);
         const data = await getMyPortfolio();
         if (data) {
+          setServerPortfolio(data);
           if (data.onboardingCompleted && !isEditing) {
             navigate('/candidates/dashboard');
             return;
@@ -984,8 +989,57 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               : 'Hồ sơ và Proof of Work của bạn đã được ghi nhận chính thức trên hệ thống fonlio. Bạn đã sẵn sàng để khám phá các cơ hội nghề nghiệp.'}
           </p>
 
-          {/* Nói trước là trang sắp tự chuyển. Không nói thì cú nhảy sau 2 giây
-              đọc ra như trang tự ý bỏ đi. */}
+          {serverPortfolio?.publicSlug && (
+            <div style={{
+              background: 'rgba(16, 185, 129, 0.08)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderRadius: '16px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'left',
+            }}>
+              <div style={{ fontSize: '0.84rem', color: '#10b981', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Globe size={16} /> Link Website cá nhân của bạn:
+              </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                background: 'rgba(0,0,0,0.25)',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                marginBottom: '10px',
+              }}>
+                <span style={{ fontSize: '0.86rem', color: '#fff', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {`${window.location.origin}/p/${serverPortfolio.publicSlug}`}
+                </span>
+                <button
+                  type="button"
+                  className="button secondary-button"
+                  style={{ padding: '6px 12px', fontSize: '0.78rem', flexShrink: 0, gap: '4px' }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/p/${serverPortfolio.publicSlug}`);
+                    setCopiedSuccessLink(true);
+                    setTimeout(() => setCopiedSuccessLink(false), 2000);
+                  }}
+                >
+                  <Copy size={13} />
+                  {copiedSuccessLink ? 'Đã sao chép' : 'Sao chép link'}
+                </button>
+              </div>
+              <a
+                href={`/p/${serverPortfolio.publicSlug}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{ fontSize: '0.8rem', color: '#10b981', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              >
+                <ExternalLink size={13} /> Mở xem website độc lập ở tab mới
+              </a>
+            </div>
+          )}
+
+          {/* Nói trước là trang sắp tự chuyển. */}
           <p className="pf-success-redirect" aria-live="polite">
             {openedAsOnboardingTab
               ? 'Đang đóng tab này, bạn quay lại trang đang xem nhé…'
@@ -1720,6 +1774,30 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               <Eye size={18} />
               Xem trước
             </button>
+          </div>
+
+          <div className="portfolio-preview-action-panel" style={{ marginTop: '14px', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
+            <div className="form-section-heading">
+              <Globe size={22} color="#10b981" />
+              <div>
+                <h2 style={{ color: '#10b981' }}>Website Portfolio cá nhân (/p/:slug)</h2>
+                <p>
+                  Sau khi lưu, bạn có thể xuất website với đường link riêng dạng <code>fonlio.vn/p/{serverPortfolio?.publicSlug || 'ten-ban'}</code> để gửi kèm trong CV hoặc LinkedIn.
+                </p>
+              </div>
+            </div>
+            {serverPortfolio?.publicSlug && (
+              <a
+                href={`/p/${serverPortfolio.publicSlug}`}
+                target="_blank"
+                rel="noreferrer"
+                className="button secondary-button preview-open-button"
+                style={{ textDecoration: 'none' }}
+              >
+                <ExternalLink size={16} />
+                Xem link riêng
+              </a>
+            )}
           </div>
 
           <div className="portfolio-submit-panel">

@@ -1942,6 +1942,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       if (res?.balanceAfter != null) {
         setWallet(prev => prev ? { ...prev, npBalance: res.balanceAfter } : prev);
       }
+      if (res?.publicSlug) {
+        setPortfolio(prev => prev ? { ...prev, publicSlug: res.publicSlug, isPublic: true } : prev);
+      }
       showToast('success', 'Xuất bản website portfolio thành công!');
       getWallet().then(w => setWallet(w)).catch(() => {});
     } catch (err) {
@@ -4714,41 +4717,50 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <p style={{ margin: '0 0 16px', fontSize: '0.88rem', color: 'var(--c-muted)', lineHeight: 1.5 }}>
                     Portfolio của bạn đã được xuất bản ra đường dẫn công khai, sẵn sàng gửi tới nhà tuyển dụng.
                   </p>
-                  <div style={{ background: 'var(--c-surface-soft)', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--c-line)', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                    <span style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {exportResult.publicUrl}
-                    </span>
-                    <button
-                      type="button"
-                      className="button secondary-button"
-                      style={{ padding: '6px 12px', fontSize: '0.78rem' }}
-                      onClick={() => {
-                        navigator.clipboard.writeText(exportResult.publicUrl);
-                        setCopiedExportUrl(true);
-                        setTimeout(() => setCopiedExportUrl(false), 2000);
-                      }}
-                    >
-                      {copiedExportUrl ? 'Đã chép' : 'Sao chép'}
-                    </button>
-                  </div>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <a
-                      href={exportResult.publicUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="button primary-button"
-                      style={{ flex: 1, textDecoration: 'none', justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                    >
-                      <ExternalLink size={15} /> Mở trang Website
-                    </a>
-                    <button
-                      type="button"
-                      className="button secondary-button"
-                      onClick={() => { setShowExportModal(false); setExportResult(null); }}
-                    >
-                      Đóng
-                    </button>
-                  </div>
+                  {(() => {
+                    const fullExportUrl = exportResult.publicUrl?.startsWith('http')
+                      ? exportResult.publicUrl
+                      : `${window.location.origin}${exportResult.publicUrl}`;
+                    return (
+                      <>
+                        <div style={{ background: 'var(--c-surface-soft)', padding: '10px 14px', borderRadius: '10px', border: '1px solid var(--c-line)', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                          <span style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={fullExportUrl}>
+                            {fullExportUrl}
+                          </span>
+                          <button
+                            type="button"
+                            className="button secondary-button"
+                            style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                            onClick={() => {
+                              navigator.clipboard.writeText(fullExportUrl);
+                              setCopiedExportUrl(true);
+                              setTimeout(() => setCopiedExportUrl(false), 2000);
+                            }}
+                          >
+                            {copiedExportUrl ? 'Đã chép' : 'Sao chép'}
+                          </button>
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                          <a
+                            href={fullExportUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="button primary-button"
+                            style={{ flex: 1, textDecoration: 'none', justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                          >
+                            <ExternalLink size={15} /> Mở trang Website
+                          </a>
+                          <button
+                            type="button"
+                            className="button secondary-button"
+                            onClick={() => { setShowExportModal(false); setExportResult(null); }}
+                          >
+                            Đóng
+                          </button>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               ) : (
                 <div>
