@@ -4,13 +4,15 @@ import {
   ChevronDown, MapPin, Wallet, Clock, Users, Briefcase,
   Heart, List, LayoutGrid, RotateCcw, Building2, Check, Search,
   X, Share2, ArrowRight, Link2, GraduationCap, Zap, ShieldCheck,
-  Star, Award, Sparkles, FolderOpen, ChevronLeft, ChevronRight, Globe, Crown,
+  Star, Award, Sparkles, FolderOpen, ChevronLeft, ChevronRight, Globe, Crown, CheckCircle2,
 } from 'lucide-react';
 import { NeonBloom } from '../components/NeonBloom.jsx';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { getExternalJobs } from '../api/externalJobApi.js';
 import { loadOpportunities, getCachedOpportunities } from '../api/jobsCache.js';
+import { getMyApplications } from '../api/applicationApi.js';
+import { getMyQuestApplications } from '../api/questApi.js';
 import { EmptyStateMascot } from '../components/EmptyStateMascot.jsx';
 import { extractProvince } from '../lib/vnProvince.js';
 import { useAuthModal } from '../context/AuthModalContext.jsx';
@@ -527,7 +529,7 @@ function SharePopover({ job, onClose }) {
   );
 }
 
-function JobDetail({ job, onClose, saved, onToggleSave, closing, onApply }) {
+function JobDetail({ job, onClose, saved, onToggleSave, closing, onApply, isApplied }) {
   const [showShare, setShowShare] = useState(false);
   const descParas = job.description ? job.description.split(/\n+/).map((s) => s.trim()).filter(Boolean) : [];
   
@@ -571,9 +573,15 @@ function JobDetail({ job, onClose, saved, onToggleSave, closing, onApply }) {
           </div>
         </div>
         <div className="jb-detail-actions">
-          <button type="button" className="jb-apply" onClick={() => onApply(job.id)}>
-            {job.isClub ? 'Ứng tuyển / Tham gia' : 'Ứng tuyển'}
-          </button>
+          {isApplied ? (
+            <button type="button" className="jb-apply applied" disabled title="Bạn đã nộp đơn ứng tuyển cho vị trí này">
+              <CheckCircle2 size={15} /> Đã ứng tuyển
+            </button>
+          ) : (
+            <button type="button" className="jb-apply" onClick={() => onApply(job.id)}>
+              {job.isClub ? 'Ứng tuyển / Tham gia' : 'Ứng tuyển'}
+            </button>
+          )}
           <button type="button" className={`jb-iconbtn${saved ? ' on' : ''}`} onClick={onToggleSave} aria-label="Lưu việc làm"><Heart size={19} fill={saved ? '#ef5da8' : 'none'} /></button>
           <div style={{ position: 'relative' }}>
             <button
@@ -657,9 +665,15 @@ function JobDetail({ job, onClose, saved, onToggleSave, closing, onApply }) {
           <ul>{benefits.map((r) => <li key={r}>{r}</li>)}</ul>
         </section>
 
-        <button type="button" className="jb-apply jb-apply-lg" onClick={() => onApply(job.id)}>
-          {job.isClub ? 'Nộp hồ sơ tham gia ngay' : 'Ứng tuyển ngay'} <ArrowRight size={17} />
-        </button>
+        {isApplied ? (
+          <button type="button" className="jb-apply jb-apply-lg applied" disabled>
+            <CheckCircle2 size={18} /> Bạn đã nộp đơn ứng tuyển
+          </button>
+        ) : (
+          <button type="button" className="jb-apply jb-apply-lg" onClick={() => onApply(job.id)}>
+            {job.isClub ? 'Nộp hồ sơ tham gia ngay' : 'Ứng tuyển ngay'} <ArrowRight size={17} />
+          </button>
+        )}
       </div>
     </aside>
   );
@@ -684,11 +698,43 @@ export function JobsPage() {
   const [loadError, setLoadError] = useState(null);
   const [selectedId, setSelectedId] = useState(() => searchParams.get('preview'));
   const [closing, setClosing] = useState(false);
+  const [appliedIds, setAppliedIds] = useState(() => new Set());
   // Trạng thái lưu nằm ở kho dùng chung (lib/savedJobs.js) chứ không phải state
   // cục bộ: trước đây trang này chỉ ghi localStorage nên khu vực ứng viên —
   // vốn đọc từ API — không bao giờ thấy tin đã lưu.
   const { savedIds: saved, toggleSave: toggleSavedJob } = useSavedJobs();
   const barRef = useRef(null);
+
+  // Tải danh sách đơn ứng tuyển của ứng viên (cả Job và Quest) để khóa nút ứng tuyển lại nếu đã nộp
+  useEffect(() => {
+    if (!getStoredToken()) return;
+    let alive = true;
+    Promise.allSettled([
+      getMyApplications(),
+      getMyQuestApplications(),
+    ]).then(([appsRes, questsRes]) => {
+      if (!alive) return;
+      const set = new Set();
+      if (appsRes.status === 'fulfilled' && Array.isArray(appsRes.value)) {
+        appsRes.value.forEach((a) => {
+          if (a.status !== 'WITHDRAWN') {
+            const id = a.job_id || a.jobId;
+            if (id) set.add(String(id));
+          }
+        });
+      }
+      if (questsRes.status === 'fulfilled' && Array.isArray(questsRes.value)) {
+        questsRes.value.forEach((qa) => {
+          if (qa.status !== 'WITHDRAWN') {
+            const id = qa.questId || qa.id;
+            if (id) set.add(String(id));
+          }
+        });
+      }
+      setAppliedIds(set);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   // Load real job postings
   useEffect(() => {
@@ -772,8 +818,25 @@ export function JobsPage() {
      Khi nào số cơ hội vượt vài trăm thì phải chuyển cả lọc lẫn phân trang sang
      server một lượt, chứ không nửa này nửa kia. */
   const PAGE_SIZE = 10;
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => {
+    const p = parseInt(new URLSearchParams(window.location.search).get('page') || '1', 10);
+    return Number.isFinite(p) && p > 0 ? p : 1;
+  });
   const listTopRef = useRef(null);
+  const previewAutoLocatedRef = useRef(null);
+
+  // Đồng bộ lại page / preview nếu người dùng bấm nút back / forward của trình duyệt
+  useEffect(() => {
+    const pParam = parseInt(searchParams.get('page') || '1', 10);
+    const validPage = Number.isFinite(pParam) && pParam > 0 ? pParam : 1;
+    if (validPage !== page) {
+      setPage(validPage);
+    }
+    const previewParam = searchParams.get('preview') || null;
+    if (previewParam !== selectedId) {
+      setSelectedId(previewParam);
+    }
+  }, [searchParams]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   /* Kẹp trong khoảng hợp lệ ngay lúc render thay vì sửa state trong effect:
@@ -785,12 +848,30 @@ export function JobsPage() {
     [filtered, safePage],
   );
 
-  /* Đổi bộ lọc / từ khoá / tab thì quay về trang đầu.
+  // Khi URL có preview id nhưng chưa có param page (ví dụ reload hoặc mở link trực tiếp),
+  // tự động nhảy tới trang chứa job đó để thẻ cơ hội xuất hiện trong danh sách bên trái.
+  useEffect(() => {
+    if (!selectedId || filtered.length === 0) return;
+    if (previewAutoLocatedRef.current === selectedId) return;
+    const idx = filtered.findIndex((j) => String(j.id) === String(selectedId));
+    if (idx === -1) return;
+    previewAutoLocatedRef.current = selectedId;
+    const targetPage = Math.floor(idx / PAGE_SIZE) + 1;
+    const hasExplicitPage = searchParams.has('page');
+    if (!hasExplicitPage && targetPage !== page) {
+      setPage(targetPage);
+      setSearchParams((prev) => {
+        const p = new URLSearchParams(prev);
+        if (targetPage > 1) p.set('page', String(targetPage));
+        else p.delete('page');
+        return p;
+      }, { replace: true });
+    }
+  }, [selectedId, filtered, searchParams, page]);
 
+  /* Đổi bộ lọc / từ khoá / tab thì quay về trang đầu.
      Chỉnh state ngay trong lúc render thay vì trong useEffect: đây là cách
-     React khuyến nghị cho loại "state phụ thuộc state khác", và useEffect ở
-     đây vừa vi phạm quy tắc lint vừa tạo thêm một nhịp render trung gian mà
-     người dùng thấy được. */
+     React khuyến nghị cho loại "state phụ thuộc state khác". */
   const filterSignature = `${query}|${activeOrgTab}|${JSON.stringify(filters)}`;
   const [lastSignature, setLastSignature] = useState(filterSignature);
   if (lastSignature !== filterSignature) {
@@ -798,9 +879,25 @@ export function JobsPage() {
     setPage(1);
   }
 
+  useEffect(() => {
+    if (lastSignature && page === 1 && searchParams.get('page')) {
+      setSearchParams((prev) => {
+        const p = new URLSearchParams(prev);
+        p.delete('page');
+        return p;
+      }, { replace: true });
+    }
+  }, [filterSignature]);
+
   function goToPage(next) {
     const target = Math.min(Math.max(1, next), pageCount);
     setPage(target);
+    setSearchParams((prev) => {
+      const p = new URLSearchParams(prev);
+      if (target > 1) p.set('page', String(target));
+      else p.delete('page');
+      return p;
+    }, { replace: true });
     // Cuộn về đầu danh sách, nếu không người dùng sang trang mới mà vẫn đang ở giữa trang.
     listTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -817,10 +914,11 @@ export function JobsPage() {
 
   function clearFilters() { setFilters({}); setQuery(''); setOpenChip(null); setActiveOrgTab('ALL'); }
 
-  function setPreviewParam(id) {
+  function setPreviewParam(id, targetPage = page) {
     setSearchParams((prev) => {
       const p = new URLSearchParams(prev);
       if (id == null) p.delete('preview'); else p.set('preview', String(id));
+      if (targetPage > 1) p.set('page', String(targetPage)); else p.delete('page');
       return p;
     }, { replace: true });
   }
@@ -833,11 +931,11 @@ export function JobsPage() {
       window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
       return;
     }
-    setClosing(false); setSelectedId(id); setPreviewParam(id);
+    setClosing(false); setSelectedId(id); setPreviewParam(id, page);
   }
   function closeDetail() {
     setClosing(true);
-    window.setTimeout(() => { setSelectedId(null); setClosing(false); setPreviewParam(null); }, 230);
+    window.setTimeout(() => { setSelectedId(null); setClosing(false); setPreviewParam(null, page); }, 230);
   }
 
   const selectedJob = jobs.find((j) => String(j.id) === String(selectedId)) || null;
@@ -952,6 +1050,7 @@ export function JobsPage() {
         /* ── Nhãn nguồn trên thẻ ── */
         .jb-org-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 500; padding: 4px 10px; border-radius: 9999px; border: 1px solid ${LINE_STRONG}; color: rgba(255,255,255,0.82); }
         .jb-org-pill.club { border-color: rgba(16,185,129,0.4); color: ${EMERALD}; }
+        .jb-org-pill.applied { border-color: rgba(16,185,129,0.5); color: #34d399; background: rgba(16,185,129,0.15); font-weight: 600; }
 
         /* ── Huy hiệu phần thưởng ── */
         .jb-reward-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid ${LINE}; }
@@ -1062,6 +1161,8 @@ export function JobsPage() {
         }
         .jb-apply { display: inline-flex; align-items: center; gap: 6px; background: ${EMERALD}; color: ${INK}; border: none; border-radius: 8px; padding: 11px 18px; font: inherit; font-weight: 500; font-size: 0.9375rem; text-decoration: none; cursor: pointer; white-space: nowrap; transition: background-color 150ms ease; }
         .jb-apply:hover { background: #34d399; }
+        .jb-apply.applied { background: rgba(16,185,129,0.14) !important; color: #34d399 !important; border: 1px solid rgba(16,185,129,0.4) !important; cursor: not-allowed !important; box-shadow: none !important; transform: none !important; opacity: 0.95; }
+        .jb-apply.applied:hover { background: rgba(16,185,129,0.14) !important; }
         .jb-iconbtn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid ${LINE_STRONG}; background: transparent; color: ${MUTED}; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: color 0.2s, border-color 0.2s, background-color 0.2s; }
         .jb-iconbtn:hover { border-color: rgba(16,185,129,0.5); color: ${EMERALD}; background: rgba(255,255,255,0.05); }
         .jb-iconbtn.on { color: #ef5da8; border-color: rgba(239,93,168,0.5); }
@@ -1234,6 +1335,11 @@ export function JobsPage() {
                     <JobLogo job={job} index={i} />
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                        {appliedIds.has(String(job.id)) && (
+                          <span className="jb-org-pill applied" title="Bạn đã nộp đơn ứng tuyển cho vị trí này">
+                            <CheckCircle2 size={12} /> Đã ứng tuyển
+                          </span>
+                        )}
                         {job.requiresPremium && (
                           <span
                             className="jb-org-pill prem"
@@ -1394,6 +1500,7 @@ export function JobsPage() {
               saved={saved.has(String(selectedJob.id))}
               onToggleSave={() => handleToggleSave(selectedJob.id)}
               onApply={handleApply}
+              isApplied={appliedIds.has(String(selectedJob.id))}
             />
           )}
         </div>
