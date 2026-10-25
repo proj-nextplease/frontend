@@ -21,6 +21,9 @@ import {
 import { resolveTheme } from '../../constants/portfolioThemes.js';
 import { PortfolioMascot } from '../PortfolioMascot.jsx';
 import { FilePreviewModal } from '../FilePreviewModal.jsx';
+import { PurpleAuraFigmaTemplate } from './PurpleAuraFigmaTemplate.jsx';
+import { NhoNeonFigmaTemplate } from './NhoNeonFigmaTemplate.jsx';
+import { ComNeonFigmaTemplate } from './ComNeonFigmaTemplate.jsx';
 import '../../styles/fomlioTheme.css';
 
 function LinkedInIcon({ size = 18 }) {
@@ -332,6 +335,7 @@ const DEFAULT_SERVICES = [
  */
 const FALLBACK_PROJECTS = [
   {
+    id: 'exp-1',
     title: 'Thiết kế Nền tảng E-Commerce Thời trang Thể thao',
     role: 'Lead UI/UX Designer',
     organization: 'Dự án Thương mại Điện tử',
@@ -342,6 +346,7 @@ const FALLBACK_PROJECTS = [
     verified: true,
   },
   {
+    id: 'exp-2',
     title: 'Ứng dụng Quản lý Tài chính & Đầu tư Cá nhân',
     role: 'Product Designer',
     organization: 'FinTech Innovation Lab',
@@ -352,6 +357,7 @@ const FALLBACK_PROJECTS = [
     verified: true,
   },
   {
+    id: 'exp-3',
     title: 'Hệ thống Quản lý Đào tạo & Khóa học Trực tuyến',
     role: 'UI Designer & Prototyper',
     organization: 'EdTech Platform',
@@ -361,6 +367,51 @@ const FALLBACK_PROJECTS = [
       'Mô tả về dự án: Xây dựng cổng học tập số kết hợp lộ trình tương tác theo gamification, tích hợp hệ thống bài tập và nộp bài với giao diện thân thiện, hiện đại.',
     verified: false,
   },
+  {
+    id: 'exp-4',
+    title: 'Cổng Dịch vụ Số & Đặt lịch Y tế Trực tuyến',
+    role: 'UX Researcher & Designer',
+    organization: 'HealthTech Innovation Hub',
+    startDate: '08/2022',
+    endDate: '12/2022',
+    description:
+      'Mô tả về dự án: Tối ưu quy trình đặt lịch khám bệnh thông minh qua 3 chạm, tích hợp hệ thống hồ sơ bệnh án điện tử trực quan giúp giảm 45% thời gian chờ đợi.',
+    verified: true,
+  },
+  {
+    id: 'exp-5',
+    title: 'Ứng dụng Đặt xe & Giao đồ ăn Tiết kiệm Xanh',
+    role: 'Lead Mobile Designer',
+    organization: 'Green Mobility Platform',
+    startDate: '03/2022',
+    endDate: '07/2022',
+    description:
+      'Mô tả về dự án: Thiết kế giao diện điều hướng thời gian thực theo bản đồ số tương tác, tối ưu hóa trải nghiệm đặt món đa điểm chạm với hệ sinh thái điểm thưởng phong phú.',
+    verified: true,
+  },
+  {
+    id: 'exp-6',
+    title: 'Nền tảng Mạng Xã hội Học tập & Phát triển Sự nghiệp',
+    role: 'Product Designer & Brand Lead',
+    organization: 'GenZ Career Network',
+    startDate: '09/2021',
+    endDate: '02/2022',
+    description:
+      'Mô tả về dự án: Kiến tạo không gian kết nối sinh viên và cố vấn nghề nghiệp thông qua hệ thống quest thử thách và bảng danh dự năng lực chuẩn hóa.',
+    verified: true,
+  },
+];
+
+/**
+ * 6 Signature neon border styles for the 2x3 overview grid (Figma Node 10-132)
+ */
+const GALLERY_BORDER_COLORS = [
+  { border: '#00e5ff', glow: 'rgba(0, 229, 255, 0.4)', tag: 'cyan' },
+  { border: '#ec4899', glow: 'rgba(236, 72, 153, 0.4)', tag: 'magenta' },
+  { border: '#fb7185', glow: 'rgba(251, 113, 133, 0.4)', tag: 'rose' },
+  { border: '#3b82f6', glow: 'rgba(59, 130, 246, 0.4)', tag: 'blue' },
+  { border: '#06b6d4', glow: 'rgba(6, 182, 212, 0.4)', tag: 'teal' },
+  { border: '#bef264', glow: 'rgba(190, 242, 100, 0.4)', tag: 'lime' },
 ];
 
 /**
@@ -368,6 +419,15 @@ const FALLBACK_PROJECTS = [
  * Faithful recreation of Figma node 9-126 ("Portfolio Landing Page 1")
  */
 export function FomlioPassport({ profile = {}, isDraft = false }) {
+  const currentThemeId = resolveTheme(profile.selectedTheme).id;
+  if (currentThemeId === 'PURPLE_AURA') {
+    return <PurpleAuraFigmaTemplate profile={profile} isDraft={isDraft} />;
+  }
+  if (currentThemeId === 'NHO_NEON') {
+    return <NhoNeonFigmaTemplate profile={profile} isDraft={isDraft} />;
+  }
+  return <ComNeonFigmaTemplate profile={profile} isDraft={isDraft} />;
+
   const [preview, setPreview] = useState(null);
   const [activeSection, setActiveSection] = useState('fom-top');
 
@@ -686,7 +746,7 @@ export function FomlioPassport({ profile = {}, isDraft = false }) {
               ))}
             </div>
 
-            {/* Right: 2 Big Glass Stat Cards */}
+            {/* Right: 3 Big Glass Stat Cards in Figma Node 10-132 */}
             <div className="fom-stats-column">
               <div className="fom-stat-card">
                 <div className="fom-stat-number">
@@ -698,10 +758,22 @@ export function FomlioPassport({ profile = {}, isDraft = false }) {
 
               <div className="fom-stat-card">
                 <div className="fom-stat-number">
-                  {verifiedPct || 100}
+                  5.0
+                  <span className="fom-stat-plus">★</span>
+                </div>
+                <div className="fom-stat-label">Chỉ số tin cậy &amp; Đánh giá</div>
+              </div>
+
+              <div className="fom-stat-card">
+                <div className="fom-stat-number">
+                  {verifiedPct || 97}
                   <span className="fom-stat-plus">%</span>
                 </div>
-                <div className="fom-stat-label">Phản hồi tích cực</div>
+                <div className="fom-stat-label">Tỷ lệ hoàn thành &amp; Phản hồi tốt</div>
+              </div>
+
+              <div className="fom-stats-star-wrap">
+                <FigmaStar3D size={58} rotate={18} className="fom-stats-star-large" />
               </div>
             </div>
           </div>
@@ -742,7 +814,66 @@ export function FomlioPassport({ profile = {}, isDraft = false }) {
               Đây là những dự án thuộc về chuyên ngành của mình
             </h2>
           </div>
+
+          {/* 6-Card Overview Gallery Grid exactly matching Figma Node 10-132 */}
+          <div className="fom-portfolio-gallery-grid">
+            <FigmaStar3D size={42} rotate={-18} className="fom-gallery-star g1" />
+            <FigmaSparkle size={20} className="fom-gallery-sparkle gsp1" />
+            <FigmaSparkle size={16} className="fom-gallery-sparkle gsp2" />
+
+            {displayProjects.slice(0, 6).map((project, idx) => {
+              const borderStyle = GALLERY_BORDER_COLORS[idx % GALLERY_BORDER_COLORS.length];
+              const shot = Array.isArray(project.proofImages) && project.proofImages[0] ? project.proofImages[0] : null;
+
+              return (
+                <a
+                  key={project.id || idx}
+                  href={`#fom-project-${idx + 1}`}
+                  className={`fom-gallery-card fom-gallery-${borderStyle.tag}`}
+                  style={{
+                    borderColor: borderStyle.border,
+                    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.35), 0 0 20px ${borderStyle.glow}`,
+                  }}
+                  title={`Xem chi tiết Dự án ${idx + 1}: ${project.title}`}
+                >
+                  <div className="fom-gallery-card-preview">
+                    {shot ? (
+                      <img src={shot} alt={project.title} className="fom-gallery-img" />
+                    ) : (
+                      <div className="fom-gallery-mockup-screen">
+                        <div className="fom-gallery-mockup-header">
+                          <span className="fom-dot red" />
+                          <span className="fom-dot yellow" />
+                          <span className="fom-dot green" />
+                          <span className="fom-gallery-url">nextplease.me/case-{idx + 1}</span>
+                        </div>
+                        <div className="fom-gallery-screen-body">
+                          <span className="fom-gallery-screen-badge">PROJECT {idx + 1}</span>
+                          <h4 className="fom-gallery-screen-name">{project.title}</h4>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="fom-gallery-card-footer">
+                    <div className="fom-gallery-card-meta">
+                      <span className="fom-gallery-card-tag">Dự án {idx + 1}</span>
+                      <h4 className="fom-gallery-card-title">{project.title}</h4>
+                      <p className="fom-gallery-card-role">{project.role || project.organization}</p>
+                    </div>
+                    <div className="fom-gallery-arrow-disc" style={{ background: borderStyle.border }}>
+                      <ArrowRight size={18} color="#130924" strokeWidth={2.5} />
+                    </div>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
         </section>
+      </div>
+
+      {/* Signature Marquee Divider before deep projects */}
+      <div className="fom-marquee-stack gallery-divider">
+        <SignatureMarquee items={skills} />
       </div>
 
       {/* ── 8. DEEP PROJECT SHOWCASES (WITH MARQUEE DIVIDERS) ──────────────── */}
@@ -750,7 +881,7 @@ export function FomlioPassport({ profile = {}, isDraft = false }) {
         {displayProjects.map((project, idx) => {
           const auraClass = PROJECT_THEMES[idx % PROJECT_THEMES.length];
           return (
-            <div key={project.id || idx} className="fom-showcase-wrapper">
+            <div key={project.id || idx} className="fom-showcase-wrapper" id={`fom-project-${idx + 1}`}>
               <div className={`fom-showcase-container ${auraClass}`}>
                 <div className="fom-shell">
                   <div className="fom-showcase-inner">
@@ -869,54 +1000,109 @@ export function FomlioPassport({ profile = {}, isDraft = false }) {
       {/* ── 10. CONTACT & FOOTER SECTION ("LIÊN HỆ") ───────────────────────── */}
       <div className="fom-shell">
         <footer className="fom-contact-section" id="fom-contact">
-          <div className="fom-section-header center">
-            <div className="fom-pill-tag purple">
-              <span>LIÊN HỆ</span>
+          <div className="fom-contact-layout">
+            {/* Left Column: Contact Copy & Actions */}
+            <div className="fom-contact-left-col">
+              <div className="fom-pill-tag purple">
+                <span>LIÊN HỆ</span>
+              </div>
+              <h2 className="fom-contact-h2">
+                Hãy cùng kết nối và tạo nên những dự án tuyệt vời!
+              </h2>
+              <p className="fom-contact-subtitle">
+                Sẵn sàng trao đổi về cơ hội làm việc, dự án freelance hoặc hợp tác phát triển sản phẩm.
+              </p>
+
+              <div className="fom-contact-channels">
+                {email && (
+                  <a href={`mailto:${email}`} className="fom-contact-pill">
+                    <Mail size={18} />
+                    <span>{email}</span>
+                  </a>
+                )}
+                {phone && (
+                  <a href={`tel:${phone}`} className="fom-contact-pill">
+                    <Phone size={18} />
+                    <span>{phone}</span>
+                  </a>
+                )}
+                {linkedin && (
+                  <a
+                    href={`https://linkedin.com/in/${linkedin}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="fom-contact-pill"
+                  >
+                    <LinkedInIcon size={18} />
+                    <span>LinkedIn</span>
+                  </a>
+                )}
+                <button
+                  type="button"
+                  className="fom-contact-pill cv-btn"
+                  onClick={handleDownloadCv}
+                >
+                  <span>Tải CV của mình</span>
+                  <ArrowRight size={16} />
+                </button>
+              </div>
             </div>
-            <h2 className="fom-section-h2 large">
-              Hãy cùng kết nối và tạo nên những dự án tuyệt vời!
-            </h2>
-            <p className="fom-contact-subtitle">
-              Sẵn sàng trao đổi về cơ hội làm việc, dự án freelance hoặc hợp tác phát triển sản phẩm.
-            </p>
+
+            {/* Right Column: Glowing Portrait matching Hero (Figma Node 10-132) */}
+            <div className="fom-contact-right-col">
+              <div className="fom-footer-portrait-box">
+                <FigmaStar3D size={44} rotate={20} className="fom-footer-star f-s1" />
+                <FigmaStar3D size={28} rotate={-16} className="fom-footer-star f-s2" />
+                <FigmaSparkle size={18} className="fom-footer-sparkle f-sp1" />
+
+                <div className="fom-footer-halo-ring">
+                  {/* Wavy Doodle Contour Lines */}
+                  <svg
+                    viewBox="0 0 400 400"
+                    className="fom-portrait-doodles"
+                    fill="none"
+                    stroke="rgba(255, 255, 255, 0.72)"
+                    strokeWidth="2.8"
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M 40,240 C 90,160 110,130 150,150 C 190,170 210,240 260,210 C 300,180 320,130 360,160" />
+                    <path d="M 60,270 C 110,190 130,160 170,180 C 210,200 230,270 280,240 C 320,210 340,160 380,190" />
+                    <path d="M 20,210 C 70,130 90,100 130,120 C 170,140 190,210 240,180 C 280,150 300,100 340,130" />
+                  </svg>
+
+                  <div className="fom-footer-img-box">
+                    {avatar.portraitUrl ? (
+                      <img
+                        src={avatar.portraitUrl}
+                        alt={`Ảnh của ${name}`}
+                        className="fom-footer-portrait-img"
+                      />
+                    ) : (
+                      <div className="fom-footer-mascot-wrap">
+                        <PortfolioMascot avatar={avatar} size={220} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="fom-contact-channels">
-            {email && (
-              <a href={`mailto:${email}`} className="fom-contact-pill">
-                <Mail size={18} />
-                <span>{email}</span>
-              </a>
-            )}
-            {phone && (
-              <a href={`tel:${phone}`} className="fom-contact-pill">
-                <Phone size={18} />
-                <span>{phone}</span>
-              </a>
-            )}
-            {linkedin && (
-              <a
-                href={`https://linkedin.com/in/${linkedin}`}
-                target="_blank"
-                rel="noreferrer"
-                className="fom-contact-pill"
-              >
-                <LinkedInIcon size={18} />
-                <span>LinkedIn</span>
-              </a>
-            )}
-            <button
-              type="button"
-              className="fom-contact-pill cv-btn"
-              onClick={handleDownloadCv}
-            >
-              <span>Tải CV của mình</span>
-              <ArrowRight size={16} />
-            </button>
+          {/* Signature "THANKS FOR WATCHING!" Banner (Figma Node 10-132) */}
+          <div className="fom-thanks-banner-wrap">
+            <FigmaStar3D size={44} rotate={-18} className="fom-thanks-star t1" />
+            <FigmaStar3D size={32} rotate={22} className="fom-thanks-star t2" />
+            <FigmaSparkle size={20} className="fom-thanks-sparkle tsp1" />
+            <FigmaSparkle size={16} className="fom-thanks-sparkle tsp2" />
+
+            <div className="fom-thanks-banner">
+              <h3 className="fom-thanks-text">THANKS FOR WATCHING!</h3>
+            </div>
           </div>
 
           <div className="fom-bottom-legal">
-            <p>© {new Date().getFullYear()} {name} · Thiết kế Portfolio Cốm Neon · fonlio</p>
+            <p>© {new Date().getFullYear()} {name} · Thiết kế Portfolio Tím Aura Neon · fonlio</p>
           </div>
         </footer>
       </div>

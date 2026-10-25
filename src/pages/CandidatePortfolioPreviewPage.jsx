@@ -41,7 +41,7 @@ export function CandidatePortfolioPreviewPage() {
         school: 'Đại học FPT',
         location: 'Thành phố Hồ Chí Minh',
         bio: 'Mình là một người đam mê sáng tạo, luôn hướng tới việc kết hợp giữa tư duy phân tích thị trường và trải nghiệm người dùng tinh tế để mang lại giá trị thực tế cho từng dự án.',
-        selectedTheme: themeOverride || 'NHO_NEON',
+        selectedTheme: themeOverride || 'FOMLIO',
         openToWork: true,
         socialLinks: {
           email: 'tram.nguyen@fpt.edu.vn',
