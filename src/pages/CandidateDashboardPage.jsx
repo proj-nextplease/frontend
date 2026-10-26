@@ -3460,19 +3460,19 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           );
         })()}
 
-        {/* 2e. CANDIDATE POINT STORE VIEW */}
+        {/* 2e. CANDIDATE POINT STORE VIEW - CYBERPUNK NEON AURA THEME */}
         {activeView === 'PREMIUM_STORE' && (
-          <section className="candidate-premium-workspace np-view fstore-wrapper">
+          <section className="candidate-premium-workspace np-view fstore-wrapper fstore-cyber-aura">
             {/* Header */}
             <div className="fstore-header">
               <div className="fstore-header-left">
                 <div className="fstore-pill-badge">
-                  <Sparkles size={13} />
-                  <span>HỆ THỐNG ĐIỂM MINH BẠCH 1:1</span>
+                  <Sparkles size={13} className="fstore-pulse-icon" />
+                  <span>CYBER AURA STORE · HỆ THỐNG ĐIỂM MINH BẠCH 1:1</span>
                 </div>
-                <h2 className="fstore-main-title">Cửa hàng Điểm FONLIO</h2>
+                <h2 className="fstore-main-title">Cửa hàng Điểm fonlio</h2>
                 <p className="fstore-subtitle">
-                  Điểm vĩnh viễn không bao giờ hết hạn · Không thu phí duy trì · Chỉ thanh toán khi nhận được giá trị thực tế
+                  1 Điểm = 1 VNĐ · Điểm bảo lưu vĩnh viễn trọn đời · Không thu phí duy trì · 80% tính năng miễn phí 0đ, chỉ thanh toán khi nhận được giá trị thực tế
                 </p>
               </div>
               <div className="fstore-header-right">
@@ -3480,14 +3480,20 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </div>
             </div>
 
-            {/* Wallet Showcase Card */}
+            {/* Wallet Showcase Card - Holographic Cyber Titanium Card */}
             <div className="fstore-wallet-card">
+              <div className="fstore-card-watermark">FONLIO // CYBER WALLET ID</div>
               <div className="fstore-wallet-left">
                 <div className="fstore-wallet-icon-ring">
                   <WalletCards size={26} />
                 </div>
                 <div className="fstore-wallet-details">
-                  <div className="fstore-wallet-label">SỐ DƯ KHẢ DỤNG TRONG VÍ</div>
+                  <div className="fstore-wallet-status-row">
+                    <span className="fstore-wallet-label">SỐ DƯ KHẢ DỤNG TRONG VÍ</span>
+                    <span className="fstore-wallet-live-badge">
+                      <span className="fstore-live-dot" /> ACTIVE 24/7
+                    </span>
+                  </div>
                   <div className="fstore-wallet-balance">
                     <span className="fstore-wallet-num">
                       {walletLoading ? '...' : (wallet?.npBalance ?? 0).toLocaleString('vi-VN')}
@@ -3497,11 +3503,15 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <div className="fstore-wallet-tags">
                     <span className="fstore-wtag">
                       <CheckCircle2 size={13} />
-                      Tương đương {(wallet?.npBalance ?? 0).toLocaleString('vi-VN')} VNĐ
+                      Tương đương <strong>{(wallet?.npBalance ?? 0).toLocaleString('vi-VN')} VNĐ</strong> (Tỷ giá 1:1)
                     </span>
                     <span className="fstore-wtag">
                       <Clock3 size={13} />
                       Bảo lưu vĩnh viễn trọn đời
+                    </span>
+                    <span className="fstore-wtag">
+                      <ShieldCheck size={13} />
+                      Không phí duy trì tài khoản
                     </span>
                   </div>
                 </div>
@@ -3525,7 +3535,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <div>
                   <h3 className="fstore-section-title">Gói nạp Điểm FONLIO tiêu chuẩn</h3>
                   <p className="fstore-section-sub">
-                    Quy chuẩn mức nạp đuôi 9 thân thiện · Thanh toán bảo mật qua VietQR PayOS tự động trong 3 giây
+                    Quy chuẩn mức nạp đuôi 9 thân thiện sinh viên · Thanh toán bảo mật qua VietQR PayOS tự động kích hoạt sau 3 giây
                   </p>
                 </div>
                 <div className="fstore-secure-badge">
@@ -3540,12 +3550,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <div className="fstore-pkg-ribbon">
                     <Sparkles size={11} /> KHUYÊN DÙNG
                   </div>
+                  <div className="fstore-pkg-badge-tier standard">GÓI TIÊU CHUẨN</div>
                   <div className="fstore-pkg-head">
-                    <div className="fstore-pkg-name">Gói Tiêu Chuẩn</div>
                     <div className="fstore-pkg-price">
                       39.000<span className="fstore-curr">đ</span>
                     </div>
-                    <div className="fstore-pkg-pts">= 39.000 Điểm</div>
+                    <div className="fstore-pkg-pts">= 39.000 Điểm FONLIO</div>
                   </div>
                   <div className="fstore-pkg-desc">Lựa chọn lý tưởng cho mọi sinh viên bắt đầu tìm kiếm việc làm và xây dựng Portfolio.</div>
                   <ul className="fstore-pkg-perks">
@@ -3559,7 +3569,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     </li>
                     <li>
                       <CheckCircle2 size={15} />
-                      <span>Không bao giờ hết hạn, dùng bất kỳ lúc nào</span>
+                      <span>Bảo lưu trọn đời, dùng bất kỳ lúc nào</span>
                     </li>
                   </ul>
                   <button
@@ -3567,18 +3577,19 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     className="fstore-pkg-btn featured"
                     onClick={() => { setTopUpAmount('39000'); setShowTopUpModal(true); }}
                   >
-                    Nạp 39.000đ
+                    <span>Nạp 39.000đ</span>
+                    <ArrowRight size={14} />
                   </button>
                 </div>
 
                 {/* Tier 2: 69.000đ */}
-                <div className="fstore-pkg-card">
+                <div className="fstore-pkg-card cyan-tier">
+                  <div className="fstore-pkg-badge-tier active">GÓI NĂNG ĐỘNG</div>
                   <div className="fstore-pkg-head">
-                    <div className="fstore-pkg-name">Gói Năng Động</div>
                     <div className="fstore-pkg-price">
                       69.000<span className="fstore-curr">đ</span>
                     </div>
-                    <div className="fstore-pkg-pts">= 69.000 Điểm</div>
+                    <div className="fstore-pkg-pts">= 69.000 Điểm FONLIO</div>
                   </div>
                   <div className="fstore-pkg-desc">Dành cho ứng viên đang tích cực apply nhiều cơ hội song song.</div>
                   <ul className="fstore-pkg-perks">
@@ -3600,18 +3611,19 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     className="fstore-pkg-btn"
                     onClick={() => { setTopUpAmount('69000'); setShowTopUpModal(true); }}
                   >
-                    Nạp 69.000đ
+                    <span>Nạp 69.000đ</span>
+                    <ArrowRight size={14} />
                   </button>
                 </div>
 
                 {/* Tier 3: 99.000đ */}
-                <div className="fstore-pkg-card">
+                <div className="fstore-pkg-card purple-tier">
+                  <div className="fstore-pkg-badge-tier breakthrough">GÓI BỨT PHÁ</div>
                   <div className="fstore-pkg-head">
-                    <div className="fstore-pkg-name">Gói Bứt Phá</div>
                     <div className="fstore-pkg-price">
                       99.000<span className="fstore-curr">đ</span>
                     </div>
-                    <div className="fstore-pkg-pts">= 99.000 Điểm</div>
+                    <div className="fstore-pkg-pts">= 99.000 Điểm FONLIO</div>
                   </div>
                   <div className="fstore-pkg-desc">Tối ưu cho sinh viên năm 3-4 nhận việc part-time & dự án freelance liên tục.</div>
                   <ul className="fstore-pkg-perks">
@@ -3633,18 +3645,19 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     className="fstore-pkg-btn"
                     onClick={() => { setTopUpAmount('99000'); setShowTopUpModal(true); }}
                   >
-                    Nạp 99.000đ
+                    <span>Nạp 99.000đ</span>
+                    <ArrowRight size={14} />
                   </button>
                 </div>
 
                 {/* Tier 4: 199.000đ */}
-                <div className="fstore-pkg-card">
+                <div className="fstore-pkg-card gold-tier">
+                  <div className="fstore-pkg-badge-tier longterm">GÓI DÀI HẠN</div>
                   <div className="fstore-pkg-head">
-                    <div className="fstore-pkg-name">Gói Dài Hạn</div>
                     <div className="fstore-pkg-price">
                       199.000<span className="fstore-curr">đ</span>
                     </div>
-                    <div className="fstore-pkg-pts">= 199.000 Điểm</div>
+                    <div className="fstore-pkg-pts">= 199.000 Điểm FONLIO</div>
                   </div>
                   <div className="fstore-pkg-desc">Đồng hành trọn vẹn xuyên suốt cả năm học và kỳ tốt nghiệp.</div>
                   <ul className="fstore-pkg-perks">
@@ -3658,7 +3671,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     </li>
                     <li>
                       <CheckCircle2 size={15} />
-                      <span>Luôn sẵn sàng điểm khi nhận được offer xịn</span>
+                      <span>Luôn sẵn sàng điểm khi nhận offer xịn</span>
                     </li>
                   </ul>
                   <button
@@ -3666,7 +3679,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     className="fstore-pkg-btn"
                     onClick={() => { setTopUpAmount('199000'); setShowTopUpModal(true); }}
                   >
-                    Nạp 199.000đ
+                    <span>Nạp 199.000đ</span>
+                    <ArrowRight size={14} />
                   </button>
                 </div>
               </div>
@@ -3678,7 +3692,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <div>
                   <h3 className="fstore-section-title">Cam kết minh bạch chi phí dịch vụ</h3>
                   <p className="fstore-section-sub">
-                    Triết lý vận hành vì sinh viên: 80% tính năng cốt lõi là miễn phí, chỉ thu phí khi bạn đạt được kết quả cụ thể.
+                    Triết lý vận hành vì sinh viên: 80% tính năng cốt lõi là miễn phí 0đ, chỉ thu phí khi bạn đạt được kết quả cụ thể.
                   </p>
                 </div>
               </div>

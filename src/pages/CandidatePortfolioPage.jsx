@@ -5,7 +5,7 @@ import { ONBOARDING_TAB_FLAG, announcePortfolioSaved } from '../lib/onboardingTa
 import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
 import { LivePortfolioPreview } from '../components/portfolio/LivePortfolioPreview.jsx';
 import { toPassportProfile } from '../lib/portfolioDraft.js';
-import { PORTFOLIO_THEME, resolveTheme } from '../constants/portfolioThemes.js';
+import { PORTFOLIO_THEMES, PORTFOLIO_THEME, resolveTheme } from '../constants/portfolioThemes.js';
 import '../styles/fomlioBuilder.css';
 import { MASCOTS, mascotSheets, resolveMascot } from '../lib/mascots.js';
 import {
@@ -885,15 +885,35 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     }
   }
 
+  function handleSelectTheme(themeId) {
+    setProfile((current) => ({ ...current, selectedTheme: themeId }));
+    setIsDraftDirty(true);
+    try {
+      localStorage.setItem('fonlio:candidate-selected-theme', themeId);
+    } catch {
+      /* ignore */
+    }
+  }
+
   function openPortfolioPreview() {
     const previewId = String(Date.now());
+    const currentTheme = profile.selectedTheme || 'PURPLE_AURA';
     const previewPayload = {
       avatar,
-      profile,
+      profile: {
+        ...profile,
+        selectedTheme: currentTheme,
+      },
       experiences,
       credentials,
       createdAt: new Date().toISOString(),
     };
+
+    try {
+      localStorage.setItem('fonlio:candidate-selected-theme', currentTheme);
+    } catch {
+      /* ignore */
+    }
 
     // Each preview holds full base64 images, so stale entries from earlier clicks
     // pile up and eventually blow the localStorage quota. Clear old previews first.
@@ -918,10 +938,10 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       setErrorMsg('Bản preview quá lớn (quá nhiều ảnh đính kèm) nên không thể mở. Hãy giảm bớt ảnh minh chứng rồi thử lại.');
       return;
     }
-    window.open(`/portfolio/preview?draft=${previewId}`, '_blank', 'noopener,noreferrer');
+    window.open(`/portfolio/preview?draft=${previewId}&theme=${currentTheme}`, '_blank', 'noopener,noreferrer');
   }
 
-  const skills = profile.skills
+  const skills = (profile.skills || '')
     .split(',')
     .map((skill) => skill.trim())
     .filter(Boolean);
@@ -1094,7 +1114,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             onOpenInNewTab={openPortfolioPreview}
             scrollToSection={activeSection}
             onScroll={handlePreviewScroll}
-            onSelectTheme={(id) => setProfile((current) => ({ ...current, selectedTheme: id }))}
+            onSelectTheme={handleSelectTheme}
           />
         </div>
 
@@ -1707,7 +1727,64 @@ export function CandidatePortfolioPage({ isEditing = false }) {
 )}
 
 {step === 5 && (<>
+          {/* Theme Selector directly in Builder Dock */}
           <div className="portfolio-preview-action-panel">
+            <div className="form-section-heading">
+              <Sparkles size={22} color="#9333ea" />
+              <div>
+                <h2>Giao diện Portfolio</h2>
+                <p>
+                  Chọn phong cách màu sắc website Portfolio của bạn. Thay đổi sẽ cập nhật tức thì vào bản xem trước.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginTop: '14px' }}>
+              {PORTFOLIO_THEMES.map((theme) => {
+                const isSelected = (profile.selectedTheme || 'PURPLE_AURA') === theme.id;
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => handleSelectTheme(theme.id)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '12px 10px',
+                      borderRadius: '16px',
+                      border: isSelected ? '2px solid #7B3AEC' : '1px solid var(--line, #e2e8f0)',
+                      background: isSelected ? 'rgba(123, 58, 236, 0.08)' : 'var(--surface, #ffffff)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: isSelected ? '0 0 14px rgba(123, 58, 236, 0.25)' : 'none',
+                    }}
+                  >
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      {theme.colorBox.map((col, i) => (
+                        <span
+                          key={i}
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            background: col,
+                            display: 'inline-block',
+                            border: '1px solid rgba(0,0,0,0.12)',
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <span style={{ fontWeight: isSelected ? 700 : 500, fontSize: '13px', color: isSelected ? '#7B3AEC' : 'var(--ink, #1e293b)' }}>
+                      {theme.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="portfolio-preview-action-panel" style={{ marginTop: '14px' }}>
             <div className="form-section-heading">
               <Eye size={22} />
               <div>
@@ -1719,7 +1796,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             </div>
             <button className="button secondary-button preview-open-button" onClick={openPortfolioPreview} type="button">
               <Eye size={18} />
-              Xem trước
+              Xem trước ({PORTFOLIO_THEMES.find(t => t.id === (profile.selectedTheme || 'PURPLE_AURA'))?.name || 'Tím Aura Neon'})
             </button>
           </div>
 

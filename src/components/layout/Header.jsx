@@ -89,6 +89,7 @@ export function Header() {
         skills: portfolio.skills ? portfolio.skills.join(', ') : '',
         openToWork: !!portfolio.openToWork,
         socialLinks: portfolio.socialLinks || {},
+        selectedTheme: portfolio.selectedTheme,
       },
       experiences: portfolio.experiences || [],
       credentials: portfolio.credentials || [],
@@ -99,7 +100,7 @@ export function Header() {
       `nextplease:portfolio-preview:${previewId}`,
       JSON.stringify(previewPayload),
     );
-    window.open(`/portfolio/preview?draft=${previewId}`, '_blank', 'noopener,noreferrer');
+    window.open(`/portfolio/preview?draft=${previewId}&theme=${portfolio.selectedTheme || ''}`, '_blank', 'noopener,noreferrer');
     setShowDropdown(false);
   };
 
