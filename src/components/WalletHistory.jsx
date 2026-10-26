@@ -63,55 +63,82 @@ export function WalletHistory({ transactions, loading }) {
   const rows = Array.isArray(transactions) ? transactions : [];
 
   return (
-    <section className="np-wallet-history">
+    <section className="fstore-history-section np-wallet-history">
       <button
         type="button"
-        className={`np-wallet-history-toggle${open ? ' is-open' : ''}`}
+        className={`fstore-history-toggle np-wallet-history-toggle${open ? ' is-open' : ''}`}
         onClick={() => setOpen(v => !v)}
         aria-expanded={open}
       >
-        <History size={15} />
-        <span className="np-wallet-history-title">Lịch sử giao dịch</span>
-        {/* Số lượng hiện ngay trên nút: người dùng biết có gì bên trong trước
-            khi bấm, và biết luôn là mình chưa có giao dịch nào. */}
-        {!loading && <span className="np-wallet-history-count">{rows.length}</span>}
-        <ChevronDown size={16} className="np-wallet-history-chevron" />
+        <div className="fstore-history-toggle-left">
+          <div className="fstore-history-icon-box">
+            <History size={16} />
+          </div>
+          <span className="fstore-history-title np-wallet-history-title">Lịch sử giao dịch ví</span>
+          {!loading && (
+            <span className="fstore-history-badge np-wallet-history-count">
+              {rows.length} {rows.length === 1 ? 'giao dịch' : 'giao dịch'}
+            </span>
+          )}
+        </div>
+        <div className="fstore-history-toggle-right">
+          <span className="fstore-history-action-hint">{open ? 'Thu gọn' : 'Xem chi tiết'}</span>
+          <ChevronDown size={17} className="fstore-history-chevron np-wallet-history-chevron" />
+        </div>
       </button>
 
       {!open ? null : loading && rows.length === 0 ? (
-        <p className="np-wallet-history-empty">Đang tải…</p>
+        <div className="fstore-history-box np-wallet-history-empty">
+          <div className="fstore-history-spinner" />
+          <p>Đang tải dữ liệu giao dịch từ blockchain/hệ thống ví…</p>
+        </div>
       ) : rows.length === 0 ? (
-        <p className="np-wallet-history-empty">
-          Chưa có giao dịch nào. Nạp Điểm hoặc hoàn thành nhiệm vụ để bắt đầu.
-        </p>
+        <div className="fstore-history-box np-wallet-history-empty">
+          <div className="fstore-history-empty-icon">
+            <History size={28} />
+          </div>
+          <h4>Chưa phát sinh giao dịch nào</h4>
+          <p>
+            Khi bạn nạp Điểm, nhận thù lao dự án hoặc xuất bản Portfolio, lịch sử biến động số dư sẽ được lưu vết minh bạch tại đây.
+          </p>
+        </div>
       ) : (
-        <ul className="np-wallet-history-list">
-          {rows.map((tx, i) => {
-            const amount = Number(tx.amount_np ?? 0);
-            /* Dấu đã nằm sẵn trong số: backend lưu số âm cho khoản chi, nên
-               không suy ra từ `transaction_type` — suy ra là có ngày một loại
-               giao dịch mới hiện sai dấu. */
-            const gain = amount >= 0;
-            const date = formatDateTime(tx.created_at);
-            const balance = Number(tx.balance_after_np ?? 0);
+        <div className="fstore-history-box">
+          <ul className="fstore-history-list np-wallet-history-list">
+            {rows.map((tx, i) => {
+              const amount = Number(tx.amount_np ?? 0);
+              const gain = amount >= 0;
+              const date = formatDateTime(tx.created_at);
+              const balance = Number(tx.balance_after_np ?? 0);
 
-            return (
-              <li key={tx.id || i} className="np-wallet-history-row">
-                <div className="np-wallet-history-main">
-                  <span className="np-wallet-history-label">{label(tx)}</span>
-                  <span className="np-wallet-history-meta">
-                    {date ? `${date} · ` : ''}còn {balance.toLocaleString('vi-VN')} Điểm
-                  </span>
-                </div>
-                {/* Khoản chi dùng màu chữ thường, không phải màu cảnh báo:
-                    tiêu NP là việc người dùng chủ động làm, không phải lỗi. */}
-                <span className={`np-wallet-history-amount${gain ? ' is-gain' : ''}`}>
-                  {gain ? '+' : '−'}{Math.abs(amount).toLocaleString('vi-VN')} Điểm
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+              return (
+                <li key={tx.id || i} className={`fstore-history-row np-wallet-history-row ${gain ? 'gain' : 'spend'}`}>
+                  <div className="fstore-history-type-icon">
+                    {gain ? '+' : '−'}
+                  </div>
+                  <div className="fstore-history-main np-wallet-history-main">
+                    <div className="fstore-history-label-row">
+                      <span className="fstore-history-label np-wallet-history-label">{label(tx)}</span>
+                      {tx.transaction_type && (
+                        <span className={`fstore-history-type-tag ${gain ? 'gain' : 'spend'}`}>
+                          {tx.transaction_type}
+                        </span>
+                      )}
+                    </div>
+                    <span className="fstore-history-meta np-wallet-history-meta">
+                      {date ? `${date} · ` : ''}Số dư sau GD: <strong>{balance.toLocaleString('vi-VN')} Điểm</strong>
+                    </span>
+                  </div>
+                  <div className={`fstore-history-amount np-wallet-history-amount ${gain ? 'is-gain' : 'is-spend'}`}>
+                    <span className="fstore-history-sign">{gain ? '+' : '−'}</span>
+                    <span className="fstore-history-value">{Math.abs(amount).toLocaleString('vi-VN')}</span>
+                    <span className="fstore-history-unit">Điểm</span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
     </section>
   );
