@@ -201,15 +201,12 @@ function ProtectedDashboardRoute() {
     return <Navigate to="/?auth=login" replace />;
   }
 
-  // User has session. Gate on onboarding: a brand-new account (e.g. first social
-  // login) has no portfolio yet, or one with onboardingCompleted=false — both must
-  // finish the portfolio first. Only a completed portfolio may reach the dashboard.
+  // Khu vực cá nhân mở cho mọi tài khoản ứng viên, kể cả khi chưa tạo portfolio:
+  // Việc đã lưu, Ứng tuyển, Cửa hàng và ví NP đều dùng được độc lập với portfolio.
+  // Chặn theo onboarding ở đây khoá luôn những thứ đó và đẩy người dùng vào trình
+  // dựng portfolio trước khi họ kịp xem bên trong có gì.
   if (isBusinessOnly) {
     return <Navigate to="/businesses/dashboard" replace />;
-  }
-
-  if (portfolio && portfolio.onboardingCompleted === false) {
-    return <Navigate to="/portfolio" replace />;
   }
 
   return <CandidateDashboardPage initialPortfolio={portfolio} />;

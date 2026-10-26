@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowRight, House, BriefcaseBusiness, MessagesSquare, FileText, Menu, X, Building2,
-  Compass, WalletCards, ChevronDown, LogOut, ExternalLink,
+  Compass, WalletCards, ChevronDown, LogOut, ExternalLink, Coins,
 } from 'lucide-react';
 import { useAuthModal } from '../../context/AuthModalContext.jsx';
 import { logout } from '../../api/httpClient.js';
@@ -526,6 +526,17 @@ export function SiteHeader({ overlay = false, pinned = true }) {
                         </span>
                       </div>
                       <div className="nph-menu-sep" />
+                      {/* ?topup=open để trang Khu vực của tôi tự bật hộp nạp —
+                          hộp đó là state của CandidateDashboardPage nên header
+                          không với tới được, chỉ ra hiệu qua URL. */}
+                      <Link
+                        to="/candidates/dashboard/store?topup=open"
+                        role="menuitem"
+                        className="nph-menu-item"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <Coins size={16} color={N_LIME} /> Nạp điểm
+                      </Link>
                       <Link
                         to="/candidates/universe"
                         role="menuitem"
