@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { supabase } from '../services/supabaseClient.js';
 import { getStoredToken, setStoredToken, clearStoredAuth } from '../lib/authStorage.js';
+import { rememberReturnTo } from '../lib/returnTo.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api/v1';
 
@@ -96,10 +97,14 @@ httpClient.interceptors.response.use(
         const path = window.location.pathname;
         const onAuthOrPublicPage = /\/(login|register|forgot-password|reset-password|portfolio\/view)/.test(path);
         if (!onAuthOrPublicPage) {
-          let loginPath = '/candidate/login';
-          if (path.startsWith('/nextplease-admin-portal')) loginPath = '/nextplease-admin-portal/login';
-          else if (path.startsWith('/business')) loginPath = '/business/login';
-          window.location.assign(`${loginPath}?expired=1`);
+          if (path.startsWith('/nextplease-admin-portal')) {
+            window.location.assign('/nextplease-admin-portal/login?expired=1');
+          } else if (path.startsWith('/business')) {
+            window.location.assign('/business/login?expired=1');
+          } else {
+            rememberReturnTo(`${path}${window.location.search}${window.location.hash}`);
+            window.location.assign('/?auth=login&expired=1');
+          }
         }
       }
     }

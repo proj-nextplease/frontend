@@ -211,7 +211,7 @@ export function AccountSettingsModal({ onClose, currentDisplayName, currentEmail
     try {
       await signOutAllSessions();
       setSessionsStatus({ type: 'success', message: 'Đã đăng xuất khỏi tất cả thiết bị. Đang chuyển hướng...' });
-      setTimeout(() => { window.location.href = '/candidate/login'; }, 1500);
+      setTimeout(() => { window.location.href = '/?auth=login'; }, 1500);
     } catch (error) {
       setSessionsStatus({ type: 'error', message: error.message || 'Không thể đăng xuất khỏi tất cả thiết bị.' });
       setSigningOutAll(false);
