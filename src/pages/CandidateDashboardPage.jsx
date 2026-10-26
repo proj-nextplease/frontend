@@ -3580,6 +3580,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             </div>
 
             <div className="fstore-packages-section">
+              <span className="fstore-eyebrow">Nạp điểm</span>
               <h3 className="fstore-section-title">Các mức nạp</h3>
               <p className="fstore-section-sub">
                 Điểm vào ví ngay sau khi chuyển khoản. Nạp bao nhiêu cũng được, bốn mức dưới đây chỉ là gợi ý theo nhu cầu thường gặp.
@@ -3631,6 +3632,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             </div>
 
             <div className="fstore-transparency-section">
+              <span className="fstore-eyebrow">Biểu phí</span>
               <h3 className="fstore-section-title">Cái gì miễn phí, cái gì tính điểm</h3>
               <p className="fstore-section-sub">
                 Những việc bạn làm để tìm cơ hội đều không mất phí. Điểm chỉ bị trừ ở hai thời điểm, và cả hai đều là lúc bạn đã có kết quả trong tay.

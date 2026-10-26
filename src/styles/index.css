@@ -17020,17 +17020,14 @@ body:has(.np-skel) {
    người dùng mất tập trung khỏi con số. */
 
 .candidate-portal-layout .fstore-wrapper {
-  --fs-accent: #10b981;
-  --fs-accent-hi: #34d399;
-  --fs-edge: #22d3ee;
-  --fs-slab: #121817;
-  --fs-slab-hi: #18211f;
-  --fs-line: rgba(255, 255, 255, 0.12);
-  --fs-line-hi: rgba(16, 185, 129, 0.55);
-  --fs-text: #ffffff;
-  --fs-muted: rgba(233, 247, 242, 0.62);
+  /* KHÔNG đặt bộ token riêng ở đây. Khu vực ứng viên đã có sẵn --c-red,
+     --c-line, --np-panel, --np-passport… và tab Cửa hàng nằm cạnh các tab
+     khác trong cùng một khung; tự dựng một bộ màu song song là cách chắc chắn
+     để nó lệch khỏi hàng xóm sau vài lần ai đó chỉnh theme. Mấy biến dưới đây
+     chỉ là bí danh cục bộ trỏ thẳng vào bộ chung. */
+  --fs-edge: #67e8f9;
   --fs-r-slab: 16px;
-  --fs-r-btn: 8px;
+  --fs-r-hero: 20px;
 
   display: flex;
   flex-direction: column;
@@ -17059,7 +17056,7 @@ body:has(.np-skel) {
   font-weight: 400;
   line-height: 1.1;
   letter-spacing: -0.025em;
-  color: var(--fs-text);
+  color: var(--c-ink);
 }
 
 .candidate-portal-layout .fstore-subtitle {
@@ -17068,7 +17065,7 @@ body:has(.np-skel) {
   font-size: 1rem;
   line-height: 1.5;
   letter-spacing: -0.015em;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 
 /* ── Thẻ ví ────────────────────────────────────────────────────────────── */
@@ -17081,12 +17078,13 @@ body:has(.np-skel) {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 32px;
-  padding: clamp(24px, 3vw, 34px);
-  border: 1px solid var(--fs-line);
-  border-radius: var(--fs-r-slab);
-  background:
-    radial-gradient(120% 140% at 100% 0%, rgba(16, 185, 129, 0.10), transparent 58%),
-    linear-gradient(158deg, #16201e 0%, #0e1413 100%);
+  padding: clamp(26px, 3vw, 40px) clamp(26px, 3vw, 44px);
+  border: 1px solid var(--c-line);
+  border-radius: var(--fs-r-hero);
+  /* Cùng mặt nền với thẻ hộ chiếu ở tab Tổng quan. Ví và hộ chiếu là hai thẻ
+     "danh tính" của cùng một người, nên chúng phải làm bằng một thứ vật liệu;
+     trước đây ví có gradient riêng nên nhìn như lấy từ trang khác dán vào. */
+  background: var(--np-passport);
 }
 
 /* Dải sáng mảnh chạy dọc mép trên — cyan ở một đầu, emerald ở đầu kia. Đây là
@@ -17096,7 +17094,7 @@ body:has(.np-skel) {
   position: absolute;
   inset: 0 0 auto;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--fs-edge), var(--fs-accent), transparent);
+  background: linear-gradient(90deg, transparent, var(--fs-edge), var(--c-red), transparent);
   opacity: 0.75;
   transition: opacity 0.3s ease;
 }
@@ -17112,22 +17110,28 @@ body:has(.np-skel) {
 .candidate-portal-layout .fstore-wallet-icon-ring {
   display: grid;
   place-items: center;
-  width: 54px;
-  height: 54px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
-  border: 1px solid rgba(16, 185, 129, 0.34);
-  border-radius: var(--fs-r-slab);
-  background: rgba(16, 185, 129, 0.10);
-  color: var(--fs-accent);
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--c-muted);
 }
 
 .candidate-portal-layout .fstore-wallet-details { min-width: 0; }
 
 .candidate-portal-layout .fstore-wallet-label {
   display: block;
-  margin-bottom: 4px;
-  font-size: 0.85rem;
-  color: var(--fs-muted);
+  margin-bottom: 8px;
+  /* Nhãn nhỏ in hoa là tiếng nói sẵn có của khu vực này (.np-pp-eyebrow ở thẻ
+     hộ chiếu). Dùng đúng nó, và chỉ ở ba chỗ: nhãn số dư cùng hai tiêu đề
+     section. Rải khắp mọi khối thì mới thành nhiễu. */
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-red);
 }
 
 .candidate-portal-layout .fstore-wallet-balance {
@@ -17144,15 +17148,18 @@ body:has(.np-skel) {
   font-variation-settings: 'wdth' 84;
   font-size: clamp(2.4rem, 5.4vw, 3.6rem);
   font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--fs-text);
+  line-height: 0.86;
+  letter-spacing: -0.04em;
+  /* Chữ số đều bề ngang, giống .np-pp-level-num. Số dư đổi sau mỗi giao dịch;
+     không có tabular-nums thì con số nhảy ngang mỗi lần vẽ lại. */
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
 }
 
 .candidate-portal-layout .fstore-wallet-unit {
   font-size: 0.95rem;
   font-weight: 500;
-  color: var(--fs-accent);
+  color: var(--c-red);
 }
 
 .candidate-portal-layout .fstore-wallet-tags {
@@ -17167,13 +17174,13 @@ body:has(.np-skel) {
   align-items: center;
   gap: 6px;
   padding: 5px 11px;
-  border: 1px solid var(--fs-line);
+  border: 1px solid var(--c-line);
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.05);
   font-size: 0.8rem;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
-.candidate-portal-layout .fstore-wtag svg { color: var(--fs-accent); flex-shrink: 0; }
+.candidate-portal-layout .fstore-wtag svg { color: var(--c-red); flex-shrink: 0; }
 
 .candidate-portal-layout .fstore-wallet-action { flex-shrink: 0; }
 
@@ -17185,40 +17192,40 @@ body:has(.np-skel) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 13px 22px;
-  border: 1px solid transparent;
-  border-radius: var(--fs-r-btn);
-  font-family: inherit;
-  font-size: 0.97rem;
-  font-weight: 700;
+  gap: 7px;
+  /* Số đo lấy nguyên từ .np-pp-btn ở tab Tổng quan. Nút cửa hàng to và đậm
+     hơn nút thẻ hộ chiếu thì hai tab đọc như hai sản phẩm khác nhau. */
+  padding: 10px 15px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 
 /* Nền emerald + chữ `ink`: cặp này đạt ~7:1, đọc được ở mọi cỡ. Chữ trắng trên
    emerald thì KHÔNG đạt AA, nên đừng đổi. */
 .candidate-portal-layout .fstore-btn-topup-main,
 .candidate-portal-layout .fstore-tier-btn.is-primary {
-  background: var(--fs-accent);
+  background: var(--c-red);
+  border-color: transparent;
   color: #0b0f0e;
+  font-weight: 600;
 }
 .candidate-portal-layout .fstore-btn-topup-main:hover,
 .candidate-portal-layout .fstore-tier-btn.is-primary:hover {
-  background: var(--fs-accent-hi);
+  background: #34d399;
 }
 
-.candidate-portal-layout .fstore-tier-btn,
-.candidate-portal-layout .fstore-rc-btn {
-  background: transparent;
-  border-color: var(--fs-line);
-  color: var(--fs-text);
-}
 .candidate-portal-layout .fstore-tier-btn:hover,
 .candidate-portal-layout .fstore-rc-btn:hover {
-  border-color: var(--fs-line-hi);
-  color: var(--fs-accent-hi);
+  border-color: rgba(16, 185, 129, 0.55);
+  color: #34d399;
 }
 
 /* Phản hồi vật lý khi bấm, theo DESIGN.md nút không nhấc lên khi hover. */
@@ -17229,11 +17236,21 @@ body:has(.np-skel) {
 .candidate-portal-layout .fstore-btn-topup-main:focus-visible,
 .candidate-portal-layout .fstore-tier-btn:focus-visible,
 .candidate-portal-layout .fstore-rc-btn:focus-visible {
-  outline: 2px solid var(--fs-accent-hi);
+  outline: 2px solid #34d399;
   outline-offset: 2px;
 }
 
 /* ── Tiêu đề section ───────────────────────────────────────────────────── */
+
+.candidate-portal-layout .fstore-eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-red);
+}
 
 .candidate-portal-layout .fstore-section-title {
   margin: 0 0 6px;
@@ -17242,7 +17259,7 @@ body:has(.np-skel) {
   font-weight: 400;
   line-height: 1.15;
   letter-spacing: -0.025em;
-  color: var(--fs-text);
+  color: var(--c-ink);
 }
 
 .candidate-portal-layout .fstore-section-sub {
@@ -17250,7 +17267,7 @@ body:has(.np-skel) {
   max-width: 62ch;
   font-size: 0.94rem;
   line-height: 1.5;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 
 /* ── Bảng giá ──────────────────────────────────────────────────────────────
@@ -17264,9 +17281,9 @@ body:has(.np-skel) {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
   overflow: hidden;
-  border: 1px solid var(--fs-line);
+  border: 1px solid var(--c-line);
   border-radius: var(--fs-r-slab);
-  background: var(--fs-line);
+  background: var(--c-line);
 }
 
 .candidate-portal-layout .fstore-tier {
@@ -17274,16 +17291,16 @@ body:has(.np-skel) {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 26px 22px;
-  background: var(--fs-slab);
+  padding: 22px 20px;
+  background: var(--np-panel);
   transition: background 0.2s ease;
 }
-.candidate-portal-layout .fstore-tier:hover { background: var(--fs-slab-hi); }
+.candidate-portal-layout .fstore-tier:hover { background: var(--np-panel-hover); }
 
 .candidate-portal-layout .fstore-tier.is-featured {
   background:
     linear-gradient(180deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.02)),
-    var(--fs-slab);
+    var(--np-panel);
 }
 /* Cột khuyên dùng có một vạch emerald ở mép trên. Vạch này thay cho ruy-băng
    "KHUYÊN DÙNG" in hoa trước đây: cùng một thông tin, ít ồn hơn. */
@@ -17292,43 +17309,44 @@ body:has(.np-skel) {
   position: absolute;
   inset: 0 0 auto;
   height: 2px;
-  background: linear-gradient(90deg, var(--fs-edge), var(--fs-accent));
+  background: linear-gradient(90deg, var(--fs-edge), var(--c-red));
 }
 
 .candidate-portal-layout .fstore-tier-name {
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
-.candidate-portal-layout .fstore-tier.is-featured .fstore-tier-name { color: var(--fs-accent); }
+.candidate-portal-layout .fstore-tier.is-featured .fstore-tier-name { color: var(--c-red); }
 
 .candidate-portal-layout .fstore-tier-price {
   font-family: 'Archivo', system-ui, sans-serif;
   font-variation-settings: 'wdth' 84;
   font-size: clamp(1.8rem, 2.5vw, 2.2rem);
   font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--fs-text);
+  line-height: 0.86;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
 }
 .candidate-portal-layout .fstore-curr {
   margin-left: 2px;
   font-size: 0.5em;
   font-weight: 700;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 
 .candidate-portal-layout .fstore-tier-pts {
   margin-top: 6px;
   font-size: 0.82rem;
-  color: var(--fs-accent);
+  color: var(--c-red);
 }
 
 .candidate-portal-layout .fstore-tier-desc {
   margin: 0;
   font-size: 0.88rem;
   line-height: 1.5;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 
 .candidate-portal-layout .fstore-tier-perks {
@@ -17351,9 +17369,9 @@ body:has(.np-skel) {
 .candidate-portal-layout .fstore-tier-perks svg {
   flex-shrink: 0;
   margin-top: 2px;
-  color: var(--fs-accent);
+  color: var(--c-red);
 }
-.candidate-portal-layout .fstore-tier-perks strong { color: var(--fs-text); font-weight: 700; }
+.candidate-portal-layout .fstore-tier-perks strong { color: var(--c-ink); font-weight: 700; }
 
 .candidate-portal-layout .fstore-tier-btn { width: 100%; }
 
@@ -17363,9 +17381,9 @@ body:has(.np-skel) {
   gap: 8px;
   margin-top: 14px;
   font-size: 0.86rem;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
-.candidate-portal-layout .fstore-rail-note svg { color: var(--fs-accent); flex-shrink: 0; }
+.candidate-portal-layout .fstore-rail-note svg { color: var(--c-red); flex-shrink: 0; }
 
 /* ── Dịch vụ miễn phí ──────────────────────────────────────────────────────
    Ba dòng chia bằng hairline thay vì ba thẻ bằng nhau. Chúng không có hành
@@ -17374,30 +17392,30 @@ body:has(.np-skel) {
 
 .candidate-portal-layout .fstore-free-list {
   overflow: hidden;
-  border: 1px solid var(--fs-line);
+  border: 1px solid var(--c-line);
   border-radius: var(--fs-r-slab);
-  background: var(--fs-slab);
+  background: var(--np-panel);
 }
 
 .candidate-portal-layout .fstore-free-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 18px;
-  padding: 18px 22px;
-  border-top: 1px solid var(--fs-line);
+  gap: clamp(12px, 1.6vw, 22px);
+  padding: 16px 20px;
+  border-top: 1px solid var(--c-line);
 }
 .candidate-portal-layout .fstore-free-row:first-child { border-top: 0; }
 
 .candidate-portal-layout .fstore-free-icon {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid rgba(16, 185, 129, 0.28);
-  border-radius: var(--fs-r-btn);
-  background: rgba(16, 185, 129, 0.10);
-  color: var(--fs-accent);
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--c-muted);
 }
 
 .candidate-portal-layout .fstore-free-row h4 {
@@ -17406,13 +17424,13 @@ body:has(.np-skel) {
   font-size: 1.02rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--fs-text);
+  color: var(--c-ink);
 }
 .candidate-portal-layout .fstore-free-row p {
   margin: 0;
   font-size: 0.88rem;
   line-height: 1.45;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 
 .candidate-portal-layout .fstore-free-price {
@@ -17423,7 +17441,7 @@ body:has(.np-skel) {
   font-size: 0.82rem;
   font-weight: 700;
   white-space: nowrap;
-  color: var(--fs-accent);
+  color: var(--c-red);
 }
 
 /* ── Dịch vụ tính điểm ─────────────────────────────────────────────────────
@@ -17441,14 +17459,14 @@ body:has(.np-skel) {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 24px;
-  border: 1px solid var(--fs-line);
+  padding: 20px;
+  border: 1px solid var(--c-line);
   border-radius: var(--fs-r-slab);
-  background: var(--fs-slab);
+  background: var(--np-panel);
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
 .candidate-portal-layout .fstore-paid-card:hover {
-  border-color: var(--fs-line-hi);
+  border-color: rgba(16, 185, 129, 0.55);
   transform: translateY(-4px);
 }
 
@@ -17460,27 +17478,28 @@ body:has(.np-skel) {
 }
 .candidate-portal-layout .fstore-rc-tag {
   font-size: 0.82rem;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 .candidate-portal-layout .fstore-rc-price {
   font-family: 'Archivo', system-ui, sans-serif;
   font-variation-settings: 'wdth' 84;
   font-size: 1.5rem;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  color: var(--fs-accent);
+  color: var(--c-red);
 }
 
 .candidate-portal-layout .fstore-rc-icon {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid rgba(16, 185, 129, 0.28);
-  border-radius: var(--fs-r-btn);
-  background: rgba(16, 185, 129, 0.10);
-  color: var(--fs-accent);
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--c-muted);
 }
 
 .candidate-portal-layout .fstore-paid-card h4 {
@@ -17489,22 +17508,22 @@ body:has(.np-skel) {
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--fs-text);
+  color: var(--c-ink);
 }
 .candidate-portal-layout .fstore-paid-card p {
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.5;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 .candidate-portal-layout .fstore-paid-card code {
   padding: 1px 6px;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.07);
   font-size: 0.88em;
-  color: var(--fs-accent);
+  color: var(--c-red);
 }
-.candidate-portal-layout .fstore-paid-card strong { color: var(--fs-text); }
+.candidate-portal-layout .fstore-paid-card strong { color: var(--c-ink); }
 
 .candidate-portal-layout .fstore-rc-foot {
   display: flex;
@@ -17514,9 +17533,9 @@ body:has(.np-skel) {
   flex-wrap: wrap;
   margin-top: auto;
   padding-top: 14px;
-  border-top: 1px solid var(--fs-line);
+  border-top: 1px solid var(--c-line);
   font-size: 0.84rem;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 .candidate-portal-layout .fstore-rc-btn { padding: 10px 16px; font-size: 0.88rem; }
 
@@ -17524,9 +17543,9 @@ body:has(.np-skel) {
    Dùng bởi components/WalletHistory.jsx. Mặc định gập lại. */
 
 .candidate-portal-layout .fstore-history-section {
-  border: 1px solid var(--fs-line);
+  border: 1px solid var(--c-line);
   border-radius: var(--fs-r-slab);
-  background: var(--fs-slab);
+  background: var(--np-panel);
   overflow: hidden;
 }
 
@@ -17536,7 +17555,7 @@ body:has(.np-skel) {
   justify-content: space-between;
   gap: 14px;
   width: 100%;
-  padding: 18px 22px;
+  padding: 16px 20px;
   border: 0;
   background: transparent;
   font-family: inherit;
@@ -17544,9 +17563,9 @@ body:has(.np-skel) {
   cursor: pointer;
   transition: background 0.15s ease;
 }
-.candidate-portal-layout .fstore-history-toggle:hover { background: var(--fs-slab-hi); }
+.candidate-portal-layout .fstore-history-toggle:hover { background: var(--np-panel-hover); }
 .candidate-portal-layout .fstore-history-toggle:focus-visible {
-  outline: 2px solid var(--fs-accent-hi);
+  outline: 2px solid #34d399;
   outline-offset: -2px;
 }
 
@@ -17568,33 +17587,33 @@ body:has(.np-skel) {
   place-items: center;
   width: 36px;
   height: 36px;
-  border: 1px solid rgba(16, 185, 129, 0.28);
-  border-radius: var(--fs-r-btn);
-  background: rgba(16, 185, 129, 0.10);
-  color: var(--fs-accent);
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--c-muted);
 }
 
 .candidate-portal-layout .fstore-history-title {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--fs-text);
+  color: var(--c-ink);
 }
 
 .candidate-portal-layout .fstore-history-badge {
   padding: 3px 10px;
-  border: 1px solid var(--fs-line);
+  border: 1px solid var(--c-line);
   border-radius: 9999px;
   font-size: 0.78rem;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 
 .candidate-portal-layout .fstore-history-action-hint {
   font-size: 0.84rem;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 
 .candidate-portal-layout .fstore-history-chevron {
-  color: var(--fs-muted);
+  color: var(--c-muted);
   transition: transform 0.2s ease;
 }
 .candidate-portal-layout .fstore-history-toggle.is-open .fstore-history-chevron {
@@ -17602,8 +17621,8 @@ body:has(.np-skel) {
 }
 
 .candidate-portal-layout .fstore-history-box {
-  padding: 4px 22px 20px;
-  border-top: 1px solid var(--fs-line);
+  padding: 4px 20px 18px;
+  border-top: 1px solid var(--c-line);
 }
 
 .candidate-portal-layout .fstore-history-list {
@@ -17617,7 +17636,7 @@ body:has(.np-skel) {
   justify-content: space-between;
   gap: 16px;
   padding: 14px 0;
-  border-bottom: 1px solid var(--fs-line);
+  border-bottom: 1px solid var(--c-line);
 }
 .candidate-portal-layout .fstore-history-list > *:last-child { border-bottom: 0; }
 
@@ -17628,17 +17647,17 @@ body:has(.np-skel) {
   align-items: center;
   gap: 8px;
 }
-.candidate-portal-layout .fstore-history-type-icon { color: var(--fs-muted); flex-shrink: 0; }
+.candidate-portal-layout .fstore-history-type-icon { color: var(--c-muted); flex-shrink: 0; }
 
 .candidate-portal-layout .fstore-history-label {
   font-size: 0.94rem;
   font-weight: 600;
-  color: var(--fs-text);
+  color: var(--c-ink);
 }
 .candidate-portal-layout .fstore-history-meta {
   margin-top: 3px;
   font-size: 0.82rem;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 
 .candidate-portal-layout .fstore-history-amount {
@@ -17650,30 +17669,31 @@ body:has(.np-skel) {
   font-variation-settings: 'wdth' 84;
   font-size: 1.05rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
 }
 /* Cộng dùng emerald; trừ KHÔNG dùng đỏ — tiêu điểm là việc bình thường, không
    phải lỗi. Đỏ ở đây sẽ làm mọi lần dùng dịch vụ trông như một cảnh báo. */
-.candidate-portal-layout .fstore-history-amount.is-gain { color: var(--fs-accent); }
-.candidate-portal-layout .fstore-history-amount.is-spend { color: var(--fs-text); }
+.candidate-portal-layout .fstore-history-amount.is-gain { color: var(--c-red); }
+.candidate-portal-layout .fstore-history-amount.is-spend { color: var(--c-ink); }
 .candidate-portal-layout .fstore-history-unit {
   font-size: 0.76rem;
   font-weight: 600;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 
 .candidate-portal-layout .fstore-history-empty-icon {
   display: block;
   margin: 0 auto 10px;
-  color: var(--fs-muted);
+  color: var(--c-muted);
 }
 
 .candidate-portal-layout .fstore-history-spinner {
   width: 22px;
   height: 22px;
   margin: 18px auto;
-  border: 2px solid var(--fs-line);
-  border-top-color: var(--fs-accent);
+  border: 2px solid var(--c-line);
+  border-top-color: var(--c-red);
   border-radius: 50%;
   animation: fstoreSpin 0.7s linear infinite;
 }
