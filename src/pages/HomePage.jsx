@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ArrowUp, ArrowUpRight, Search, Sparkles } from 'lucide-react';
 import { HeroMesh } from '../components/HeroMesh.jsx';
-import { PartnerLogos } from '../components/PartnerLogos.jsx';
 import { loadJobs } from '../api/jobsCache.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
@@ -936,14 +935,7 @@ export function HomePage() {
           2. CÁC PHÂN ĐOẠN TIẾP THEO (TỰ ĐỘNG CHUYỂN NỀN TRẮNG KHI LƯỚT)
       ───────────────────────────────────────────────────────────── */}
       
-      {/* 2.1. LOGO ĐỐI TÁC DOANH NGHIỆP */}
-      <section style={{ ...INNER, marginTop: 'clamp(80px, 10vw, 130px)' }}>
-        <Reveal>
-          <PartnerLogos onDark={!isLight} colorLogos showHeading={false} />
-        </Reveal>
-      </section>
-
-      {/* 2.2. BA BƯỚC HOẠT ĐỘNG */}
+      {/* 2.1. BA BƯỚC HOẠT ĐỘNG */}
       <section style={{ ...INNER, marginTop: 'clamp(90px, 11vw, 150px)' }}>
         <Reveal>
           <SectionTitle align="center" style={{ maxWidth: '680px', margin: '0 auto' }}>

@@ -15,7 +15,7 @@ export const PORTFOLIO_THEMES = [
   {
     id: 'FOMLIO',
     name: 'Cốm Neon',
-    hint: 'Nền đen, quầng cốm',
+    hint: 'Nền đen, quầng cốm (Figma 9-126)',
     colorBox: ['#cbf748', '#7b3aec'],
   },
   {
@@ -23,6 +23,12 @@ export const PORTFOLIO_THEMES = [
     name: 'Nho Neon',
     hint: 'Xanh hoàng gia, cốm neon & trắng (Figma 10-129)',
     colorBox: ['#160ae6', '#cbf748'],
+  },
+  {
+    id: 'PURPLE_AURA',
+    name: 'Tím Aura Neon',
+    hint: 'Tím hoàng gia, quầng sáng aura & cốm neon (Figma 10-132)',
+    colorBox: ['#9333ea', '#cbf748'],
   },
 ];
 
@@ -32,5 +38,8 @@ export const PORTFOLIO_THEME = PORTFOLIO_THEMES[0];
 /** Đổi mã trong DB thành một giao diện có thật. Không bao giờ trả về null:
  *  một mã lạ không được phép làm trắng cả trang hồ sơ. */
 export function resolveTheme(id) {
+  if (id === 'LILAC_PASTEL') {
+    return PORTFOLIO_THEMES.find((t) => t.id === 'PURPLE_AURA') || PORTFOLIO_THEMES[0];
+  }
   return PORTFOLIO_THEMES.find((t) => t.id === id) || PORTFOLIO_THEME;
 }

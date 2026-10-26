@@ -3,7 +3,7 @@
    Dựng theo chuẩn thiết kế Figma "PORTFOLIO-TEMP", Node 9-126 (Portfolio Landing Page 1).
    ────────────────────────────────────────────────────────────────────────── */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Dancing+Script:wght@500;600;700&family=League+Spartan:wght@700;800;900&family=Licorice&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Be+Vietnam+Pro:wght@400;500;600;700&family=Slackey&family=Chakra+Petch:wght@500;600;700;800;900&family=Noto+Sans:wght@500;600;700;800&display=swap');
 
 .fom-page {
   /* Brand Tokens - Figma Node 9-126 */
@@ -869,6 +869,187 @@
 
 .fom-portfolio-intro-section {
   padding: clamp(60px, 8vw, 100px) 0 clamp(30px, 4vw, 50px);
+}
+
+/* ── 7.5. OVERVIEW PROJECT GALLERY (FIGMA NODE 10-132) ────────────────── */
+
+.fom-portfolio-gallery-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  margin-top: 48px;
+  z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .fom-portfolio-gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.fom-gallery-star.g1 {
+  top: -24px;
+  right: -10px;
+}
+
+.fom-gallery-sparkle.gsp1 {
+  top: 15%;
+  left: -20px;
+}
+
+.fom-gallery-sparkle.gsp2 {
+  bottom: 10%;
+  right: -16px;
+}
+
+.fom-gallery-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-radius: 28px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.26s ease, border-color 0.26s ease;
+  cursor: pointer;
+}
+
+.fom-gallery-card:hover {
+  transform: translateY(-6px);
+}
+
+.fom-gallery-card-preview {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #090314;
+}
+
+.fom-gallery-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.fom-gallery-card:hover .fom-gallery-img {
+  transform: scale(1.04);
+}
+
+.fom-gallery-mockup-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(147, 51, 234, 0.16) 100%);
+}
+
+.fom-gallery-mockup-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fom-gallery-url {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: monospace;
+}
+
+.fom-gallery-screen-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px;
+}
+
+.fom-gallery-screen-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #bef264;
+  margin-bottom: 6px;
+}
+
+.fom-gallery-screen-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.fom-gallery-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 8px 6px;
+}
+
+.fom-gallery-card-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.fom-gallery-card-tag {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #bef264;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.fom-gallery-card-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fom-gallery-card-role {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fom-gallery-arrow-disc {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: transform 0.22s ease;
+}
+
+.fom-gallery-card:hover .fom-gallery-arrow-disc {
+  transform: translateX(4px);
+}
+
+.fom-marquee-stack.gallery-divider {
+  margin-top: 60px;
 }
 
 .fom-project-showcases {
@@ -1946,3 +2127,865 @@
   background: #d9f99d;
   box-shadow: 0 8px 28px rgba(203, 247, 72, 0.65);
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Theme PURPLE_AURA / LILAC_PASTEL — Giao diện Portfolio công khai của ứng viên.
+   Dựng chuẩn xác 100% theo thiết kế Figma "PORTFOLIO-TEMP", Node 10-132 (Column 2).
+   Tone màu Tím Hoàng Gia & Aura Magenta, quầng sáng rực rỡ, cốm neon, viền cyan & 3 pill cards.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.fom-page[data-fom-theme='PURPLE_AURA'],
+.fom-page[data-fom-theme='LILAC_PASTEL'] {
+  /* Brand Tokens - Figma Node 10-132 */
+  --fom-brand: #cbf748;              /* Electric Acid Neon Lime */
+  --fom-brand-glow: rgba(203, 247, 72, 0.55);
+  --fom-royal-purple: #1f0438;       /* Royal Deep Midnight Purple */
+  --fom-magenta: #c026d3;            /* Vibrant Magenta Glow */
+  --fom-secondary: #00e5ff;          /* Electric Cyan / Aqua for Browser Outlines */
+  --fom-secondary-dark: #581c87;     /* Deep Violet for Marquee text */
+  --fom-ink: #ffffff;
+  --fom-bg: #1f0438;                 /* Deep Royal Purple Canvas */
+  --fom-white: #ffffff;
+  --fom-black: #000000;
+
+  /* 3D Star Colors (Pale Sunny Yellow with Deep Purple Extrusion Shadow) */
+  --fom-star-light: #ffffff;
+  --fom-star-mid: #fef08a;
+  --fom-star-main: #facc15;
+  --fom-star-shadow-start: #ca8a04;
+  --fom-star-shadow-end: #3b0764;
+  --fom-star-facet-dark: #eab308;
+  --fom-star-facet-deep: #854d0e;
+  --fom-star-facet-light: #fef9c3;
+
+  background-color: var(--fom-bg);
+  color: var(--fom-white);
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+}
+
+/* 3D Star Glow in Node 10-132 */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-star-3d,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-star-3d {
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 16px rgba(203, 247, 72, 0.5));
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-sparkle path,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-sparkle path {
+  fill: #ffffff;
+}
+
+/* ── AMBIENT RADIANT BACKGROUND AURAS IN NODE 10-132 ── */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-aura-top-purple,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-aura-top-purple {
+  background: radial-gradient(circle, rgba(192, 38, 211, 0.7) 0%, rgba(192, 38, 211, 0) 70%);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-aura-hero-lime,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-aura-hero-lime {
+  background: radial-gradient(circle, rgba(203, 247, 72, 0.45) 0%, rgba(203, 247, 72, 0) 70%);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-aura-mid-violet,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-aura-mid-violet {
+  background: radial-gradient(circle, rgba(126, 34, 206, 0.7) 0%, rgba(126, 34, 206, 0) 70%);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-aura-bottom-lime,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-aura-bottom-lime {
+  background: radial-gradient(circle, rgba(203, 247, 72, 0.35) 0%, rgba(203, 247, 72, 0) 70%);
+}
+
+/* ── NAVBAR & HEADER IN NODE 10-132 ── */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-brand-name,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-brand-name {
+  color: #ffffff;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-brand-dot,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-brand-dot {
+  color: #cbf748;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-floating-navbar,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-floating-navbar {
+  background: rgba(31, 4, 56, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-floating-navbar .fom-nav-pill,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-floating-navbar .fom-nav-pill {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-floating-navbar .fom-nav-pill:hover,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-floating-navbar .fom-nav-pill:hover {
+  color: #ffffff;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-floating-navbar .fom-nav-pill.active,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-floating-navbar .fom-nav-pill.active {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  border-radius: 9999px;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-hire-btn,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hire-btn {
+  background: #ffffff;
+  color: #1f0438;
+  font-weight: 800;
+  border: none;
+  border-radius: 9999px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-hire-btn:hover,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hire-btn:hover {
+  background: #cbf748;
+  color: #130924;
+  box-shadow: 0 6px 24px rgba(203, 247, 72, 0.45);
+}
+
+/* ── HERO SECTION IN NODE 10-132 ── */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-portrait-halo-ring,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-portrait-halo-ring {
+  box-shadow: 0 0 70px rgba(203, 247, 72, 0.55), inset 0 0 40px rgba(203, 247, 72, 0.35);
+  border: 4px solid #cbf748;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-portrait-doodles,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-portrait-doodles {
+  stroke: rgba(255, 255, 255, 0.75);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-download-badge-box .fom-download-center-disc,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-download-badge-box .fom-download-center-disc {
+  fill: #cbf748;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-download-badge-box text,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-download-badge-box text {
+  fill: #ffffff;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-pill-tag,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-pill-tag {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: 9999px;
+  padding: 6px 20px;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-pill-tag-dot,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-pill-tag-dot {
+  background: #cbf748;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-hero-heading,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-heading {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-text-highlight,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-text-highlight {
+  color: #ffffff;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-hero-lede,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-lede {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-hero-btn-row .fom-btn-solid-white,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-btn-row .fom-btn-solid-white {
+  background: #ffffff;
+  color: #1f0438;
+  font-weight: 800;
+  border-radius: 9999px;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-hero-btn-row .fom-btn-solid-white:hover,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-btn-row .fom-btn-solid-white:hover {
+  background: #cbf748;
+  color: #130924;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-hero-btn-row .fom-btn-glass-ghost,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-btn-row .fom-btn-glass-ghost {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  border-radius: 9999px;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-hero-btn-row .fom-btn-glass-ghost:hover,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-btn-row .fom-btn-glass-ghost:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* ── SIGNATURE 3-LAYER MARQUEE TICKER (FIGMA NODE 10-132) ── */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-marquee-bar,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-bar {
+  background: #ffffff;
+  border-top: 3.5px solid #bef264;
+  border-bottom: 3.5px solid #bef264;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  padding: 10px 0;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-marquee-label,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-label {
+  color: #581c87;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 0.96rem;
+  letter-spacing: 0.02em;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-marquee-bullet,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-bullet {
+  color: #581c87;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-marquee-bar-secondary,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-bar-secondary {
+  background: #ffffff;
+  border-top: 3.5px solid #bef264;
+  border-bottom: 3.5px solid #bef264;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-marquee-bar-secondary .fom-marquee-label,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-bar-secondary .fom-marquee-label {
+  color: #581c87;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-marquee-bar-secondary .fom-marquee-bullet,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-bar-secondary .fom-marquee-bullet {
+  color: #581c87;
+}
+
+/* ── ABOUT SECTION ("VỀ MÌNH") IN NODE 10-132 ── */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-about-section .fom-about-heading,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-about-section .fom-about-heading {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-about-section .fom-about-desc,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-about-section .fom-about-desc {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-about-section .fom-pill-tag.purple,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-about-section .fom-pill-tag.purple {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-about-section .fom-btn-solid-white,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-about-section .fom-btn-solid-white {
+  background: #ffffff;
+  color: #1f0438;
+  font-weight: 800;
+  border-radius: 9999px;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-about-section .fom-btn-solid-white:hover,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-about-section .fom-btn-solid-white:hover {
+  background: #cbf748;
+  color: #130924;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-diamond-outer,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-diamond-outer {
+  background: linear-gradient(135deg, rgba(162, 28, 175, 0.35) 0%, rgba(31, 4, 56, 0.85) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-diamond-glow,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-diamond-glow {
+  background: radial-gradient(circle, rgba(192, 38, 211, 0.4) 0%, rgba(192, 38, 211, 0) 70%);
+}
+
+/* ── ACTIVITIES & STATS ("★ Kinh nghiệm hoạt động") IN NODE 10-132 ── */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-star-icon,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-star-icon {
+  color: #cbf748;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-milestone-tag,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-milestone-tag {
+  color: #bef264;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-milestone-card,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-milestone-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-stat-card,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stat-card {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(16px);
+  border-radius: 24px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-stat-card:hover,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stat-card:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 16px 44px rgba(192, 38, 211, 0.25);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-stat-number,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stat-number {
+  color: #bef264;
+  font-weight: 900;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-stat-plus,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stat-plus {
+  color: #bef264;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-stat-label,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stat-label {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+/* ── SKILLS / SERVICES ("★ DỊCH VỤ CỦA TÔI") IN NODE 10-132 ── */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-services-section .fom-pill-tag.purple,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-services-section .fom-pill-tag.purple {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-service-card,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-service-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(200, 140, 180, 0.12) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(14px);
+  border-radius: 24px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.25);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-service-card:hover,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-service-card:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(217, 70, 239, 0.18) 100%);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-4px);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-service-icon-box,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-service-icon-box {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 18px;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-service-title,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-service-title {
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.35rem;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-service-desc,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-service-desc {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-section-h2,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-section-h2 {
+  color: #ffffff;
+}
+
+/* ── DEEP PROJECT SHOWCASES (FIGMA NODE 10-132) ── */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-portfolio-intro-section .fom-pill-tag.purple,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-showcase-container .fom-pill-tag.purple,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-portfolio-intro-section .fom-pill-tag.purple,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-container .fom-pill-tag.purple {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Cyclic Radial Aura Gradients Exactly matching Column 2 Node 10-132 */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-showcase-container.fom-aura-purple,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-container.fom-aura-purple {
+  background: radial-gradient(circle at 75% 40%, rgba(217, 70, 239, 0.78) 0%, rgba(162, 28, 175, 0.65) 40%, #2b043d 85%);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-showcase-container.fom-aura-plum,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-container.fom-aura-plum {
+  background: radial-gradient(circle at 75% 40%, rgba(168, 85, 247, 0.78) 0%, rgba(126, 34, 206, 0.65) 40%, #1f0330 85%);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-showcase-container.fom-aura-amber,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-container.fom-aura-amber {
+  background: radial-gradient(circle at 75% 40%, rgba(251, 113, 133, 0.72) 0%, rgba(225, 29, 72, 0.58) 40%, #380718 85%);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-showcase-container.fom-aura-olive,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-container.fom-aura-olive {
+  background: radial-gradient(circle at 75% 40%, rgba(250, 204, 21, 0.72) 0%, rgba(202, 138, 4, 0.58) 40%, #301e04 85%);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-showcase-container.fom-aura-lime,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-showcase-container.fom-aura-lime {
+  background: radial-gradient(circle at 75% 40%, rgba(190, 242, 100, 0.82) 0%, rgba(132, 204, 22, 0.68) 40%, #192b05 85%);
+}
+
+/* Typography of Project */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-project-num-title,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-project-num-title {
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif !important;
+  font-size: clamp(2.6rem, 4.4vw, 4.2rem);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.1;
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-project-sub-title,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-project-sub-title {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-project-main-desc,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-project-main-desc {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+/* Browser Mockup with Electric Cyan Border */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-mockup-frame,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-mockup-frame {
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  border-radius: 28px;
+  padding: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-mockup-window,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-mockup-window {
+  border: 3.5px solid #00e5ff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 0 24px rgba(0, 229, 255, 0.35);
+}
+
+/* 3 Frosted Pill Info Cards (Matching Node 10-132) */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-project-info-card,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-project-info-card {
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  border-radius: 24px;
+  padding: 24px 22px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-project-info-card:hover,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-project-info-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-info-card-title,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-info-card-title {
+  color: #111827;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  margin: 0 0 6px;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-info-card-text,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-info-card-text {
+  color: #111827;
+  font-weight: 500;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-verified-badge-inline,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-verified-badge-inline {
+  background: #111827;
+  color: #bef264;
+  font-weight: 800;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-proof-link,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-proof-link {
+  color: #111827;
+  font-weight: 700;
+}
+
+/* ── CREDENTIALS SECTION IN NODE 10-132 ── */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-credential-card,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-credential-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-credential-icon,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-credential-icon {
+  color: #bef264;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-credential-name,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-credential-name {
+  color: #ffffff;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-credential-meta,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-credential-meta {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ── CONTACT & FOOTER IN NODE 10-132 ── */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-contact-section .fom-pill-tag.purple,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-section .fom-pill-tag.purple {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-contact-subtitle,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-subtitle {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-contact-pill,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-pill {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  backdrop-filter: blur(12px);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-contact-pill:hover,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-pill:hover {
+  border-color: #bef264;
+  color: #bef264;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-contact-pill.cv-btn,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-pill.cv-btn {
+  background: #bef264;
+  border-color: transparent;
+  color: #130924;
+  font-weight: 800;
+  box-shadow: 0 4px 20px rgba(190, 242, 100, 0.35);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-contact-pill.cv-btn:hover,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-pill.cv-btn:hover {
+  background: #cbf748;
+  box-shadow: 0 8px 28px rgba(203, 247, 72, 0.5);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-bottom-legal,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-bottom-legal {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* ── STRICT PLUS JAKARTA SANS FONT ENFORCEMENT (FIGMA NODE 10-132) ── */
+
+.fom-page[data-fom-theme='PURPLE_AURA'],
+.fom-page[data-fom-theme='LILAC_PASTEL'] {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] h1,
+.fom-page[data-fom-theme='PURPLE_AURA'] h2,
+.fom-page[data-fom-theme='PURPLE_AURA'] h3,
+.fom-page[data-fom-theme='PURPLE_AURA'] h4,
+.fom-page[data-fom-theme='PURPLE_AURA'] h5,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-section-h2,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-hero-heading,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-about-heading,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-contact-h2,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-service-title,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-milestone-title,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-milestone-tag,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-project-num-title,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-project-sub-title,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-info-card-title,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-stat-number,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-stat-label,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-marquee-label,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-pill-tag,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-btn-solid-white,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-btn-glass-ghost,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-hire-btn,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-nav-pill,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-contact-pill,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-thanks-text,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-gallery-card-title,
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-gallery-card-tag,
+.fom-page[data-fom-theme='LILAC_PASTEL'] h1,
+.fom-page[data-fom-theme='LILAC_PASTEL'] h2,
+.fom-page[data-fom-theme='LILAC_PASTEL'] h3,
+.fom-page[data-fom-theme='LILAC_PASTEL'] h4,
+.fom-page[data-fom-theme='LILAC_PASTEL'] h5,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-section-h2,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hero-heading,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-about-heading,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-h2,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-service-title,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-milestone-title,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-milestone-tag,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-project-num-title,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-project-sub-title,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-info-card-title,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stat-number,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stat-label,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-marquee-label,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-pill-tag,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-btn-solid-white,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-btn-glass-ghost,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-hire-btn,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-nav-pill,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-contact-pill,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-thanks-text,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-gallery-card-title,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-gallery-card-tag {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
+}
+
+/* ── 3-CARD STATS COLUMN & STAR IN NODE 10-132 ── */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-stats-column,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stats-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-stats-star-wrap,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-stats-star-wrap {
+  position: absolute;
+  bottom: -36px;
+  right: -24px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ── 6-CARD PROJECT GALLERY IN PURPLE_AURA (FIGMA NODE 10-132) ── */
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-gallery-card,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-gallery-card {
+  background: rgba(31, 4, 56, 0.72);
+  backdrop-filter: blur(18px);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-gallery-card.fom-gallery-cyan,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-gallery-card.fom-gallery-cyan {
+  border: 2.5px solid #00e5ff;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(0, 229, 255, 0.35);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-gallery-card.fom-gallery-magenta,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-gallery-card.fom-gallery-magenta {
+  border: 2.5px solid #ec4899;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(236, 72, 153, 0.35);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-gallery-card.fom-gallery-rose,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-gallery-card.fom-gallery-rose {
+  border: 2.5px solid #fb7185;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(251, 113, 133, 0.35);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-gallery-card.fom-gallery-blue,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-gallery-card.fom-gallery-blue {
+  border: 2.5px solid #3b82f6;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(59, 130, 246, 0.35);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-gallery-card.fom-gallery-teal,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-gallery-card.fom-gallery-teal {
+  border: 2.5px solid #06b6d4;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(6, 182, 212, 0.35);
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-gallery-card.fom-gallery-lime,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-gallery-card.fom-gallery-lime {
+  border: 2.5px solid #bef264;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(190, 242, 100, 0.35);
+}
+
+/* ── 2-COLUMN CONTACT LAYOUT & GLOWING PORTRAIT (NODE 10-132) ── */
+
+.fom-contact-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 1fr);
+  gap: clamp(32px, 5vw, 64px);
+  align-items: center;
+  width: 100%;
+  text-align: left;
+}
+
+@media (max-width: 860px) {
+  .fom-contact-layout {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .fom-contact-left-col {
+    align-items: center !important;
+  }
+}
+
+.fom-contact-left-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.fom-contact-h2 {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
+  font-size: clamp(2rem, 3.4vw, 3.25rem);
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+  margin: 16px 0 12px;
+}
+
+.fom-contact-right-col {
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.fom-footer-portrait-box {
+  position: relative;
+  width: min(340px, 80vw);
+  aspect-ratio: 1;
+}
+
+.fom-footer-halo-ring {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(203, 247, 72, 0.95) 0%,
+    rgba(203, 247, 72, 0.75) 45%,
+    rgba(203, 247, 72, 0.25) 65%,
+    rgba(203, 247, 72, 0) 75%
+  );
+  box-shadow: 0 0 70px rgba(203, 247, 72, 0.45);
+  display: grid;
+  place-items: center;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-footer-halo-ring,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-footer-halo-ring {
+  border: 4px solid #cbf748;
+  box-shadow: 0 0 70px rgba(203, 247, 72, 0.55), inset 0 0 40px rgba(203, 247, 72, 0.35);
+}
+
+.fom-footer-img-box {
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #130924;
+  position: relative;
+  z-index: 2;
+}
+
+.fom-footer-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fom-footer-mascot-wrap {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.fom-footer-star.f-s1 { top: -4%; right: 4%; }
+.fom-footer-star.f-s2 { bottom: 6%; left: -4%; }
+.fom-footer-sparkle.f-sp1 { top: 38%; left: -6%; }
+
+/* ── SIGNATURE "THANKS FOR WATCHING!" BANNER (NODE 10-132) ── */
+
+.fom-thanks-banner-wrap {
+  width: 100%;
+  margin-top: 70px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.fom-thanks-banner {
+  width: 100%;
+  max-width: 980px;
+  padding: 26px 36px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(162, 28, 175, 0.8) 0%, rgba(88, 28, 135, 0.95) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 14px 44px rgba(192, 38, 211, 0.4), inset 0 0 24px rgba(255, 255, 255, 0.25);
+  text-align: center;
+}
+
+.fom-page[data-fom-theme='PURPLE_AURA'] .fom-thanks-banner,
+.fom-page[data-fom-theme='LILAC_PASTEL'] .fom-thanks-banner {
+  background: linear-gradient(135deg, rgba(162, 28, 175, 0.85) 0%, rgba(88, 28, 135, 0.95) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 14px 44px rgba(192, 38, 211, 0.4), inset 0 0 24px rgba(255, 255, 255, 0.25);
+}
+
+.fom-thanks-text {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.6);
+}
+
+.fom-thanks-star.t1 { top: -24px; left: 12%; }
+.fom-thanks-star.t2 { bottom: -20px; right: 14%; }
+.fom-thanks-sparkle.tsp1 { top: 12px; right: 6%; }
+.fom-thanks-sparkle.tsp2 { bottom: 14px; left: 6%; }

@@ -95,7 +95,8 @@ export function PreviewFrame({ children, bodyClassName = '', onReady }) {
           margin: 0 !important;
           padding: 0 !important;
           overflow: visible !important;
-          background: transparent !important;
+          background: #000000 !important;
+          color-scheme: dark;
         }
       `;
       head.appendChild(reset);
