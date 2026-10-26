@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useId } from 'react';
+import React, { useState, useMemo, useId } from 'react';
 import {
   ExternalLink,
   Mail,
@@ -227,7 +227,7 @@ function ComNeonProjectMockup({ exp = {}, index = 0, isLarge = false }) {
  * - Không bịa số liệu ảo, không chèn tên nhãn hàng giả (Adidas, Samsung, Red Bull...).
  * - Dữ liệu thống kê, dự án, kỹ năng, thông tin liên hệ được lấy trực tiếp từ hồ sơ ứng viên.
  */
-export function ComNeonFigmaTemplate({ profile = {}, isDraft = false }) {
+export function ComNeonFigmaTemplate({ profile = {} }) {
   const [preview, setPreview] = useState(null);
   const [activeSection, setActiveSection] = useState('cn-hero');
 

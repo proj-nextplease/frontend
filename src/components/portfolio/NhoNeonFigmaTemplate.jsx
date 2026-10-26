@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useId } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ExternalLink,
   Mail,
@@ -157,7 +157,7 @@ function NhoNeonProjectMockup({ exp = {}, index = 0, isDark = false }) {
  * - Không bịa số liệu ảo, không chèn tên nhãn hàng giả (Adidas, Fintech...).
  * - Dữ liệu thống kê, dự án, kỹ năng, thông tin liên hệ được lấy trực tiếp từ hồ sơ ứng viên.
  */
-export function NhoNeonFigmaTemplate({ profile = {}, isDraft = false }) {
+export function NhoNeonFigmaTemplate({ profile = {} }) {
   const [preview, setPreview] = useState(null);
   const [activeSection, setActiveSection] = useState('nn-hero');
 
@@ -179,7 +179,6 @@ export function NhoNeonFigmaTemplate({ profile = {}, isDraft = false }) {
   const email = profile.socialLinks?.email || profile.email || '';
   const phone = profile.socialLinks?.phone || profile.phone || '';
   const website = profile.socialLinks?.website || profile.website || profile.portfolioUrl || '';
-  const resumeUrl = profile.resumeUrl;
 
   // 2. Real Social Links (Only those the candidate actually provided)
   const socialLinks = useMemo(() => {

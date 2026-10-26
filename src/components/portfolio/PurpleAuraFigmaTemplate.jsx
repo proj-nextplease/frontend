@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useId } from 'react';
+import React, { useState, useMemo, useId } from 'react';
 import {
   ExternalLink,
   Mail,
@@ -208,9 +208,9 @@ const FALLBACK_PROJECTS = [
   },
 ];
 
-export function PurpleAuraFigmaTemplate({ profile = {}, isDraft = false }) {
+export function PurpleAuraFigmaTemplate({ profile = {} }) {
   const [preview, setPreview] = useState(null);
-  const [activeSection, setActiveSection] = useState('hero');
+  const [activeSection] = useState('hero');
 
   // Candidate Data & Figma Fallbacks
   const name = profile.name || 'Trâm Nguyễn';

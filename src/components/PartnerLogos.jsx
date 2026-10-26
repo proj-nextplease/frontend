@@ -306,7 +306,7 @@ function MarqueeRow({ variant, items }) {
   );
 }
 
-export function PartnerLogos({ onDark = false, colorLogos = false, showHeading = true } = {}) {
+export function PartnerLogos({ onDark = false, showHeading = true } = {}) {
   return (
     <div className={`np-partner-ecosystem${onDark ? ' np-dark-mode' : ' np-light-mode'}`}>
       <style>{`
