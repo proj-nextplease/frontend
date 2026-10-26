@@ -1,8 +1,8 @@
 // WalletCard.jsx – renders the holographic wallet card for the store
 import React from 'react';
-import { WalletCards, CheckCircle2, Clock3, ShieldCheck } from 'lucide-react';
+import { WalletCards, CheckCircle2, Clock3, ShieldCheck, Coins } from 'lucide-react';
 
-export default function WalletCard({ wallet, walletLoading }) {
+export default function WalletCard({ wallet, walletLoading, onTopUp }) {
   return (
     <div className="fstore-wallet-card">
       <div className="fstore-card-watermark">FONLIO // CYBER WALLET ID</div>
@@ -40,7 +40,7 @@ export default function WalletCard({ wallet, walletLoading }) {
         <button
           type="button"
           className="fstore-btn-topup-main"
-          onClick={() => { setTopUpAmount('39000'); setShowTopUpModal(true); }}
+          onClick={() => onTopUp?.('39000')}
         >
           <Coins size={18} />
           <span>Nạp Điểm Ngay</span>
