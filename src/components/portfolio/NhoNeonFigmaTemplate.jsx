@@ -9,7 +9,6 @@ import {
   Sparkles,
   Globe,
   Share2,
-  Download,
   Calendar,
   User,
   Activity,
@@ -1176,27 +1175,120 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         /* ── SECTION 6: FOOTER (RECTANGLE 42: GRADIENT #250CF1 -> #07041F) ── */
+        /* Crossing Ribbons at the transition into the footer (Figma Role ribbons at top: 15841px & 15958px) */
+        .nn-footer-crossing-ribbons {
+          position: relative;
+          width: 100%;
+          margin-top: 40px;
+          margin-bottom: 20px;
+          z-index: 10;
+        }
+
+        .nn-footer-crossing-ribbons .nn-ribbon-wrapper:nth-child(2) {
+          margin-top: -55px;
+        }
+
         .nn-footer-section {
-          background: linear-gradient(180deg, var(--nn-blue) 0%, var(--nn-midnight) 100%);
-          padding: 100px 24px 80px;
+          background: linear-gradient(180deg, #250CF1 0%, #07041F 100%);
+          padding: 80px 24px 90px;
           position: relative;
           overflow: hidden;
-          color: var(--nn-white);
+          color: #FFFFFF;
           text-align: center;
         }
 
-        /* Ambient Teal Aura (Ellipse 40) */
+        /* Ambient Teal Aura (Ellipse 40 in Figma: 1278px x 1278px, rotate -27.56deg) */
         .nn-footer-aura {
           position: absolute;
-          width: 800px;
-          height: 800px;
+          width: min(1200px, 92vw);
+          height: min(1200px, 92vw);
           left: 50%;
-          top: 20%;
-          transform: translate(-50%, -20%) rotate(-27.56deg);
-          background: linear-gradient(207.56deg, rgba(106, 204, 195, 0.3) 15.01%, rgba(53, 102, 98, 0.3) 64.2%);
-          filter: blur(80px);
+          top: 38%;
+          transform: translate(-50%, -38%) rotate(-27.56deg);
+          background: linear-gradient(207.56deg, rgba(106, 204, 195, 0.35) 15.01%, rgba(53, 102, 98, 0.35) 64.2%);
+          filter: blur(14px);
           pointer-events: none;
           border-radius: 50%;
+          z-index: 1;
+        }
+
+        /* Organic Neon Lime Bubble on Left (Ellipse 36 & 38 in Figma) */
+        .nn-footer-bubble-left {
+          position: absolute;
+          left: -40px;
+          top: 140px;
+          width: 320px;
+          height: 320px;
+          pointer-events: none;
+          z-index: 2;
+        }
+
+        .nn-bubble-orb-left-main {
+          position: absolute;
+          width: 246px;
+          height: 245px;
+          left: 50px;
+          top: 0;
+          background: #BFFF00;
+          border-radius: 50%;
+          filter: drop-shadow(0 0 24px rgba(191, 255, 0, 0.45));
+        }
+
+        .nn-bubble-orb-left-sub {
+          position: absolute;
+          width: 116px;
+          height: 116px;
+          left: 215px;
+          top: 120px;
+          background: #BFFF00;
+          border-radius: 50%;
+          transform: rotate(30deg);
+          filter: drop-shadow(0 0 16px rgba(191, 255, 0, 0.4));
+        }
+
+        /* Top-Right Neon Lime Sparkle Stars (Star 41 & 42 in Figma) */
+        .nn-footer-stars-right {
+          position: absolute;
+          right: 40px;
+          top: 110px;
+          width: 280px;
+          height: 220px;
+          pointer-events: none;
+          z-index: 2;
+        }
+
+        /* Organic Neon Lime Bubble on Bottom-Right (Ellipse 37 & 39 in Figma) */
+        .nn-footer-bubble-right {
+          position: absolute;
+          right: -30px;
+          bottom: 120px;
+          width: 320px;
+          height: 320px;
+          pointer-events: none;
+          z-index: 2;
+        }
+
+        .nn-bubble-orb-right-main {
+          position: absolute;
+          width: 234px;
+          height: 233px;
+          right: 50px;
+          bottom: 0;
+          background: #BFFF00;
+          border-radius: 50%;
+          filter: drop-shadow(0 0 24px rgba(191, 255, 0, 0.45));
+        }
+
+        .nn-bubble-orb-right-sub {
+          position: absolute;
+          width: 110px;
+          height: 110px;
+          right: 210px;
+          bottom: 100px;
+          background: #BFFF00;
+          border-radius: 50%;
+          transform: rotate(-35deg);
+          filter: drop-shadow(0 0 16px rgba(191, 255, 0, 0.4));
         }
 
         .nn-footer-inner {
@@ -1207,94 +1299,105 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 50px;
+          gap: 36px;
         }
 
-        /* Footer Slackey Stack */
+        /* Footer Slackey Stack (Group 58 in Figma: THANKS / FOR / WATCHING!) */
         .nn-footer-slackey {
           display: flex;
           flex-direction: column;
           gap: 12px;
           align-items: center;
+          margin-top: 10px;
         }
 
         .nn-footer-slackey-line {
           font-family: 'Slackey', cursive, sans-serif;
           font-weight: 400;
-          color: var(--nn-white);
+          color: #FFFFFF;
           text-transform: uppercase;
-          line-height: 0.95;
+          line-height: 0.92;
           letter-spacing: -2px;
+          text-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
         }
 
         .nn-footer-thanks {
-          font-size: clamp(64px, 9.5vw, 165px);
+          font-size: clamp(64px, 10vw, 165px);
         }
 
-        .nn-footer-name {
-          font-size: clamp(56px, 8.8vw, 155px);
+        .nn-footer-for {
+          font-size: clamp(56px, 9vw, 155px);
         }
 
-        .nn-footer-year {
-          font-size: clamp(56px, 8.8vw, 155px);
+        .nn-footer-watching {
+          font-size: clamp(56px, 9vw, 155px);
         }
 
-        /* Contact Details Card */
-        .nn-contact-card {
-          background: rgba(255, 255, 255, 0.08);
-          border: 2px solid var(--nn-lime);
-          border-radius: 36px;
-          padding: 48px 60px;
-          backdrop-filter: blur(16px);
-          width: min(800px, 92vw);
-          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+        /* Contact Section (Figma LIÊN HỆ & Centered Noto Sans Contact Rows) */
+        .nn-contact-section {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 30px;
+          gap: 20px;
+          width: 100%;
+          max-width: 820px;
+          margin-top: 10px;
         }
 
         .nn-contact-heading {
           font-family: 'Poppins', sans-serif;
-          font-weight: 700;
-          font-size: clamp(36px, 4.5vw, 64px);
-          color: var(--nn-white);
+          font-style: normal;
+          font-weight: 600;
+          font-size: clamp(38px, 4.8vw, 64px);
+          line-height: 1.2;
+          text-align: center;
+          color: #FFFFFF;
           margin: 0;
-          letter-spacing: 1px;
+          letter-spacing: 0.5px;
         }
 
         .nn-contact-lines {
           display: flex;
           flex-direction: column;
-          gap: 16px;
-          font-family: 'Noto Sans', sans-serif;
-          font-weight: 600;
-          font-size: clamp(16px, 1.6vw, 24px);
-          color: var(--nn-white);
-          text-align: left;
-          width: 100%;
-        }
-
-        .nn-contact-row {
-          display: flex;
           align-items: center;
-          gap: 16px;
-          padding: 12px 18px;
-          background: rgba(255, 255, 255, 0.06);
-          border-radius: 16px;
-          border: 1px solid rgba(203, 247, 72, 0.2);
+          gap: 12px;
+          font-family: 'Noto Sans', sans-serif;
+          font-style: normal;
+          font-weight: 600;
+          font-size: clamp(16px, 1.8vw, 24px);
+          line-height: 1.45;
+          text-align: center;
+          color: #FFFFFF;
+        }
+
+        .nn-contact-line {
+          color: #FFFFFF;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 8px;
           transition: all 0.2s ease;
+          padding: 4px 14px;
+          border-radius: 10px;
         }
 
-        .nn-contact-row:hover {
-          border-color: var(--nn-lime);
+        .nn-contact-link:hover {
+          color: #CBF748;
           background: rgba(203, 247, 72, 0.12);
-          transform: translateX(4px);
+          transform: translateY(-2px);
         }
 
-        .nn-contact-icon {
-          color: var(--nn-lime);
-          flex-shrink: 0;
+        .nn-contact-label {
+          color: #CBF748;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+        }
+
+        .nn-contact-value {
+          color: #FFFFFF;
+          font-weight: 500;
         }
 
         .nn-social-pills {
@@ -1302,16 +1405,16 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           flex-wrap: wrap;
           gap: 14px;
           justify-content: center;
-          margin-top: 10px;
+          margin-top: 14px;
         }
 
         .nn-social-pill {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          background: var(--nn-lime);
-          color: var(--nn-blue);
-          border: 2px solid var(--nn-lime);
+          background: #CBF748;
+          color: #250CF1;
+          border: 2px solid #CBF748;
           border-radius: 999px;
           padding: 10px 24px;
           font-family: 'DM Sans', sans-serif;
@@ -1319,13 +1422,49 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           font-size: 15px;
           text-decoration: none;
           transition: all 0.2s ease;
+          box-shadow: 0 4px 14px rgba(203, 247, 72, 0.35);
         }
 
         .nn-social-pill:hover {
-          background: var(--nn-white);
-          color: var(--nn-blue);
+          background: #FFFFFF;
+          border-color: #FFFFFF;
+          color: #250CF1;
           transform: translateY(-2px);
-          box-shadow: 0 6px 18px rgba(203, 247, 72, 0.4);
+          box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+        }
+
+        .nn-footer-cv-action {
+          margin-top: 8px;
+        }
+
+        .nn-footer-cv-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          background: transparent;
+          color: #CBF748;
+          border: 2px dashed #CBF748;
+          border-radius: 999px;
+          padding: 10px 26px;
+          font-family: 'Chakra Petch', sans-serif;
+          font-weight: 700;
+          font-size: 16px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .nn-footer-cv-btn:hover {
+          background: #CBF748;
+          color: #000000;
+          border-style: solid;
+          transform: translateY(-2px);
+        }
+
+        .nn-footer-copyright {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 14px;
+          margin-top: 24px;
+          font-family: 'DM Sans', sans-serif;
         }
 
         /* ── RESPONSIVE ADAPTATIONS ── */
@@ -1371,6 +1510,12 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           .nn-hire-btn {
             padding: 8px 16px;
             font-size: 13px;
+          }
+          .nn-footer-bubble-left,
+          .nn-footer-bubble-right,
+          .nn-footer-stars-right {
+            opacity: 0.3;
+            transform: scale(0.6);
           }
         }
       `}</style>
@@ -1754,81 +1899,122 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         )}
       </div>
 
+      {/* Crossing Ribbons at entrance of Footer (Figma 10-129 top: 15841px & 15958px) */}
+      <div className="nn-footer-crossing-ribbons" aria-hidden="true">
+        <NhoNeonRibbon
+          bgBottom="#00FFE8"
+          bgTop="#250CF1"
+          textColor="#CBF748"
+          rotate="0.78deg"
+          skills={skills}
+        />
+        <NhoNeonRibbon
+          bgBottom="#00FFE8"
+          bgTop="#250CF1"
+          textColor="#CBF748"
+          rotate="-1.37deg"
+          skills={skills}
+        />
+      </div>
+
       {/* ── SECTION 6: FOOTER (RECTANGLE 42: GRADIENT BLUE -> MIDNIGHT) ── */}
       <footer id="nn-footer" className="nn-footer-section">
         {/* Ambient Teal Aura (Ellipse 40 in Figma) */}
-        <div className="nn-footer-aura" />
+        <div className="nn-footer-aura" aria-hidden="true" />
+
+        {/* Organic Neon Lime Bubble on Left (Ellipse 36 & 38 in Figma) */}
+        <div className="nn-footer-bubble-left" aria-hidden="true">
+          <div className="nn-bubble-orb-left-main" />
+          <div className="nn-bubble-orb-left-sub" />
+        </div>
+
+        {/* Top-Right Neon Lime Sparkle Stars (Star 41 & 42 in Figma) */}
+        <div className="nn-footer-stars-right" aria-hidden="true">
+          <NeonStar
+            size={145}
+            color="#CBF748"
+            rotate={118.57}
+            style={{ position: 'absolute', right: '40px', top: '20px' }}
+          />
+          <NeonStar
+            size={82}
+            color="#CBF748"
+            rotate={118.57}
+            style={{ position: 'absolute', right: '165px', top: '55px' }}
+          />
+        </div>
+
+        {/* Organic Neon Lime Bubble on Bottom-Right (Ellipse 37 & 39 in Figma) */}
+        <div className="nn-footer-bubble-right" aria-hidden="true">
+          <div className="nn-bubble-orb-right-main" />
+          <div className="nn-bubble-orb-right-sub" />
+        </div>
 
         <div className="nn-footer-inner">
-          {/* Giant Slackey Stack in Footer (Group 58 in Figma) */}
+          {/* Giant Slackey Stack in Footer (Group 58 in Figma: THANKS / FOR / WATCHING!) */}
           <div className="nn-footer-slackey">
             <div className="nn-footer-slackey-line nn-footer-thanks">THANKS</div>
-            <div className="nn-footer-slackey-line nn-footer-name">{name.toUpperCase()}</div>
-            <div className="nn-footer-slackey-line nn-footer-year">{birthYear || school || new Date().getFullYear()}</div>
+            <div className="nn-footer-slackey-line nn-footer-for">FOR</div>
+            <div className="nn-footer-slackey-line nn-footer-watching">WATCHING!</div>
           </div>
 
-          {/* Contact Box with Noto Sans (Figma Contact Box) */}
-          <div className="nn-contact-card">
+          {/* Contact Section: LIÊN HỆ with Clean Centered Noto Sans Contact Info */}
+          <div className="nn-contact-section">
             <h3 className="nn-contact-heading">LIÊN HỆ</h3>
+
             <div className="nn-contact-lines">
-              <div className="nn-contact-row">
-                <User size={24} className="nn-contact-icon" />
-                <span>
-                  <strong>HỌ VÀ TÊN:</strong> {name}
-                </span>
+              <div className="nn-contact-line">
+                <span className="nn-contact-label">HỌ VÀ TÊN:</span>{' '}
+                <span className="nn-contact-value">{name}</span>
               </div>
+
               {phone && (
-                <div className="nn-contact-row">
-                  <Phone size={24} className="nn-contact-icon" />
-                  <span>
-                    <strong>SỐ ĐIỆN THOẠI:</strong> {phone}
-                  </span>
-                </div>
+                <a href={`tel:${phone}`} className="nn-contact-line nn-contact-link">
+                  <span className="nn-contact-label">SỐ ĐIỆN THOẠI:</span>{' '}
+                  <span className="nn-contact-value">{phone}</span>
+                </a>
               )}
+
               {email && (
-                <div className="nn-contact-row">
-                  <Mail size={24} className="nn-contact-icon" />
-                  <span>
-                    <strong>EMAIL/GMAIL:</strong> {email}
-                  </span>
-                </div>
+                <a href={`mailto:${email}`} className="nn-contact-line nn-contact-link">
+                  <span className="nn-contact-label">EMAIL/GMAIL:</span>{' '}
+                  <span className="nn-contact-value">{email}</span>
+                </a>
               )}
+
               {website && (
-                <div className="nn-contact-row">
-                  <Globe size={24} className="nn-contact-icon" />
-                  <span>
-                    <strong>WEBSITE:</strong> {website}
-                  </span>
-                </div>
+                <a
+                  href={website.startsWith('http') ? website : `https://${website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="nn-contact-line nn-contact-link"
+                >
+                  <span className="nn-contact-label">WEBSITE:</span>{' '}
+                  <span className="nn-contact-value">{website}</span>
+                </a>
               )}
             </div>
 
             {/* Social Buttons */}
-            <div className="nn-social-pills">
-              {socialLinks.map((s, idx) => (
-                <a
-                  key={idx}
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="nn-social-pill"
-                >
-                  <ExternalLink size={16} />
-                  <span>{s.name}</span>
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Bottom Copyright */}
-          <div style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '14px', marginTop: '20px' }}>
-            © {new Date().getFullYear()} {name} · Thiết kế chuẩn Figma 10-129 (Nho Neon) · fonlio Verified Candidate
+            {socialLinks.length > 0 && (
+              <div className="nn-social-pills">
+                {socialLinks.map((s, idx) => (
+                  <a
+                    key={idx}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="nn-social-pill"
+                  >
+                    <ExternalLink size={16} />
+                    <span>{s.name}</span>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </footer>
-
-      {/* Floating Mascot */}
-      <PortfolioMascot avatar={profile.avatar} />
 
       {/* Image / Attachment Preview Modal */}
       {preview && (

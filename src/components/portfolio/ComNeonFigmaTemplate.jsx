@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useId } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ExternalLink,
   Mail,
@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Sparkles,
   Globe,
-  Download,
   User,
   Calendar,
   Layers,
@@ -46,80 +45,6 @@ function ComNeonStar({ size = 42, color = '#FFFFFF', rotate = 0, style = {} }) {
         fill={color}
       />
     </svg>
-  );
-}
-
-/**
- * Circular Rotating Badge around Photo ("DOWNLOAD CV - DOWNLOAD CV -" in Figma 9-126)
- */
-function CircularDownloadBadge({ resumeUrl, onClick, size = 180 }) {
-  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
-  const pathId = `cn-download-circle-${uid}`;
-
-  return (
-    <div
-      className="cn-download-badge"
-      style={{ width: size, height: size }}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      title={resumeUrl ? 'Tải CV ứng viên' : 'Xem thông tin liên hệ'}
-    >
-      <svg viewBox="0 0 199 199" width={size} height={size} className="cn-download-svg">
-        <defs>
-          <path
-            id={pathId}
-            d="M 99.5, 99.5 m -72, 0 a 72,72 0 1,1 144,0 a 72,72 0 1,1 -144,0"
-          />
-        </defs>
-
-        {/* Outer glass disc (Ellipse 3 in Figma) */}
-        <circle
-          cx="99.5"
-          cy="99.5"
-          r="75"
-          fill="rgba(0, 0, 0, 0.25)"
-          stroke="#FFFFFF"
-          strokeWidth="2"
-        />
-
-        {/* Inner Lime Circle (Ellipse 4 in Figma) */}
-        <circle
-          cx="99.5"
-          cy="99.5"
-          r="40"
-          fill="#CBF748"
-          filter="drop-shadow(0 0 12px rgba(203, 247, 72, 0.6))"
-        />
-
-        {/* Download Icon (akar-icons:download in Figma) */}
-        <g transform="translate(85.5, 85.5)">
-          <path
-            d="M14 3v14m0 0l-5-5m5 5l5-5M4 21h20"
-            stroke="#000000"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-          />
-        </g>
-
-        {/* Circular Rotating Text (DOWNLOAD CV - DOWNLOAD CV -) */}
-        <g className="cn-spin-rotor">
-          <text
-            fill="#FFFFFF"
-            fontSize="12.5"
-            fontFamily="'Inter', sans-serif"
-            fontWeight="500"
-            letterSpacing="3"
-          >
-            <textPath href={`#${pathId}`} startOffset="0%">
-              DOWNLOAD CV - DOWNLOAD CV -
-            </textPath>
-          </text>
-        </g>
-      </svg>
-    </div>
   );
 }
 
@@ -271,7 +196,6 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
   const email = profile.socialLinks?.email || profile.email;
   const phone = profile.socialLinks?.phone || profile.phone;
   const website = profile.socialLinks?.website || profile.website || profile.portfolioUrl;
-  const resumeUrl = profile.resumeUrl;
 
   const socialLinks = useMemo(() => {
     const list = [];
@@ -326,14 +250,6 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
       setActiveSection(id);
-    }
-  };
-
-  const handleDownloadCv = () => {
-    if (resumeUrl) {
-      window.open(resumeUrl, '_blank');
-    } else {
-      scrollTo('cn-footer');
     }
   };
 
@@ -1262,104 +1178,242 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           font-size: 18px;
         }
 
-        /* ── SECTION 6: FOOTER (BOTTOM CANVAS) ── */
+        /* ── SECTION 6: FOOTER (BOTTOM CANVAS: LIME TO PURPLE GRADIENT & FIGMA 9-126) ── */
         .cn-footer-section {
           position: relative;
           z-index: 2;
-          padding: 100px 24px 60px;
+          padding: 110px 24px 60px;
+          margin-top: 50px;
+          background: linear-gradient(180deg, rgba(203, 247, 72, 0) 0%, rgba(123, 58, 236, 0.4) 22%, #7B3AEC 65%, #5618C2 100%);
+          overflow: hidden;
+        }
+
+        /* Ambient Aura Glow behind the avatar (Ellipse 28 in Figma) */
+        .cn-footer-aura-glow {
+          position: absolute;
+          right: 5%;
+          top: 12%;
+          width: min(680px, 85vw);
+          height: min(680px, 85vw);
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(203, 247, 72, 0.65) 0%, rgba(203, 247, 72, 0.22) 40%, rgba(123, 58, 236, 0) 70%);
+          filter: blur(55px);
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        .cn-footer-container {
           max-width: 1200px;
           margin: 0 auto;
+          position: relative;
+          z-index: 2;
           display: flex;
           flex-direction: column;
-          align-items: center;
-          text-align: center;
           gap: 50px;
         }
 
-        .cn-footer-card {
-          background: rgba(255, 255, 255, 0.08);
-          border: 2px solid var(--cn-lime);
-          border-radius: 40px;
-          padding: 48px 60px;
-          backdrop-filter: blur(16px);
-          width: min(800px, 92vw);
-          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
-          display: flex;
-          flex-direction: column;
+        /* Two-column layout: Left = Contact info, Right = Avatar & Download */
+        .cn-footer-grid {
+          display: grid;
+          grid-template-columns: 1.15fr 1fr;
+          gap: 60px;
           align-items: center;
-          gap: 30px;
         }
 
-        .cn-footer-heading {
+        /* Left Column: Contact */
+        .cn-footer-contact-col {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          text-align: left;
+          gap: 18px;
+        }
+
+        .cn-footer-pill-row {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .cn-footer-tag-pill {
+          background: var(--cn-lime);
+          color: var(--cn-black);
           font-family: 'Poppins', sans-serif;
           font-weight: 700;
-          font-size: clamp(36px, 4.5vw, 64px);
+          font-size: 16px;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          padding: 8px 24px;
+          border-radius: 50px;
+          box-shadow: 0 4px 18px rgba(203, 247, 72, 0.45);
+        }
+
+        .cn-footer-headline {
+          font-family: 'Poppins', sans-serif;
+          font-weight: 700;
+          font-size: clamp(30px, 3.6vw, 46px);
+          line-height: 1.25;
           color: var(--cn-white);
           margin: 0;
         }
 
-        .cn-footer-lines {
+        .cn-footer-subhead {
+          font-family: 'DM Sans', sans-serif;
+          font-size: clamp(15px, 1.3vw, 18px);
+          color: rgba(255, 255, 255, 0.85);
+          margin: 0 0 6px 0;
+          line-height: 1.5;
+        }
+
+        .cn-footer-card-list {
           display: flex;
           flex-direction: column;
-          gap: 16px;
-          font-family: 'Be Vietnam Pro', sans-serif;
-          font-weight: 600;
-          font-size: clamp(16px, 1.6vw, 22px);
-          color: var(--cn-white);
-          text-align: left;
+          gap: 12px;
           width: 100%;
         }
 
-        .cn-footer-row {
+        .cn-footer-info-row {
           display: flex;
           align-items: center;
           gap: 16px;
-          padding: 12px 18px;
-          background: rgba(255, 255, 255, 0.06);
-          border-radius: 16px;
-          border: 1px solid rgba(203, 247, 72, 0.25);
+          padding: 14px 20px;
+          background: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          border-radius: 20px;
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          text-decoration: none;
+          color: inherit;
+          transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .cn-footer-info-row:hover {
+          border-color: var(--cn-lime);
+          background: rgba(203, 247, 72, 0.22);
+          transform: translateX(6px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .cn-footer-info-icon {
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+          background: var(--cn-lime);
+          color: var(--cn-black);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          box-shadow: 0 4px 12px rgba(203, 247, 72, 0.35);
+        }
+
+        .cn-footer-info-content {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .cn-footer-info-label {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.65);
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        }
+
+        .cn-footer-info-text {
+          font-family: 'Be Vietnam Pro', sans-serif;
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--cn-white);
+          word-break: break-all;
+        }
+
+        .cn-footer-social-wrap {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-top: 6px;
+        }
+
+        .cn-footer-social-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.16);
+          color: var(--cn-white);
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          border-radius: 50px;
+          padding: 8px 20px;
+          font-family: 'DM Sans', sans-serif;
+          font-weight: 700;
+          font-size: 14px;
+          text-decoration: none;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           transition: all 0.2s ease;
         }
 
-        .cn-footer-row:hover {
+        .cn-footer-social-pill:hover {
+          background: var(--cn-lime);
+          color: var(--cn-black);
           border-color: var(--cn-lime);
-          background: rgba(203, 247, 72, 0.15);
-          transform: translateX(4px);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 16px rgba(203, 247, 72, 0.45);
         }
 
-        .cn-footer-icon {
-          color: var(--cn-lime);
-          flex-shrink: 0;
-        }
-
-        .cn-social-pills {
+        /* Right Column: Avatar Frame with Glowing Rings & Download CV Rotor */
+        .cn-footer-avatar-col {
           display: flex;
-          flex-wrap: wrap;
-          gap: 14px;
+          align-items: center;
           justify-content: center;
+          position: relative;
+        }
+
+        .cn-footer-avatar-box {
+          position: relative;
+          width: min(500px, 85vw);
+          height: min(580px, 92vw);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        /* Bottom Banner: THANKS FOR WATCHING! */
+        .cn-footer-bottom-banner {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 16px;
           margin-top: 10px;
         }
 
-        .cn-social-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          background: var(--cn-lime);
-          color: var(--cn-black);
-          border: 2px solid var(--cn-lime);
-          border-radius: 999px;
-          padding: 10px 24px;
-          font-family: 'DM Sans', sans-serif;
-          font-weight: 700;
-          font-size: 15px;
-          text-decoration: none;
-          transition: all 0.2s ease;
+        .cn-footer-thanks-title {
+          font-family: 'Poppins', sans-serif;
+          font-weight: 800;
+          font-size: clamp(34px, 5.5vw, 76px);
+          line-height: 1.1;
+          color: var(--cn-white);
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          margin: 0;
+          text-shadow: 0 4px 28px rgba(203, 247, 72, 0.45), 0 0 60px rgba(123, 58, 236, 0.7);
         }
 
-        .cn-social-pill:hover {
-          background: var(--cn-white);
-          transform: translateY(-2px);
-          box-shadow: 0 6px 18px rgba(203, 247, 72, 0.5);
+        .cn-footer-divider-line {
+          width: min(460px, 70vw);
+          height: 2px;
+          background: linear-gradient(90deg, transparent, rgba(203, 247, 72, 0.65), transparent);
+          margin: 6px auto;
+        }
+
+        .cn-footer-copyright {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          color: rgba(255, 255, 255, 0.75);
+          margin: 0;
         }
 
         /* ── RESPONSIVE ADAPTATIONS ── */
@@ -1388,6 +1442,20 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           .cn-showcase-top-row {
             grid-template-columns: 1fr;
           }
+          .cn-footer-grid {
+            grid-template-columns: 1fr;
+            gap: 50px;
+          }
+          .cn-footer-contact-col {
+            align-items: center;
+            text-align: center;
+          }
+          .cn-footer-headline {
+            text-align: center;
+          }
+          .cn-footer-social-wrap {
+            justify-content: center;
+          }
         }
 
         @media (max-width: 768px) {
@@ -1397,8 +1465,8 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           .cn-stat-cards-row {
             grid-template-columns: 1fr;
           }
-          .cn-footer-card {
-            padding: 32px 20px;
+          .cn-footer-section {
+            padding: 90px 16px 50px;
           }
           .cn-header-nav {
             top: 12px;
@@ -1480,12 +1548,6 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
               <PortfolioMascot avatar={profile.avatar} size={280} />
             </div>
           )}
-
-          {/* Circular Rotating DOWNLOAD CV Badge (Figma DOWNLOAD in 9-126) */}
-          <CircularDownloadBadge
-            resumeUrl={resumeUrl}
-            onClick={handleDownloadCv}
-          />
         </div>
 
         {/* Right Hero Content */}
@@ -1784,97 +1846,156 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         </div>
       )}
 
-      {/* ── SECTION 6: FOOTER (BOTTOM CANVAS) ── */}
+      {/* ── SECTION 6: FOOTER (BOTTOM CANVAS: LIME TO PURPLE GRADIENT & FIGMA 9-126) ── */}
       <footer id="cn-footer" className="cn-footer-section">
-        {/* Circular Avatar Cutout & DOWNLOAD Rotor in Footer */}
-        <div className="cn-hero-avatar-box" style={{ width: '360px', height: '420px' }}>
-          <div className="cn-avatar-glow-ring" style={{ width: '340px', height: '340px' }} />
-          <div className="cn-avatar-inner-ring" style={{ width: '320px', height: '320px' }} />
-          {portraitSrc ? (
-            <img
-              src={portraitSrc}
-              alt={name}
-              className="cn-avatar-img"
-              style={{ width: '280px', height: '380px' }}
-            />
-          ) : (
-            <div className="cn-avatar-mascot-wrap" style={{ width: '260px', height: '260px' }}>
-              <PortfolioMascot avatar={profile.avatar} size={200} />
+        {/* Ambient Aura Glow behind the avatar (Ellipse 28 in Figma) */}
+        <div className="cn-footer-aura-glow" />
+
+        {/* Floating Sparkle Stars (Figma Star 20, 21, 22 in Footer) */}
+        <ComNeonStar
+          size={44}
+          color="#FFFFFF"
+          rotate={-15}
+          style={{ position: 'absolute', top: '12%', left: '7%', pointerEvents: 'none', opacity: 0.85 }}
+        />
+        <ComNeonStar
+          size={30}
+          color="#CBF748"
+          rotate={25}
+          style={{ position: 'absolute', top: '22%', left: '4%', pointerEvents: 'none', opacity: 0.9 }}
+        />
+        <ComNeonStar
+          size={38}
+          color="#FFFFFF"
+          rotate={-10}
+          style={{ position: 'absolute', top: '10%', right: '11%', pointerEvents: 'none', opacity: 0.85 }}
+        />
+        <ComNeonStar
+          size={58}
+          color="#CBF748"
+          rotate={35}
+          style={{ position: 'absolute', bottom: '26%', right: '5%', pointerEvents: 'none', opacity: 0.9 }}
+        />
+        <ComNeonStar
+          size={26}
+          color="#CBF748"
+          rotate={-20}
+          style={{ position: 'absolute', bottom: '20%', left: '46%', pointerEvents: 'none', opacity: 0.8 }}
+        />
+
+        <div className="cn-footer-container">
+          <div className="cn-footer-grid">
+            {/* Left Column: Contact Information (Figma 9-126) */}
+            <div className="cn-footer-contact-col">
+              <div className="cn-footer-pill-row">
+                <ComNeonStar size={22} color="#CBF748" />
+                <div className="cn-footer-tag-pill">LIÊN HỆ</div>
+              </div>
+
+              <h3 className="cn-footer-headline">Kết nối với mình</h3>
+              <p className="cn-footer-subhead">
+                Sẵn sàng hợp tác trong các dự án mới &amp; cơ hội nghề nghiệp thú vị.
+              </p>
+
+              <div className="cn-footer-card-list">
+                <div className="cn-footer-info-row">
+                  <div className="cn-footer-info-icon">
+                    <User size={22} />
+                  </div>
+                  <div className="cn-footer-info-content">
+                    <span className="cn-footer-info-label">Họ và tên</span>
+                    <span className="cn-footer-info-text">{name}</span>
+                  </div>
+                </div>
+
+                {phone && (
+                  <a href={`tel:${phone}`} className="cn-footer-info-row">
+                    <div className="cn-footer-info-icon">
+                      <Phone size={22} />
+                    </div>
+                    <div className="cn-footer-info-content">
+                      <span className="cn-footer-info-label">Số điện thoại</span>
+                      <span className="cn-footer-info-text">{phone}</span>
+                    </div>
+                  </a>
+                )}
+
+                {email && (
+                  <a href={`mailto:${email}`} className="cn-footer-info-row">
+                    <div className="cn-footer-info-icon">
+                      <Mail size={22} />
+                    </div>
+                    <div className="cn-footer-info-content">
+                      <span className="cn-footer-info-label">Email / Gmail</span>
+                      <span className="cn-footer-info-text">{email}</span>
+                    </div>
+                  </a>
+                )}
+
+                {website && (
+                  <a
+                    href={website.startsWith('http') ? website : `https://${website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cn-footer-info-row"
+                  >
+                    <div className="cn-footer-info-icon">
+                      <Globe size={22} />
+                    </div>
+                    <div className="cn-footer-info-content">
+                      <span className="cn-footer-info-label">Website cá nhân</span>
+                      <span className="cn-footer-info-text">{website}</span>
+                    </div>
+                  </a>
+                )}
+              </div>
+
+              {/* Dynamic Social Links */}
+              {socialLinks.length > 0 && (
+                <div className="cn-footer-social-wrap">
+                  {socialLinks.map((s, idx) => (
+                    <a
+                      key={idx}
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="cn-footer-social-pill"
+                    >
+                      <ExternalLink size={15} />
+                      <span>{s.name}</span>
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
 
-          <CircularDownloadBadge
-            resumeUrl={resumeUrl}
-            size={140}
-            onClick={handleDownloadCv}
-          />
-        </div>
+            {/* Right Column: Avatar Frame with Radiant Glow & Circular Rotor */}
+            <div className="cn-footer-avatar-col">
+              <div className="cn-footer-avatar-box">
+                <div className="cn-avatar-glow-ring" />
+                <div className="cn-avatar-inner-ring" />
 
-        {/* Real Contact Info Card */}
-        <div className="cn-footer-card">
-          <h3 className="cn-footer-heading">LIÊN HỆ</h3>
-          <div className="cn-footer-lines">
-            <div className="cn-footer-row">
-              <User size={24} className="cn-footer-icon" />
-              <span>
-                <strong>HỌ VÀ TÊN:</strong> {name}
-              </span>
+                {portraitSrc ? (
+                  <img
+                    src={portraitSrc}
+                    alt={name}
+                    className="cn-avatar-img"
+                  />
+                ) : (
+                  <div className="cn-avatar-mascot-wrap">
+                    <PortfolioMascot avatar={profile.avatar} size={280} />
+                  </div>
+                )}
+              </div>
             </div>
-
-            {phone && (
-              <div className="cn-footer-row">
-                <Phone size={24} className="cn-footer-icon" />
-                <span>
-                  <strong>SỐ ĐIỆN THOẠI:</strong> {phone}
-                </span>
-              </div>
-            )}
-
-            {email && (
-              <div className="cn-footer-row">
-                <Mail size={24} className="cn-footer-icon" />
-                <span>
-                  <strong>EMAIL/GMAIL:</strong> {email}
-                </span>
-              </div>
-            )}
-
-            {website && (
-              <div className="cn-footer-row">
-                <Globe size={24} className="cn-footer-icon" />
-                <span>
-                  <strong>WEBSITE:</strong> {website}
-                </span>
-              </div>
-            )}
           </div>
 
-          {/* Social Pills (Only rendered for platforms the candidate actually provided!) */}
-          {socialLinks.length > 0 && (
-            <div className="cn-social-pills">
-              {socialLinks.map((s, idx) => (
-                <a
-                  key={idx}
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cn-social-pill"
-                >
-                  <ExternalLink size={16} />
-                  <span>{s.name}</span>
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', marginTop: '10px' }}>
-          © {new Date().getFullYear()} {name} · fonlio Verified Candidate
+          {/* Bottom Banner: THANKS FOR WATCHING! */}
+          <div className="cn-footer-bottom-banner">
+            <h2 className="cn-footer-thanks-title">THANKS FOR WATCHING!</h2>
+          </div>
         </div>
       </footer>
-
-      {/* Floating Mascot */}
-      <PortfolioMascot avatar={profile.avatar} />
 
       {/* Image / Attachment Preview Modal */}
       {preview && (

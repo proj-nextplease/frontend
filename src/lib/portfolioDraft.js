@@ -7,11 +7,20 @@
  * trước mở riêng không bao giờ lệch nhau: lệch một trường là người dùng thấy
  * hai kết quả khác nhau cho cùng một bản nháp.
  */
-export function toPassportProfile({ profile = {}, avatar, experiences, credentials } = {}) {
-  const skills = String(profile.skills || '')
-    .split(',')
-    .map((skill) => skill.trim())
+export function toPassportProfile(data = {}) {
+  const profile = data?.profile || {};
+  const rawSkills = profile.skills;
+  const skills = (
+    Array.isArray(rawSkills)
+      ? rawSkills
+      : String(rawSkills || '').split(',')
+  )
+    .map((skill) => (typeof skill === 'string' ? skill.trim() : String(skill || '')))
     .filter(Boolean);
+
+  const avatar = data?.avatar;
+  const experiences = data?.experiences;
+  const credentials = data?.credentials;
 
   return {
     name: profile.name,

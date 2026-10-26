@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useId } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ExternalLink,
   Mail,
@@ -72,195 +72,146 @@ function AngledRoleRibbon({
 }
 
 /**
- * Circular Rotating Badge around Photo ("TẢI ẢNH LÊN ĐÂY NHA" in Figma)
+ * Category code to Vietnamese readable label mapping
  */
-function CircularSpinBadge({ resumeUrl, onClick, size = 164 }) {
-  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
-  const pathId = `pa-badge-circle-${uid}`;
+const CATEGORY_LABELS = {
+  CLUB_SMALL: 'Câu lạc bộ Khoa / Trường',
+  CLUB_LEADER: 'Ban Chủ nhiệm CLB',
+  BUSINESS_INTERN: 'Thực tập sinh doanh nghiệp',
+  BUSINESS_OFFICIAL: 'Nhân viên chính thức',
+  FREELANCE: 'Dự án tự do / Freelance',
+  ACADEMIC_RESEARCH: 'Nghiên cứu khoa học',
+  COMPETITION: 'Cuộc thi học thuật & ĐMST',
+  VOLUNTEER: 'Hoạt động tình nguyện',
+  COMMUNITY_PROJECT: 'Dự án cộng đồng',
+};
+
+/**
+ * Helper to get a valid candidate-uploaded project image URL or attachment
+ */
+function getProjectImageUrl(exp) {
+  if (!exp) return null;
+  if (exp.imageUrl && typeof exp.imageUrl === 'string' && exp.imageUrl.trim()) return exp.imageUrl;
+  if (exp.thumbnailUrl && typeof exp.thumbnailUrl === 'string' && exp.thumbnailUrl.trim()) return exp.thumbnailUrl;
+  if (Array.isArray(exp.proofImages) && exp.proofImages[0] && typeof exp.proofImages[0] === 'string') return exp.proofImages[0];
+  if (exp.certificateUrl && typeof exp.certificateUrl === 'string' && exp.certificateUrl.trim()) return exp.certificateUrl;
+  return null;
+}
+
+/**
+ * Authentic Interactive Mockup Screen for projects without custom uploaded shots
+ * Matching Purple Aura (Figma 10-132) styling with verified badges and real links
+ */
+function PurpleAuraProjectMockup({ exp = {}, index = 0, isDark = false }) {
+  const title = exp.title || exp.projectName || exp.name || `Dự án ${index + 1}`;
+  const org = exp.organization || exp.role || exp.position || 'fonlio Verified Experience';
+  const categoryLabel = CATEGORY_LABELS[exp.category] || exp.category || 'Kinh nghiệm thực chiến';
+  const displayUrl = exp.proofLink
+    ? exp.proofLink.replace(/^https?:\/\//, '').replace(/\/$/, '')
+    : `fonlio.me/project-${index + 1}`;
 
   return (
-    <div
-      className="pa-spin-badge-box"
-      style={{ width: size, height: size }}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      title={resumeUrl ? 'Tải CV ứng viên' : 'Hồ sơ năng lực'}
-    >
-      <svg viewBox="0 0 164 164" width={size} height={size} className="pa-spin-badge-svg">
-        <defs>
-          <path
-            id={pathId}
-            d="M 82, 82 m -60, 0 a 60,60 0 1,1 120,0 a 60,60 0 1,1 -120,0"
-          />
-        </defs>
-
-        {/* Outer glass disc (Ellipse 3) */}
-        <circle
-          cx="82"
-          cy="82"
-          r="78"
-          fill="rgba(0, 0, 0, 0.12)"
-          stroke="#3F016B"
-          strokeWidth="2"
-        />
-
-        {/* Circular Rotating Text (Group 46) */}
-        <g className="pa-spin-rotor">
-          <text
-            fill="#3F016B"
-            fontSize="10.1"
-            fontFamily="'Inter', sans-serif"
-            fontWeight="500"
-            letterSpacing="3"
-          >
-            <textPath href={`#${pathId}`} startOffset="0%">
-              TẢI ẢNH LÊN ĐÂY NHA • TẢI ẢNH LÊN ĐÂY NHA •
-            </textPath>
-          </text>
-        </g>
-
-        {/* Inner solid white circle (Ellipse 4) */}
-        <circle cx="82" cy="82" r="42" fill="#FFFFFF" />
-
-        {/* Upload / Download Arrow Icon */}
-        <g transform="translate(82, 82)">
-          <path
-            d="M 0,-12 L 0,8 M -8,0 L 0,8 L 8,0 M -12,12 L 12,12"
-            stroke="#000000"
-            strokeWidth="2.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-          />
-        </g>
-      </svg>
+    <div className={`pa-project-mockup-screen${isDark ? ' dark' : ' light'}`}>
+      <div className="pa-mockup-browser-bar">
+        <div className="pa-mockup-dots">
+          <span className="pa-mockup-dot red" />
+          <span className="pa-mockup-dot yellow" />
+          <span className="pa-mockup-dot green" />
+        </div>
+        <span className="pa-mockup-url">{displayUrl}</span>
+      </div>
+      <div className="pa-mockup-screen-body">
+        <div className="pa-mockup-badge">
+          <Sparkles size={13} />
+          <span>DỰ ÁN {index + 1}</span>
+        </div>
+        <h4 className="pa-mockup-title">{title}</h4>
+        <p className="pa-mockup-org">{org}</p>
+        <div className="pa-mockup-chip-row">
+          <span className="pa-mockup-chip">✦ {categoryLabel}</span>
+          {exp.verified && <span className="pa-mockup-chip verified">✦ Đã xác thực</span>}
+        </div>
+      </div>
     </div>
   );
 }
-
-const FALLBACK_PROJECTS = [
-  {
-    id: 'exp-1',
-    title: 'Dự án 1',
-    name: 'Adidas Website UI Design',
-    role: 'UX/UI Lead & Product Designer',
-    time: '4 tháng · 2024',
-    interactions: '35.000+ Lượt tương tác',
-    description:
-      'Mô tả về dự án: Nghiên cứu hành vi người dùng, tái cấu trúc luồng checkout 3 bước, xây dựng hệ thống design system với hơn 200 components chuẩn mực và tối ưu tỷ lệ chuyển đổi đơn hàng tăng 38%.',
-    verified: true,
-  },
-  {
-    id: 'exp-2',
-    title: 'Dự án 2',
-    name: 'Ứng dụng Quản lý Tài chính & Đầu tư Cá nhân',
-    role: 'Senior Product Designer',
-    time: '6 tháng · 2023',
-    interactions: '50.000+ Người dùng tích cực',
-    description:
-      'Mô tả về dự án: Thiết kế giao diện theo dõi danh mục đầu tư theo thời gian thực, bảng phân tích dòng tiền trực quan bằng biểu đồ tương tác, mang lại sự tin cậy và tiện lợi tối đa cho người dùng trẻ.',
-    verified: true,
-  },
-  {
-    id: 'exp-3',
-    title: 'Dự án 3',
-    name: 'Cổng Học tập Trực tuyến Gamified EdTech',
-    role: 'UI Designer & Brand Specialist',
-    time: '3 tháng · 2023',
-    interactions: '22.000+ Học viên hoàn thành',
-    description:
-      'Mô tả về dự án: Xây dựng cổng học tập số kết hợp lộ trình tương tác theo gamification, tích hợp hệ thống bài tập và nộp bài với giao diện thân thiện, hiện đại.',
-    verified: true,
-  },
-  {
-    id: 'exp-4',
-    title: 'Dự án 4',
-    name: 'Cổng Dịch vụ Số & Đặt lịch Y tế Trực tuyến',
-    role: 'UX Researcher & Interaction Designer',
-    time: '5 tháng · 2022',
-    interactions: '40.000+ Lượt đặt lịch khám',
-    description:
-      'Mô tả về dự án: Tối ưu quy trình đặt lịch khám bệnh thông minh qua 3 chạm, tích hợp hệ thống hồ sơ bệnh án điện tử trực quan giúp giảm 45% thời gian chờ đợi.',
-    verified: true,
-  },
-  {
-    id: 'exp-5',
-    title: 'Dự án 5',
-    name: 'Ứng dụng Đặt xe & Giao đồ ăn Tiết kiệm Xanh',
-    role: 'Lead Mobile Experience Designer',
-    time: '4 tháng · 2022',
-    interactions: '80.000+ Lượt chuyến xe xanh',
-    description:
-      'Mô tả về dự án: Thiết kế giao diện điều hướng thời gian thực theo bản đồ số tương tác, tối ưu hóa trải nghiệm đặt món đa điểm chạm với hệ sinh thái điểm thưởng phong phú.',
-    verified: true,
-  },
-  {
-    id: 'exp-6',
-    title: 'Dự án 6',
-    name: 'Nền tảng Mạng Xã hội Học tập & Phát triển Sự nghiệp',
-    role: 'Product Designer & Brand Lead',
-    time: '6 tháng · 2021',
-    interactions: '18.000+ Thành viên kết nối',
-    description:
-      'Mô tả về dự án: Kiến tạo không gian kết nối sinh viên và cố vấn nghề nghiệp thông qua hệ thống quest thử thách và bảng danh dự năng lực chuẩn hóa.',
-    verified: true,
-  },
-];
 
 export function PurpleAuraFigmaTemplate({ profile = {} }) {
   const [preview, setPreview] = useState(null);
   const [activeSection] = useState('hero');
 
-  // Candidate Data & Figma Fallbacks
-  const name = profile.name || 'Trâm Nguyễn';
-  const major = profile.major || profile.headline || 'Digital Marketing';
-  const school = profile.school || 'Đại học FPT';
-  const location = profile.location || 'Thành phố Hồ Chí Minh';
-  const headline = profile.headline || 'Digital Market-er';
-  const bio =
-    profile.bio ||
-    'Mình hiện là Digital Market-er và đang làm việc tự do tại Thành phố Hồ Chí Minh. Đam mê kết hợp tư duy phân tích thị trường với trải nghiệm người dùng tinh tế để tạo nên những sản phẩm số đột phá.';
+  // Candidate Data (Bám sát 100% dữ liệu thật của ứng viên)
+  const name = profile.name?.trim() || 'Ứng viên fonlio';
+  const roleTitle = profile.headline?.trim() || profile.title?.trim() || '';
+  const major = profile.major?.trim() || '';
+  const school = profile.school?.trim() || '';
+  const location = profile.location?.trim() || '';
+  const bio = profile.bio?.trim() || '';
+  const birthYear = profile.birthYear || '';
+  const email = profile.socialLinks?.email || profile.email || '';
+  const phone = profile.socialLinks?.phone || profile.phone || '';
+  const website = profile.socialLinks?.website || profile.website || profile.portfolioUrl || '';
+
+  const portraitSrc =
+    profile.avatar?.portraitUrl ||
+    profile.avatarUrl ||
+    (typeof profile.avatar === 'string' && profile.avatar.startsWith('http') ? profile.avatar : null) ||
+    profile.avatar?.url ||
+    null;
+
+  const avatar =
+    profile.avatar && typeof profile.avatar === 'object' && Object.keys(profile.avatar).length > 0
+      ? profile.avatar
+      : { gender: 'female' };
+
+  const socialLinks = useMemo(() => {
+    const links = [];
+    const sl = profile.socialLinks || {};
+    if (sl.github || profile.github) links.push({ name: 'GitHub', url: sl.github || profile.github });
+    if (sl.linkedin || profile.linkedin) {
+      const raw = sl.linkedin || profile.linkedin;
+      const url = raw.startsWith('http') ? raw : `https://linkedin.com/in/${raw}`;
+      links.push({ name: 'LinkedIn', url });
+    }
+    if (sl.facebook || profile.facebook) links.push({ name: 'Facebook', url: sl.facebook || profile.facebook });
+    if (sl.behance || profile.behance) links.push({ name: 'Behance', url: sl.behance || profile.behance });
+    if (website && !links.some((l) => l.name === 'Website')) {
+      const url = website.startsWith('http') ? website : `https://${website}`;
+      links.push({ name: 'Website', url });
+    }
+    return links;
+  }, [profile, website]);
 
   const skills = useMemo(() => {
-    if (Array.isArray(profile.skills) && profile.skills.length > 0) {
-      return profile.skills;
-    }
-    return [
-      'Thiết kế giao diện',
-      'Thiết kế đồ họa',
-      'Marketing',
-      'Phân tích tài chính',
-      'Thiết kế website',
-      'Nghiên cứu người dùng',
-    ];
+    return (Array.isArray(profile.skills) ? profile.skills : []).filter(
+      (s) => typeof s === 'string' && s.trim().length > 0
+    );
   }, [profile.skills]);
 
   const experiences = useMemo(() => {
-    if (Array.isArray(profile.experiences) && profile.experiences.length > 0) {
-      return profile.experiences;
-    }
-    return FALLBACK_PROJECTS;
+    return (Array.isArray(profile.experiences) ? profile.experiences : []).filter(
+      (e) =>
+        e &&
+        (e.title?.trim() ||
+          e.projectName?.trim() ||
+          e.name?.trim() ||
+          e.role?.trim() ||
+          e.position?.trim() ||
+          e.organization?.trim() ||
+          e.description?.trim() ||
+          e.detail?.trim())
+    );
   }, [profile.experiences]);
 
-  const avatar = profile.avatar && Object.keys(profile.avatar).length > 0 ? profile.avatar : { gender: 'female' };
-  const email = profile.socialLinks?.email || 'tram.nguyen@fpt.edu.vn';
-  const phone = profile.socialLinks?.phone || '0909 123 456';
-  const linkedin = profile.socialLinks?.linkedin;
-  const resumeUrl = profile.resumeUrl;
+  const credentials = useMemo(() => {
+    return (Array.isArray(profile.credentials) ? profile.credentials : []).filter(
+      (c) => c && (c.name?.trim() || c.title?.trim())
+    );
+  }, [profile.credentials]);
 
   const contactHref = email
     ? (email.startsWith('mailto:') ? email : `mailto:${email}`)
-    : (linkedin ? `https://linkedin.com/in/${linkedin}` : '#contact');
-
-  const handleDownloadCv = () => {
-    if (resumeUrl) {
-      window.open(resumeUrl, '_blank');
-    } else {
-      const el = document.getElementById('about');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+    : (phone ? `tel:${phone}` : '#contact');
 
   return (
     <div className="pa-figma-page">
@@ -875,32 +826,141 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
           box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1);
         }
 
-        .pa-mockup-inner {
+        .pa-project-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 36px;
+          border: 2px solid #FFFFFF;
+          transition: transform 0.3s ease;
+        }
+
+        .pa-project-img:hover {
+          transform: scale(1.02);
+        }
+
+        .pa-project-mockup-screen {
           width: 100%;
           height: 100%;
           border: 2px solid #FFFFFF;
           border-radius: 36px;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.1));
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          background: rgba(255, 255, 255, 0.45);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+        }
+
+        .pa-project-mockup-screen.dark {
+          background: linear-gradient(135deg, rgba(63, 1, 107, 0.25), rgba(167, 128, 235, 0.2));
+        }
+
+        .pa-project-mockup-screen.light {
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(240, 225, 255, 0.35));
+        }
+
+        .pa-mockup-browser-bar {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 18px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        .pa-mockup-dots {
+          display: flex;
+          gap: 6px;
+        }
+
+        .pa-mockup-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+        }
+
+        .pa-mockup-dot.red { background: #FF5F56; }
+        .pa-mockup-dot.yellow { background: #FFBD2E; }
+        .pa-mockup-dot.green { background: #27C93F; }
+
+        .pa-mockup-url {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          color: #3F016B;
+          opacity: 0.75;
+          letter-spacing: 0.5px;
+        }
+
+        .pa-mockup-screen-body {
+          flex: 1;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           padding: 24px;
-          box-sizing: border-box;
           text-align: center;
+          gap: 10px;
         }
 
-        .pa-mockup-tag {
+        .pa-mockup-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 12px;
+          border-radius: 999px;
+          background: #3F016B;
+          color: #FFFFFF;
           font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
           font-weight: 700;
-          font-size: 14px;
+          letter-spacing: 1px;
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          padding: 6px 14px;
-          border-radius: 50px;
-          background: #FFFFFF;
+        }
+
+        .pa-mockup-title {
+          font-family: 'Be Vietnam Pro', sans-serif;
+          font-weight: 700;
+          font-size: clamp(18px, 2.2vw, 24px);
+          color: #2D007C;
+          margin: 0;
+          line-height: 1.3;
+          max-width: 420px;
+        }
+
+        .pa-mockup-org {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          color: #4B127D;
+          margin: 0;
+          font-weight: 500;
+        }
+
+        .pa-mockup-chip-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          justify-content: center;
+          margin-top: 6px;
+        }
+
+        .pa-mockup-chip {
+          display: inline-flex;
+          align-items: center;
+          padding: 4px 10px;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.75);
+          border: 1px solid rgba(63, 1, 107, 0.2);
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px;
+          font-weight: 600;
           color: #3F016B;
-          margin-bottom: 16px;
+        }
+
+        .pa-mockup-chip.verified {
+          background: rgba(99, 255, 56, 0.25);
+          border-color: rgba(99, 255, 56, 0.6);
+          color: #0b6800;
         }
 
         /* 3 Stat / Experience Pill Cards (Frame 55) */
@@ -1110,7 +1170,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
         </a>
 
         {/* Subtitle (Frame 53: #3F016B) */}
-        <p className="pa-hero-sub-text">Công việc của tôi</p>
+        <p className="pa-hero-sub-text">{roleTitle || 'Công việc của tôi'}</p>
       </section>
 
       {/* ── ANGLED RIBBON 1 (Role at top: 983px) ── */}
@@ -1127,9 +1187,9 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
           {/* Left: Photo Frame & Circular Rotor Badge */}
           <div className="pa-photo-frame-wrap">
             <div className="pa-photo-frame">
-              {avatar.portraitUrl ? (
+              {portraitSrc ? (
                 <img
-                  src={avatar.portraitUrl}
+                  src={portraitSrc}
                   alt={`Chân dung ${name}`}
                   className="pa-photo-img"
                 />
@@ -1139,8 +1199,6 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
                 </div>
               )}
             </div>
-
-            <CircularSpinBadge resumeUrl={resumeUrl} onClick={handleDownloadCv} size={164} />
           </div>
 
           {/* Right: Content (Frame 35 & Hero Content) */}
@@ -1150,13 +1208,17 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
             </div>
 
             <h2 className="pa-about-headline">
-              Mình hiện là {headline} và đang làm việc tự do tại {location}
+              {roleTitle
+                ? `Mình hiện là ${roleTitle}${location ? ` và đang làm việc tại ${location}` : ''}`
+                : `Xin chào, mình là ${name}!`}
             </h2>
 
-            <p className="pa-about-bio-text">{bio}</p>
+            <p className="pa-about-bio-text">
+              {bio || 'Ứng viên năng động luôn sẵn sàng cống hiến và phát triển kỹ năng thực chiến trong các dự án.'}
+            </p>
 
-            <a href={contactHref} className="pa-about-action-btn">
-              Đăng hồ sơ công việc của bạn tại đây
+            <a href="#portfolio" className="pa-about-action-btn">
+              Xem các dự án của mình
             </a>
           </div>
         </div>
@@ -1176,25 +1238,59 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
 
         <div className="pa-matrix-grid">
           {/* Item 1: Học vấn */}
-          <div className="pa-matrix-card">
-            <h3 className="pa-matrix-heading">Học vấn</h3>
-            <p className="pa-matrix-meta">
-              <b>{school}</b> · Chuyên ngành: {major} · 2021 - 2025
-            </p>
-          </div>
-
-          {/* Items 2..11: Projects Matrix (Group 59 & 60) */}
-          {experiences.slice(0, 7).map((exp, idx) => (
-            <div className="pa-matrix-card" key={exp.id || idx}>
-              <h3 className="pa-matrix-heading">Dự án {idx + 1}</h3>
+          {(school || major) && (
+            <div className="pa-matrix-card">
+              <h3 className="pa-matrix-heading">Học vấn</h3>
               <p className="pa-matrix-meta">
-                <b>{exp.role || 'Thành viên dự án'}</b> · {exp.startDate || '10/2023'}
-                {exp.endDate ? ` - ${exp.endDate}` : ' - Hiện tại'}
-                <br />
-                {exp.title || 'Mô tả dự án'}
+                <b>{school || 'Đại học'}</b>
+                {major ? ` · Chuyên ngành: ${major}` : ''}
+                {birthYear ? ` · Năm sinh: ${birthYear}` : ''}
               </p>
             </div>
-          ))}
+          )}
+
+          {/* Items: Projects Matrix from candidate experiences */}
+          {experiences.length > 0 &&
+            experiences.slice(0, 6).map((exp, idx) => {
+              const timeStr = `${exp.startDate || exp.startedAt || ''}${
+                exp.endDate || exp.endedAt ? ' - ' + (exp.endDate || exp.endedAt) : (exp.startDate || exp.startedAt) ? ' - Hiện tại' : ''
+              }`;
+              const itemTitle = exp.title || exp.projectName || exp.name || `Dự án ${idx + 1}`;
+              const itemRole = exp.role || exp.roleLevel || exp.position || exp.organization || 'Thành viên thực hiện';
+              const itemDesc = exp.description || exp.detail || (exp.organization ? `Hoạt động tại ${exp.organization}` : 'Kinh nghiệm thực chiến');
+
+              return (
+                <div className="pa-matrix-card" key={exp.id || idx}>
+                  <h3 className="pa-matrix-heading">{itemTitle}</h3>
+                  <p className="pa-matrix-meta">
+                    <b>{itemRole}</b>
+                    {timeStr ? ` · ${timeStr}` : ''}
+                    {exp.verified && ' ✦ Đã xác thực'}
+                    <br />
+                    {itemDesc}
+                  </p>
+                </div>
+              );
+            })}
+
+          {/* Items: Credentials Matrix if available */}
+          {credentials.length > 0 &&
+            credentials.slice(0, 3).map((c, idx) => (
+              <div className="pa-matrix-card" key={c.id || `cred-${idx}`}>
+                <h3 className="pa-matrix-heading">{c.name || c.title || `Chứng chỉ ${idx + 1}`}</h3>
+                <p className="pa-matrix-meta">
+                  <b>{c.issuer || 'Đơn vị chứng thực'}</b>
+                  {c.issuedAt ? ` · ${c.issuedAt}` : ''}
+                  {' ✦ Chứng chỉ'}
+                </p>
+              </div>
+            ))}
+
+          {!school && !major && experiences.length === 0 && credentials.length === 0 && (
+            <div className="pa-empty-box" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '30px', color: '#3F016B', background: 'rgba(255,255,255,0.4)', borderRadius: '24px' }}>
+              Chưa có kinh nghiệm hoạt động nào được thêm. Bạn có thể cập nhật tại bảng soạn hồ sơ.
+            </div>
+          )}
         </div>
       </section>
 
@@ -1202,48 +1298,28 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
       <section className="pa-skills-band" id="skills">
         <h2 className="pa-section-h2-title">Kỹ năng Chuyên Môn</h2>
 
-        <div className="pa-skills-cards-row">
-          {/* Card 1: UX/UI (White) */}
-          <div className="pa-skill-pill-card white">
-            <div className="pa-skill-icon-wrap">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <rect x="2" y="3" width="20" height="14" rx="2" />
-                <path d="M8 21h8M12 17v4" />
-              </svg>
-            </div>
-            <h3 className="pa-skill-title">UX/UI</h3>
-            <p className="pa-skill-body">
-              Figma, Design System, Wireframing, Prototyping, Usability Testing, Information Architecture, User Journey Mapping.
-            </p>
+        {skills.length > 0 ? (
+          <div className="pa-skills-cards-row">
+            {skills.map((skillName, idx) => {
+              const isLavender = idx % 2 === 1;
+              return (
+                <div key={idx} className={`pa-skill-pill-card ${isLavender ? 'lavender' : 'white'}`}>
+                  <div className="pa-skill-icon-wrap">
+                    <Sparkles size={36} color="#3F016B" />
+                  </div>
+                  <h3 className="pa-skill-title">{skillName}</h3>
+                  <p className="pa-skill-body">
+                    Năng lực chuyên môn được tôi luyện và ứng dụng hiệu quả trong các dự án thực tế của {name}.
+                  </p>
+                </div>
+              );
+            })}
           </div>
-
-          {/* Card 2: TECH (Lavender) */}
-          <div className="pa-skill-pill-card lavender">
-            <div className="pa-skill-icon-wrap">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <polyline points="16 18 22 12 16 6" />
-                <polyline points="8 6 2 12 8 18" />
-              </svg>
-            </div>
-            <h3 className="pa-skill-title">TECH</h3>
-            <p className="pa-skill-body">
-              Frontend Development, React, JavaScript / TypeScript, Responsive Layouts, RESTful API, Performance Optimization.
-            </p>
+        ) : (
+          <div className="pa-empty-box" style={{ textAlign: 'center', padding: '40px', color: '#3F016B', background: 'rgba(255,255,255,0.4)', borderRadius: '24px', maxWidth: '600px', margin: '0 auto' }}>
+            Chưa có kỹ năng nào được cập nhật. Bạn có thể thêm kỹ năng tại bảng soạn hồ sơ.
           </div>
-
-          {/* Card 3: MARKETING (White) */}
-          <div className="pa-skill-pill-card white">
-            <div className="pa-skill-icon-wrap">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <path d="M18 20V10M12 20V4M6 20v-6" />
-              </svg>
-            </div>
-            <h3 className="pa-skill-title">MARKETING</h3>
-            <p className="pa-skill-body">
-              Digital Marketing, Content Strategy, Brand Growth, SEO/SEM Optimization, Social Media Ads, Data Analytics.
-            </p>
-          </div>
-        </div>
+        )}
       </section>
 
       {/* ── ANGLED RIBBON 3 (Role at top: 3809px, angle: 3.34deg) ── */}
@@ -1259,69 +1335,110 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
         <h2 className="pa-portfolio-giant-cursive">Portfolio</h2>
       </section>
 
-      {experiences.slice(0, 6).map((exp, idx) => {
-        const isOdd = idx % 2 === 0;
-        return (
-          <div key={exp.id || idx}>
-            <div className={`pa-project-block ${isOdd ? 'odd' : 'even'}`}>
-              <div className="pa-project-content-wrap">
-                {/* Top Row: Description on Left, Mockup on Right */}
-                <div className="pa-project-top-row">
-                  <div>
-                    <h3 className="pa-project-cursive-head">Dự án {idx + 1}</h3>
-                    <h4 className="pa-project-title-real">{exp.name || exp.title}</h4>
-                    <p className="pa-project-desc">
-                      {exp.description ||
-                        'Mô tả về dự án: Nghiên cứu hành vi người dùng, tối ưu luồng chuyển đổi, xây dựng hệ thống design system chuẩn mực và đo lường kết quả thực chiến vượt trội.'}
-                    </p>
+      {experiences.length > 0 ? (
+        experiences.map((exp, idx) => {
+          const isOdd = idx % 2 === 0;
+          const shot = getProjectImageUrl(exp);
+          const timeStr = `${exp.startDate || exp.startedAt || ''}${
+            exp.endDate || exp.endedAt ? ' - ' + (exp.endDate || exp.endedAt) : (exp.startDate || exp.startedAt) ? ' - Hiện tại' : ''
+          }`;
+          const expTitle = exp.title || exp.projectName || exp.name || `Dự án ${idx + 1}`;
+          const expDesc =
+            exp.description ||
+            exp.detail ||
+            (exp.organization
+              ? `Dự án thực tế tại ${exp.organization} với các nhiệm vụ được ứng viên trực tiếp đảm nhận.`
+              : 'Dự án thực tế ghi nhận năng lực chuyên môn và kết quả hoàn thành của ứng viên.');
+          const expRole = exp.role || exp.roleLevel || exp.position || 'Thành viên thực hiện';
+
+          return (
+            <div key={exp.id || idx}>
+              <div className={`pa-project-block ${isOdd ? 'odd' : 'even'}`}>
+                <div className="pa-project-content-wrap">
+                  {/* Top Row: Description on Left, Mockup on Right */}
+                  <div className="pa-project-top-row">
+                    <div>
+                      <h3 className="pa-project-cursive-head">Dự án {idx + 1}</h3>
+                      <h4 className="pa-project-title-real">{expTitle}</h4>
+                      <p className="pa-project-desc">{expDesc}</p>
+                    </div>
+
+                    {/* Mockup Frame (580x443, radius 50px, border 2px solid white) */}
+                    <div
+                      className="pa-mockup-frame"
+                      onClick={() => {
+                        if (shot) {
+                          setPreview({
+                            src: shot,
+                            fileName: expTitle,
+                          });
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      title={shot ? 'Xem phóng to ảnh dự án' : expTitle}
+                      style={{ cursor: shot ? 'pointer' : 'default' }}
+                    >
+                      {shot ? (
+                        <img
+                          src={shot}
+                          alt={expTitle}
+                          className="pa-project-img"
+                        />
+                      ) : (
+                        <PurpleAuraProjectMockup exp={exp} index={idx} isDark={!isOdd} />
+                      )}
+                    </div>
                   </div>
 
-                  {/* Mockup Frame (580x443, radius 50px, border 2px solid white) */}
-                  <div className="pa-mockup-frame">
-                    <div className="pa-mockup-inner">
-                      <span className="pa-mockup-tag">
-                        {exp.role || 'Dự án thực tế'}
-                      </span>
-                      <h5 style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: 24, margin: '0 0 10px', color: '#141414' }}>
-                        {exp.name || exp.title}
-                      </h5>
-                      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: '#4b5563', margin: 0, maxWidth: 360 }}>
-                        {exp.organization ? `Tổ chức: ${exp.organization}` : 'NextPlease Verified Proof-of-Work'}
+                  {/* Bottom Row: 3 Stat / Experience Glass Cards (Frame 55) */}
+                  <div className="pa-project-stats-row">
+                    <div className="pa-stat-card-glass">
+                      <h4 className="pa-stat-glass-title">Vị trí trong dự án</h4>
+                      <p className="pa-stat-glass-sub">{expRole}</p>
+                    </div>
+
+                    <div className="pa-stat-card-glass">
+                      <h4 className="pa-stat-glass-title">Thời gian thực hiện</h4>
+                      <p className="pa-stat-glass-sub">{timeStr || 'Đang cập nhật'}</p>
+                    </div>
+
+                    <div className="pa-stat-card-glass">
+                      <h4 className="pa-stat-glass-title">Đơn vị / Xác thực</h4>
+                      <p className="pa-stat-glass-sub">
+                        {exp.organization ? (
+                          <>
+                            {exp.organization}
+                            {exp.verified && ' (✦ Đã xác thực)'}
+                          </>
+                        ) : exp.verified ? (
+                          'fonlio Verified ✦'
+                        ) : (
+                          'Dự án thực tế'
+                        )}
                       </p>
                     </div>
                   </div>
                 </div>
-
-                {/* Bottom Row: 3 Stat / Experience Glass Cards (Frame 55) */}
-                <div className="pa-project-stats-row">
-                  <div className="pa-stat-card-glass">
-                    <h4 className="pa-stat-glass-title">Vị trí trong dự án</h4>
-                    <p className="pa-stat-glass-sub">{exp.role || 'UX/UI Lead & Product Designer'}</p>
-                  </div>
-
-                  <div className="pa-stat-card-glass">
-                    <h4 className="pa-stat-glass-title">Thời gian thực hiện</h4>
-                    <p className="pa-stat-glass-sub">{exp.time || exp.startDate || '4 tháng'}</p>
-                  </div>
-
-                  <div className="pa-stat-card-glass">
-                    <h4 className="pa-stat-glass-title">Lượt tương tác</h4>
-                    <p className="pa-stat-glass-sub">{exp.interactions || '35.000+ Lượt tương tác'}</p>
-                  </div>
-                </div>
               </div>
-            </div>
 
-            {/* Separating Angled Ribbon between projects */}
-            <AngledRoleRibbon
-              bgBottom={isOdd ? '#C31DFF' : '#EB80B0'}
-              bgTop={isOdd ? '#F0E1FF' : '#FFE1F8'}
-              rotate={isOdd ? '-0.48deg' : '-0.32deg'}
-              skills={skills}
-            />
-          </div>
-        );
-      })}
+              {/* Separating Angled Ribbon between projects */}
+              {idx < experiences.length - 1 && (
+                <AngledRoleRibbon
+                  bgBottom={isOdd ? '#C31DFF' : '#EB80B0'}
+                  bgTop={isOdd ? '#F0E1FF' : '#FFE1F8'}
+                  rotate={isOdd ? '-0.48deg' : '-0.32deg'}
+                  skills={skills}
+                />
+              )}
+            </div>
+          );
+        })
+      ) : (
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#3F016B' }}>
+          Chưa có dự án nào được thêm. Bạn có thể thêm dự án tại bảng soạn hồ sơ.
+        </div>
+      )}
 
       {/* ── 6. FOOTER & THANKS BANNER ── */}
       <footer className="pa-footer-band" id="contact">
@@ -1343,22 +1460,29 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
               <span>{phone}</span>
             </a>
           )}
-          {linkedin && (
+          {socialLinks.map((s, idx) => (
             <a
-              href={`https://linkedin.com/in/${linkedin}`}
+              key={idx}
+              href={s.url}
               target="_blank"
               rel="noreferrer"
               className="pa-channel-pill"
             >
-              <LinkedInIcon size={18} />
-              <span>LinkedIn</span>
+              <ExternalLink size={16} />
+              <span>{s.name}</span>
             </a>
-          )}
+          ))}
         </div>
       </footer>
 
       {/* File Preview Modal */}
-      {preview && <FilePreviewModal file={preview} onClose={() => setPreview(null)} />}
+      {preview && (
+        <FilePreviewModal
+          src={preview.src}
+          fileName={preview.fileName}
+          onClose={() => setPreview(null)}
+        />
+      )}
     </div>
   );
 }
