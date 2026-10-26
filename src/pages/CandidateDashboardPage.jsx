@@ -1453,6 +1453,18 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     const topupParam = params.get('topup');
     if (!topupParam) return;
 
+    /* "open" là lối vào từ menu tài khoản trên header: chỉ cần bật hộp nạp,
+       không có đơn PayOS nào để tra trạng thái. */
+    if (topupParam === 'open') {
+      navigate('/candidates/dashboard/store', { replace: true });
+      setTopUpAmount('39000');
+      setTopUpError('');
+      setTopUpSuccess('');
+      setTopUpCheckState('idle');
+      setShowTopUpModal(true);
+      return;
+    }
+
     let pending = null;
     try {
       const raw = sessionStorage.getItem('np_payos_pending');
