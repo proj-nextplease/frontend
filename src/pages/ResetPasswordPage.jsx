@@ -12,7 +12,7 @@ const WHITE = '#ffffff';
 const THEMES = {
   candidate: {
     accent: '#e5533f', ink: '#1d1320', muted: '#6e6470', line: '#ece6e2',
-    submitBg: '#1d1320', radius: '12px', btnRadius: '999px', loginPath: '/candidate/login',
+    submitBg: '#1d1320', radius: '12px', btnRadius: '999px', loginPath: '/?auth=login',
   },
   business: {
     accent: '#2563eb', ink: '#101828', muted: '#5b6472', line: '#e3e8ef',

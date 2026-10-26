@@ -406,7 +406,7 @@ export function CandidateRegisterPage() {
               </button>
 
               <p style={{ textAlign: 'center', fontSize: '0.92rem', color: MUTED, margin: '22px 0 0' }}>
-                Đã có tài khoản? <Link to="/candidate/login" style={{ color: RED, fontWeight: '700', textDecoration: 'none' }}>Đăng nhập</Link>
+                Đã có tài khoản? <Link to="/?auth=login" style={{ color: RED, fontWeight: '700', textDecoration: 'none' }}>Đăng nhập</Link>
               </p>
             </>
           )}

@@ -1,11 +1,10 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Route, Routes, Navigate, useParams } from 'react-router-dom';
+import { Route, Routes, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '../components/layout/AppLayout.jsx';
 import { BusinessPage } from '../pages/BusinessPage.jsx';
 import { CandidateDashboardPage, CandidateContentSkeleton, skeletonVariantForTabSlug } from '../pages/CandidateDashboardPage.jsx';
 import { CandidateLandingPage } from '../pages/CandidateLandingPage.jsx';
 import { JobsPage } from '../pages/JobsPage.jsx';
-import { CandidateLoginPage } from '../pages/CandidateLoginPage.jsx';
 import { CandidateRegisterPage } from '../pages/CandidateRegisterPage.jsx';
 import { HomePage } from '../pages/HomePage.jsx';
 import { NotFoundPage } from '../pages/NotFoundPage.jsx';
@@ -23,6 +22,7 @@ import { JobDetailPage } from '../pages/JobDetailPage.jsx';
 import { CandidatePortfolioViewPage } from '../pages/CandidatePortfolioViewPage.jsx';
 import { getCurrentRoles, isAdmin, isBusiness } from '../lib/authRoles.js';
 import { getStoredToken } from '../lib/authStorage.js';
+import { rememberReturnTo } from '../lib/returnTo.js';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage.jsx';
 import { ResetPasswordPage } from '../pages/ResetPasswordPage.jsx';
 import { DiscussionPage } from '../pages/DiscussionPage.jsx';
@@ -46,6 +46,15 @@ const CandidateUniversePage = lazy(() =>
     default: module.CandidateUniversePage,
   })),
 );
+
+function CandidateLoginRedirect() {
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
+  if (returnTo) {
+    rememberReturnTo(returnTo);
+  }
+  return <Navigate to="/?auth=login" replace />;
+}
 
 function ProtectedUniverseRoute() {
   const [session, setSession] = useState(null);
@@ -83,7 +92,8 @@ function ProtectedUniverseRoute() {
   const hasAuth = Boolean(session || getStoredToken());
   const isPreview = window.location.search.includes('preview') || window.location.search.includes('wrapped') || window.location.search.includes('test');
   if (!hasAuth && !isPreview) {
-    return <Navigate to="/candidate/login" replace />;
+    rememberReturnTo('/candidates/universe');
+    return <Navigate to="/?auth=login" replace />;
   }
 
   return (
@@ -104,28 +114,34 @@ function ProtectedDashboardRoute() {
     let isMounted = true;
 
     async function checkSession() {
-      if (!supabase) {
-        setLoading(false);
-        return;
+      const storedToken = getStoredToken();
+      let activeSession = null;
+
+      if (supabase) {
+        try {
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          if (currentSession) activeSession = currentSession;
+        } catch (err) {
+          console.error("Lỗi khi kiểm tra session:", err);
+        }
       }
 
-      try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (!isMounted) return;
+      if (!activeSession && storedToken) {
+        activeSession = { access_token: storedToken };
+      }
 
-        if (currentSession) {
-          setSession(currentSession);
-          try {
-            const data = await getMyPortfolio();
-            if (isMounted) {
-              setPortfolio(data);
-            }
-          } catch (err) {
-            console.error("Lỗi khi tải portfolio trong wrapper:", err);
+      if (!isMounted) return;
+
+      if (activeSession) {
+        setSession(activeSession);
+        try {
+          const data = await getMyPortfolio();
+          if (isMounted) {
+            setPortfolio(data);
           }
+        } catch (err) {
+          console.error("Lỗi khi tải portfolio trong wrapper:", err);
         }
-      } catch (err) {
-        console.error("Lỗi khi kiểm tra session:", err);
       }
 
       try {
@@ -146,8 +162,10 @@ function ProtectedDashboardRoute() {
     const { data: { subscription } } = supabase
       ? supabase.auth.onAuthStateChange(async (event, newSession) => {
           if (!isMounted) return;
-          if (newSession) {
-            setSession(newSession);
+          const currentStored = getStoredToken();
+          const effectiveSession = newSession || (currentStored ? { access_token: currentStored } : null);
+          if (effectiveSession) {
+            setSession(effectiveSession);
             try {
               const data = await getMyPortfolio();
               if (isMounted) setPortfolio(data);
@@ -176,26 +194,21 @@ function ProtectedDashboardRoute() {
     );
   }
 
-  if (!session) {
-    return <Navigate to="/candidate/login" replace />;
+  const hasAuth = Boolean(session || getStoredToken());
+  if (!hasAuth) {
+    const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    rememberReturnTo(currentPath || '/candidates/dashboard/overview');
+    return <Navigate to="/?auth=login" replace />;
   }
 
   // User has session. Gate on onboarding: a brand-new account (e.g. first social
   // login) has no portfolio yet, or one with onboardingCompleted=false — both must
   // finish the portfolio first. Only a completed portfolio may reach the dashboard.
-  /* Tài khoản doanh nghiệp / CLB không bao giờ có Portfolio ứng viên, nên
-     điều kiện dưới luôn đúng với họ và đẩy thẳng sang trình dựng Portfolio.
-     Đây chính là chuỗi gây ra lỗi "đăng nhập doanh nghiệp xong lại thấy trang
-     sửa Portfolio của ứng viên":
-       ProtectedBusinessRoute thấy vai trò chưa phải business → đẩy sang
-       /candidates/dashboard → chỗ này thấy không có portfolio → đẩy sang
-       /portfolio → trình dựng không kiểm vai trò nên render luôn.
-     Chặn ở đây, và đã thêm kiểm vai trò ở ProtectedPortfolioRoute. */
   if (isBusinessOnly) {
     return <Navigate to="/businesses/dashboard" replace />;
   }
 
-  if (!portfolio || !portfolio.onboardingCompleted) {
+  if (portfolio && portfolio.onboardingCompleted === false) {
     return <Navigate to="/portfolio" replace />;
   }
 
@@ -205,28 +218,31 @@ function ProtectedDashboardRoute() {
 function ProtectedPortfolioRoute({ isEditing = false }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  /* null = chưa biết. Trình dựng Portfolio trước đây KHÔNG kiểm vai trò: chỉ
-     cần có phiên đăng nhập là vào được, nên tài khoản doanh nghiệp / CLB cũng
-     rơi thẳng vào đây. Xem chuỗi dẫn tới lỗi ở ProtectedDashboardRoute. */
   const [isBusinessOnly, setIsBusinessOnly] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
 
     async function checkSession() {
-      if (!supabase) {
-        setLoading(false);
-        return;
+      const storedToken = getStoredToken();
+      let activeSession = null;
+
+      if (supabase) {
+        try {
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          if (currentSession) activeSession = currentSession;
+        } catch (err) {
+          console.error("Lỗi khi kiểm tra session:", err);
+        }
       }
 
-      try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (!isMounted) return;
-        if (currentSession) {
-          setSession(currentSession);
-        }
-      } catch (err) {
-        console.error("Lỗi khi kiểm tra session:", err);
+      if (!activeSession && storedToken) {
+        activeSession = { access_token: storedToken };
+      }
+
+      if (!isMounted) return;
+      if (activeSession) {
+        setSession(activeSession);
       }
 
       try {
@@ -234,8 +250,6 @@ function ProtectedPortfolioRoute({ isEditing = false }) {
         if (isMounted) setIsBusinessOnly(isBusiness(roles) && !isAdmin(roles));
       } catch (err) {
         console.error("Lỗi khi đọc vai trò:", err);
-        // Đọc vai trò hỏng thì KHÔNG chặn: thà cho vào nhầm còn hơn khoá cả
-        // ứng viên hợp lệ ra ngoài vì một lần gọi mạng lỗi.
         if (isMounted) setIsBusinessOnly(false);
       }
 
@@ -265,15 +279,13 @@ function ProtectedPortfolioRoute({ isEditing = false }) {
     );
   }
 
-  // Fall back to the BE-issued token (same pattern as ProtectedBusinessRoute)
-  // in case the Supabase client session hasn't rehydrated yet — e.g. a stale
-  // in-memory-only session from a tab that predates a page reload.
-  if (!session && !getStoredToken()) {
-    return <Navigate to="/candidate/login" replace />;
+  const hasAuth = Boolean(session || getStoredToken());
+  if (!hasAuth) {
+    const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    rememberReturnTo(currentPath || (isEditing ? '/portfolio/edit' : '/portfolio'));
+    return <Navigate to="/?auth=login" replace />;
   }
 
-  /* Tài khoản doanh nghiệp / CLB không có Portfolio ứng viên để dựng. Trả họ
-     về đúng khu vực của mình thay vì hiện trình dựng của vai trò khác. */
   if (isBusinessOnly) {
     return <Navigate to="/businesses/dashboard" replace />;
   }
@@ -448,7 +460,8 @@ export function AppRouter() {
         <Route path="/candidates/dashboard" element={<ProtectedDashboardRoute />} />
         <Route path="/candidates/dashboard/:tabSlug" element={<ProtectedDashboardRoute />} />
         <Route path="/candidate/dashboard" element={<Navigate to="/candidates/dashboard/overview" replace />} />
-        <Route path="/candidate/login" element={<CandidateLoginPage />} />
+        <Route path="/candidate/login" element={<CandidateLoginRedirect />} />
+        <Route path="/candidates/login" element={<CandidateLoginRedirect />} />
         <Route path="/candidate/register" element={<CandidateRegisterPage />} />
 
         {/* Shared password-reset flow (candidate + business; admin excluded) */}
