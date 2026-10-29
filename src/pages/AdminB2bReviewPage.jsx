@@ -38,6 +38,7 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  Sparkles,
   ExternalLink,
   FileText,
   GraduationCap,
@@ -4463,6 +4464,8 @@ export function AdminB2bReviewPage() {
                         {creds.map((c) => {
                           const cs = (c.verification_status || c.status || 'PENDING').toUpperCase();
                           const active = c.id === activeCred.id;
+                          const cAiVerdict = c.aiVerdict || c.ai_verdict;
+                          const cAiScore = c.aiConfidenceScore ?? c.ai_confidence_score;
                           return (
                             <button key={c.id} type="button"
                               className={`verif-md-row ${cs.toLowerCase()} ${active ? 'active' : ''}`}
@@ -4473,6 +4476,22 @@ export function AdminB2bReviewPage() {
                                   {c.project_name}
                                   {c.expressVerification && <Zap size={11} className="verif-md-express" />}
                                   {c.contentFlag && <AlertTriangle size={12} style={{ color: '#d97706', marginLeft: '4px', flexShrink: 0 }} aria-label="Nghi ngờ nội dung" />}
+                                  {cAiVerdict && (
+                                    <span style={{
+                                      fontSize: '10px',
+                                      padding: '2px 6px',
+                                      borderRadius: '6px',
+                                      marginLeft: '6px',
+                                      fontWeight: '700',
+                                      background: cAiVerdict === 'APPROVE' ? 'rgba(34,197,94,0.12)' : cAiVerdict === 'REJECT' ? 'rgba(239,68,68,0.12)' : 'rgba(234,179,8,0.15)',
+                                      color: cAiVerdict === 'APPROVE' ? '#16a34a' : cAiVerdict === 'REJECT' ? '#dc2626' : '#b45309',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px'
+                                    }}>
+                                      <Sparkles size={9} /> AI {cAiScore ? `${cAiScore}%` : ''}
+                                    </span>
+                                  )}
                                 </span>
                                 <span className={`proof-status-badge ${cs.toLowerCase()}`}>{statusLabel(cs)}</span>
                               </span>
@@ -4508,6 +4527,117 @@ export function AdminB2bReviewPage() {
                         </div>
                         <span className={`proof-status-badge ${status.toLowerCase()}`}>{statusLabel(status)}</span>
                       </div>
+
+                      {/* AI Evaluation Insight Card */}
+                      {(() => {
+                        const aiStatus = activeCred.aiStatus || activeCred.ai_status;
+                        const aiVerdict = activeCred.aiVerdict || activeCred.ai_verdict;
+                        const aiScore = activeCred.aiConfidenceScore ?? activeCred.ai_confidence_score;
+                        const aiFeedback = activeCred.aiFeedback || activeCred.ai_feedback;
+                        const isAiApproved = activeCred.verifiedByType === 'AI' || activeCred.verified_by_type === 'AI';
+                        let aiAnalysis = null;
+                        try {
+                          aiAnalysis = typeof (activeCred.aiAnalysisData || activeCred.ai_analysis_data) === 'string'
+                            ? JSON.parse(activeCred.aiAnalysisData || activeCred.ai_analysis_data)
+                            : (activeCred.aiAnalysisData || activeCred.ai_analysis_data);
+                        } catch { aiAnalysis = null; }
+
+                        if (!aiVerdict && aiStatus !== 'PROCESSING') return null;
+
+                        const isApprove = aiVerdict === 'APPROVE';
+                        const isReject = aiVerdict === 'REJECT';
+                        const themeColor = isApprove ? '#16a34a' : isReject ? '#dc2626' : '#d97706';
+                        const bgColor = isApprove ? 'rgba(34,197,94,0.06)' : isReject ? 'rgba(239,68,68,0.06)' : 'rgba(245,158,11,0.07)';
+                        const borderColor = isApprove ? 'rgba(34,197,94,0.3)' : isReject ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.35)';
+
+                        return (
+                          <div style={{
+                            marginTop: '14px',
+                            padding: '14px 16px',
+                            borderRadius: '14px',
+                            background: bgColor,
+                            border: `1.5px solid ${borderColor}`,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '50%',
+                                  background: themeColor,
+                                  color: '#fff',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}>
+                                  <Sparkles size={13} />
+                                </div>
+                                <span style={{ fontWeight: '800', fontSize: '13px', color: themeColor }}>
+                                  {aiStatus === 'PROCESSING'
+                                    ? 'AI đang quét và thẩm định minh chứng...'
+                                    : `AI Thẩm định: ${isApprove ? 'Đề xuất Duyệt' : isReject ? 'Đề xuất Từ chối' : 'Cần kiểm tra thủ công'}`}
+                                </span>
+                              </div>
+                              {aiScore !== null && aiScore !== undefined && (
+                                <span style={{
+                                  fontSize: '11px',
+                                  fontWeight: '800',
+                                  padding: '3px 10px',
+                                  borderRadius: '999px',
+                                  background: themeColor,
+                                  color: '#fff'
+                                }}>
+                                  Độ tin cậy: {aiScore}%
+                                </span>
+                              )}
+                            </div>
+
+                            {aiFeedback && (
+                              <p style={{ margin: 0, fontSize: '13px', color: 'var(--ink)', lineHeight: '1.5' }}>
+                                <strong>Nhận định:</strong> {aiFeedback}
+                              </p>
+                            )}
+
+                            {aiAnalysis && (
+                              <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                                gap: '8px',
+                                marginTop: '4px',
+                                fontSize: '12px',
+                                background: 'var(--surface)',
+                                padding: '10px 12px',
+                                borderRadius: '10px',
+                                border: '1px solid var(--line)'
+                              }}>
+                                <div>
+                                  <span style={{ color: 'var(--muted)' }}>Tên trên bằng: </span>
+                                  <strong style={{ color: aiAnalysis.name_matched ? '#16a34a' : '#ea580c' }}>
+                                    {aiAnalysis.detected_name || 'Không tìm thấy'} {aiAnalysis.name_matched ? '✓' : ''}
+                                  </strong>
+                                </div>
+                                <div>
+                                  <span style={{ color: 'var(--muted)' }}>Đơn vị cấp: </span>
+                                  <strong>{aiAnalysis.detected_issuer || 'Chưa rõ'}</strong>
+                                </div>
+                                <div>
+                                  <span style={{ color: 'var(--muted)' }}>Mộc đỏ / Chữ ký: </span>
+                                  <strong>{aiAnalysis.has_valid_proof ? 'Có ✓' : 'Không có / Mờ'}</strong>
+                                </div>
+                              </div>
+                            )}
+
+                            {isAiApproved && (
+                              <div style={{ fontSize: '11px', color: '#16a34a', fontWeight: '700', marginTop: '2px' }}>
+                                🤖 Minh chứng này đã được AI tự động duyệt và cộng điểm thành công.
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {activeCred.contentFlag && (
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '12px 15px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.35)', color: '#b45309', marginTop: '14px', fontSize: '0.84rem' }}>
