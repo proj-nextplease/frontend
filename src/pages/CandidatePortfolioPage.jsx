@@ -34,6 +34,8 @@ import {
   Mail,
   Copy,
   ExternalLink,
+  CheckCircle2,
+  Clock,
 } from 'lucide-react';
 import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
@@ -1432,15 +1434,19 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             <div className="form-section-heading" data-preview-target="fom-portfolio">
               <BriefcaseBusiness size={22} />
               <div>
-                <h2>Kinh nghiệm</h2>
-                {/* Trang công khai CHỈ hiện kinh nghiệm đã được duyệt — xem
-                    ProfileService.java, truy vấn hồ sơ công khai lọc theo
-                    verification_status. Không nói trước ở đây thì người dùng
-                    điền xong, xuất bản, mở link và thấy trang trống mà không
-                    hiểu vì sao. */}
+                <h2>Kinh nghiệm & Dự án thực chiến</h2>
                 <p>
-                  Mục nào chưa được Admin duyệt sẽ <strong>chưa hiện trên trang công khai</strong>,
-                  nhưng vẫn được lưu và sẽ tự hiện ngay khi duyệt xong.
+                  Dự án <strong>đã xác thực</strong> sẽ hiển thị trên Portfolio công khai và tích lũy EXP, RS cho bạn.
+                </p>
+              </div>
+            </div>
+
+            <div className="portfolio-ai-flow-card">
+              <Sparkles size={18} className="portfolio-ai-icon" />
+              <div className="portfolio-ai-flow-content">
+                <strong>Cơ chế tự động thẩm định dự án Portfolio:</strong>
+                <p>
+                  Khi bạn thêm dự án và đính kèm <strong>ảnh chứng chỉ</strong> hoặc dán <strong>link minh chứng</strong> (Google Drive, GitHub, Figma, Fanpage sự kiện...), hệ thống sẽ tự động quét và đối soát khi bạn bấm <strong>Lưu hồ sơ</strong>. Dự án đạt tiêu chuẩn sẽ được duyệt ngay và xuất hiện đẹp mắt trên Portfolio công khai.
                 </p>
               </div>
             </div>
@@ -1451,6 +1457,19 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                   <div className="edit-card-index">
                     <span>{String(index + 1).padStart(2, '0')}</span>
                     <strong>Kinh nghiệm nổi bật</strong>
+                    {experience.verified || experience.verificationStatus === 'APPROVED' ? (
+                      <span className="experience-status-badge approved" title="Dự án đã được thẩm định và đang hiển thị công khai trên Portfolio">
+                        <CheckCircle2 size={13} /> Đã xác thực · Hiển thị công khai
+                      </span>
+                    ) : experience.verificationStatus === 'REJECTED' ? (
+                      <span className="experience-status-badge rejected" title="Cần bổ sung thêm ảnh hoặc link minh chứng hợp lệ">
+                        <AlertTriangle size={13} /> Cần bổ sung minh chứng
+                      </span>
+                    ) : (
+                      <span className="experience-status-badge pending" title="Hệ thống sẽ tự động thẩm định khi bạn bấm Lưu">
+                        <Clock size={13} /> Chờ duyệt (Tự động duyệt khi lưu)
+                      </span>
+                    )}
                   </div>
                   <button
                     className="edit-card-remove"
@@ -1531,10 +1550,10 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                   </span>
                   <input
                     onChange={(event) => updateExperience(experience.id, 'proofLink', event.target.value)}
-                    placeholder="https://drive.google.com/... hoặc link Facebook event"
+                    placeholder="https://drive.google.com/... hoặc link GitHub, Figma, sự kiện"
                     value={experience.proofLink || ''}
                   />
-                  <small className="field-hint">Dán link Google Drive, fanpage sự kiện, hoặc ảnh chứng nhận để Admin xác thực nhanh hơn.</small>
+                  <small className="field-hint">Dán link Google Drive (ảnh / PDF chứng nhận), GitHub, Figma hoặc bài viết sự kiện. Hệ thống sẽ tự động quét tài liệu và lấy ảnh đại diện hiển thị lên Portfolio.</small>
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <label>
@@ -1611,7 +1630,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                     )}
                   </div>
                   <span style={{ fontSize: '0.76rem', color: 'var(--c-muted, #8a7f78)', marginTop: '6px', display: 'block' }}>
-                    Ảnh minh chứng giúp Admin xác thực kinh nghiệm này trong "Hàng chờ xác thực".
+                    Ảnh giấy chứng nhận, quyết định khen thưởng hoặc ảnh tham gia hoạt động giúp hệ thống tự động đối soát nhanh chóng.
                   </span>
                 </label>
               </article>
