@@ -62,23 +62,49 @@ function stripKeys(obj, keys) {
  * This prevents a stale draft from dropping server rows, which on save would
  * make the backend delete them as orphaned PENDING experiences.
  */
-function mergeExperiences(serverExperiences, draftExperiences) {
-  if (!Array.isArray(draftExperiences)) return serverExperiences;
+/**
+ * Lọc kinh nghiệm hợp lệ cho Portfolio:
+ * - Dự án từ server bắt buộc phải APPROVED (hoặc verified === true).
+ * - Các dự án PENDING hoặc REJECTED từ luồng nộp minh chứng tuyệt đối KHÔNG đưa vào Portfolio.
+ * - Dự án mới đang soạn trên client (id dạng number / Date.now() và chưa lưu trên server) được giữ lại để soạn tiếp.
+ */
+function filterApprovedOrNewExperiences(list) {
+  if (!Array.isArray(list)) return [];
+  return list.filter((exp) => {
+    if (!exp) return false;
+    // Bị từ chối hoặc đang chờ duyệt -> loại bỏ hoàn toàn khỏi Portfolio
+    if (exp.verificationStatus === 'PENDING' || exp.verificationStatus === 'REJECTED') {
+      return false;
+    }
+    // Đã được xác thực thành công
+    if (exp.verified === true || exp.verificationStatus === 'APPROVED') {
+      return true;
+    }
+    // Dự án nháp mới thêm ở client (id số hoặc không có dấu gạch ngang UUID)
+    const isClientDraft = !exp.id || typeof exp.id === 'number' || !String(exp.id).includes('-');
+    return isClientDraft;
+  });
+}
 
+function mergeExperiences(serverExperiences, draftExperiences) {
+  const safeServer = filterApprovedOrNewExperiences(serverExperiences || []);
+  if (!Array.isArray(draftExperiences)) return safeServer;
+
+  const safeDraft = filterApprovedOrNewExperiences(draftExperiences);
   const draftById = new Map();
-  for (const exp of draftExperiences) {
+  for (const exp of safeDraft) {
     if (exp?.id != null) draftById.set(String(exp.id), exp);
   }
 
-  const serverIds = new Set((serverExperiences || []).map((exp) => String(exp.id)));
+  const serverIds = new Set(safeServer.map((exp) => String(exp.id)));
 
-  const merged = (serverExperiences || []).map((exp) => {
+  const merged = safeServer.map((exp) => {
     const draftVersion = draftById.get(String(exp.id));
     return draftVersion ? { ...exp, ...draftVersion } : exp;
   });
 
   // Draft rows not present on the server yet (newly added in the editor).
-  for (const exp of draftExperiences) {
+  for (const exp of safeDraft) {
     if (exp?.id == null || !serverIds.has(String(exp.id))) {
       merged.push(exp);
     }
@@ -350,7 +376,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               // never saw — e.g. proof-of-work submissions made via the dashboard
               // "Nộp minh chứng" form — are not dropped on the next save (which
               // would let the backend delete them as orphaned PENDING rows).
-              setExperiences(mergeExperiences(data.experiences || [], draft.experiences));
+              const mergedExp = mergeExperiences(data.experiences || [], draft.experiences);
+              setExperiences(mergedExp.length > 0 ? mergedExp : defaultExperiences);
               if (draft.credentials) {
                 setCredentials(mergeCredentials(data.credentials || [], draft.credentials));
               }
@@ -384,9 +411,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                  bao giờ rơi vào trạng thái "không nút nào sáng". */
               selectedTheme: resolveTheme(data.selectedTheme).id,
             });
-            if (data.experiences && data.experiences.length > 0) {
-              setExperiences(data.experiences);
-            }
+            const approvedOnly = filterApprovedOrNewExperiences(data.experiences || []);
+            setExperiences(approvedOnly.length > 0 ? approvedOnly : defaultExperiences);
             if (data.credentials && data.credentials.length > 0) {
               setCredentials(data.credentials);
             }
@@ -458,7 +484,12 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       };
       
       await updateMyPortfolio(payload);
-      setSuccessMsg('Portfolio của bạn đã được lưu chính thức vào hệ thống!');
+      const hasNewExp = payload.experiences.some(exp => !exp.verified && exp.verificationStatus !== 'APPROVED');
+      setSuccessMsg(
+        hasNewExp
+          ? 'Đã lưu Portfolio! Các dự án mới đang được AI thẩm định tự động trong vài giây. Bạn có thể theo dõi kết quả tại trang Quản lý minh chứng.'
+          : 'Portfolio của bạn đã được lưu chính thức vào hệ thống!'
+      );
       setIsSubmittedSuccessfully(true);
       setShowConfirmModal(false);
       localStorage.removeItem('nextplease:portfolio-draft');
@@ -1454,7 +1485,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               <div>
                 <h2>Kinh nghiệm & Dự án thực chiến</h2>
                 <p>
-                  Dự án <strong>đã xác thực</strong> sẽ hiển thị trên Portfolio công khai và tích lũy EXP, RS cho bạn.
+                  Chỉ các dự án <strong>đã được xác thực (APPROVED)</strong> mới được hiển thị trên Portfolio công khai.
                 </p>
               </div>
             </div>
@@ -1462,9 +1493,9 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             <div className="portfolio-ai-flow-card">
               <Sparkles size={18} className="portfolio-ai-icon" />
               <div className="portfolio-ai-flow-content">
-                <strong>Cơ chế tự động thẩm định dự án Portfolio:</strong>
+                <strong>Cơ chế thẩm định minh chứng tự động bằng AI:</strong>
                 <p>
-                  Khi bạn thêm dự án và đính kèm <strong>ảnh chứng chỉ</strong> hoặc dán <strong>link minh chứng</strong> (Google Drive, GitHub, Figma, Fanpage sự kiện...), hệ thống sẽ tự động quét và đối soát khi bạn bấm <strong>Lưu hồ sơ</strong>. Dự án đạt tiêu chuẩn sẽ được duyệt ngay và xuất hiện đẹp mắt trên Portfolio công khai.
+                  Khi bạn thêm dự án mới và cung cấp <strong>ảnh chứng nhận</strong> hoặc <strong>link minh chứng</strong> (Google Drive, GitHub, Figma, Fanpage sự kiện...), hệ thống AI sẽ <strong>tự động quét và duyệt kết quả trong 3-10 giây</strong> ngay sau khi bạn bấm <strong>Lưu hồ sơ</strong>. Dự án đạt tiêu chuẩn sẽ được duyệt ngay và xuất hiện đẹp mắt trên Portfolio công khai.
                 </p>
               </div>
             </div>
@@ -1479,13 +1510,9 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                       <span className="experience-status-badge approved" title="Dự án đã được thẩm định và đang hiển thị công khai trên Portfolio">
                         <CheckCircle2 size={13} /> Đã xác thực · Hiển thị công khai
                       </span>
-                    ) : experience.verificationStatus === 'REJECTED' ? (
-                      <span className="experience-status-badge rejected" title="Cần bổ sung thêm ảnh hoặc link minh chứng hợp lệ">
-                        <AlertTriangle size={13} /> Cần bổ sung minh chứng
-                      </span>
                     ) : (
-                      <span className="experience-status-badge pending" title="Hệ thống sẽ tự động thẩm định khi bạn bấm Lưu">
-                        <Clock size={13} /> Chờ duyệt (Tự động duyệt khi lưu)
+                      <span className="experience-status-badge pending" title="Dự án sẽ được kích hoạt AI thẩm định tự động ngay khi bạn bấm Lưu hồ sơ">
+                        <Sparkles size={13} /> Sẽ gửi AI thẩm định khi lưu
                       </span>
                     )}
                   </div>
@@ -1654,10 +1681,29 @@ export function CandidatePortfolioPage({ isEditing = false }) {
               </article>
             ))}
 
-            <button className="button secondary-button add-experience-button" onClick={addExperience} type="button">
-              <Plus size={18} />
-              Thêm kinh nghiệm
-            </button>
+            <div style={{ marginTop: '16px' }}>
+              <button className="button secondary-button add-experience-button" onClick={addExperience} type="button">
+                <Plus size={18} />
+                Thêm dự án / kinh nghiệm mới
+              </button>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginTop: '10px',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                background: 'rgba(56, 189, 248, 0.08)',
+                border: '1px solid rgba(56, 189, 248, 0.2)',
+                fontSize: '0.8rem',
+                color: 'var(--ink)'
+              }}>
+                <Sparkles size={15} style={{ color: '#38bdf8', flexShrink: 0 }} />
+                <span>
+                  <strong>Lưu ý:</strong> Dự án thêm mới tại đây sẽ được kích hoạt <strong>AI Fast-track thẩm định tự động trong 3-10 giây</strong> ngay sau khi bạn bấm <strong>Lưu hồ sơ</strong>. Chỉ dự án được duyệt mới hiển thị lên Portfolio công khai.
+                </span>
+              </div>
+            </div>
           </div>
 
 )}
@@ -1948,11 +1994,26 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                 </div>
 
                 <div className="confirm-section">
-                  <h3>Kinh nghiệm làm việc</h3>
+                  <h3>Kinh nghiệm làm việc & Dự án</h3>
                   {experiences.filter(exp => exp.title.trim() || exp.organization.trim()).length > 0 ? (
-                    experiences.filter(exp => exp.title.trim() || exp.organization.trim()).map((exp, index) => (
-                      <div className="confirm-list-item" key={exp.id || index}>
-                        <strong>{exp.title}</strong> tại <em>{exp.organization}</em> {exp.startDate || exp.endDate ? `(${exp.startDate || '?'}${exp.endDate ? ` - ${exp.endDate}` : ''})` : ''}
+                    experiences.filter(exp => exp.title.trim() || exp.organization.trim()).map((exp, index) => {
+                      const isApproved = exp.verified || exp.verificationStatus === 'APPROVED';
+                      return (
+                        <div className="confirm-list-item" key={exp.id || index}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                            <div>
+                              <strong>{exp.title}</strong> tại <em>{exp.organization}</em> {exp.startDate || exp.endDate ? `(${exp.startDate || '?'}${exp.endDate ? ` - ${exp.endDate}` : ''})` : ''}
+                            </div>
+                            {isApproved ? (
+                              <span className="experience-status-badge approved" style={{ flexShrink: 0 }}>
+                                <CheckCircle2 size={12} /> Đã duyệt
+                              </span>
+                            ) : (
+                              <span className="experience-status-badge pending" style={{ flexShrink: 0 }}>
+                                <Sparkles size={12} /> Chờ AI duyệt
+                              </span>
+                            )}
+                          </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
                           {EXPERIENCE_CATEGORY_OPTIONS.find(o => o.value === exp.category) && (
                             <span className="confirm-tag">{EXPERIENCE_CATEGORY_OPTIONS.find(o => o.value === exp.category).label.replace(/ \(\+.*$/, '')}</span>
@@ -1977,7 +2038,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                           </div>
                         )}
                       </div>
-                    ))
+                    );
+                  })
                   ) : (
                     <span className="confirm-field" style={{ color: 'var(--ink-muted)' }}>Chưa có kinh nghiệm làm việc.</span>
                   )}

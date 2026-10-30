@@ -31,11 +31,15 @@ export function toPassportProfile(data = {}) {
     skills,
     avatar: avatar || { gender: 'female' },
     /* Trình dựng luôn mở sẵn một dòng kinh nghiệm trống để người dùng có chỗ
-       gõ ngay. Dòng đó KHÔNG phải một kinh nghiệm: để nguyên thì bản xem
-       trước đếm "1 dự án đã hoàn thành" và vẽ một thẻ dự án rỗng trước khi
-       người dùng kịp nhập chữ nào. */
+       gõ ngay. Dòng đó KHÔNG phải một kinh nghiệm. Ngoài ra, chỉ hiển thị các
+       dự án đã duyệt (APPROVED) hoặc dự án mới đang soạn — tuyệt đối không đưa
+       các dự án đang chờ duyệt hoặc bị từ chối vào preview portfolio. */
     experiences: (experiences || []).filter(
-      (exp) => exp && (exp.title?.trim() || exp.organization?.trim() || exp.detail?.trim()),
+      (exp) =>
+        exp &&
+        (exp.title?.trim() || exp.organization?.trim() || exp.detail?.trim()) &&
+        exp.verificationStatus !== 'PENDING' &&
+        exp.verificationStatus !== 'REJECTED',
     ),
     credentials: (credentials || []).filter((cred) => cred && cred.name?.trim()),
     openToWork: !!profile.openToWork,
