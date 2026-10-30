@@ -1763,7 +1763,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     setCredentialFormLoading(true);
     try {
       await submitCredential(credentialForm);
-      setCredentialFormSuccess('Nộp minh chứng thành công! Hệ thống sẽ xem xét và phản hồi trong 1-3 ngày làm việc.');
+      setCredentialFormSuccess('Đã gửi minh chứng thành công! Hệ thống đang tự động kiểm tra và sẽ phản hồi kết quả ngay trên danh sách bên dưới.');
       // Nhiệm vụ "minh chứng được duyệt" chỉ tính khi admin DUYỆT (bắn từ backend), không tính lúc nộp.
       setCredentialForm({ projectName: '', position: '', category: 'CLUB_SMALL', roleLevel: 'MEMBER', description: '', proofLink: '', proofImages: [], startedAt: '', endedAt: '' });
       setShowCredentialForm(false);
@@ -4179,9 +4179,35 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               </div>
 
               {credentialFormSuccess && (
-                <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399', fontSize: '0.88rem', marginBottom: '14px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                  <CheckCircle2 size={16} style={{ flexShrink: 0, marginTop: '1px' }} />
-                  {credentialFormSuccess}
+                <div style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  background: 'rgba(16, 185, 129, 0.08)',
+                  border: '1px solid rgba(16, 185, 129, 0.25)',
+                  color: '#34d399',
+                  fontSize: '0.86rem',
+                  lineHeight: '1.5',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  animation: 'fadeIn 0.25s ease-out',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <CheckCircle2 size={15} style={{ color: '#34d399' }} />
+                    </div>
+                    <span>{credentialFormSuccess}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCredentialFormSuccess('')}
+                    style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', borderRadius: '6px' }}
+                    aria-label="Đóng thông báo"
+                  >
+                    <X size={15} />
+                  </button>
                 </div>
               )}
 
