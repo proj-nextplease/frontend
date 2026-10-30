@@ -4166,13 +4166,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
             <section className="credentials-list-section" style={{ marginTop: '4px' }}>
               <div className="np-cred-subhead">
                 <div>
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    Minh chứng hoạt động
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: '700', padding: '2px 8px', borderRadius: '12px', background: 'rgba(168,85,247,0.12)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.25)' }}>
-                      <Sparkles size={11} /> AI Hybrid thẩm định
-                    </span>
-                  </h3>
-                  <p>AI tự động đọc ảnh & duyệt ngay trong vài giây khi thông tin trùng khớp, hoặc gửi Admin hỗ trợ xác thực.</p>
+                  <h3>Minh chứng hoạt động</h3>
+                  <p>Hệ thống tự động xác thực bằng chứng và cấp tích xanh ngay trong vài giây khi hợp lệ, hoặc chuyển Ban quản trị hỗ trợ.</p>
                 </div>
                 <button
                   className="button primary-button"
@@ -4194,16 +4189,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <form onSubmit={handleSubmitCredential} className="credential-submit-form">
                   <div className="credential-submit-topline">
                     <div className="credential-submit-mark">
-                      <Sparkles size={20} color="#a855f7" />
+                      <ShieldCheck size={20} color="var(--primary)" />
                     </div>
                     <div>
-                      <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        Biến hoạt động thật thành Reputation Capital
-                        <span style={{ fontSize: '0.72rem', background: 'rgba(168,85,247,0.12)', color: '#a855f7', padding: '2px 8px', borderRadius: '10px', border: '1px solid rgba(168,85,247,0.25)' }}>
-                          AI Duyệt Tự Động
-                        </span>
-                      </h3>
-                      <p>Điền thông tin và <strong>tải ảnh chứng chỉ / giấy khen rõ nét</strong> để hệ thống AI (Gemini Vision) nhận diện họ tên và duyệt ngay lập tức.</p>
+                      <h3>Biến hoạt động thật thành Reputation Capital</h3>
+                      <p>Điền thông tin và đính kèm ảnh giấy chứng nhận / bằng khen rõ nét để hệ thống tự động nhận diện và xác thực nhanh nhất.</p>
                     </div>
                   </div>
                   <div className="form-grid">
@@ -4267,13 +4257,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       <label className="form-label">Link minh chứng (Google Drive, fanpage sự kiện, bài đăng...)</label>
                       <input className="form-input" placeholder="https://drive.google.com/... hoặc link Facebook event" value={credentialForm.proofLink} onChange={e => setCredentialForm(f => ({ ...f, proofLink: e.target.value }))} />
                       <small style={{ fontSize: '0.74rem', color: 'var(--muted)', marginTop: '4px', display: 'block' }}>
-                        * Lưu ý với link Google Drive: Mở quyền truy cập "Bất kỳ ai có liên kết" để AI có thể trích xuất hình ảnh.
+                        * Với liên kết Google Drive: Vui lòng mở quyền "Bất kỳ ai có liên kết" để hệ thống kiểm tra nhanh tài liệu.
                       </small>
                     </div>
                     <div className="form-full">
                       <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span>Ảnh minh chứng (chứng chỉ, bằng khen, ảnh hoạt động — tối đa 6 ảnh) *</span>
-                        <span style={{ fontSize: '0.74rem', color: '#10b981', fontWeight: '600' }}>Khuyên dùng: AI duyệt ngay</span>
+                        <span style={{ fontSize: '0.74rem', color: '#10b981', fontWeight: '600' }}>Khuyên dùng: Xác thực tự động</span>
                       </label>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                         {(credentialForm.proofImages || []).map((img, i) => (
@@ -4333,32 +4323,33 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     const status = sub.verification_status || 'PENDING';
                     const statusKey = status.toLowerCase();
                     const isLeader = sub.role_level === 'LEADER';
-                    const isAiVerified = status === 'APPROVED' && sub.verifiedByType === 'AI';
-                    const isAiProcessing = status === 'PENDING' && sub.aiStatus === 'PROCESSING';
+                    const isAutoVerified = status === 'APPROVED' && sub.verifiedByType === 'AI';
+                    const isProcessing = status === 'PENDING' && sub.aiStatus === 'PROCESSING';
 
                     let statusLabel = 'Chờ duyệt';
-                    if (isAiVerified) {
-                      statusLabel = 'Xác thực bởi AI ✓';
-                    } else if (status === 'APPROVED') {
-                      statusLabel = 'Đã duyệt';
+                    if (status === 'APPROVED') {
+                      statusLabel = isAutoVerified ? 'Đã xác thực tự động' : 'Đã duyệt';
                     } else if (status === 'REJECTED') {
                       statusLabel = 'Từ chối';
-                    } else if (isAiProcessing) {
-                      statusLabel = 'AI đang quét...';
+                    } else if (isProcessing) {
+                      statusLabel = 'Đang kiểm tra...';
+                    }
+
+                    // Chuẩn hóa lý do từ chối: loại bỏ tiền tố thô như "AI từ chối do...", "Lý do:" nếu có
+                    let cleanRejectReason = sub.reject_reason || '';
+                    if (cleanRejectReason) {
+                      cleanRejectReason = cleanRejectReason
+                        .replace(/^AI từ chối do bằng chứng không hợp lệ:\s*/i, '')
+                        .replace(/^AI từ chối:\s*/i, '')
+                        .replace(/^AI:\s*/i, '')
+                        .trim();
                     }
 
                     return (
                       <li key={sub.id} className={`np-proof-row ${statusKey}`}>
                         <div className="np-proof-main">
                           <div className="np-proof-titleline">
-                            <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              {sub.project_name}
-                              {isAiVerified && (
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.7rem', padding: '1px 6px', borderRadius: '8px', background: 'rgba(168,85,247,0.12)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.25)', fontWeight: '600' }}>
-                                  <Sparkles size={10} /> AI Fast-track
-                                </span>
-                              )}
-                            </h4>
+                            <h4>{sub.project_name}</h4>
                             {sub.expressVerification && <span className="np-proof-express"><Zap size={11} /> Express</span>}
                           </div>
                           <div className="np-proof-meta">
@@ -4374,36 +4365,27 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                             </a>
                           )}
 
-                          {status === 'REJECTED' && sub.reject_reason && (
-                            <p className="np-proof-reject">Lý do từ chối: {sub.reject_reason}</p>
+                          {status === 'REJECTED' && cleanRejectReason && (
+                            <p className="np-proof-reject">Lý do từ chối: {cleanRejectReason}</p>
                           )}
                           {status === 'APPROVED' && (
                             <p className="np-proof-reward">
                               Đã cộng +{expRewards[sub.category] || 100} EXP · +{isLeader ? 10 : 5} RS
-                              {isAiVerified && ' · Duyệt tự động tức thì'}
                             </p>
                           )}
                           {/* Nói trước phần thưởng khi còn chờ duyệt: đó là lý
                               do người dùng chịu khó nộp và chịu khó chờ. */}
                           {status === 'PENDING' && (
                             <p className="np-proof-pending-note">
-                              {isAiProcessing
-                                ? 'AI đang phân tích và đối chiếu văn bản trên minh chứng...'
+                              {isProcessing
+                                ? 'Hệ thống đang đối chiếu thông tin minh chứng...'
                                 : `Nếu được duyệt: +${expRewards[sub.category] || 100} EXP · +${isLeader ? 10 : 5} RS`}
                             </p>
-                          )}
-
-                          {/* Phản hồi từ AI nếu ở diện cần Admin hỗ trợ */}
-                          {status === 'PENDING' && sub.aiFeedback && (
-                            <div style={{ marginTop: '6px', fontSize: '0.78rem', color: 'var(--muted)', background: 'var(--surface-sunken, rgba(255,255,255,0.03))', padding: '6px 10px', borderRadius: '8px', border: '1px dashed var(--line)' }}>
-                              <span style={{ color: '#a855f7', fontWeight: '600' }}>AI Ghi chú: </span>
-                              {sub.aiFeedback}
-                            </div>
                           )}
                         </div>
 
                         <div className="np-proof-side">
-                          <span className={`np-proof-status ${statusKey}`} style={isAiVerified ? { background: 'rgba(16,185,129,0.15)', color: '#34d399', borderColor: 'rgba(16,185,129,0.3)' } : isAiProcessing ? { background: 'rgba(168,85,247,0.15)', color: '#c084fc', borderColor: 'rgba(168,85,247,0.3)' } : {}}>
+                          <span className={`np-proof-status ${statusKey}`}>
                             {statusLabel}
                           </span>
                         </div>
