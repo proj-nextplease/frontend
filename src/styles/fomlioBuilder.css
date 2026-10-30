@@ -269,6 +269,8 @@
   position: absolute;
   top: 50%;
   left: 100%;
+  z-index: 25;
+  pointer-events: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;

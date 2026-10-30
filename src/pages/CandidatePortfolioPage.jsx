@@ -202,6 +202,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   const [step, setStep] = useState(1);
   const [dockOpen, setDockOpen] = useState(true);
   const lastPreviewY = useRef(0);
+  const ignoreScrollUntil = useRef(0);
+  const userExplicitlyOpened = useRef(false);
   const editorColRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -260,19 +262,35 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   const [errors, setErrors] = useState({});
 
   /* Bảng soạn tự nhường chỗ khi người dùng đang xem trang.
-     Cuộn XUỐNG là tín hiệu "giờ tôi muốn ngắm", nên thu bảng lại; về sát đỉnh
-     mới mở lại. Cố ý KHÔNG mở lại khi chỉ cuộn ngược lên một đoạn — bảng
-     thụt ra thụt vào giữa chừng còn khó chịu hơn là cứ đóng. */
+     Chỉ tự động thu gọn khi người dùng lướt xem và chưa chủ động bấm "Soạn tiếp".
+     Bỏ qua sự kiện cuộn do iframe co giãn kích thước (reflow) để không đóng ngược lại bảng soạn. */
   const handlePreviewScroll = useCallback((y, programmatic) => {
     const previous = lastPreviewY.current;
     lastPreviewY.current = y;
-    /* Cuộn do code (nhảy bước làm khung xem trước chạy tới khối tương ứng)
-       chỉ cập nhật mốc, không đụng tới bảng soạn: người dùng vừa bấm "Tiếp
-       theo" là đang muốn gõ tiếp, đóng bảng ngay lúc đó là phản tác dụng. */
-    if (programmatic) return;
-    if (y <= 8) setDockOpen(true);
-    // Ngưỡng 4px để rung lắc nhỏ của trackpad không kích hoạt.
-    else if (y > previous + 4) setDockOpen(false);
+
+    if (programmatic || Date.now() < ignoreScrollUntil.current) return;
+
+    if (y <= 8) {
+      setDockOpen(true);
+      userExplicitlyOpened.current = false;
+    } else if (!userExplicitlyOpened.current && y > previous + 15) {
+      setDockOpen(false);
+    }
+  }, []);
+
+  const handleToggleDock = useCallback((e) => {
+    e?.stopPropagation();
+    // Khóa sự kiện cuộn từ iframe trong 2.5s để chống việc iframe co giãn reflow làm đóng ngược lại
+    ignoreScrollUntil.current = Date.now() + 2500;
+    setDockOpen((open) => {
+      const next = !open;
+      userExplicitlyOpened.current = next;
+      // Nếu đang cuộn sâu ở dưới trang (đang xem dự án) và bấm Soạn tiếp, chuyển thẳng sang Bước 3
+      if (next && lastPreviewY.current > 400) {
+        setStep(3);
+      }
+      return next;
+    });
   }, []);
 
   /* Người dùng gõ vào ô nào thì khung xem trước nhảy tới khối chứa ô đó. Bắt
@@ -513,8 +531,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       setErrorMsg('Vui lòng chọn một tệp ảnh.');
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      setErrorMsg('Ảnh chân dung phải nhỏ hơn 2MB.');
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMsg('Ảnh chân dung phải nhỏ hơn 10MB.');
       return;
     }
     setErrorMsg('');
@@ -601,7 +619,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     if (!files.length) return;
     markDirty();
     files.forEach((file) => {
-      if (file.size > 2 * 1024 * 1024) return;
+      if (file.size > 10 * 1024 * 1024) return;
       const reader = new FileReader();
       reader.onload = () => {
         setExperiences((current) =>
@@ -659,10 +677,10 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   }
 
   function updateCredentialFile(id, file) {
-    if (file && file.size > 5 * 1024 * 1024) {
+    if (file && file.size > 10 * 1024 * 1024) {
       setErrors((prev) => ({
         ...prev,
-        [`credential_${id}_fileName`]: 'File bằng cấp/chứng chỉ không được vượt quá 5MB.',
+        [`credential_${id}_fileName`]: 'File bằng cấp/chứng chỉ không được vượt quá 10MB.',
       }));
       return;
     }
@@ -1132,7 +1150,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
           <button
             type="button"
             className="pf-dock-toggle"
-            onClick={() => setDockOpen((open) => !open)}
+            onClick={handleToggleDock}
             aria-expanded={dockOpen}
             aria-label={dockOpen ? 'Thu gọn bảng soạn để xem trọn trang' : 'Mở bảng soạn'}
             title={dockOpen ? 'Thu gọn bảng soạn để xem trọn trang' : 'Mở bảng soạn'}
@@ -1303,7 +1321,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                       Bỏ ảnh, dùng linh vật
                     </button>
                   )}
-                  <span className="pf-identity-hint">Ảnh dọc, dưới 2MB.</span>
+                  <span className="pf-identity-hint">Ảnh dọc, dưới 10MB.</span>
                 </div>
               </div>
             </div>
@@ -1610,7 +1628,7 @@ export function CandidatePortfolioPage({ isEditing = false }) {
 
                 {/* Proof images — sent to admin verification queue on save */}
                 <label className="full-field">
-                  Minh chứng (ảnh, tối đa 6 · ≤ 2MB mỗi ảnh)
+                  Minh chứng (ảnh, tối đa 6 · ≤ 10MB mỗi ảnh)
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '6px' }}>
                     {(experience.proofImages || []).map((img, i) => (
                       <div key={i} style={{ position: 'relative', width: '88px', height: '88px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--c-line, #ece6e2)' }}>

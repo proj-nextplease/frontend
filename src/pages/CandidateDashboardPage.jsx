@@ -1060,7 +1060,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   function handleProofImageUpload(e) {
     const files = Array.from(e.target.files || []);
     files.forEach((file) => {
-      if (file.size > 2 * 1024 * 1024) { setCredentialFormError('Mỗi ảnh minh chứng phải dưới 2MB.'); return; }
+      if (file.size > 10 * 1024 * 1024) { setCredentialFormError('Mỗi ảnh minh chứng phải dưới 10MB.'); return; }
       const reader = new FileReader();
       reader.onload = () => setCredentialForm((f) => ({ ...f, proofImages: [...(f.proofImages || []), reader.result].slice(0, 6) }));
       reader.readAsDataURL(file);

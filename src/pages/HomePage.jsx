@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ArrowUp, ArrowUpRight, Search, Sparkles } from 'lucide-react';
 import { HeroMesh } from '../components/HeroMesh.jsx';
-import { loadJobs } from '../api/jobsCache.js';
+import { loadJobs, loadOpportunities } from '../api/jobsCache.js';
+import { getExternalJobs } from '../api/externalJobApi.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { NeonBloom } from '../components/NeonBloom.jsx';
@@ -271,13 +272,20 @@ export function HomePage() {
     fading: false,
   }));
 
-  /* Nạp danh sách việc làm */
+  /* Nạp danh sách việc làm & cơ hội nổi bật */
   useEffect(() => {
     let alive = true;
-    loadJobs()
-      .then((data) => {
+    Promise.all([
+      loadOpportunities({ limit: 12 }).catch(() => []),
+      getExternalJobs({ limit: 6 }).catch(() => []),
+    ])
+      .then(([opps, external]) => {
         if (!alive) return;
-        const list = Array.isArray(data) ? data.slice(0, 6).map(toRailJob) : [];
+        const oppList = Array.isArray(opps) ? opps.map(toRailJob) : [];
+        const extList = Array.isArray(external) ? external.map(toRailJob) : [];
+        const combined = [...oppList, ...extList];
+        // Đảm bảo đủ 6 thẻ để lấp kín lưới 3 cột x 2 hàng, không bị khuyết ô 06
+        const list = combined.slice(0, 6);
         setJobs(list.length ? list : FALLBACK_JOBS);
       })
       .catch(() => { if (alive) setJobs(FALLBACK_JOBS); });

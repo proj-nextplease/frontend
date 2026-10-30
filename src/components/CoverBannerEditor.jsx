@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { ImagePlus, Move, Plus, Minus, Trash2 } from 'lucide-react';
 import { parseBanner, serializeBanner } from './postingConstants.js';
 
-const MAX_BYTES = 2 * 1024 * 1024;
+const MAX_BYTES = 10 * 1024 * 1024;
 
 /**
  * Chọn và căn ảnh bìa cho portfolio.
@@ -12,7 +12,7 @@ const MAX_BYTES = 2 * 1024 * 1024;
  * của banner tin tuyển dụng (parseBanner/serializeBanner) để hai nơi không
  * trôi khỏi nhau.
  *
- * Ảnh lưu dưới dạng data URL, giống banner tin đăng — giới hạn 2MB.
+ * Ảnh lưu dưới dạng data URL, giống banner tin đăng — giới hạn 10MB.
  */
 export function CoverBannerEditor({ url, pos, onChange, height = 180 }) {
   const [error, setError] = useState('');
@@ -31,7 +31,7 @@ export function CoverBannerEditor({ url, pos, onChange, height = 180 }) {
       return;
     }
     if (file.size > MAX_BYTES) {
-      setError('Ảnh bìa phải nhỏ hơn 2MB.');
+      setError('Ảnh bìa phải nhỏ hơn 10MB.');
       return;
     }
     setError('');
