@@ -4167,7 +4167,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               <div className="np-cred-subhead">
                 <div>
                   <h3>Minh chứng hoạt động</h3>
-                  <p>Admin xét duyệt, rồi EXP và RS được cộng tự động.</p>
+                  <p>Hệ thống tự động xác thực bằng chứng và cấp tích xanh ngay trong vài giây khi hợp lệ, hoặc chuyển Ban quản trị hỗ trợ.</p>
                 </div>
                 <button
                   className="button primary-button"
@@ -4189,11 +4189,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <form onSubmit={handleSubmitCredential} className="credential-submit-form">
                   <div className="credential-submit-topline">
                     <div className="credential-submit-mark">
-                      <ShieldCheck size={20} />
+                      <ShieldCheck size={20} color="var(--primary)" />
                     </div>
                     <div>
                       <h3>Biến hoạt động thật thành Reputation Capital</h3>
-                      <p>Điền thông tin hoạt động bạn đã tham gia. Sau khi Admin xét duyệt, EXP và RS sẽ được cộng tự động vào hồ sơ.</p>
+                      <p>Điền thông tin và đính kèm ảnh giấy chứng nhận / bằng khen rõ nét để hệ thống tự động nhận diện và xác thực nhanh nhất.</p>
                     </div>
                   </div>
                   <div className="form-grid">
@@ -4254,11 +4254,17 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       />
                     </div>
                     <div className="form-full">
-                      <label className="form-label">Link minh chứng (certificate, fanpage sự kiện, ảnh...)</label>
+                      <label className="form-label">Link minh chứng (Google Drive, fanpage sự kiện, bài đăng...)</label>
                       <input className="form-input" placeholder="https://drive.google.com/... hoặc link Facebook event" value={credentialForm.proofLink} onChange={e => setCredentialForm(f => ({ ...f, proofLink: e.target.value }))} />
+                      <small style={{ fontSize: '0.74rem', color: 'var(--muted)', marginTop: '4px', display: 'block' }}>
+                        * Với liên kết Google Drive: Vui lòng mở quyền "Bất kỳ ai có liên kết" để hệ thống kiểm tra nhanh tài liệu.
+                      </small>
                     </div>
                     <div className="form-full">
-                      <label className="form-label">Ảnh minh chứng (giấy xác nhận, ảnh hoạt động — tối đa 6 ảnh, &lt;2MB)</label>
+                      <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span>Ảnh minh chứng (chứng chỉ, bằng khen, ảnh hoạt động — tối đa 6 ảnh) *</span>
+                        <span style={{ fontSize: '0.74rem', color: '#10b981', fontWeight: '600' }}>Khuyên dùng: Xác thực tự động</span>
+                      </label>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                         {(credentialForm.proofImages || []).map((img, i) => (
                           <div key={i} style={{ position: 'relative', width: '92px', height: '92px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--line)' }}>
@@ -4316,8 +4322,29 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     const expRewards = { CLUB_SMALL: 100, SCHOOL_CAMPAIGN: 300, COMPANY_PROJECT: 500, SHORT_INTERNSHIP: 500, FREELANCE_GIG: 500 };
                     const status = sub.verification_status || 'PENDING';
                     const statusKey = status.toLowerCase();
-                    const statusLabel = status === 'APPROVED' ? 'Đã duyệt' : status === 'REJECTED' ? 'Từ chối' : 'Chờ duyệt';
                     const isLeader = sub.role_level === 'LEADER';
+                    const isAutoVerified = status === 'APPROVED' && sub.verifiedByType === 'AI';
+                    const isProcessing = status === 'PENDING' && sub.aiStatus === 'PROCESSING';
+
+                    let statusLabel = 'Chờ duyệt';
+                    if (status === 'APPROVED') {
+                      statusLabel = isAutoVerified ? 'Đã xác thực tự động' : 'Đã duyệt';
+                    } else if (status === 'REJECTED') {
+                      statusLabel = 'Từ chối';
+                    } else if (isProcessing) {
+                      statusLabel = 'Đang kiểm tra...';
+                    }
+
+                    // Chuẩn hóa lý do từ chối: loại bỏ tiền tố thô như "AI từ chối do...", "Lý do:" nếu có
+                    let cleanRejectReason = sub.reject_reason || '';
+                    if (cleanRejectReason) {
+                      cleanRejectReason = cleanRejectReason
+                        .replace(/^AI từ chối do bằng chứng không hợp lệ:\s*/i, '')
+                        .replace(/^AI từ chối:\s*/i, '')
+                        .replace(/^AI:\s*/i, '')
+                        .trim();
+                    }
+
                     return (
                       <li key={sub.id} className={`np-proof-row ${statusKey}`}>
                         <div className="np-proof-main">
@@ -4338,8 +4365,8 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                             </a>
                           )}
 
-                          {status === 'REJECTED' && sub.reject_reason && (
-                            <p className="np-proof-reject">Lý do từ chối: {sub.reject_reason}</p>
+                          {status === 'REJECTED' && cleanRejectReason && (
+                            <p className="np-proof-reject">Lý do từ chối: {cleanRejectReason}</p>
                           )}
                           {status === 'APPROVED' && (
                             <p className="np-proof-reward">
@@ -4350,13 +4377,17 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                               do người dùng chịu khó nộp và chịu khó chờ. */}
                           {status === 'PENDING' && (
                             <p className="np-proof-pending-note">
-                              Nếu được duyệt: +{expRewards[sub.category] || 100} EXP · +{isLeader ? 10 : 5} RS
+                              {isProcessing
+                                ? 'Hệ thống đang đối chiếu thông tin minh chứng...'
+                                : `Nếu được duyệt: +${expRewards[sub.category] || 100} EXP · +${isLeader ? 10 : 5} RS`}
                             </p>
                           )}
                         </div>
 
                         <div className="np-proof-side">
-                          <span className={`np-proof-status ${statusKey}`}>{statusLabel}</span>
+                          <span className={`np-proof-status ${statusKey}`}>
+                            {statusLabel}
+                          </span>
                         </div>
                       </li>
                     );
