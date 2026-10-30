@@ -171,10 +171,10 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
   const location = profile.location?.trim() || '';
   const bio = profile.bio?.trim() || '';
 
-  // 2. Real Experiences / Projects
+  // 2. Real Experiences / Projects (chỉ lấy các mục đã được duyệt)
   const experiences = useMemo(() => {
     return (Array.isArray(profile.experiences) ? profile.experiences : []).filter(
-      (e) => e && (e.title?.trim() || e.role?.trim() || e.organization?.trim() || e.description?.trim())
+      (e) => e && (e.verified === true || e.verificationStatus === 'APPROVED') && (e.title?.trim() || e.role?.trim() || e.organization?.trim() || e.description?.trim())
     );
   }, [profile.experiences]);
 

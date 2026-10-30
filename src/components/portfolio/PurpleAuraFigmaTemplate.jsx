@@ -192,6 +192,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
     return (Array.isArray(profile.experiences) ? profile.experiences : []).filter(
       (e) =>
         e &&
+        (e.verified === true || e.verificationStatus === 'APPROVED') &&
         (e.title?.trim() ||
           e.projectName?.trim() ||
           e.name?.trim() ||
