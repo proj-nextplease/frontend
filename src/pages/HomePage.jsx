@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ArrowUp, ArrowUpRight, Search, Sparkles } from 'lucide-react';
 import { HeroMesh } from '../components/HeroMesh.jsx';
-import { loadJobs, loadOpportunities } from '../api/jobsCache.js';
+import { loadOpportunities } from '../api/jobsCache.js';
 import { getExternalJobs } from '../api/externalJobApi.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
