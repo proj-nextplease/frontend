@@ -269,6 +269,8 @@
   position: absolute;
   top: 50%;
   left: 100%;
+  z-index: 25;
+  pointer-events: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -468,6 +470,70 @@
 .portfolio-page.fomlio-builder .edit-card-index span {
   background: rgba(203, 247, 72, 0.14);
   color: var(--fomb-brand);
+}
+
+/* Badge trạng thái xác thực trên từng thẻ kinh nghiệm */
+.experience-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  line-height: 1.2;
+  margin-left: 8px;
+}
+
+.experience-status-badge.approved {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.experience-status-badge.rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.experience-status-badge.pending {
+  background: rgba(234, 179, 8, 0.14);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+/* Khối thông báo cơ chế thẩm định tự động trong trình soạn thảo Portfolio */
+.portfolio-ai-flow-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(123, 58, 236, 0.08);
+  border: 1px solid rgba(123, 58, 236, 0.25);
+  margin-bottom: 22px;
+}
+
+.portfolio-ai-flow-card .portfolio-ai-icon {
+  color: #a78bfa;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.portfolio-ai-flow-content strong {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--fomb-text, #fff);
+  margin-bottom: 4px;
+}
+
+.portfolio-ai-flow-content p {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--fomb-muted, rgba(255, 255, 255, 0.7));
+  margin: 0;
 }
 
 .portfolio-page.fomlio-builder .edit-card-remove {

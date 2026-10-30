@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ArrowUp, ArrowUpRight, Search, Sparkles } from 'lucide-react';
 import { HeroMesh } from '../components/HeroMesh.jsx';
-import { loadJobs } from '../api/jobsCache.js';
+import { loadOpportunities } from '../api/jobsCache.js';
+import { getExternalJobs } from '../api/externalJobApi.js';
 import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { NeonBloom } from '../components/NeonBloom.jsx';
@@ -59,12 +60,12 @@ const HINT_FADE_MS = 450;   // cả câu mờ đi trước khi đổi câu kế
 
 /* Thẻ việc làm mẫu — chỉ hiện khi API chưa trả về, để lưới không rỗng. */
 const FALLBACK_JOBS = [
-  { id: null, title: 'Thực tập Marketing', pay: 'Tới 5 triệu/tháng', payKnown: true, type: 'Thực tập', where: 'TP.HCM' },
-  { id: null, title: 'Cộng tác viên Content', pay: 'Tới 300k/bài', payKnown: true, type: 'Part-time', where: 'Remote' },
-  { id: null, title: 'Frontend Intern', pay: 'Tới 8 triệu/tháng', payKnown: true, type: 'Thực tập', where: 'TP.HCM' },
-  { id: null, title: 'Hỗ trợ sự kiện CLB', pay: 'Proof & điểm uy tín', payKnown: false, type: 'Quest', where: 'Hà Nội' },
-  { id: null, title: 'Data Entry Part-time', pay: 'Tới 35k/giờ', payKnown: true, type: 'Part-time', where: 'Remote' },
-  { id: null, title: 'Trợ lý Kinh doanh', pay: 'Tới 7 triệu/tháng', payKnown: true, type: 'Full-time', where: 'Đà Nẵng' },
+  { id: null, title: 'Thực tập sinh Lập trình Backend (Java)', pay: '4.5 triệu/tháng', payKnown: true, type: 'Thực tập', where: 'TP. Hồ Chí Minh' },
+  { id: null, title: 'Nhân viên Marketing nội dung (Content)', pay: '7 triệu/tháng', payKnown: true, type: 'Part-time', where: 'TP. Hồ Chí Minh' },
+  { id: null, title: 'Thực tập sinh thiết kế Figma (UI/UX)', pay: '1 triệu/tháng', payKnown: true, type: 'Thực tập', where: 'TP. Hồ Chí Minh' },
+  { id: null, title: 'Cộng tác viên Sự kiện CLB FPTU', pay: 'Tích lũy kinh nghiệm & RS', payKnown: false, type: 'Quest', where: 'Hà Nội' },
+  { id: null, title: 'Data Entry & Phân tích cơ bản', pay: '35k/giờ', payKnown: true, type: 'Part-time', where: 'Remote' },
+  { id: null, title: 'Trợ lý Phát triển Kinh doanh (BD Intern)', pay: '5 triệu/tháng', payKnown: true, type: 'Thực tập', where: 'Đà Nẵng' },
 ];
 
 /* Ba bước quy trình */
@@ -206,18 +207,34 @@ function jobTypeLabel(rawType, isClub) {
 }
 
 function toRailJob(raw) {
-  const pay = raw.salaryText
-    || (Number(raw.salaryMax) ? `Tới ${Math.round(Number(raw.salaryMax) / 1e6)} triệu/tháng` : null)
-    || (Number(raw.salaryMin) ? `Từ ${Math.round(Number(raw.salaryMin) / 1e6)} triệu/tháng` : null);
+  let pay = raw.salaryText || null;
+  if (!pay && raw.compensation) {
+    const compNum = Number(raw.compensation);
+    if (!isNaN(compNum) && compNum > 0) {
+      if (compNum >= 1e6) {
+        pay = `${(compNum / 1e6).toFixed(compNum % 1e6 === 0 ? 0 : 1)} triệu/tháng`;
+      } else {
+        pay = `${compNum.toLocaleString('vi-VN')} đ/tháng`;
+      }
+    }
+  }
+  if (!pay && (Number(raw.salaryMax) || Number(raw.salaryMin))) {
+    if (Number(raw.salaryMax)) {
+      pay = `Tới ${Math.round(Number(raw.salaryMax) / 1e6)} triệu/tháng`;
+    } else {
+      pay = `Từ ${Math.round(Number(raw.salaryMin) / 1e6)} triệu/tháng`;
+    }
+  }
+
   const isClub = raw.companyType === 'CLUB' || raw.organizationType === 'CLUB';
   const type = jobTypeLabel(raw.jobType || raw.employmentType || raw.workForm || raw.workType, isClub);
   return {
     id: raw.id ?? raw.jobId ?? null,
     title: raw.title || 'Chưa đặt tên',
-    pay: pay || 'Proof & điểm uy tín',
+    pay: pay || (isClub ? 'Tích lũy kinh nghiệm & RS' : 'Thỏa thuận'),
     payKnown: Boolean(pay),
     type,
-    where: raw.location || 'Không xác định',
+    where: raw.location || 'TP. Hồ Chí Minh',
   };
 }
 
@@ -255,13 +272,20 @@ export function HomePage() {
     fading: false,
   }));
 
-  /* Nạp danh sách việc làm */
+  /* Nạp danh sách việc làm & cơ hội nổi bật */
   useEffect(() => {
     let alive = true;
-    loadJobs()
-      .then((data) => {
+    Promise.all([
+      loadOpportunities({ limit: 12 }).catch(() => []),
+      getExternalJobs({ limit: 6 }).catch(() => []),
+    ])
+      .then(([opps, external]) => {
         if (!alive) return;
-        const list = Array.isArray(data) ? data.slice(0, 6).map(toRailJob) : [];
+        const oppList = Array.isArray(opps) ? opps.map(toRailJob) : [];
+        const extList = Array.isArray(external) ? external.map(toRailJob) : [];
+        const combined = [...oppList, ...extList];
+        // Đảm bảo đủ 6 thẻ để lấp kín lưới 3 cột x 2 hàng, không bị khuyết ô 06
+        const list = combined.slice(0, 6);
         setJobs(list.length ? list : FALLBACK_JOBS);
       })
       .catch(() => { if (alive) setJobs(FALLBACK_JOBS); });

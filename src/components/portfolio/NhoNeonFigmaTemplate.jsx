@@ -103,6 +103,22 @@ function NhoNeonRibbon({
   );
 }
 
+function getGoogleDriveThumbnail(url) {
+  if (!url || typeof url !== 'string') return null;
+  const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+                url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1200`;
+  }
+  return null;
+}
+
+function isDirectImageUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  return /\.(png|jpe?g|webp|svg|gif)($|\?)/i.test(url) ||
+         /(cloudinary\.com|imgur\.com|unsplash\.com|supabase\.co\/storage)/i.test(url);
+}
+
 /**
  * Helper to get a valid candidate-uploaded project image URL or attachment
  */
@@ -112,6 +128,11 @@ function getProjectImageUrl(exp) {
   if (exp.thumbnailUrl && typeof exp.thumbnailUrl === 'string' && exp.thumbnailUrl.trim()) return exp.thumbnailUrl;
   if (Array.isArray(exp.proofImages) && exp.proofImages[0] && typeof exp.proofImages[0] === 'string') return exp.proofImages[0];
   if (exp.certificateUrl && typeof exp.certificateUrl === 'string' && exp.certificateUrl.trim()) return exp.certificateUrl;
+  if (exp.proofLink) {
+    const driveThumb = getGoogleDriveThumbnail(exp.proofLink);
+    if (driveThumb) return driveThumb;
+    if (isDirectImageUrl(exp.proofLink)) return exp.proofLink;
+  }
   return null;
 }
 
@@ -205,10 +226,10 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
     );
   }, [profile.skills]);
 
-  // 4. Real Experiences & Projects
+  // 4. Real Experiences & Projects (chỉ lấy các mục đã được duyệt)
   const experiences = useMemo(() => {
     return (Array.isArray(profile.experiences) ? profile.experiences : []).filter(
-      (e) => e && (e.title?.trim() || e.role?.trim() || e.organization?.trim() || e.description?.trim())
+      (e) => e && (e.verified === true || e.verificationStatus === 'APPROVED') && (e.title?.trim() || e.role?.trim() || e.organization?.trim() || e.description?.trim())
     );
   }, [profile.experiences]);
 

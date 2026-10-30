@@ -7,6 +7,8 @@ import {
   Eye,
   CheckCircle2,
   Sparkles,
+  ShieldCheck,
+  FileText,
 } from 'lucide-react';
 import { PortfolioMascot } from '../PortfolioMascot.jsx';
 import { FilePreviewModal } from '../FilePreviewModal.jsx';
@@ -87,6 +89,36 @@ const CATEGORY_LABELS = {
 };
 
 /**
+ * Tự động trích xuất ảnh thumbnail từ Google Drive link (ảnh, PDF, tài liệu)
+ */
+function getGoogleDriveThumbnail(url) {
+  if (!url || typeof url !== 'string') return null;
+  const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+                url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1200`;
+  }
+  return null;
+}
+
+function isDirectImageUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  return /\.(png|jpe?g|webp|svg|gif)($|\?)/i.test(url) ||
+         /(cloudinary\.com|imgur\.com|unsplash\.com|supabase\.co\/storage)/i.test(url);
+}
+
+function getProofLinkPlatform(url) {
+  if (!url || typeof url !== 'string') return null;
+  const lower = url.toLowerCase();
+  if (lower.includes('drive.google.com')) return { label: 'Google Drive', icon: '📁' };
+  if (lower.includes('github.com')) return { label: 'GitHub Repo', icon: '🐙' };
+  if (lower.includes('figma.com')) return { label: 'Figma Design', icon: '🎨' };
+  if (lower.includes('facebook.com') || lower.includes('fb.com')) return { label: 'Sự kiện Fanpage', icon: '📢' };
+  if (lower.includes('behance.net')) return { label: 'Behance', icon: '💎' };
+  return { label: 'Tài liệu / Trang dự án', icon: '🌐' };
+}
+
+/**
  * Helper to get a valid candidate-uploaded project image URL or attachment
  */
 function getProjectImageUrl(exp) {
@@ -95,17 +127,22 @@ function getProjectImageUrl(exp) {
   if (exp.thumbnailUrl && typeof exp.thumbnailUrl === 'string' && exp.thumbnailUrl.trim()) return exp.thumbnailUrl;
   if (Array.isArray(exp.proofImages) && exp.proofImages[0] && typeof exp.proofImages[0] === 'string') return exp.proofImages[0];
   if (exp.certificateUrl && typeof exp.certificateUrl === 'string' && exp.certificateUrl.trim()) return exp.certificateUrl;
+  if (exp.proofLink) {
+    const driveThumb = getGoogleDriveThumbnail(exp.proofLink);
+    if (driveThumb) return driveThumb;
+    if (isDirectImageUrl(exp.proofLink)) return exp.proofLink;
+  }
   return null;
 }
 
 /**
- * Authentic Interactive Mockup Screen for projects without custom uploaded shots
- * Matching Purple Aura (Figma 10-132) styling with verified badges and real links
+ * Thẻ chứng nhận & minh chứng dự án cao cấp (dành cho dự án có link hoặc tài liệu)
  */
 function PurpleAuraProjectMockup({ exp = {}, index = 0, isDark = false }) {
   const title = exp.title || exp.projectName || exp.name || `Dự án ${index + 1}`;
   const org = exp.organization || exp.role || exp.position || 'fonlio Verified Experience';
   const categoryLabel = CATEGORY_LABELS[exp.category] || exp.category || 'Kinh nghiệm thực chiến';
+  const platform = getProofLinkPlatform(exp.proofLink);
   const displayUrl = exp.proofLink
     ? exp.proofLink.replace(/^https?:\/\//, '').replace(/\/$/, '')
     : `fonlio.me/project-${index + 1}`;
@@ -118,22 +155,75 @@ function PurpleAuraProjectMockup({ exp = {}, index = 0, isDark = false }) {
           <span className="pa-mockup-dot yellow" />
           <span className="pa-mockup-dot green" />
         </div>
-        <span className="pa-mockup-url">{displayUrl}</span>
+        <span className="pa-mockup-url" title={displayUrl}>{displayUrl}</span>
+        {platform && (
+          <span className="pa-mockup-platform-tag">
+            {platform.icon} {platform.label}
+          </span>
+        )}
       </div>
+
       <div className="pa-mockup-screen-body">
-        <div className="pa-mockup-badge">
-          <Sparkles size={13} />
-          <span>DỰ ÁN {index + 1}</span>
+        <div className="pa-mockup-cert-seal">
+          <ShieldCheck size={28} className="pa-seal-icon" />
+          <div className="pa-mockup-badge">
+            <Sparkles size={12} />
+            <span>DỰ ÁN THỰC CHIẾN #{index + 1}</span>
+          </div>
         </div>
+
         <h4 className="pa-mockup-title">{title}</h4>
-        <p className="pa-mockup-org">{org}</p>
+        <p className="pa-mockup-org">
+          <CheckCircle2 size={14} style={{ display: 'inline-block', verticalAlign: '-2px', marginRight: '4px', color: '#10b981' }} />
+          {org}
+        </p>
+
         <div className="pa-mockup-chip-row">
           <span className="pa-mockup-chip">✦ {categoryLabel}</span>
+          <span className="pa-mockup-chip rewards">+{exp.expReward || 500} EXP · +{exp.rsReward || 5} RS</span>
           {exp.verified && <span className="pa-mockup-chip verified">✦ Đã xác thực</span>}
         </div>
+
+        {exp.proofLink ? (
+          <div className="pa-mockup-action-wrap" onClick={(e) => e.stopPropagation()}>
+            <a
+              href={exp.proofLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pa-mockup-btn"
+              title="Mở tài liệu minh chứng trong tab mới"
+            >
+              <FileText size={14} />
+              <span>Xem tài liệu minh chứng</span>
+              <ExternalLink size={13} />
+            </a>
+          </div>
+        ) : (
+          <div className="pa-mockup-verified-note">
+            <Sparkles size={12} />
+            <span>Bảo chứng năng lực số Fonlio</span>
+          </div>
+        )}
       </div>
     </div>
   );
+}
+
+function PurpleAuraProjectVisual({ exp, idx, isOdd, expTitle, shot }) {
+  const [imgError, setImgError] = useState(false);
+
+  if (shot && !imgError) {
+    return (
+      <img
+        src={shot}
+        alt={expTitle}
+        className="pa-project-img"
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
+  return <PurpleAuraProjectMockup exp={exp} index={idx} isDark={!isOdd} />;
 }
 
 export function PurpleAuraFigmaTemplate({ profile = {} }) {
@@ -192,6 +282,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
     return (Array.isArray(profile.experiences) ? profile.experiences : []).filter(
       (e) =>
         e &&
+        (e.verified === true || e.verificationStatus === 'APPROVED') &&
         (e.title?.trim() ||
           e.projectName?.trim() ||
           e.name?.trim() ||
@@ -963,6 +1054,74 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
           color: #0b6800;
         }
 
+        .pa-mockup-chip.rewards {
+          background: rgba(203, 247, 72, 0.25);
+          border-color: rgba(203, 247, 72, 0.7);
+          color: #2b5700;
+          font-weight: 700;
+        }
+
+        .pa-mockup-platform-tag {
+          margin-left: auto;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          font-weight: 700;
+          color: #7B3AEC;
+          background: rgba(123, 58, 236, 0.12);
+          padding: 2px 10px;
+          border-radius: 999px;
+          white-space: nowrap;
+        }
+
+        .pa-mockup-cert-seal {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .pa-seal-icon {
+          color: #10b981;
+          filter: drop-shadow(0 2px 6px rgba(16, 185, 129, 0.35));
+        }
+
+        .pa-mockup-action-wrap {
+          margin-top: 10px;
+          z-index: 2;
+        }
+
+        .pa-mockup-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 18px;
+          border-radius: 999px;
+          background: #7B3AEC;
+          color: #FFFFFF !important;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          font-weight: 700;
+          text-decoration: none;
+          box-shadow: 0 4px 16px rgba(123, 58, 236, 0.35);
+          transition: all 0.2s ease;
+        }
+
+        .pa-mockup-btn:hover {
+          background: #6428d0;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(123, 58, 236, 0.5);
+        }
+
+        .pa-mockup-verified-note {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          color: #4B127D;
+          opacity: 0.8;
+          margin-top: 4px;
+        }
+
         /* 3 Stat / Experience Pill Cards (Frame 55) */
         .pa-project-stats-row {
           display: grid;
@@ -1379,15 +1538,13 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
                       title={shot ? 'Xem phóng to ảnh dự án' : expTitle}
                       style={{ cursor: shot ? 'pointer' : 'default' }}
                     >
-                      {shot ? (
-                        <img
-                          src={shot}
-                          alt={expTitle}
-                          className="pa-project-img"
-                        />
-                      ) : (
-                        <PurpleAuraProjectMockup exp={exp} index={idx} isDark={!isOdd} />
-                      )}
+                      <PurpleAuraProjectVisual
+                        exp={exp}
+                        idx={idx}
+                        isOdd={isOdd}
+                        expTitle={expTitle}
+                        shot={shot}
+                      />
                     </div>
                   </div>
 
