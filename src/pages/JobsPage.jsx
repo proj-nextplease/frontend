@@ -752,7 +752,15 @@ export function JobsPage() {
       .then(([own, external]) => {
         if (!alive) return;
         const mine = Array.isArray(own) ? own.map(toCard) : [];
-        const ext = Array.isArray(external) ? external.map(externalToCard) : [];
+        const ext = Array.isArray(external)
+          ? external
+              .filter((j) => {
+                const comp = (j.companyName || j.company || '').toLowerCase();
+                const title = (j.title || '').toLowerCase();
+                return !comp.includes('tp solar') && !comp.includes('neotech') && !title.includes('booking pr');
+              })
+              .map(externalToCard)
+          : [];
         // Tin thật lên trước: đó mới là sản phẩm của nextplease, tin ngoài chỉ
         // là phần mở rộng.
         setJobs([...mine, ...ext]);

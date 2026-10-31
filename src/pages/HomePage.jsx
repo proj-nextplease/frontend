@@ -287,7 +287,15 @@ export function HomePage() {
       .then(([opps, external]) => {
         if (!alive) return;
         const oppList = Array.isArray(opps) ? opps.map(toRailJob) : [];
-        const extList = Array.isArray(external) ? external.map(toRailJob) : [];
+        const extList = Array.isArray(external)
+          ? external
+              .filter((j) => {
+                const comp = (j.companyName || j.company || '').toLowerCase();
+                const title = (j.title || '').toLowerCase();
+                return !comp.includes('tp solar') && !comp.includes('neotech') && !title.includes('booking pr');
+              })
+              .map(toRailJob)
+          : [];
         const combined = [...oppList, ...extList];
         // Đảm bảo đủ 6 thẻ để lấp kín lưới 3 cột x 2 hàng, không bị khuyết ô 06
         const list = combined.slice(0, 6);

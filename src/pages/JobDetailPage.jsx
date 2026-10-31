@@ -236,7 +236,12 @@ export function JobDetailPage() {
         if (id && String(id).startsWith('ext:')) {
           const externalJobs = await getExternalJobs({ limit: 100 }).catch(() => []);
           const rawId = String(id).replace(/^ext:/, '');
-          const matched = externalJobs.find((j) => String(j.id) === rawId || String(j.id) === String(id));
+          const matched = externalJobs.find((j) => {
+            const comp = (j.companyName || '').toLowerCase();
+            const title = (j.title || '').toLowerCase();
+            if (comp.includes('tp solar') || comp.includes('neotech') || title.includes('booking pr')) return false;
+            return String(j.id) === rawId || String(j.id) === String(id);
+          });
           if (matched) {
             setJob({
               id: `ext:${matched.id}`,
