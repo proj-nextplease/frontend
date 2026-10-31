@@ -228,6 +228,8 @@ function toRailJob(raw) {
 
   const isClub = raw.companyType === 'CLUB' || raw.organizationType === 'CLUB';
   const type = jobTypeLabel(raw.jobType || raw.employmentType || raw.workForm || raw.workType, isClub);
+  const isExternal = Boolean(raw.applyUrl || raw.kind === 'EXTERNAL');
+  const isQuest = isClub || raw.type === 'QUEST' || raw.kind === 'QUEST' || raw.__kind === 'QUEST';
   return {
     id: raw.id ?? raw.jobId ?? null,
     title: raw.title || 'Chưa đặt tên',
@@ -235,6 +237,9 @@ function toRailJob(raw) {
     payKnown: Boolean(pay),
     type,
     where: raw.location || 'TP. Hồ Chí Minh',
+    isExternal,
+    applyUrl: raw.applyUrl || null,
+    isQuest,
   };
 }
 
@@ -922,10 +927,15 @@ export function HomePage() {
           {/* Lưới việc làm thật trong Hero */}
           <div className="np-jobgrid">
             {rail.map((job, index) => {
-              const Tag = job.id ? 'a' : 'div';
+              const Tag = job.id || job.applyUrl ? 'a' : 'div';
+              const href = job.isExternal && job.applyUrl
+                ? job.applyUrl
+                : (job.id ? (job.isQuest ? `/quests/${job.id}` : `/jobs/${job.id}`) : undefined);
+              const target = job.isExternal ? '_blank' : undefined;
+              const rel = job.isExternal ? 'noopener noreferrer' : undefined;
               return (
                 <Reveal key={job.id ?? `${job.title}-${index}`} delay={index * 70} y={20} style={{ height: '100%' }}>
-                  <Tag className="np-jobcard" {...(job.id ? { href: `/jobs/${job.id}` } : {})}>
+                  <Tag className="np-jobcard" {...(href ? { href, target, rel } : {})}>
                     <span className="np-jobcard-index" aria-hidden="true">
                       {String(index + 1).padStart(2, '0')}
                     </span>

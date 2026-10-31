@@ -431,7 +431,7 @@ export function BusinessRegisterPage() {
 
                   {/* Upload zone */}
                   <div onClick={handleUploadZoneClick}
-                    style={{ cursor: 'pointer', border: `1.5px dashed ${uploadedFileName ? BLUE : LINE}`, borderRadius: '12px', padding: '18px', display: 'flex', gap: '14px', alignItems: 'center', background: uploadedFileName ? 'rgba(37,99,235,0.08)' : 'var(--surface-soft)', transition: 'all 0.2s' }}>
+                    style={{ cursor: 'pointer', border: `1.5px dashed ${uploadedFileName ? BLUE : LINE}`, borderRadius: '12px', padding: '18px', display: 'flex', gap: '14px', alignItems: 'center', background: uploadedFileName ? 'rgba(37,99,235,0.08)' : 'var(--surface-soft)', transition: 'all 0.2s', overflow: 'hidden', maxWidth: '100%' }}>
                     <div style={{ flexShrink: 0, width: '46px', height: '46px', borderRadius: '11px', background: uploadedFileName ? BLUE : 'var(--surface-soft)', color: uploadedFileName ? WHITE : 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <FileText size={22} />
                     </div>
@@ -445,8 +445,11 @@ export function BusinessRegisterPage() {
                           : 'Bắt buộc tải lên ảnh Quyết định thành lập CLB / Giấy xác nhận có dấu đỏ (dưới 2MB).'}
                       </div>
                       {uploadedFileName ? (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '0.82rem', fontWeight: '700', color: BLUE }}>
-                          <CheckCircle2 size={16} /> Đã chọn: {uploadedFileName}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '0.82rem', fontWeight: '700', color: BLUE, minWidth: 0, maxWidth: '100%' }}>
+                          <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}>
+                            Đã chọn: {uploadedFileName}
+                          </span>
                         </div>
                       ) : null}
                     </div>

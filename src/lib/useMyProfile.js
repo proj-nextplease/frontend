@@ -22,6 +22,14 @@ export function clearMyProfileCache() {
   inflight = null;
 }
 
+/** Báo cho toàn bộ ứng dụng biết thông tin hồ sơ/số dư ví đã thay đổi và cần tải lại ngay. */
+export function invalidateMyProfile() {
+  clearMyProfileCache();
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('np:profile-invalidated'));
+  }
+}
+
 function load() {
   if (cache) return Promise.resolve(cache);
   if (inflight) return inflight;
@@ -90,7 +98,27 @@ export function useMyProfile() {
         .then((data) => { if (alive) setLoaded(data); })
         .catch(() => { /* bỏ qua, lần đọc sau sẽ thử lại */ });
     });
-    return () => { alive = false; unsubscribe(); };
+
+    const handleInvalidate = () => {
+      clearMyProfileCache();
+      load()
+        .then((data) => { if (alive) setLoaded(data); })
+        .catch(() => { /* bỏ qua */ });
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('np:profile-invalidated', handleInvalidate);
+      window.addEventListener('focus', handleInvalidate);
+    }
+
+    return () => {
+      alive = false;
+      unsubscribe();
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('np:profile-invalidated', handleInvalidate);
+        window.removeEventListener('focus', handleInvalidate);
+      }
+    };
   }, [signedIn]);
 
   // Đọc thẳng từ cache khi render: component gắn sau khi cache đã đầy vẫn có
