@@ -10,6 +10,7 @@ import { SiteHeader } from '../components/layout/SiteHeader.jsx';
 import { SiteFooter } from '../components/layout/SiteFooter.jsx';
 import { NeonBloom } from '../components/NeonBloom.jsx';
 import { getJobDetail } from '../api/jobApi.js';
+import { getExternalJobs } from '../api/externalJobApi.js';
 import { applyToJob, getMyApplications } from '../api/applicationApi.js';
 import { applyToQuest, getMyQuestApplications } from '../api/questApi.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
@@ -232,6 +233,26 @@ export function JobDetailPage() {
     async function load() {
       try {
         setLoading(true);
+        if (id && String(id).startsWith('ext:')) {
+          const externalJobs = await getExternalJobs({ limit: 100 }).catch(() => []);
+          const rawId = String(id).replace(/^ext:/, '');
+          const matched = externalJobs.find((j) => String(j.id) === rawId || String(j.id) === String(id));
+          if (matched) {
+            setJob({
+              id: `ext:${matched.id}`,
+              title: matched.title || 'Cơ hội từ thị trường',
+              companyName: matched.companyName || 'Nhà tuyển dụng',
+              description: matched.excerpt || 'Vui lòng nhấn nút ứng tuyển để xem chi tiết và nộp đơn trên website nhà tuyển dụng.',
+              location: matched.location || 'Việt Nam',
+              isRemote: false,
+              jobType: 'Từ thị trường',
+              salary: matched.salaryText || 'Thoả thuận',
+              applyUrl: matched.applyUrl,
+              isExternal: true,
+            });
+            return;
+          }
+        }
         const data = await getJobDetail(id);
         setJob(data);
       } catch (err) {
@@ -533,7 +554,7 @@ export function JobDetailPage() {
             </h1>
 
             {/* Quick Meta Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px', margin: '22px 0 26px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px', margin: '22px 0 20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.94rem', color: ON_DARK }}>
                 <span style={{ color: EMERALD, display: 'flex' }}><Wallet size={19} /></span>
                 <span style={{ fontWeight: 800, color: EMERALD, textShadow: GLOW_SM }}>{salaryDisplay}</span>
@@ -562,10 +583,51 @@ export function JobDetailPage() {
               </div>
             </div>
 
+            {/* Point & Fee Disclosure Banner */}
+            {!isQuest && !job.isExternal && job.compensation && Number(job.compensation) > 0 ? (
+              <div style={{ padding: '12px 18px', borderRadius: '14px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.88rem', color: '#e0f2fe' }}>
+                <Wallet size={18} color="#38bdf8" style={{ flexShrink: 0 }} />
+                <div>
+                  <strong style={{ color: '#38bdf8' }}>Vị trí có trả thù lao ({Number(job.compensation).toLocaleString('vi-VN')} đ):</strong> Nộp đơn ứng tuyển hoàn toàn miễn phí. Khi được nhà tuyển dụng duyệt và gửi lời mời nhận việc (Offer), phí xác nhận nhận việc là <strong>19.000 Điểm</strong> (chỉ trừ khi bạn chủ động đồng ý nhận việc).
+                </div>
+              </div>
+            ) : isQuest ? (
+              <div style={{ padding: '12px 18px', borderRadius: '14px', background: `rgba(${NEON_RGB}, 0.08)`, border: `1px solid rgba(${NEON_RGB}, 0.25)`, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.88rem', color: '#ecfdf5' }}>
+                <Zap size={18} color={EMERALD} style={{ flexShrink: 0 }} />
+                <div>
+                  <strong style={{ color: EMERALD }}>Sự kiện / Quest CLB:</strong> Nộp đơn và tham gia hoàn toàn miễn phí (0 Điểm). Nhận giấy chứng nhận Verified Proof và điểm uy tín RS / EXP sau khi hoàn thành.
+                </div>
+              </div>
+            ) : null}
+
             {/* Action Buttons Bar */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', paddingTop: '20px', borderTop: `1px solid ${HAIRLINE}` }}>
               {/* Primary Apply Button */}
-              {applySuccess ? (
+              {job.isExternal ? (
+                <a
+                  href={job.applyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    background: EMERALD,
+                    color: INK,
+                    fontFamily: 'inherit',
+                    fontWeight: 700,
+                    fontSize: '0.95rem',
+                    padding: '14px 28px',
+                    borderRadius: '999px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: GLOW_SM,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    textDecoration: 'none',
+                  }}
+                >
+                  Ứng tuyển trên website gốc <ArrowRight size={16} />
+                </a>
+              ) : applySuccess ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 22px', borderRadius: '999px', background: `rgba(${NEON_RGB}, 0.12)`, border: `1px solid rgba(${NEON_RGB}, 0.35)`, color: EMERALD, fontSize: '0.92rem', fontWeight: 800, boxShadow: GLOW_SM }}>
                   <CheckCircle2 size={18} /> {applySuccess}
                 </div>
@@ -1020,6 +1082,27 @@ export function JobDetailPage() {
                   </div>
                 </div>
               )}
+
+              {/* Point disclosure note for candidate */}
+              {!isQuest && !job.isExternal && job.compensation && Number(job.compensation) > 0 ? (
+                <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', fontSize: '0.84rem', color: '#e0f2fe', lineHeight: 1.5 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#38bdf8', marginBottom: '4px' }}>
+                    <Wallet size={15} /> Vị trí có thù lao ({Number(job.compensation).toLocaleString('vi-VN')} đ)
+                  </div>
+                  <span>
+                    Nộp đơn ứng tuyển hoàn toàn <strong>miễn phí (0 Điểm)</strong>. Khi bạn trúng tuyển và được nhà tuyển dụng gửi lời mời nhận việc (Offer), phí xác nhận nhận việc là <strong>19.000 Điểm</strong> (chỉ trừ khi bạn chủ động đồng ý nhận việc).
+                  </span>
+                </div>
+              ) : isQuest ? (
+                <div style={{ padding: '12px 14px', borderRadius: '12px', background: `rgba(${NEON_RGB}, 0.08)`, border: `1px solid rgba(${NEON_RGB}, 0.25)`, fontSize: '0.84rem', color: '#ecfdf5', lineHeight: 1.5 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: EMERALD, marginBottom: '4px' }}>
+                    <Zap size={15} /> Sự kiện / Quest CLB
+                  </div>
+                  <span>
+                    Nộp đơn và tham gia hoàn toàn <strong>miễn phí (0 Điểm)</strong>. Tích lũy EXP kinh nghiệm và RS uy tín khi hoàn thành!
+                  </span>
+                </div>
+              ) : null}
 
               {/* Cover Note */}
               <div>

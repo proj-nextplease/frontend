@@ -76,8 +76,6 @@ const SIDEBAR_TABS = [
   { key: 'dashboard', route: '', label: 'Bảng điều khiển', icon: { business: BriefcaseBusiness, club: Grid }, lockable: false },
   { key: 'create-job', route: 'create-job', label: 'Đăng tin tuyển dụng', icon: { business: Plus, club: Compass }, lockable: true },
   { key: 'manage-jobs', route: 'manage-jobs', label: 'Quản lý tin đăng', icon: { business: FileText, club: Trophy }, lockable: true },
-  // comingSoon: tab vẫn hiện để giữ lộ trình, nhưng KHÔNG giả vờ là đã có.
-  { key: 'find-talent', route: 'find-talent', label: 'Tìm kiếm Talent', icon: { business: Search, club: Sparkles }, lockable: true, comingSoon: true },
   { key: 'candidates', route: 'candidates', label: 'Quản lý ứng viên', icon: { business: UsersRound, club: Users }, lockable: true },
   { key: 'members', route: 'members', label: 'Thành viên & Phân quyền', icon: { business: ShieldCheck, club: GraduationCap }, lockable: true },
   { key: 'pipeline', route: 'pipeline', label: 'Quy trình tuyển dụng', icon: { business: Filter, club: TrendingUp }, lockable: true },
@@ -1586,7 +1584,6 @@ function PendingView({ company, onRefresh, onTabChange }) {
         <div className="feature-grid" style={{ gap: '14px' }}>
           {[
             { icon: BriefcaseBusiness, label: 'Đăng tin tuyển dụng', desc: 'Tạo Job, Gig, Quest, Event Staff' },
-            { icon: UsersRound, label: 'Tìm kiếm Talent', desc: 'Lọc theo RS, kỹ năng, trường học' },
             { icon: MessageSquareText, label: 'Quản lý ứng viên', desc: 'Shortlist, nhắn tin, theo dõi' },
           ].map((f) => {
             const Icon = f.icon;
@@ -1764,7 +1761,6 @@ function ApprovedView({ company, onTabChange }) {
   const quickActions = [
     { icon: isClub ? Star : BriefcaseBusiness, label: postLabel, desc: isClub ? 'Tuyển event staff, marketer' : 'Mô tả công việc & yêu cầu', color: accent, tab: 'create-job', hide: !canPost },
     { icon: FileText, label: 'Quản lý tin đăng', desc: 'Theo dõi & chỉnh sửa tin', color: 'var(--p-ink)', tab: 'manage-jobs' },
-    { icon: Search, label: 'Tìm kiếm Talent', desc: 'Lọc theo proof, kỹ năng', color: '#16a34a', tab: 'find-talent' },
     { icon: MessageSquareText, label: 'Quản lý ứng viên', desc: 'Shortlist & theo dõi', color: '#7c3aed', tab: 'candidates' },
   ].filter((a) => !a.hide);
 
@@ -1815,9 +1811,6 @@ function ApprovedView({ company, onTabChange }) {
             <button className="button primary-button" type="button" onClick={() => onTabChange('create-job')}
               style={{ background: 'var(--p-navy)', borderColor: 'transparent' }}>
               <Plus size={17} /> {postLabel}
-            </button>
-            <button className="button secondary-button" type="button" onClick={() => onTabChange('find-talent')}>
-              <Search size={17} /> Tìm Talent
             </button>
           </div>
         ) : null}
@@ -3643,16 +3636,6 @@ export function BusinessPage() {
           : <JobPostForm onSuccess={() => handleTabChange('manage-jobs')} onCancel={() => handleTabChange('manage-jobs')} />;
       case 'manage-jobs':
         return <ManageJobsView onTabChange={handleTabChange} company={company} />;
-      case 'find-talent':
-        return (
-          <TabPlaceholderView
-            icon={Search}
-            title="Tìm kiếm Talent — đang phát triển"
-            desc={'Tính năng này chưa có. Dự kiến cho phép lọc ứng viên theo trường, kỹ năng, '
-              + 'minh chứng đã duyệt và điểm uy tín.\n\n'
-              + 'Hiện tại bạn xem được hồ sơ ứng viên trong mục Quản lý ứng viên, sau khi họ nộp đơn.'}
-          />
-        );
       case 'candidates':
         return <CandidatesView />;
       case 'members':

@@ -1476,7 +1476,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     return () => { isMounted = false; };
   }, [activeView, refreshKey]);
 
-  // Load wallet on mount
+  // Load wallet on mount and when navigating
   useEffect(() => {
     let isMounted = true;
     setWalletLoading(true);
@@ -1485,7 +1485,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       .catch(err => { if (isMounted) noteLoadError('vi', err); })
       .finally(() => { if (isMounted) setWalletLoading(false); });
     return () => { isMounted = false; };
-  }, [refreshKey]);
+  }, [activeView, refreshKey]);
 
   /*
    * ── Quay lại từ PayOS ──
@@ -2010,9 +2010,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   }
 
   async function handleExportPortfolio() {
-    const fee = wallet?.portfolioExportFeeNp || 1000;
-    if ((wallet?.npBalance ?? 0) < fee) {
-      const errMsg = `Số dư ví hiện tại (${(wallet?.npBalance ?? 0).toLocaleString()} Điểm) không đủ thanh toán phí xuất website (${fee.toLocaleString()} Điểm). Vui lòng nạp thêm Điểm.`;
+    const isFirstExport = !portfolio?.isExported && (portfolio?.exportCount ?? 0) === 0;
+    const fee = isFirstExport ? 0 : (wallet?.portfolioExportFeeNp || 1000);
+    if (fee > 0 && (wallet?.npBalance ?? 0) < fee) {
+      const errMsg = `Số dư ví hiện tại (${(wallet?.npBalance ?? 0).toLocaleString()} Điểm) không đủ thanh toán phí cập nhật website (${fee.toLocaleString()} Điểm). Vui lòng nạp thêm Điểm.`;
       setExportError(errMsg);
       showToast('error', errMsg);
       return;
@@ -2031,6 +2032,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
           publicSlug: res.publicSlug,
           isPublic: true,
           isExported: true,
+          exportCount: (prev.exportCount || 0) + 1,
           hasUnpublishedChanges: false
         } : prev);
       }
@@ -2041,9 +2043,11 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       try {
         await navigator.clipboard.writeText(fullUrl);
         setCopiedExportUrl(true);
-        showToast('success', res?.isUpdate
-          ? 'Cập nhật website thành công và đã tự động sao chép link!'
-          : 'Xuất bản website thành công và đã tự động sao chép link!');
+        showToast('success', res?.isFirstExport
+          ? 'Chúc mừng! Bạn đã xuất bản website lần đầu hoàn toàn miễn phí (đã tự động sao chép link)!'
+          : (res?.isUpdate
+            ? 'Cập nhật website thành công và đã tự động sao chép link!'
+            : 'Xuất bản website thành công và đã tự động sao chép link!'));
       } catch {
         showToast('success', res?.isUpdate
           ? 'Cập nhật website portfolio thành công!'
@@ -2506,7 +2510,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         type="button"
                         className="np-pp-btn"
                         onClick={() => { setExportError(''); setExportResult(null); setShowExportModal(true); }}
-                        title={portfolio?.isExported ? "Cập nhật các thay đổi mới nhất từ bản nháp lên website công khai (1.000 Điểm)" : "Xuất bản Portfolio thành website công khai chính thức (1.000 Điểm)"}
+                        title={portfolio?.isExported ? "Cập nhật các thay đổi mới nhất từ bản nháp lên website công khai (1.000 Điểm)" : "Xuất bản Portfolio thành website công khai chính thức (Miễn phí lần đầu)"}
                         style={{ border: '1px solid rgba(16, 185, 129, 0.45)', color: '#10b981' }}
                       >
                         {portfolio?.isExported ? (
@@ -2515,7 +2519,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                           </>
                         ) : (
                           <>
-                            <Globe size={15} /> Xuất website (1.000 Điểm)
+                            <Globe size={15} /> Xuất website (Miễn phí)
                           </>
                         )}
                       </button>
@@ -3430,9 +3434,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 <div className="appcard-reject">Lý do từ chối: {app.reject_reason || app.rejectionReason}</div>
                               )}
                               {app.rating_score != null && (
-                                <div className="appcard-rating">
+                                <div className="appcard-rating" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                   <span className="appcard-stars">{[1, 2, 3, 4, 5].map(n => <Star key={n} size={15} fill={n <= app.rating_score ? '#f59e0b' : 'none'} color={n <= app.rating_score ? '#f59e0b' : 'var(--c-line-strong)'} />)}</span>
                                   {app.rating_comment && <span className="appcard-ratenote">"{app.rating_comment}"</span>}
+                                  {app.rating_score === 5 && (
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '6px', background: 'rgba(22, 163, 74, 0.1)', color: '#16a34a', fontSize: '0.76rem', fontWeight: 700 }}>
+                                      +2.000 NP
+                                    </span>
+                                  )}
                                 </div>
                               )}
                               <div className="appcard-actions">
@@ -3500,9 +3509,14 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                 <div className="appcard-reject">Lý do từ chối: {qa.rejectReason}</div>
                               )}
                               {qa.ratingScore != null && (
-                                <div className="appcard-rating">
+                                <div className="appcard-rating" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                   <span className="appcard-stars">{[1, 2, 3, 4, 5].map(n => <Star key={n} size={15} fill={n <= qa.ratingScore ? '#f59e0b' : 'none'} color={n <= qa.ratingScore ? '#f59e0b' : 'var(--c-line-strong)'} />)}</span>
                                   {qa.ratingComment && <span className="appcard-ratenote">"{qa.ratingComment}"</span>}
+                                  {qa.ratingScore === 5 && (
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '6px', background: 'rgba(22, 163, 74, 0.1)', color: '#16a34a', fontSize: '0.76rem', fontWeight: 700 }}>
+                                      +2.000 NP
+                                    </span>
+                                  )}
                                 </div>
                               )}
                               <div className="appcard-actions">
@@ -4790,14 +4804,22 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <div style={{ background: 'var(--c-surface-soft)', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px', border: '1px solid var(--c-line)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.86rem' }}>
                       <span style={{ color: 'var(--c-muted)' }}>Phí {portfolio?.isExported ? 'cập nhật snapshot:' : 'xuất bản:'}</span>
-                      <strong style={{ color: 'var(--c-ink)' }}>1.000 Điểm / lần</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.86rem' }}>
-                      <span style={{ color: 'var(--c-muted)' }}>Số dư ví hiện tại:</span>
-                      <strong style={{ color: (wallet?.npBalance ?? 0) >= 1000 ? '#10b981' : '#ef4444' }}>
-                        {(wallet?.npBalance ?? 0).toLocaleString('vi-VN')} Điểm
+                      <strong style={{ color: portfolio?.isExported ? 'var(--c-ink)' : '#10b981' }}>
+                        {portfolio?.isExported ? '1.000 Điểm / lần' : 'Miễn phí (0 Điểm)'}
                       </strong>
                     </div>
+                    {portfolio?.isExported ? (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.86rem' }}>
+                        <span style={{ color: 'var(--c-muted)' }}>Số dư ví hiện tại:</span>
+                        <strong style={{ color: (wallet?.npBalance ?? 0) >= 1000 ? '#10b981' : '#ef4444' }}>
+                          {(wallet?.npBalance ?? 0).toLocaleString('vi-VN')} Điểm
+                        </strong>
+                      </div>
+                    ) : (
+                      <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: 'var(--c-muted)' }}>
+                        🎁 Ưu đãi: Lần xuất website đầu tiên hoàn toàn miễn phí. Từ lần thứ 2 trở đi sẽ tính 1.000 Điểm / lần cập nhật snapshot.
+                      </p>
+                    )}
                   </div>
                   {exportError && (
                     <div className="alert-banner error" style={{ marginBottom: '14px', fontSize: '0.84rem' }}>
@@ -4806,7 +4828,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    {(wallet?.npBalance ?? 0) < 1000 ? (
+                    {portfolio?.isExported && (wallet?.npBalance ?? 0) < 1000 ? (
                       <button
                         type="button"
                         className="button primary-button"
@@ -4823,7 +4845,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         disabled={exportLoading}
                         onClick={handleExportPortfolio}
                       >
-                        {exportLoading ? 'Đang thực hiện...' : (portfolio?.isExported ? 'Xác nhận cập nhật website (1.000 Điểm)' : 'Xác nhận xuất website (1.000 Điểm)')}
+                        {exportLoading ? 'Đang thực hiện...' : (portfolio?.isExported ? 'Xác nhận cập nhật website (1.000 Điểm)' : 'Xác nhận xuất website (Miễn phí)')}
                       </button>
                     )}
                     <button

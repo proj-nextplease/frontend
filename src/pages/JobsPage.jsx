@@ -532,9 +532,10 @@ function SharePopover({ job, onClose }) {
 function JobDetail({ job, onClose, saved, onToggleSave, closing, onApply, isApplied }) {
   const [showShare, setShowShare] = useState(false);
   const descParas = job.description ? job.description.split(/\n+/).map((s) => s.trim()).filter(Boolean) : [];
+  const skills = Array.isArray(job.skills) ? job.skills : [];
   
   const requirements = [
-    job.skills.length ? `Có kiến thức hoặc định hướng với ${job.skills.join(', ')}.` : 'Tinh thần cầu tiến, nhiệt huyết và sẵn sàng học hỏi.',
+    skills.length ? `Có kiến thức hoặc định hướng với ${skills.join(', ')}.` : 'Tinh thần cầu tiến, nhiệt huyết và sẵn sàng học hỏi.',
     'Kỹ năng giao tiếp và làm việc nhóm tốt.',
     'Chủ động, có trách nhiệm và cam kết đồng hành cùng chương trình.',
   ];
@@ -547,6 +548,9 @@ function JobDetail({ job, onClose, saved, onToggleSave, closing, onApply, isAppl
   ] : [
     `Mức lương / thù lao: ${job.salary}.`,
     `Hình thức làm việc: ${job.workForm} · ${job.type}.`,
+    job.salaryKnown
+      ? 'Phí xác nhận nhận việc: 19.000 Điểm (Ứng tuyển miễn phí, chỉ trừ điểm khi trúng tuyển và bạn đồng ý nhận offer).'
+      : 'Ứng tuyển & tham gia không mất phí.',
     'Tích luỹ EXP, RS và NP trên Fonlio sau khi hoàn thành nhiệm vụ.',
     'Cơ hội phát triển nghề nghiệp và làm việc cùng đội ngũ chuyên nghiệp.',
   ];
@@ -638,9 +642,9 @@ function JobDetail({ job, onClose, saved, onToggleSave, closing, onApply, isAppl
           </div>
         )}
 
-        {job.skills.length > 0 && (
+        {skills.length > 0 && (
           <div className="jb-skillrow">
-            {job.skills.map((s) => <span key={s} className="jb-skill">{s}</span>)}
+            {skills.map((s) => <span key={s} className="jb-skill">{s}</span>)}
           </div>
         )}
 
@@ -804,7 +808,8 @@ export function JobsPage() {
     if (activeOrgTab === 'CLUB' && !job.isClub) return false;
     if (activeOrgTab === 'EXTERNAL' && job.kind !== 'EXTERNAL') return false;
 
-    const haystack = `${job.title} ${job.company} ${job.location} ${job.type} ${job.skills.join(' ')}`.toLowerCase();
+    const skillText = Array.isArray(job.skills) ? job.skills.join(' ') : '';
+    const haystack = `${job.title || ''} ${job.company || ''} ${job.location || ''} ${job.type || ''} ${skillText}`.toLowerCase();
     if (query && !haystack.includes(query.toLowerCase())) return false;
     return Object.entries(filters).every(([key, vals]) => !vals || vals.length === 0 || vals.includes(job[key]));
   }), [query, filters, jobs, activeOrgTab]);
@@ -926,9 +931,11 @@ export function JobsPage() {
   function openJob(id) {
     /* Tin ngoài không có trang chi tiết trong hệ thống — mở thẳng trang gốc.
        Nếu vẫn mở panel thì panel sẽ trống vì không gọi được /jobs/{id}. */
-    const job = jobs.find((j) => j.id === id);
+    const job = jobs.find((j) => String(j.id) === String(id));
     if (job?.kind === 'EXTERNAL') {
-      window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
+      if (job.applyUrl) {
+        window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
+      }
       return;
     }
     setClosing(false); setSelectedId(id); setPreviewParam(id, page);
@@ -951,12 +958,18 @@ export function JobsPage() {
   }
 
   function handleApply(jobId) {
+    const item = jobs.find((j) => String(j.id) === String(jobId));
+    if (item?.kind === 'EXTERNAL') {
+      if (item.applyUrl) {
+        window.open(item.applyUrl, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
     if (!getStoredToken()) {
       openLoginModal('candidate');
       return;
     }
     // Quest có trang chi tiết riêng (/quests/:id); gửi nhầm sang /jobs/:id là ra trang trống.
-    const item = jobs.find((j) => j.id === jobId);
     navigate(item?.kind === 'QUEST' ? `/quests/${jobId}` : `/jobs/${jobId}`);
   }
 

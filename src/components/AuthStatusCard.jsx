@@ -1,6 +1,6 @@
 import { AlertCircle, CheckCircle2, Clock, Loader2, X } from 'lucide-react';
 
-const INK = 'var(--lp-ink)';
+const INK = 'var(--text-primary, #0f172a)';
 const BLUE = '#2563eb';
 
 const CONFIG = {
