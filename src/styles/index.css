@@ -19143,3 +19143,35 @@ html:has(.vp-page), body:has(.vp-page), .app-shell:has(.vp-page) { background: #
   border-color: rgba(168, 85, 247, 0.35);
 }
 
+
+/* ── /delete-account: khối thao tác nằm đầu văn bản pháp lý ──────────────
+   Dùng lại đúng mặt nền và màu chữ của .np-legal-doc; chỉ thêm viền đỏ nhạt
+   để báo đây là vùng nguy hiểm, không tô cả khối đỏ cho khỏi la hét. */
+.np-delacc {
+  display: grid; gap: 12px;
+  margin-bottom: clamp(26px, 3vw, 36px);
+  padding: clamp(18px, 2.4vw, 26px);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 16px;
+  background: rgba(248, 113, 113, 0.05);
+}
+.np-delacc-title { margin: 0; font-family: inherit; font-size: 1.12rem; font-weight: 600; letter-spacing: -0.01em; color: #fff; overflow-wrap: anywhere; }
+.np-delacc-text { margin: 0; max-width: 68ch; font-size: 0.97rem; line-height: 1.7; color: rgba(233, 247, 242, 0.9); }
+.np-delacc-text a { color: var(--np-accent, #10b981); }
+.np-delacc-label { font-size: 0.82rem; color: rgba(233, 247, 242, 0.6); }
+.np-delacc-input {
+  width: 100%; max-width: 420px; box-sizing: border-box;
+  padding: 11px 14px; border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14); background: #0b0f0e; color: #fff;
+  font: inherit; font-size: 0.97rem;
+}
+.np-delacc-input:focus { outline: none; border-color: #f87171; }
+.np-delacc-error { margin: 0; font-size: 0.9rem; color: #f87171; }
+.np-delacc-btn {
+  justify-self: start; padding: 11px 18px; border-radius: 10px;
+  font: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+}
+.np-delacc-btn--danger { border: 0; background: #ef4444; color: #fff; }
+.np-delacc-btn--danger:disabled { opacity: 0.4; cursor: not-allowed; }
+.np-delacc-btn--ghost { border: 1px solid rgba(255, 255, 255, 0.2); background: transparent; color: #fff; }
+.np-delacc-btn--ghost:hover { border-color: var(--np-accent, #10b981); }

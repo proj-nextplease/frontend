@@ -85,3 +85,15 @@ export async function deactivateAccount(password) {
   }
   return response.data.message;
 }
+
+/**
+ * Xoá hẳn tài khoản của chính mình. Xác nhận bằng cách gõ lại email đăng nhập
+ * (người dùng Google/GitHub/Facebook không có mật khẩu để nhập).
+ */
+export async function deleteMyAccount(confirmEmail) {
+  const response = await httpClient.post('/account/delete', { confirmEmail });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể xoá tài khoản.');
+  }
+  return response.data.message;
+}

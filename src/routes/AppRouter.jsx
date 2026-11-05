@@ -10,6 +10,7 @@ import { HomePage } from '../pages/HomePage.jsx';
 import { NotFoundPage } from '../pages/NotFoundPage.jsx';
 import { TermsPage } from '../pages/TermsPage.jsx';
 import { PrivacyPage } from '../pages/PrivacyPage.jsx';
+import { DeleteAccountPage } from '../pages/DeleteAccountPage.jsx';
 import { supabase } from '../services/supabaseClient.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
 import { BusinessLoginPage } from '../pages/BusinessLoginPage.jsx';
@@ -472,6 +473,7 @@ export function AppRouter() {
         <Route path="/businesses" element={<BusinessLandingPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/delete-account" element={<DeleteAccountPage />} />
         <Route path="/businesses/dashboard" element={<ProtectedBusinessRoute />} />
         <Route path="/businesses/dashboard/:tabSlug" element={<ProtectedBusinessRoute />} />
         <Route path="/business/dashboard" element={<Navigate to="/businesses/dashboard" replace />} />

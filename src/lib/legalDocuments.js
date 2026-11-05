@@ -91,7 +91,7 @@ const TERMS_SECTIONS = [
     id: 'lien-he',
     h: 'Liên hệ',
     p: [
-      'Mọi thắc mắc về Điều khoản, vui lòng liên hệ: lienhe@fonlio.vn.',
+      'Mọi thắc mắc về Điều khoản, vui lòng liên hệ: fonlioofficial@gmail.com.',
     ],
   },
 ];
@@ -177,7 +177,7 @@ const PRIVACY_SECTIONS = [
     id: 'lien-he',
     h: 'Liên hệ',
     p: [
-      'Câu hỏi về quyền riêng tư, vui lòng liên hệ: lienhe@fonlio.vn.',
+      'Câu hỏi về quyền riêng tư, vui lòng liên hệ: fonlioofficial@gmail.com.',
     ],
   },
 ];

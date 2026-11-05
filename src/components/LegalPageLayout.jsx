@@ -26,7 +26,7 @@ import { HeroMesh } from './HeroMesh.jsx';
 
 const MESH_MASK = 'linear-gradient(to bottom, #000 0px, #000 180px, transparent 520px)';
 
-export function LegalPageLayout({ eyebrow, title, updated, intro, sections }) {
+export function LegalPageLayout({ eyebrow, title, updated, intro, sections, lead = null }) {
   const location = useLocation();
   const [activeId, setActiveId] = useState(sections[0]?.id);
 
@@ -87,6 +87,7 @@ export function LegalPageLayout({ eyebrow, title, updated, intro, sections }) {
         </nav>
 
         <article className="np-legal-doc">
+          {lead}
           {sections.map((s, i) => (
             <section className="np-legal-section" id={s.id} key={s.id}>
               <h2>
