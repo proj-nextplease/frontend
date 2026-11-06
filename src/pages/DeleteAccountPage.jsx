@@ -71,14 +71,16 @@ const SECTIONS = [
 
 function DeletePanel() {
   const { openLoginModal } = useAuthModal();
-  const [session, setSession] = useState(undefined);
+  // undefined = đang kiểm tra phiên đăng nhập; null = chưa đăng nhập.
+  // Không có supabase thì biết ngay là chưa đăng nhập, khỏi chờ effect.
+  const [session, setSession] = useState(supabase ? undefined : null);
   const [confirmEmail, setConfirmEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    if (!supabase) { setSession(null); return undefined; }
+    if (!supabase) return undefined;
     supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s ?? null));
     return () => subscription.unsubscribe();
