@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { scrollToSection } from './scrollToSection.js';
 import {
   ExternalLink,
   Mail,
@@ -230,6 +231,13 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
   const [preview, setPreview] = useState(null);
   const [activeSection] = useState('hero');
 
+  /* Giữ href để còn mở được tab mới / chép link, nhưng tự cuộn thay vì để
+     trình duyệt đổi hash: trong khung xem trước ở trang sửa, đổi hash là
+     điều hướng cả iframe đi chỗ khác (xem scrollToSection). */
+  const goTo = (e, id) => {
+    if (scrollToSection(e.currentTarget, id)) e.preventDefault();
+  };
+
   // Candidate Data (Bám sát 100% dữ liệu thật của ứng viên)
   const name = profile.name?.trim() || 'Ứng viên fonlio';
   const roleTitle = profile.headline?.trim() || profile.title?.trim() || '';
@@ -314,7 +322,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
           min-height: 100vh;
           background: #FFFFFF;
           color: #141414;
-          font-family: 'DM Sans', system-ui, sans-serif;
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
           overflow-x: hidden;
         }
 
@@ -358,7 +366,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
         }
 
         .pa-nav-btn {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 700;
           font-size: clamp(13px, 1.2vw, 18px);
           line-height: 1;
@@ -390,7 +398,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
           background: #141414;
           border-radius: 50px;
           color: #DFCCFF;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 700;
           font-size: clamp(14px, 1.2vw, 18px);
           text-transform: uppercase;
@@ -671,7 +679,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
         }
 
         .pa-about-bio-text {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 400;
           font-size: clamp(16px, 1.6vw, 24px);
           line-height: 1.45;
@@ -747,7 +755,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
         }
 
         .pa-matrix-meta {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 400;
           font-size: 16px;
           line-height: 22px;
@@ -813,7 +821,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
         }
 
         .pa-skill-body {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 400;
           font-size: 16px;
           line-height: 22px;
@@ -976,7 +984,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
         .pa-mockup-dot.green { background: #27C93F; }
 
         .pa-mockup-url {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 11px;
           color: #3F016B;
           opacity: 0.75;
@@ -1002,7 +1010,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
           border-radius: 999px;
           background: #3F016B;
           color: #FFFFFF;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 11px;
           font-weight: 700;
           letter-spacing: 1px;
@@ -1020,7 +1028,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
         }
 
         .pa-mockup-org {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 14px;
           color: #4B127D;
           margin: 0;
@@ -1042,7 +1050,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
           border-radius: 8px;
           background: rgba(255, 255, 255, 0.75);
           border: 1px solid rgba(63, 1, 107, 0.2);
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 12px;
           font-weight: 600;
           color: #3F016B;
@@ -1063,7 +1071,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
 
         .pa-mockup-platform-tag {
           margin-left: auto;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 11px;
           font-weight: 700;
           color: #7B3AEC;
@@ -1097,7 +1105,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
           border-radius: 999px;
           background: #7B3AEC;
           color: #FFFFFF !important;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 13px;
           font-weight: 700;
           text-decoration: none;
@@ -1115,7 +1123,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 11px;
           color: #4B127D;
           opacity: 0.8;
@@ -1168,7 +1176,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
         .pa-project-block.even .pa-stat-glass-title { color: #FF00D0; }
 
         .pa-stat-glass-sub {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-style: normal;
           font-weight: 400;
           font-size: 16px;
@@ -1211,7 +1219,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
         }
 
         .pa-thanks-sub {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: clamp(16px, 1.6vw, 22px);
           color: #DFCCFF;
           margin: 0;
@@ -1234,7 +1242,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
           background: #141414;
           border-radius: 50px;
           color: #DFCCFF;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 700;
           font-size: 16px;
           text-decoration: none;
@@ -1295,19 +1303,19 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
         {/* Floating Navbar */}
         <header className="pa-navbar-row">
           <div className="pa-navbar-pill-box">
-            <a href="#hero" className={`pa-nav-btn ${activeSection === 'hero' ? 'active' : ''}`}>
+            <a href="#hero" onClick={(e) => goTo(e, 'hero')} className={`pa-nav-btn ${activeSection === 'hero' ? 'active' : ''}`}>
               TRANG CHỦ
             </a>
-            <a href="#portfolio" className="pa-nav-btn">
+            <a href="#portfolio" onClick={(e) => goTo(e, 'portfolio')} className="pa-nav-btn">
               Portfolio
             </a>
-            <a href="#skills" className="pa-nav-btn">
+            <a href="#skills" onClick={(e) => goTo(e, 'skills')} className="pa-nav-btn">
               DỊCH VỤ
             </a>
-            <a href="#about" className="pa-nav-btn">
+            <a href="#about" onClick={(e) => goTo(e, 'about')} className="pa-nav-btn">
               VỀ TÔI
             </a>
-            <a href="#contact" className="pa-nav-btn">
+            <a href="#contact" onClick={(e) => goTo(e, 'contact')} className="pa-nav-btn">
               LIÊN HỆ
             </a>
           </div>
@@ -1324,7 +1332,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
         </div>
 
         {/* Bottom CTA Capsule (Frame 23: #A26DFF) */}
-        <a href="#portfolio" className="pa-hero-cta-capsule">
+        <a href="#portfolio" onClick={(e) => goTo(e, 'portfolio')} className="pa-hero-cta-capsule">
           <span className="pa-hero-cta-text">Hãy cùng tìm hiểu portfolio của mình!</span>
         </a>
 
@@ -1376,7 +1384,7 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
               {bio || 'Ứng viên năng động luôn sẵn sàng cống hiến và phát triển kỹ năng thực chiến trong các dự án.'}
             </p>
 
-            <a href="#portfolio" className="pa-about-action-btn">
+            <a href="#portfolio" onClick={(e) => goTo(e, 'portfolio')} className="pa-about-action-btn">
               Xem các dự án của mình
             </a>
           </div>

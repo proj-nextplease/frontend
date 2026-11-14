@@ -62,7 +62,7 @@
 
   background: var(--fomb-ink);
   color: var(--fomb-text);
-  font-family: 'DM Sans', 'Be Vietnam Pro', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', system-ui, sans-serif;
 
   /* Container chung của site kẹp nội dung ở 1180px — đúng cho một trang để
      đọc, sai cho một trình soạn thảo hai khoang: ở màn 1800px nó bỏ không
@@ -86,7 +86,7 @@
 }
 
 .portfolio-page.fomlio-builder .portfolio-hero h1 {
-  font-family: 'Poppins', system-ui, sans-serif;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
   font-variation-settings: normal;
   font-weight: 600;
   letter-spacing: -0.015em;
@@ -406,7 +406,7 @@
    không đọc được. Mọi chỗ còn lại có nền lime đều theo cùng quy tắc này. */
 .portfolio-page.fomlio-builder .form-section-heading h2,
 .portfolio-page.fomlio-builder .pf-mascot-picker-label {
-  font-family: 'Poppins', system-ui, sans-serif;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
   font-weight: 600;
   color: var(--fomb-ink);
 }
