@@ -1000,6 +1000,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   // Wallet states
   const [wallet, setWallet] = useState(null);
+  /* Đại sứ thương hiệu dùng miễn phí: backend trả phí = 0 trong /wallet và
+     không trừ NP. Các nhãn giá bên dưới phải nói đúng điều đó, không thì
+     người dùng nhìn "19.000 Điểm" mà tưởng mình bị trừ. */
+  const isAmbassador = !!wallet?.isAmbassador;
+  const acceptFeeText = isAmbassador ? 'Miễn phí – Đại sứ' : '19.000 Điểm';
+  const exportFeeText = isAmbassador ? 'Miễn phí – Đại sứ' : '1.000 Điểm';
   const [walletLoading, setWalletLoading] = useState(true);
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState('39000');
@@ -1940,7 +1946,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   // Candidate Point Model Handlers
   async function handleAcceptOffer(app) {
-    const fee = (app.compensation && Number(app.compensation) > 0) ? (wallet?.paidJobAcceptanceFeeNp || 19000) : 0;
+    const fee = (app.compensation && Number(app.compensation) > 0) ? (wallet?.paidJobAcceptanceFeeNp ?? 19000) : 0;
     if (fee > 0 && (wallet?.npBalance ?? 0) < fee) {
       const errMsg = `Số dư ví hiện tại (${(wallet?.npBalance ?? 0).toLocaleString()} Điểm) không đủ để thanh toán phí nhận việc (${fee.toLocaleString()} Điểm). Vui lòng nạp thêm Điểm.`;
       setOfferActionError(errMsg);
@@ -1957,7 +1963,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
       if (res?.balanceAfter != null) {
         setWallet(prev => prev ? { ...prev, npBalance: res.balanceAfter } : prev);
       }
-      const successMsg = fee > 0 ? `Chúc mừng bạn! Bạn đã xác nhận nhận việc thành công (Phí trừ: ${fee.toLocaleString()} Điểm).` : 'Chúc mừng bạn! Bạn đã xác nhận nhận việc thành công.';
+      const successMsg = fee > 0 ? `Chúc mừng bạn! Bạn đã xác nhận nhận việc thành công (Phí trừ: ${fee.toLocaleString()} Điểm).` : (isAmbassador && app.compensation && Number(app.compensation) > 0 ? 'Chúc mừng bạn! Bạn đã xác nhận nhận việc thành công (Miễn phí – Đại sứ thương hiệu).' : 'Chúc mừng bạn! Bạn đã xác nhận nhận việc thành công.');
       setApplySuccessMsg(successMsg);
       showToast('success', successMsg);
       getWallet().then(w => setWallet(w)).catch(() => {});
@@ -2011,7 +2017,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   async function handleExportPortfolio() {
     const isFirstExport = !portfolio?.isExported && (portfolio?.exportCount ?? 0) === 0;
-    const fee = isFirstExport ? 0 : (wallet?.portfolioExportFeeNp || 1000);
+    const fee = isFirstExport ? 0 : (wallet?.portfolioExportFeeNp ?? 1000);
     if (fee > 0 && (wallet?.npBalance ?? 0) < fee) {
       const errMsg = `Số dư ví hiện tại (${(wallet?.npBalance ?? 0).toLocaleString()} Điểm) không đủ thanh toán phí cập nhật website (${fee.toLocaleString()} Điểm). Vui lòng nạp thêm Điểm.`;
       setExportError(errMsg);
@@ -2384,7 +2390,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         <p style={{ margin: 0, fontSize: '0.84rem', color: 'rgba(233, 247, 242, 0.75)', lineHeight: 1.5 }}>
                           {app.compensation && Number(app.compensation) > 0 ? (
                             <>
-                              Thù lao: <strong style={{ color: '#34d399' }}>{Number(app.compensation).toLocaleString('vi-VN')} đ</strong> · Phí xác nhận nhận việc: <strong style={{ color: '#c084fc' }}>19.000 Điểm</strong> (chỉ trừ khi đồng ý thành công).
+                              Thù lao: <strong style={{ color: '#34d399' }}>{Number(app.compensation).toLocaleString('vi-VN')} đ</strong> · Phí xác nhận nhận việc: <strong style={{ color: '#c084fc' }}>{acceptFeeText}</strong>{isAmbassador ? '.' : ' (chỉ trừ khi đồng ý thành công).'}
                             </>
                           ) : (
                             <>
@@ -2405,7 +2411,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                           <Check size={15} />
                           {offerActionLoadingId === app.id
                             ? 'Đang xử lý...'
-                            : (app.compensation && Number(app.compensation) > 0 ? 'Đồng ý nhận việc (19.000 Điểm)' : 'Đồng ý nhận việc (Miễn phí)')}
+                            : (app.compensation && Number(app.compensation) > 0 ? `Đồng ý nhận việc (${acceptFeeText})` : 'Đồng ý nhận việc (Miễn phí)')}
                         </button>
                         <button
                           type="button"
@@ -2510,12 +2516,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         type="button"
                         className="np-pp-btn"
                         onClick={() => { setExportError(''); setExportResult(null); setShowExportModal(true); }}
-                        title={portfolio?.isExported ? "Cập nhật các thay đổi mới nhất từ bản nháp lên website công khai (1.000 Điểm)" : "Xuất bản Portfolio thành website công khai chính thức (Miễn phí lần đầu)"}
+                        title={portfolio?.isExported ? `Cập nhật các thay đổi mới nhất từ bản nháp lên website công khai (${exportFeeText})` : "Xuất bản Portfolio thành website công khai chính thức (Miễn phí lần đầu)"}
                         style={{ border: '1px solid rgba(16, 185, 129, 0.45)', color: '#10b981' }}
                       >
                         {portfolio?.isExported ? (
                           <>
-                            <RefreshCw size={15} /> Cập nhật website (1.000 Điểm)
+                            <RefreshCw size={15} /> Cập nhật website ({exportFeeText})
                           </>
                         ) : (
                           <>
@@ -3291,7 +3297,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                           <p style={{ margin: 0, fontSize: '0.82rem', color: 'rgba(233, 247, 242, 0.75)' }}>
                             {app.compensation && Number(app.compensation) > 0 ? (
                               <>
-                                Thù lao: <strong style={{ color: '#34d399' }}>{Number(app.compensation).toLocaleString('vi-VN')} đ</strong> · Phí nhận việc: <strong style={{ color: '#c084fc' }}>19.000 Điểm</strong> (chỉ trừ khi đồng ý thành công).
+                                Thù lao: <strong style={{ color: '#34d399' }}>{Number(app.compensation).toLocaleString('vi-VN')} đ</strong> · Phí nhận việc: <strong style={{ color: '#c084fc' }}>{acceptFeeText}</strong>{isAmbassador ? '.' : ' (chỉ trừ khi đồng ý thành công).'}
                               </>
                             ) : (
                               <>
@@ -3311,7 +3317,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                             <Check size={14} />
                             {offerActionLoadingId === app.id
                               ? 'Đang xử lý...'
-                              : (app.compensation && Number(app.compensation) > 0 ? 'Đồng ý nhận việc (19.000 Điểm)' : 'Đồng ý nhận việc (Miễn phí)')}
+                              : (app.compensation && Number(app.compensation) > 0 ? `Đồng ý nhận việc (${acceptFeeText})` : 'Đồng ý nhận việc (Miễn phí)')}
                           </button>
                           <button
                             type="button"
@@ -3411,7 +3417,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                                       <Check size={14} />
                                       {offerActionLoadingId === app.id
                                         ? 'Đang xử lý...'
-                                        : (app.compensation && Number(app.compensation) > 0 ? 'Đồng ý nhận việc (19.000 Điểm)' : 'Đồng ý nhận việc (Miễn phí)')}
+                                        : (app.compensation && Number(app.compensation) > 0 ? `Đồng ý nhận việc (${acceptFeeText})` : 'Đồng ý nhận việc (Miễn phí)')}
                                     </button>
                                     <button
                                       type="button"
@@ -3566,6 +3572,12 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     <span className="fstore-wallet-unit">Điểm</span>
                   </div>
                   <div className="fstore-wallet-tags">
+                    {isAmbassador && (
+                      <span className="fstore-wtag" style={{ color: '#16a34a', borderColor: 'rgba(22,163,74,0.35)' }}>
+                        <ShieldCheck size={13} />
+                        Đại sứ thương hiệu · Miễn phí mọi khoản phí
+                      </span>
+                    )}
                     <span className="fstore-wtag">
                       <CheckCircle2 size={13} />
                       Tương đương {(wallet?.npBalance ?? 0).toLocaleString('vi-VN')} VNĐ
@@ -3685,7 +3697,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <div className="fstore-paid-card">
                   <div className="fstore-rc-top">
                     <span className="fstore-rc-tag">Khi bạn xuất bản</span>
-                    <span className="fstore-rc-price">1.000 Điểm</span>
+                    <span className="fstore-rc-price">{exportFeeText}</span>
                   </div>
                   <div className="fstore-rc-icon"><Globe size={19} /></div>
                   <h4>Xuất website portfolio</h4>
@@ -3708,7 +3720,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <div className="fstore-paid-card">
                   <div className="fstore-rc-top">
                     <span className="fstore-rc-tag">Khi bạn nhận việc</span>
-                    <span className="fstore-rc-price">19.000 Điểm</span>
+                    <span className="fstore-rc-price">{acceptFeeText}</span>
                   </div>
                   <div className="fstore-rc-icon"><Award size={19} /></div>
                   <h4>Phí nhận việc có thù lao</h4>
@@ -4805,13 +4817,13 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.86rem' }}>
                       <span style={{ color: 'var(--c-muted)' }}>Phí {portfolio?.isExported ? 'cập nhật snapshot:' : 'xuất bản:'}</span>
                       <strong style={{ color: portfolio?.isExported ? 'var(--c-ink)' : '#10b981' }}>
-                        {portfolio?.isExported ? '1.000 Điểm / lần' : 'Miễn phí (0 Điểm)'}
+                        {portfolio?.isExported ? (isAmbassador ? exportFeeText : '1.000 Điểm / lần') : 'Miễn phí (0 Điểm)'}
                       </strong>
                     </div>
                     {portfolio?.isExported ? (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.86rem' }}>
                         <span style={{ color: 'var(--c-muted)' }}>Số dư ví hiện tại:</span>
-                        <strong style={{ color: (wallet?.npBalance ?? 0) >= 1000 ? '#10b981' : '#ef4444' }}>
+                        <strong style={{ color: (isAmbassador || (wallet?.npBalance ?? 0) >= 1000) ? '#10b981' : '#ef4444' }}>
                           {(wallet?.npBalance ?? 0).toLocaleString('vi-VN')} Điểm
                         </strong>
                       </div>
@@ -4845,7 +4857,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                         disabled={exportLoading}
                         onClick={handleExportPortfolio}
                       >
-                        {exportLoading ? 'Đang thực hiện...' : (portfolio?.isExported ? 'Xác nhận cập nhật website (1.000 Điểm)' : 'Xác nhận xuất website (Miễn phí)')}
+                        {exportLoading ? 'Đang thực hiện...' : (portfolio?.isExported ? `Xác nhận cập nhật website (${exportFeeText})` : 'Xác nhận xuất website (Miễn phí)')}
                       </button>
                     )}
                     <button
@@ -4923,7 +4935,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     setShowExportModal(true);
                   }}
                 >
-                  <Globe size={14} /> {portfolio?.isExported ? 'Cập nhật website (1.000 Điểm)' : 'Xuất website (1.000 Điểm)'}
+                  <Globe size={14} /> {portfolio?.isExported ? `Cập nhật website (${exportFeeText})` : 'Xuất website (Miễn phí lần đầu)'}
                 </button>
                 <button
                   type="button"
