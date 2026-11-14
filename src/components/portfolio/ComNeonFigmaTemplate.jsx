@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
+import { scrollToSection } from './scrollToSection.js';
 import {
   ExternalLink,
   Mail,
@@ -266,16 +267,17 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
     };
   }, [experiences, skills, credentials, profile.reputationScore]);
 
+  // Gốc của trang, để tìm khối trong đúng document (xem scrollToSection).
+  const rootRef = useRef(null);
+
   const scrollTo = (id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+    if (scrollToSection(rootRef.current, id)) {
       setActiveSection(id);
     }
   };
 
   return (
-    <div className="cn-container">
+    <div className="cn-container" ref={rootRef}>
       {/* ── EMBEDDED DEDICATED STYLESHEET ─────────────────────────────────── */}
       <style>{`
         /* ── FONTS & TOKENS ── */
@@ -289,7 +291,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           --cn-white: #FFFFFF;
           --cn-black: #000000;
 
-          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
           background-color: #07041F;
           background-image: var(--cn-gradient);
           background-repeat: no-repeat;
@@ -384,7 +386,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           border: none;
           background: transparent;
           color: var(--cn-white);
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 700;
           font-size: 15px;
           line-height: 20px;
@@ -551,7 +553,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-hero-heading {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 600;
           font-size: clamp(30px, 3.2vw, 42px);
           line-height: 1.45;
@@ -560,7 +562,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-hero-subtext {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 400;
           font-size: clamp(16px, 1.6vw, 22px);
           line-height: 1.6;
@@ -660,7 +662,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           align-items: center;
           gap: 26px;
           padding-right: 26px;
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 500;
           font-size: 22px;
           line-height: 20px;
@@ -698,7 +700,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           border: 1px solid var(--cn-white);
           border-radius: 50px;
           padding: 10px 24px;
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 500;
           font-size: 24px;
           text-transform: uppercase;
@@ -706,7 +708,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-about-headline {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 600;
           font-size: clamp(28px, 3vw, 40px);
           line-height: 1.45;
@@ -715,7 +717,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-about-desc {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 400;
           font-size: clamp(16px, 1.5vw, 22px);
           line-height: 1.6;
@@ -771,7 +773,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-stat-number {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 700;
           font-size: clamp(48px, 5.5vw, 70px);
           line-height: 1;
@@ -802,7 +804,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-section-title-large {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 600;
           font-size: clamp(38px, 4.5vw, 64px);
           line-height: 1.25;
@@ -859,7 +861,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-skill-text {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 400;
           font-size: 15px;
           line-height: 1.6;
@@ -969,7 +971,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         .cn-mockup-dot.green { background: #27C93F; }
 
         .cn-mockup-url {
-          font-family: 'DM Sans', monospace, sans-serif;
+          font-family: 'Plus Jakarta Sans', monospace, sans-serif;
           font-size: 11px;
           color: rgba(255, 255, 255, 0.6);
           background: rgba(255, 255, 255, 0.08);
@@ -997,7 +999,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           background: rgba(203, 247, 72, 0.15);
           border: 1px solid var(--cn-lime);
           color: var(--cn-lime);
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-size: 12px;
           font-weight: 700;
           letter-spacing: 0.05em;
@@ -1014,7 +1016,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-mockup-org {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 14px;
           color: rgba(255, 255, 255, 0.75);
           margin: 0;
@@ -1035,7 +1037,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           border: 1px solid rgba(255, 255, 255, 0.15);
           color: rgba(255, 255, 255, 0.9);
           font-size: 12px;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
         .cn-mockup-chip.verified {
@@ -1061,7 +1063,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-gallery-tag {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 700;
           font-size: 14px;
           color: var(--cn-lime);
@@ -1095,7 +1097,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-showcase-num {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 600;
           font-size: clamp(56px, 7vw, 110px);
           line-height: 1;
@@ -1180,7 +1182,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-stat-subcard-val {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 500;
           font-size: 15px;
           line-height: 1.4;
@@ -1259,7 +1261,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         .cn-footer-tag-pill {
           background: var(--cn-lime);
           color: var(--cn-black);
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 700;
           font-size: 16px;
           text-transform: uppercase;
@@ -1270,7 +1272,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-footer-headline {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 700;
           font-size: clamp(30px, 3.6vw, 46px);
           line-height: 1.25;
@@ -1279,7 +1281,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-footer-subhead {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: clamp(15px, 1.3vw, 18px);
           color: rgba(255, 255, 255, 0.85);
           margin: 0 0 6px 0;
@@ -1335,7 +1337,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-footer-info-label {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 11px;
           font-weight: 700;
           color: rgba(255, 255, 255, 0.65);
@@ -1367,7 +1369,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           border: 1px solid rgba(255, 255, 255, 0.35);
           border-radius: 50px;
           padding: 8px 20px;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 700;
           font-size: 14px;
           text-decoration: none;
@@ -1412,7 +1414,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-footer-thanks-title {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 800;
           font-size: clamp(34px, 5.5vw, 76px);
           line-height: 1.1;
@@ -1431,7 +1433,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         .cn-footer-copyright {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 14px;
           color: rgba(255, 255, 255, 0.75);
           margin: 0;

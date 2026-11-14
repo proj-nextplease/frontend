@@ -133,3 +133,29 @@ export async function updateReviewNotes(itemType, itemId, notes) {
 }
 
 
+
+/* ── Đại sứ thương hiệu (ứng viên dùng fonlio miễn phí) ── */
+
+export async function getAmbassadors() {
+  const response = await httpClient.get('/admin/ambassadors');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải danh sách đại sứ.');
+  }
+  return response.data.data;
+}
+
+export async function grantAmbassador(email, note) {
+  const response = await httpClient.post('/admin/ambassadors', { email, note });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Cấp quyền đại sứ thất bại.');
+  }
+  return response.data.data;
+}
+
+export async function revokeAmbassador(userId, reason) {
+  const response = await httpClient.post(`/admin/ambassadors/${userId}/revoke`, { reason });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Gỡ quyền đại sứ thất bại.');
+  }
+  return response.data.data;
+}

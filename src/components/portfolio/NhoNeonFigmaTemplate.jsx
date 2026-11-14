@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
+import { scrollToSection } from './scrollToSection.js';
 import {
   ExternalLink,
   Mail,
@@ -52,7 +53,7 @@ function NeonStar({ size = 48, color = '#CBF748', rotate = 0, style = {} }) {
 
 /**
  * Double-layer Angled Role Ribbon (Figma 10-129 "Role" & "SIDE BAR")
- * Alternating neon green/cyan backgrounds with bold uppercase Poppins 900 ticker
+ * Alternating neon green/cyan backgrounds with bold uppercase Be Vietnam Pro 900 ticker
  */
 function NhoNeonRibbon({
   bgBottom = '#63FF38',
@@ -233,16 +234,17 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
     );
   }, [profile.experiences]);
 
+  // Gốc của trang, để tìm khối trong đúng document (xem scrollToSection).
+  const rootRef = useRef(null);
+
   const scrollTo = (id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+    if (scrollToSection(rootRef.current, id)) {
       setActiveSection(id);
     }
   };
 
   return (
-    <div className="nn-container">
+    <div className="nn-container" ref={rootRef}>
       {/* ── EMBEDDED DEDICATED STYLESHEET ─────────────────────────────────── */}
       <style>{`
         /* ── FONTS & TOKENS ── */
@@ -256,7 +258,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           --nn-white: #FFFFFF;
           --nn-black: #000000;
 
-          font-family: 'DM Sans', -apple-system, sans-serif;
+          font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
           background-color: var(--nn-white);
           color: var(--nn-black);
           overflow-x: clip;
@@ -299,7 +301,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           border: none;
           background: transparent;
           color: var(--nn-lime);
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 700;
           font-size: 14px;
           line-height: 20px;
@@ -402,7 +404,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           top: 42%;
         }
 
-        /* Giant Slackey Typography Stack */
+        /* Giant Sigmar Typography Stack */
         .nn-slackey-stack {
           position: relative;
           z-index: 2;
@@ -415,7 +417,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         .nn-slackey-line {
-          font-family: 'Slackey', cursive, sans-serif;
+          font-family: 'Sigmar', 'Be Vietnam Pro', sans-serif;
           font-weight: 400;
           color: var(--nn-white);
           text-transform: uppercase;
@@ -426,12 +428,18 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         .nn-slackey-portfolio {
-          font-size: clamp(64px, 9.5vw, 165px);
+          /* Sigmar rộng hơn Slackey: ở 64px chữ PORTFOLIO tràn màn hình 375px. */
+          font-size: clamp(52px, 9.5vw, 165px);
         }
 
         .nn-slackey-name {
           font-size: clamp(56px, 8.8vw, 155px);
           color: #FFFFFF;
+          /* Tên tiếng Việt viết hoa có dấu chồng phía trên (Ễ, Ỳ, Ấ...). Với
+             line-height 0.95 dấu của dòng dưới đè lên chân chữ dòng trên khi
+             tên xuống dòng, nên tên cần khoảng thở riêng. */
+          line-height: 1.12;
+          padding-top: 0.08em;
         }
 
         .nn-slackey-year {
@@ -561,7 +569,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           align-items: center;
           gap: 28px;
           padding-right: 28px;
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 900;
           font-size: 22px;
           line-height: 20px;
@@ -667,7 +675,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         .nn-about-headline {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 600;
           font-size: clamp(26px, 2.8vw, 40px);
           line-height: 1.4;
@@ -676,7 +684,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         .nn-about-body {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 400;
           font-size: clamp(16px, 1.4vw, 22px);
           line-height: 1.6;
@@ -785,14 +793,14 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         .nn-milestone-time {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 14px;
           color: var(--nn-cyan);
           margin: 0;
         }
 
         .nn-milestone-desc {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 400;
           font-size: 14px;
           line-height: 1.5;
@@ -865,7 +873,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         .nn-skill-desc {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 400;
           font-size: 15px;
           line-height: 1.6;
@@ -911,7 +919,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         .nn-project-number {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-weight: 600;
           font-size: clamp(52px, 6.8vw, 100px);
           line-height: 1;
@@ -946,7 +954,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         .nn-project-tag {
           padding: 6px 16px;
           border-radius: 20px;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 700;
           font-size: 13px;
           text-transform: uppercase;
@@ -1057,7 +1065,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         .nn-mockup-dot.green { background: #27C93F; }
 
         .nn-mockup-url {
-          font-family: 'DM Sans', monospace, sans-serif;
+          font-family: 'Plus Jakarta Sans', monospace, sans-serif;
           font-size: 11px;
           color: rgba(255, 255, 255, 0.7);
           background: rgba(255, 255, 255, 0.1);
@@ -1085,7 +1093,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           background: rgba(203, 247, 72, 0.18);
           border: 1px solid var(--nn-lime);
           color: var(--nn-lime);
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-size: 12px;
           font-weight: 700;
           letter-spacing: 0.05em;
@@ -1102,7 +1110,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         .nn-mockup-org {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 14px;
           color: rgba(255, 255, 255, 0.8);
           margin: 0;
@@ -1123,7 +1131,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           border: 1px solid rgba(255, 255, 255, 0.2);
           color: rgba(255, 255, 255, 0.9);
           font-size: 12px;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
         .nn-mockup-chip.verified {
@@ -1186,7 +1194,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         .nn-stat-value {
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 500;
           font-size: 15px;
           line-height: 1.4;
@@ -1323,7 +1331,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           gap: 36px;
         }
 
-        /* Footer Slackey Stack (Group 58 in Figma: THANKS / FOR / WATCHING!) */
+        /* Footer Sigmar Stack (Group 58 in Figma: THANKS / FOR / WATCHING!) */
         .nn-footer-slackey {
           display: flex;
           flex-direction: column;
@@ -1333,7 +1341,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         .nn-footer-slackey-line {
-          font-family: 'Slackey', cursive, sans-serif;
+          font-family: 'Sigmar', 'Be Vietnam Pro', sans-serif;
           font-weight: 400;
           color: #FFFFFF;
           text-transform: uppercase;
@@ -1366,7 +1374,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         .nn-contact-heading {
-          font-family: 'Poppins', sans-serif;
+          font-family: 'Be Vietnam Pro', sans-serif;
           font-style: normal;
           font-weight: 600;
           font-size: clamp(38px, 4.8vw, 64px);
@@ -1438,7 +1446,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           border: 2px solid #CBF748;
           border-radius: 999px;
           padding: 10px 24px;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 700;
           font-size: 15px;
           text-decoration: none;
@@ -1485,7 +1493,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           color: rgba(255, 255, 255, 0.6);
           font-size: 14px;
           margin-top: 24px;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
         /* ── RESPONSIVE ADAPTATIONS ── */
@@ -1598,7 +1606,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         <div className="nn-hero-orb nn-hero-orb-3" />
         <div className="nn-hero-orb nn-hero-orb-4" />
 
-        {/* Massive Typography Stack in 'Slackey' */}
+        {/* Massive Typography Stack in 'Sigmar' */}
         <div className="nn-slackey-stack">
           <div className="nn-slackey-line nn-slackey-portfolio">PORTFOLIO</div>
           <div className="nn-slackey-line nn-slackey-name">{name.toUpperCase()}</div>
@@ -1972,7 +1980,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         </div>
 
         <div className="nn-footer-inner">
-          {/* Giant Slackey Stack in Footer (Group 58 in Figma: THANKS / FOR / WATCHING!) */}
+          {/* Giant Sigmar Stack in Footer (Group 58 in Figma: THANKS / FOR / WATCHING!) */}
           <div className="nn-footer-slackey">
             <div className="nn-footer-slackey-line nn-footer-thanks">THANKS</div>
             <div className="nn-footer-slackey-line nn-footer-for">FOR</div>

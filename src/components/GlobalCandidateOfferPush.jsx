@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Sparkles, ArrowRight, X, Building2 } from 'lucide-react';
 import { getMyApplications } from '../api/applicationApi.js';
+import { getWallet } from '../api/walletApi.js';
 import { getMyPendingInvitations } from '../api/b2bApi.js';
 import { getStoredToken } from '../lib/authStorage.js';
 import { supabase } from '../services/supabaseClient.js';
@@ -12,6 +13,8 @@ export function GlobalCandidateOfferPush() {
 
   const [offers, setOffers] = useState([]);
   const [orgInvites, setOrgInvites] = useState([]);
+  // Đại sứ thương hiệu nhận việc miễn phí: popup không được ghi "19.000 Điểm".
+  const [isAmbassador, setIsAmbassador] = useState(false);
   const [dismissedOfferIds, setDismissedOfferIds] = useState(() => {
     try {
       const stored = sessionStorage.getItem('fonlio_dismissed_push_offers');
@@ -48,6 +51,9 @@ export function GlobalCandidateOfferPush() {
       const apps = await getMyApplications();
       const pendingOffers = (apps || []).filter((a) => a.status === 'OFFERED');
       setOffers(pendingOffers);
+      if (pendingOffers.some((a) => a.compensation && Number(a.compensation) > 0)) {
+        getWallet().then((w) => setIsAmbassador(!!w?.isAmbassador)).catch(() => {});
+      }
 
       // 2. Check organization invitations
       const invites = await getMyPendingInvitations();
@@ -185,7 +191,7 @@ export function GlobalCandidateOfferPush() {
             Vị trí: <strong style={{ color: '#ffffff' }}>{topOffer.jobTitle}</strong>
             {topOffer.compensation && Number(topOffer.compensation) > 0 ? (
               <>
-                {' '}· Thù lao: <strong style={{ color: '#34d399' }}>{Number(topOffer.compensation).toLocaleString('vi-VN')} đ</strong> (Phí nhận việc: 19.000 Điểm khi đồng ý).
+                {' '}· Thù lao: <strong style={{ color: '#34d399' }}>{Number(topOffer.compensation).toLocaleString('vi-VN')} đ</strong> ({isAmbassador ? 'Nhận việc miễn phí – Đại sứ thương hiệu' : 'Phí nhận việc: 19.000 Điểm khi đồng ý'}).
               </>
             ) : (
               <>

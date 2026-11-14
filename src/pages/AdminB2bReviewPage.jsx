@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef, useLayoutEffect, useId } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { NotificationBell } from '../components/NotificationBell.jsx';
+import { AdminAmbassadorsPanel } from '../components/admin/AdminAmbassadorsPanel.jsx';
 import {
   getPendingB2bRegistrations,
   approveB2bRegistration,
@@ -124,6 +125,7 @@ const SIDEBAR_TABS = [
   },
   { key: 'FRAUD_FLAGS', route: 'fraud-flags', label: 'Cờ gian lận', icon: ShieldAlert },
   { key: 'AUDIT_LOGS', route: 'audit-logs', label: 'Ghi nhận hệ thống', icon: Activity },
+  { key: 'AMBASSADORS', route: 'ambassadors', label: 'Đại sứ thương hiệu', icon: Award },
   { key: 'SYSTEM_CONFIG', route: 'system-config', label: 'Cấu hình hệ thống', icon: Settings },
 ];
 
@@ -6817,6 +6819,7 @@ export function AdminB2bReviewPage() {
               {activeTab === 'VERIF_QUEUE' && renderVerifQueue()}
               {activeTab === 'FRAUD_FLAGS' && renderFraudFlags()}
               {activeTab === 'AUDIT_LOGS' && renderAuditLogs()}
+              {activeTab === 'AMBASSADORS' && <AdminAmbassadorsPanel />}
               {activeTab === 'SYSTEM_CONFIG' && <SystemConfigPanel />}
             </div>
           )}
