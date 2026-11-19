@@ -286,7 +286,9 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           pointer-events: auto;
           display: flex;
           align-items: center;
-          background: rgba(155, 178, 86, 0.45);
+          /* Nền xanh theme, gần đặc: thanh menu trôi qua cả khối trắng, mà
+             nền ô liu 45% cũ để chữ lime gần như biến mất trên nền trắng. */
+          background: rgba(37, 12, 241, 0.86);
           border: 1.5px solid var(--nn-lime);
           backdrop-filter: blur(14px);
           -webkit-backdrop-filter: blur(14px);
@@ -412,7 +414,10 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           flex-direction: column;
           align-items: center;
           gap: 12px;
-          margin-bottom: -180px;
+          /* Figma kéo ảnh lên đè dòng chữ cuối (-180px) — hợp với ảnh người
+             đã tách nền, nhưng ảnh chân dung thật là một khung chữ nhật nên che
+             mất cả dòng (trường / năm sinh). Để ảnh nằm ngay dưới chữ. */
+          margin-bottom: 0;
           width: 100%;
         }
 
@@ -456,7 +461,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-top: 40px;
+          margin-top: 24px;
         }
 
         .nn-hero-portrait-frame {
@@ -972,6 +977,18 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           border: 1px solid var(--nn-blue);
         }
 
+        /* Thẻ "Đã xác thực": chữ lime chỉ đọc được trên nền xanh. Khối trắng
+           thì lật lại — nền xanh, chữ lime — thay vì lime trên trắng (gần như
+           vô hình). */
+        .nn-project-blue .nn-project-tag-verified {
+          color: var(--nn-lime);
+        }
+
+        .nn-project-white .nn-project-tag-verified {
+          background: var(--nn-blue);
+          color: var(--nn-lime);
+        }
+
         /* Mockup Display Frame (Rectangle 14 & 12) */
         .nn-project-mockup-frame {
           position: relative;
@@ -1138,6 +1155,15 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
           background: rgba(99, 255, 56, 0.2);
           border-color: rgba(99, 255, 56, 0.6);
           color: var(--nn-green);
+        }
+
+        /* Khối "chưa có dự án" nằm trên nền trắng của trang (không phải khối
+           xanh) — chữ trắng 70% ở đó vô hình, chỉ còn lại một dải trắng trống
+           giữa các dải chữ chạy. Dùng màu xanh theme. */
+        .nn-empty-box.nn-empty-box-light {
+          background: rgba(37, 12, 241, 0.06);
+          border-color: rgba(37, 12, 241, 0.35);
+          color: var(--nn-blue);
         }
 
         .nn-empty-box {
@@ -1518,6 +1544,13 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
         }
 
         @media (max-width: 768px) {
+          /* Khung ảnh trên điện thoại chỉ cao ~85vw; giữ min-height 580px thì
+             còn lại một khoảng trống lớn giữa tên và ảnh. */
+          .nn-hero-stage {
+            min-height: 0;
+            padding: 36px 0 44px;
+            margin-top: 8px;
+          }
           .nn-milestone-grid {
             grid-template-columns: 1fr;
           }
@@ -1578,7 +1611,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
             className={`nn-nav-btn ${activeSection === 'nn-skills' ? 'active' : ''}`}
             onClick={() => scrollTo('nn-skills')}
           >
-            Về chúng tôi
+            Về tôi
           </button>
           <button
             type="button"
@@ -1845,7 +1878,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
                             <span className="nn-project-tag">#{exp.category}</span>
                           )}
                           {exp.verified && (
-                            <span className="nn-project-tag" style={{ color: '#CBF748' }}>
+                            <span className="nn-project-tag nn-project-tag-verified">
                               #ĐãXácThực
                             </span>
                           )}
@@ -1922,7 +1955,7 @@ export function NhoNeonFigmaTemplate({ profile = {} }) {
             );
           })
         ) : (
-          <div className="nn-empty-box" style={{ margin: '60px auto' }}>
+          <div className="nn-empty-box nn-empty-box-light" style={{ margin: '60px auto' }}>
             Chưa có dự án nào được thêm. Bạn có thể thêm dự án tại bảng soạn hồ sơ.
           </div>
         )}

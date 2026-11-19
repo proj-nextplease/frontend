@@ -371,7 +371,9 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           pointer-events: auto;
           display: flex;
           align-items: center;
-          background: rgba(255, 255, 255, 0.2);
+          /* Kính tối thay cho kính trắng 20%: thanh menu trôi qua cả vùng
+             lime, chữ trắng trên kính trắng ở đó gần như mất. */
+          background: rgba(7, 4, 31, 0.5);
           border: 1px solid var(--cn-white);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
@@ -696,7 +698,9 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          background: rgba(255, 255, 255, 0.2);
+          /* Kính tối như thanh menu: nhãn mục có thể rơi vào vùng lime của
+             nền (hồ sơ ngắn thì càng dễ), chữ trắng trên kính trắng chìm hẳn. */
+          background: rgba(7, 4, 31, 0.5);
           border: 1px solid var(--cn-white);
           border-radius: 50px;
           padding: 10px 24px;
@@ -810,6 +814,8 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           line-height: 1.25;
           color: var(--cn-white);
           margin: 16px 0 50px;
+          /* Bóng tối mềm: giữ tiêu đề trắng đọc được cả khi nằm trên vùng lime. */
+          text-shadow: 0 2px 18px rgba(7, 4, 31, 0.55), 0 1px 3px rgba(7, 4, 31, 0.45);
         }
 
         /* Skill Cards Grid (Matching Frame 46 & Frame 48) */
@@ -1089,11 +1095,21 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           align-items: center;
         }
 
+        /* Nền trang chuyển tím → lime theo chiều dài trang, nên khối dự án
+           rơi vào vùng nào là tuỳ số dự án. Chữ trắng / lime chìm hẳn trên
+           vùng lime — đặt chúng trên một tấm kính tối (#07041F của theme) để
+           đọc được ở mọi vị trí. */
         .cn-showcase-info {
           display: flex;
           flex-direction: column;
           align-items: flex-start;
           gap: 16px;
+          padding: 28px;
+          border-radius: 32px;
+          background: rgba(7, 4, 31, 0.58);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
         }
 
         .cn-showcase-num {
@@ -1190,14 +1206,18 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
           color: var(--cn-black);
         }
 
+        /* Hồ sơ trống thì trang ngắn lại và các khối này rơi vào vùng lime —
+           chữ trắng 80% trên kính trắng 8% gần như vô hình. Dùng kính tối. */
         .cn-empty-box {
-          background: rgba(255, 255, 255, 0.08);
+          background: rgba(7, 4, 31, 0.58);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           border: 1.5px dashed var(--cn-white);
           border-radius: 32px;
           padding: 48px 32px;
           text-align: center;
           width: 100%;
-          color: rgba(255, 255, 255, 0.8);
+          color: rgba(255, 255, 255, 0.9);
           font-size: 18px;
         }
 
@@ -1244,12 +1264,20 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
         }
 
         /* Left Column: Contact */
+        /* Khối liên hệ nằm đúng chỗ nền chuyển lime → tím: chữ trắng mờ ở đó
+           gần như chìm. Cùng tấm kính tối với khối dự án. */
         .cn-footer-contact-col {
           display: flex;
           flex-direction: column;
           align-items: flex-start;
           text-align: left;
           gap: 18px;
+          padding: 28px;
+          border-radius: 32px;
+          background: rgba(7, 4, 31, 0.58);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
         }
 
         .cn-footer-pill-row {
@@ -1533,7 +1561,7 @@ export function ComNeonFigmaTemplate({ profile = {} }) {
             className={`cn-nav-btn ${activeSection === 'cn-gallery' ? 'active' : ''}`}
             onClick={() => scrollTo('cn-gallery')}
           >
-            Về chúng tôi
+            Về tôi
           </button>
           <button
             type="button"

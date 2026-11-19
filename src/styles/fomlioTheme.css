@@ -8,6 +8,17 @@
    ễ, ệ, ỳ rơi sang font dự phòng, tên người dùng bị lẫn hai kiểu chữ. */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Sigmar&family=Dancing+Script:wght@500;600;700&family=League+Spartan:wght@700;800;900&family=Licorice&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Chakra+Petch:wght@500;600;700;800;900&family=Noto+Sans:wght@500;600;700;800&display=swap');
 
+/* Chữ trong 3 theme portfolio lấy màu từ khối chứa nó (khối xanh → chữ trắng,
+   khối trắng → chữ xanh…). Nhưng bộ reset của Astryx (index.css) tô thẳng
+   h1–h6, p, small bằng --color-text-primary = light-dark(#171717, #fafafa):
+   máy để chế độ tối thì tiêu đề thành gần trắng, chìm vào khối trắng; chế độ
+   sáng thì thành gần đen, chìm vào khối xanh. Trả chúng về "kế thừa màu".
+   :where() giữ độ ưu tiên bằng 0, nên mọi màu theme tự đặt cho từng phần tử
+   vẫn thắng; rule này chỉ thắng được reset vì reset nằm trong @layer. */
+:where(.cn-container, .nn-container, .pa-figma-page) :where(h1, h2, h3, h4, h5, h6, p, small) {
+  color: inherit;
+}
+
 .fom-page {
   /* Brand Tokens - Figma Node 9-126 */
   --fom-brand: #cbf748;         /* Neon Lime / Cốm Neon */

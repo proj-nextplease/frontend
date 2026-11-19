@@ -1,48 +1,32 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Sparkles } from 'lucide-react';
-import {
-  PORTFOLIO_PREVIEW_STORAGE_PREFIX,
-} from './CandidatePortfolioPage.jsx';
 import { VerifiedPassport } from './CandidatePortfolioViewPage.jsx';
 import { toPassportProfile } from '../lib/portfolioDraft.js';
 import { getMyPortfolio } from '../api/portfolioApi.js';
+import { loadPreviewDraft } from '../lib/previewDraftStore.js';
 
-function readPortfolioDraft() {
-  const params = new URLSearchParams(window.location.search);
-  const draftId = params.get('draft');
-
-  if (draftId) {
-    try {
-      const rawDraft = localStorage.getItem(`${PORTFOLIO_PREVIEW_STORAGE_PREFIX}${draftId}`);
-      if (rawDraft) return JSON.parse(rawDraft);
-    } catch {
-      // ignore
-    }
+/**
+ * Đọc bản nháp do trang sửa cất (IndexedDB). Trang sửa mở tab này NGAY lúc
+ * bấm rồi mới cất bản nháp song song, nên bản nháp có thể chưa kịp có mặt khi
+ * tab tải xong — chờ thêm một lúc trước khi kết luận là không có.
+ */
+async function waitForDraft(draftId) {
+  if (!draftId) return loadPreviewDraft(null);
+  const deadline = Date.now() + 8000;
+  for (;;) {
+    const draft = await loadPreviewDraft(draftId);
+    if (draft || Date.now() > deadline) return draft;
+    await new Promise((r) => setTimeout(r, 200));
   }
+}
 
-  // Look for any recent preview drafts saved in localStorage
-  try {
-    let latestKey = null;
-    let latestTime = 0;
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(PORTFOLIO_PREVIEW_STORAGE_PREFIX)) {
-        const timestamp = parseInt(key.replace(PORTFOLIO_PREVIEW_STORAGE_PREFIX, ''), 10) || 0;
-        if (timestamp > latestTime) {
-          latestTime = timestamp;
-          latestKey = key;
-        }
-      }
-    }
-    if (latestKey) {
-      const rawDraft = localStorage.getItem(latestKey);
-      if (rawDraft) return JSON.parse(rawDraft);
-    }
-  } catch {
-    // ignore
-  }
-
-  return null;
+function draftToProfile(draft, theme) {
+  return toPassportProfile({
+    profile: { ...(draft.profile || {}), selectedTheme: theme },
+    avatar: draft.avatar || { gender: draft.gender || 'female' },
+    experiences: draft.experiences,
+    credentials: draft.credentials,
+  });
 }
 
 /**
@@ -60,33 +44,28 @@ export function CandidatePortfolioPreviewPage() {
     }
   }, []);
 
-  const initialDraft = useMemo(() => readPortfolioDraft(), []);
-  const activeTheme = themeOverride || initialDraft?.profile?.selectedTheme || savedTheme || 'PURPLE_AURA';
-
-  const [profileData, setProfileData] = useState(() => {
-    if (initialDraft) {
-      return toPassportProfile({
-        profile: {
-          ...(initialDraft.profile || {}),
-          selectedTheme: activeTheme,
-        },
-        avatar: initialDraft.avatar || { gender: initialDraft.gender || 'female' },
-        experiences: initialDraft.experiences,
-        credentials: initialDraft.credentials,
-      });
-    }
-    return null;
-  });
-
-  const [loading, setLoading] = useState(!initialDraft);
+  const draftId = urlParams.get('draft');
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [draftMissing, setDraftMissing] = useState(false);
 
   useEffect(() => {
-    if (initialDraft) return;
-
     let isMounted = true;
-    getMyPortfolio()
-      .then((data) => {
-        if (!isMounted || !data) return;
+
+    async function load() {
+      const draft = await waitForDraft(draftId);
+      if (draft) {
+        const theme = themeOverride || draft.profile?.selectedTheme || savedTheme || 'PURPLE_AURA';
+        return { profile: draftToProfile(draft, theme) };
+      }
+      // Mở từ nút "Xem trước" mà bản nháp không tới được: nói thẳng ra, đừng
+      // lặng lẽ hiện bản đã lưu khiến người dùng tưởng thay đổi bị mất.
+      if (draftId) return { missing: true };
+
+      const activeTheme = themeOverride || savedTheme || 'PURPLE_AURA';
+      try {
+        const data = await getMyPortfolio();
+        if (!data) return {};
         const normalized = toPassportProfile({
           profile: {
             name: data.name || '',
@@ -108,25 +87,46 @@ export function CandidatePortfolioPreviewPage() {
         if (data.reputationScore) {
           normalized.reputationScore = data.reputationScore;
         }
-        setProfileData(normalized);
-      })
-      .catch(() => {
-        // Not logged in or network error, fallback will take over
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
+        return { profile: normalized };
+      } catch {
+        // Chưa đăng nhập hoặc lỗi mạng: hiện hồ sơ mẫu bên dưới.
+        return {};
+      }
+    }
+
+    load().then((result) => {
+      if (!isMounted) return;
+      if (result.profile) setProfileData(result.profile);
+      if (result.missing) setDraftMissing(true);
+      setLoading(false);
+    });
 
     return () => {
       isMounted = false;
     };
-  }, [initialDraft, activeTheme]);
+  }, [draftId, themeOverride, savedTheme]);
 
   if (loading) {
     return (
       <div className="fom-page fom-page-state" style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <Sparkles size={28} />
         <p style={{ marginTop: '12px', color: '#7B3AEC' }}>Đang tải hồ sơ ứng viên...</p>
+      </div>
+    );
+  }
+
+  if (draftMissing) {
+    return (
+      <div className="fom-page fom-page-state" style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '40px 20px' }}>
+        <Sparkles size={28} />
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '12px 0 8px', color: '#fff' }}>
+          Không mở được bản xem trước
+        </h2>
+        <p style={{ maxWidth: '440px', lineHeight: 1.6, color: 'rgba(255,255,255,0.7)', margin: '0 0 20px', fontSize: '0.9rem' }}>
+          Bản xem trước này không còn trong trình duyệt (có thể đã được thay bằng lần bấm “Xem trước” mới hơn).
+          Hãy đóng tab này và bấm “Xem trước” lại ở trang sửa Portfolio.
+        </p>
+        <button type="button" className="fom-btn" onClick={() => window.close()}>Đóng tab</button>
       </div>
     );
   }
@@ -145,7 +145,7 @@ export function CandidatePortfolioPreviewPage() {
       school: 'Đại học FPT',
       location: 'Thành phố Hồ Chí Minh',
       bio: 'Đam mê xây dựng trải nghiệm người dùng hiện đại, kết hợp thẩm mỹ tinh tế và hiệu năng mượt mà.',
-      selectedTheme: activeTheme,
+      selectedTheme: themeOverride || savedTheme || 'PURPLE_AURA',
       openToWork: true,
       socialLinks: {},
       skills: [
@@ -162,7 +162,7 @@ export function CandidatePortfolioPreviewPage() {
         title: 'Xây dựng Nền tảng Portfolio fonlio',
         role: 'Lead UI/UX & Frontend',
         organization: 'fonlio Platform',
-        startDate: '10/2023',
+        startDate: '02/10/2023',
         endDate: 'Hiện tại',
         description:
           'Thiết kế giao diện người dùng, đồng bộ trải nghiệm đa nền tảng và tối ưu hóa hiệu năng render các theme portfolio.',
@@ -172,8 +172,8 @@ export function CandidatePortfolioPreviewPage() {
         title: 'Hệ thống Quản lý Dự án & Minh chứng Thực chiến',
         role: 'Product Designer',
         organization: 'Dự án Công nghệ fonlio',
-        startDate: '05/2023',
-        endDate: '09/2023',
+        startDate: '15/05/2023',
+        endDate: '30/09/2023',
         description:
           'Xây dựng luồng xác thực kinh nghiệm với bảo chứng phân tầng và bảng điều khiển tổng quan trực quan.',
         verified: true,
