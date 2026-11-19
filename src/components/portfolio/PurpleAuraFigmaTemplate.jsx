@@ -1172,8 +1172,11 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
           margin: 0;
         }
 
-        .pa-project-block.odd .pa-stat-glass-title { color: #C31DFF; }
-        .pa-project-block.even .pa-stat-glass-title { color: #FF00D0; }
+        /* Cùng tông tím / hồng của Figma nhưng đậm hơn: #C31DFF và #FF00D0
+           trên nền kính nhạt chỉ đạt ~2.3:1, chữ nhỏ bên dưới gần như chìm.
+           Tiêu đề (chữ lớn) ≥ 3:1, dòng phụ (16px) ≥ 4.5:1. */
+        .pa-project-block.odd .pa-stat-glass-title { color: #9A12D6; }
+        .pa-project-block.even .pa-stat-glass-title { color: #C4009F; }
 
         .pa-stat-glass-sub {
           font-family: 'Plus Jakarta Sans', sans-serif;
@@ -1184,8 +1187,8 @@ export function PurpleAuraFigmaTemplate({ profile = {} }) {
           margin: 0;
         }
 
-        .pa-project-block.odd .pa-stat-glass-sub { color: #C31DFF; }
-        .pa-project-block.even .pa-stat-glass-sub { color: #FF00D0; }
+        .pa-project-block.odd .pa-stat-glass-sub { color: #7A0EB0; }
+        .pa-project-block.even .pa-stat-glass-sub { color: #A3007F; }
 
         /* ── FOOTER & THANKS BANNER ── */
         .pa-footer-band {

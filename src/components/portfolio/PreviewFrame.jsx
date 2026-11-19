@@ -25,7 +25,7 @@ import { createPortal } from 'react-dom';
  * khớp với bề ngang thật mà trang đang được xem, nên bản responsive hiện ra
  * đúng như người xem sẽ gặp.
  */
-export function PreviewFrame({ children, bodyClassName = '', onReady }) {
+export function PreviewFrame({ children, bodyClassName = '', onReady, style }) {
   const frameRef = useRef(null);
   const [mountNode, setMountNode] = useState(null);
 
@@ -115,9 +115,16 @@ export function PreviewFrame({ children, bodyClassName = '', onReady }) {
       title="Xem trước portfolio"
       /* allow-same-origin để React cắm cây DOM vào được; KHÔNG có allow-scripts
          hay allow-top-navigation, nên bấm nhầm một liên kết trong bản xem
-         trước không kéo người dùng đi đâu cả. */
-      sandbox="allow-same-origin"
+         trước không kéo trang sửa đi đâu cả.
+         allow-popups: link mở TAB MỚI (target="_blank") vẫn phải mở được —
+         thiếu nó, "Mở bản gốc trên Google Drive", link mạng xã hội… bấm vào
+         im lặng không có gì xảy ra. allow-popups-to-escape-sandbox để tab mới
+         đó là một trang bình thường (Google Drive cần chạy script). */
+      sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
       className="pf-frame"
+      /* .pf-frame chỉ có trong CSS của trang sửa portfolio; nơi khác (cửa sổ
+         "Xem thử" ở Bảng điều khiển) tự truyền kích thước vào đây. */
+      style={style}
     >
       {mountNode && createPortal(children, mountNode)}
     </iframe>

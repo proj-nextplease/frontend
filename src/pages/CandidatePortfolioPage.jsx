@@ -5,6 +5,7 @@ import { ONBOARDING_TAB_FLAG, announcePortfolioSaved } from '../lib/onboardingTa
 import { PortfolioMascot } from '../components/PortfolioMascot.jsx';
 import { LivePortfolioPreview } from '../components/portfolio/LivePortfolioPreview.jsx';
 import { toPassportProfile } from '../lib/portfolioDraft.js';
+import { openPreviewTab } from '../lib/previewDraftStore.js';
 import { PORTFOLIO_THEMES, PORTFOLIO_THEME, resolveTheme } from '../constants/portfolioThemes.js';
 import '../styles/fomlioBuilder.css';
 import { MASCOTS, mascotSheets, resolveMascot } from '../lib/mascots.js';
@@ -41,8 +42,8 @@ import { getMyPortfolio, updateMyPortfolio } from '../api/portfolioApi.js';
 import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
 import { CoverBannerEditor } from '../components/CoverBannerEditor.jsx';
 import { EXPERIENCE_CATEGORY_OPTIONS, EXPERIENCE_ROLE_LEVEL_OPTIONS } from '../constants/experience.js';
+import { DATE_PLACEHOLDER, maskDateInput, validateDateRange } from '../lib/experienceDates.js';
 
-export const PORTFOLIO_PREVIEW_STORAGE_PREFIX = 'nextplease:portfolio-preview:';
 
 /** Return a shallow copy of `obj` without the given keys (used to drop heavy
  * base64 blobs before persisting a localStorage draft). */
@@ -231,12 +232,17 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   const ignoreScrollUntil = useRef(0);
   const userExplicitlyOpened = useRef(false);
   const editorColRef = useRef(null);
+  /* Ô ngày nào người dùng đã gõ lại ("<id>:startDate"). Ô chưa đụng tới được
+     giữ giá trị mm/yyyy của bản ghi cũ; ô đã gõ lại thì phải đủ dd/mm/yyyy. */
+  const editedDateFields = useRef(new Set());
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+  /* Link bản xem trước khi trình duyệt chặn tab mới — người dùng tự bấm. */
+  const [blockedPreviewUrl, setBlockedPreviewUrl] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   /* Đọc MỘT LẦN lúc mount: luồng đăng nhập gắn cờ này vào URL khi nó mở trang
      dựng ở tab riêng. Đọc một lần vì trang có thể thay đổi URL trong lúc dùng,
@@ -760,14 +766,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   }
 
   function handleExperienceDateChange(id, field, rawValue) {
-    let clean = rawValue.replace(/[^0-9/]/g, '');
-    const digits = clean.replace(/\D/g, '');
-    if (digits.length > 2) {
-      clean = `${digits.substring(0, 2)}/${digits.substring(2, 4)}`;
-    } else {
-      clean = digits;
-    }
-    updateExperience(id, field, clean);
+    editedDateFields.current.add(`${id}:${field}`);
+    updateExperience(id, field, maskDateInput(rawValue));
   }
 
   function addCredential() {
@@ -828,38 +828,15 @@ export function CandidatePortfolioPage({ isEditing = false }) {
         newErrors[`experience_${exp.id}_detail`] = 'Vui lòng nhập mô tả kinh nghiệm.';
       }
 
-      // Start date validation
-      if (!exp.startDate?.trim()) {
-        newErrors[`experience_${exp.id}_startDate`] = 'Vui lòng nhập thời gian bắt đầu.';
-      } else if (!datePattern.test(exp.startDate)) {
-        newErrors[`experience_${exp.id}_startDate`] = 'Đúng định dạng MM/YY (ví dụ: 09/24).';
-      } else {
-        const [startM, startY] = exp.startDate.split('/').map(Number);
-        if (startY > currentYear2Digit || (startY === currentYear2Digit && startM > currentMonth)) {
-          newErrors[`experience_${exp.id}_startDate`] = `Thời gian bắt đầu không được lớn hơn tháng hiện tại (${String(currentMonth).padStart(2, '0')}/${currentYear2Digit}).`;
-        }
-      }
-
-      // End date validation
-      if (!exp.endDate?.trim()) {
-        newErrors[`experience_${exp.id}_endDate`] = 'Vui lòng nhập thời gian kết thúc.';
-      } else if (!datePattern.test(exp.endDate)) {
-        newErrors[`experience_${exp.id}_endDate`] = 'Đúng định dạng MM/YY (ví dụ: 06/26).';
-      } else {
-        const [endM, endY] = exp.endDate.split('/').map(Number);
-        if (endY > currentYear2Digit || (endY === currentYear2Digit && endM > currentMonth)) {
-          newErrors[`experience_${exp.id}_endDate`] = `Thời gian kết thúc không được lớn hơn tháng hiện tại (${String(currentMonth).padStart(2, '0')}/${currentYear2Digit}).`;
-        }
-      }
-
-      // Compare start and end dates
-      if (exp.startDate?.trim() && exp.endDate?.trim() && datePattern.test(exp.startDate) && datePattern.test(exp.endDate)) {
-        const [startM, startY] = exp.startDate.split('/').map(Number);
-        const [endM, endY] = exp.endDate.split('/').map(Number);
-        if (startY > endY || (startY === endY && startM > endM)) {
-          newErrors[`experience_${exp.id}_endDate`] = `Thời gian kết thúc không được sớm hơn thời gian bắt đầu (${exp.startDate}).`;
-        }
-      }
+      const dateErrors = validateDateRange({
+        start: exp.startDate,
+        end: exp.endDate,
+        required: true,
+        allowLegacyStart: !editedDateFields.current.has(`${exp.id}:startDate`),
+        allowLegacyEnd: !editedDateFields.current.has(`${exp.id}:endDate`),
+      });
+      if (dateErrors.start) newErrors[`experience_${exp.id}_startDate`] = dateErrors.start;
+      if (dateErrors.end) newErrors[`experience_${exp.id}_endDate`] = dateErrors.end;
     });
 
     credentials.forEach((cred) => {
@@ -947,7 +924,6 @@ export function CandidatePortfolioPage({ isEditing = false }) {
   }
 
   function openPortfolioPreview() {
-    const previewId = String(Date.now());
     const currentTheme = profile.selectedTheme || 'PURPLE_AURA';
     const previewPayload = {
       avatar,
@@ -966,30 +942,17 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       /* ignore */
     }
 
-    // Each preview holds full base64 images, so stale entries from earlier clicks
-    // pile up and eventually blow the localStorage quota. Clear old previews first.
-    try {
-      for (let i = localStorage.length - 1; i >= 0; i -= 1) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith(PORTFOLIO_PREVIEW_STORAGE_PREFIX)) {
-          localStorage.removeItem(key);
-        }
-      }
-    } catch {
-      /* ignore */
-    }
-
-    try {
-      localStorage.setItem(
-        `${PORTFOLIO_PREVIEW_STORAGE_PREFIX}${previewId}`,
-        JSON.stringify(previewPayload),
-      );
-    } catch (err) {
-      console.warn('Không thể tạo bản xem trước:', err);
-      setErrorMsg('Bản preview quá lớn (quá nhiều ảnh đính kèm) nên không thể mở. Hãy giảm bớt ảnh minh chứng rồi thử lại.');
-      return;
-    }
-    window.open(`/portfolio/preview?draft=${previewId}&theme=${currentTheme}`, '_blank', 'noopener,noreferrer');
+    // Bản nháp chứa nguyên ảnh base64 — cất vào IndexedDB, không phải
+    // localStorage (~5MB, vài ảnh là đầy). Xem lib/previewDraftStore.js.
+    setBlockedPreviewUrl('');
+    openPreviewTab(previewPayload, currentTheme)
+      .then(({ opened, url }) => {
+        if (!opened) setBlockedPreviewUrl(url);
+      })
+      .catch((err) => {
+        console.warn('Không thể tạo bản xem trước:', err);
+        setErrorMsg('Trình duyệt không cho lưu bản xem trước (có thể đang ở chế độ ẩn danh hoặc bộ nhớ trình duyệt đã đầy). Hãy thử lại ở cửa sổ thường.');
+      });
   }
 
   const skills = (profile.skills || '')
@@ -1236,6 +1199,28 @@ export function CandidatePortfolioPage({ isEditing = false }) {
             }}>
               <BadgeCheck size={20} />
               <span>{successMsg}</span>
+            </div>
+          )}
+
+          {blockedPreviewUrl && (
+            <div style={{
+              background: 'rgba(203, 247, 72, 0.12)',
+              border: '1px solid rgba(203, 247, 72, 0.45)',
+              padding: '14px 16px',
+              borderRadius: '12px',
+              marginBottom: '24px',
+              fontSize: '0.9rem',
+            }}>
+              Trình duyệt đã chặn mở tab mới.{' '}
+              <a
+                href={blockedPreviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setBlockedPreviewUrl('')}
+                style={{ fontWeight: 700, textDecoration: 'underline' }}
+              >
+                Bấm vào đây để mở bản xem trước
+              </a>
             </div>
           )}
 
@@ -1607,7 +1592,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                       onChange={(event) =>
                         handleExperienceDateChange(experience.id, 'startDate', event.target.value)
                       }
-                      placeholder="mm/yy (Ví dụ: 09/24)"
+                      inputMode="numeric"
+                      placeholder={`${DATE_PLACEHOLDER} (Ví dụ: 15/09/2024)`}
                       value={experience.startDate || ''}
                       className={errors[`experience_${experience.id}_startDate`] ? 'input-error' : ''}
                     />
@@ -1624,7 +1610,8 @@ export function CandidatePortfolioPage({ isEditing = false }) {
                       onChange={(event) =>
                         handleExperienceDateChange(experience.id, 'endDate', event.target.value)
                       }
-                      placeholder="mm/yy (Ví dụ: 06/26)"
+                      inputMode="numeric"
+                      placeholder={`${DATE_PLACEHOLDER} (Ví dụ: 30/06/2026)`}
                       value={experience.endDate || ''}
                       className={errors[`experience_${experience.id}_endDate`] ? 'input-error' : ''}
                     />

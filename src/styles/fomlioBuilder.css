@@ -811,7 +811,7 @@
 
 @container dock (max-width: 620px) {
   /* Một cột cho mọi lưới biểu mẫu. Hai cột trong 400px thì mỗi ô còn ~190px —
-     không đủ cho nhãn "Thời gian bắt đầu" lẫn ô nhập MM/YY. */
+     không đủ cho nhãn "Thời gian bắt đầu" lẫn ô nhập dd/mm/yyyy. */
   .portfolio-form-grid,
   .experience-edit-card,
   .credential-edit-card,

@@ -6,6 +6,7 @@ import { getMyPortfolio } from '../../api/portfolioApi.js';
 import { logout } from '../../api/httpClient.js';
 import { BrandWordmark } from '../BrandWordmark.jsx';
 import { NotificationBell } from '../NotificationBell.jsx';
+import { openPreviewTab } from '../../lib/previewDraftStore.js';
 
 export function Header() {
   const navigate = useNavigate();
@@ -71,7 +72,6 @@ export function Header() {
 
   const openPortfolioPreview = () => {
     if (!portfolio) return;
-    const previewId = String(Date.now());
     const previewPayload = {
       avatar: portfolio.avatar || {
         gender: 'female',
@@ -96,11 +96,16 @@ export function Header() {
       createdAt: new Date().toISOString(),
     };
 
-    localStorage.setItem(
-      `nextplease:portfolio-preview:${previewId}`,
-      JSON.stringify(previewPayload),
-    );
-    window.open(`/portfolio/preview?draft=${previewId}&theme=${portfolio.selectedTheme || ''}`, '_blank', 'noopener,noreferrer');
+    // IndexedDB thay cho localStorage: hồ sơ nhiều ảnh vượt hạn mức ~5MB và
+    // setItem ném lỗi làm nút này "bấm không ăn". Xem lib/previewDraftStore.js.
+    openPreviewTab(previewPayload, portfolio.selectedTheme)
+      .then(({ opened, url }) => {
+        // Bị chặn popup: ở đây không có gì chưa lưu, mở luôn trong tab này.
+        if (!opened) window.location.assign(url);
+      })
+      .catch((err) => {
+        console.warn('Không thể tạo bản xem trước:', err);
+      });
     setShowDropdown(false);
   };
 

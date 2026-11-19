@@ -43,7 +43,9 @@ import {
   ShoppingBag, Globe, Coins,
 } from 'lucide-react';
 import { getMyPortfolio, updateMySlug, exportPortfolioWebsite } from '../api/portfolioApi.js';
+import { DATE_PLACEHOLDER, maskDateInput, toIsoDate, validateDateRange } from '../lib/experienceDates.js';
 import { VerifiedPassport } from './CandidatePortfolioViewPage.jsx';
+import { PreviewFrame } from '../components/portfolio/PreviewFrame.jsx';
 import { UserAvatar } from '../components/UserAvatar.jsx';
 import { AccountSettingsModal } from '../components/AccountSettingsModal.jsx';
 import { CelebrationLayer, CountUp } from '../components/RewardCelebration.jsx';
@@ -121,90 +123,6 @@ const CATEGORY_MAP = {
     ]
   }
 };
-
-const MONTH_LABELS = [
-  'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-  'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
-];
-
-function getCurrentMonthValue() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-}
-
-function compareMonthValues(left, right) {
-  if (!left || !right) return 0;
-  return left.localeCompare(right);
-}
-
-function formatMonthValue(value) {
-  if (!value) return 'Chọn tháng / năm';
-  const [year, month] = value.split('-');
-  const monthIndex = Number(month) - 1;
-  if (!year || monthIndex < 0 || monthIndex > 11) return 'Chọn tháng / năm';
-  return `${MONTH_LABELS[monthIndex]} ${year}`;
-}
-
-function CredentialMonthPicker({ id, label, value, minValue, maxValue, openPicker, setOpenPicker, onChange, helperText }) {
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 12 }, (_, index) => currentYear - index);
-  const isOpen = openPicker === id;
-
-  function isDisabled(monthValue) {
-    if (maxValue && compareMonthValues(monthValue, maxValue) > 0) return true;
-    if (minValue && compareMonthValues(monthValue, minValue) < 0) return true;
-    return false;
-  }
-
-  return (
-    <div className="credential-month-field">
-      {label && <label className="form-label">{label}</label>}
-      <button
-        type="button"
-        className={`credential-month-trigger ${value ? 'has-value' : ''}`}
-        onClick={() => setOpenPicker(isOpen ? null : id)}
-        aria-expanded={isOpen}
-      >
-        <span>
-          <Calendar size={16} />
-          {formatMonthValue(value)}
-        </span>
-        <span className="credential-month-trigger-dot" />
-      </button>
-      {helperText && <p className="credential-month-helper">{helperText}</p>}
-
-      {isOpen && (
-        <div className="credential-month-popover">
-          {years.map((year) => (
-            <div className="credential-month-year" key={year}>
-              <div className="credential-month-year-label">{year}</div>
-              <div className="credential-month-grid">
-                {MONTH_LABELS.map((monthLabel, index) => {
-                  const monthValue = `${year}-${String(index + 1).padStart(2, '0')}`;
-                  const disabled = isDisabled(monthValue);
-                  return (
-                    <button
-                      key={monthValue}
-                      type="button"
-                      className={`credential-month-option ${value === monthValue ? 'selected' : ''}`}
-                      disabled={disabled}
-                      onClick={() => {
-                        onChange(monthValue);
-                        setOpenPicker(null);
-                      }}
-                    >
-                      {monthLabel.replace('Tháng ', 'T')}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 const JOB_TYPES = [
   { value: 'INTERNSHIP', label: 'Thực tập sinh (Internship)' },
@@ -1006,6 +924,10 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const isAmbassador = !!wallet?.isAmbassador;
   const acceptFeeText = isAmbassador ? 'Miễn phí – Đại sứ' : '19.000 Điểm';
   const exportFeeText = isAmbassador ? 'Miễn phí – Đại sứ' : '1.000 Điểm';
+  /* Phí cập nhật website thật của người này (0 với đại sứ), lấy từ ví.
+     Hộp xác nhận so số dư với số này, không so với 1.000 cố định: so cố định
+     thì đại sứ dưới 1.000 Điểm chỉ thấy nút "Nạp thêm Điểm" dù không mất phí. */
+  const exportFeeNp = wallet?.portfolioExportFeeNp ?? 1000;
   const [walletLoading, setWalletLoading] = useState(true);
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState('39000');
@@ -1079,7 +1001,6 @@ export function CandidateDashboardPage({ initialPortfolio }) {
   const [credentialFormLoading, setCredentialFormLoading] = useState(false);
   const [credentialFormError, setCredentialFormError] = useState('');
   const [credentialFormSuccess, setCredentialFormSuccess] = useState('');
-  const [openCredentialMonthPicker, setOpenCredentialMonthPicker] = useState(null);
 
   // DB Loaded Organizations States
   const [companiesList, setCompaniesList] = useState([]);
@@ -1749,26 +1670,23 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     e.preventDefault();
     setCredentialFormError('');
     setCredentialFormSuccess('');
-    const currentMonthValue = getCurrentMonthValue();
     if (!credentialForm.projectName.trim() || !credentialForm.position.trim()) {
       setCredentialFormError('Vui lòng điền tên hoạt động và vai trò.');
       return;
     }
-    if (credentialForm.startedAt && compareMonthValues(credentialForm.startedAt, currentMonthValue) > 0) {
-      setCredentialFormError('Thời gian bắt đầu không được sau tháng hiện tại.');
-      return;
-    }
-    if (credentialForm.endedAt && compareMonthValues(credentialForm.endedAt, currentMonthValue) > 0) {
-      setCredentialFormError('Thời gian kết thúc không được sau tháng hiện tại.');
-      return;
-    }
-    if (credentialForm.startedAt && credentialForm.endedAt && compareMonthValues(credentialForm.endedAt, credentialForm.startedAt) < 0) {
-      setCredentialFormError('Thời gian kết thúc không được trước thời gian bắt đầu.');
+    const dateErrors = validateDateRange({ start: credentialForm.startedAt, end: credentialForm.endedAt });
+    if (dateErrors.start || dateErrors.end) {
+      setCredentialFormError(dateErrors.start || dateErrors.end);
       return;
     }
     setCredentialFormLoading(true);
     try {
-      await submitCredential(credentialForm);
+      // Ô nhập hiển thị dd/mm/yyyy; backend lưu cột date nên gửi yyyy-mm-dd.
+      await submitCredential({
+        ...credentialForm,
+        startedAt: toIsoDate(credentialForm.startedAt),
+        endedAt: toIsoDate(credentialForm.endedAt),
+      });
       setCredentialFormSuccess('Đã gửi minh chứng thành công! Hệ thống đang tự động kiểm tra và sẽ phản hồi kết quả ngay trên danh sách bên dưới.');
       // Nhiệm vụ "minh chứng được duyệt" chỉ tính khi admin DUYỆT (bắn từ backend), không tính lúc nộp.
       setCredentialForm({ projectName: '', position: '', category: 'CLUB_SMALL', roleLevel: 'MEMBER', description: '', proofLink: '', proofImages: [], startedAt: '', endedAt: '' });
@@ -2017,7 +1935,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
 
   async function handleExportPortfolio() {
     const isFirstExport = !portfolio?.isExported && (portfolio?.exportCount ?? 0) === 0;
-    const fee = isFirstExport ? 0 : (wallet?.portfolioExportFeeNp ?? 1000);
+    const fee = isFirstExport ? 0 : exportFeeNp;
     if (fee > 0 && (wallet?.npBalance ?? 0) < fee) {
       const errMsg = `Số dư ví hiện tại (${(wallet?.npBalance ?? 0).toLocaleString()} Điểm) không đủ thanh toán phí cập nhật website (${fee.toLocaleString()} Điểm). Vui lòng nạp thêm Điểm.`;
       setExportError(errMsg);
@@ -4198,7 +4116,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                 <button
                   className="button primary-button"
                   style={{ fontSize: '0.82rem', padding: '7px 14px', borderRadius: '10px' }}
-                  onClick={() => { setShowCredentialForm(v => !v); setOpenCredentialMonthPicker(null); setCredentialFormError(''); setCredentialFormSuccess(''); }}
+                  onClick={() => { setShowCredentialForm(v => !v); setCredentialFormError(''); setCredentialFormSuccess(''); }}
                 >
                   {showCredentialForm ? 'Đóng form' : '+ Nộp minh chứng mới'}
                 </button>
@@ -4275,35 +4193,32 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       </select>
                     </div>
                     <div>
-                      <label className="form-label">Thời gian bắt đầu</label>
-                      <CredentialMonthPicker
+                      <label className="form-label" htmlFor="credential-started-at">Thời gian bắt đầu</label>
+                      <input
                         id="credential-started-at"
-                        label=""
+                        className="form-input"
+                        inputMode="numeric"
+                        placeholder={`${DATE_PLACEHOLDER} (Ví dụ: 15/09/2024)`}
                         value={credentialForm.startedAt}
-                        maxValue={getCurrentMonthValue()}
-                        openPicker={openCredentialMonthPicker}
-                        setOpenPicker={setOpenCredentialMonthPicker}
-                        helperText="Không chọn sau tháng hiện tại."
-                        onChange={(value) => setCredentialForm((form) => ({
-                          ...form,
-                          startedAt: value,
-                          endedAt: form.endedAt && compareMonthValues(form.endedAt, value) < 0 ? '' : form.endedAt,
-                        }))}
+                        onChange={e => setCredentialForm(f => ({ ...f, startedAt: maskDateInput(e.target.value) }))}
                       />
+                      <small style={{ fontSize: '0.74rem', color: 'var(--muted)', marginTop: '4px', display: 'block' }}>
+                        Không sau ngày hôm nay.
+                      </small>
                     </div>
                     <div>
-                      <label className="form-label">Thời gian kết thúc</label>
-                      <CredentialMonthPicker
+                      <label className="form-label" htmlFor="credential-ended-at">Thời gian kết thúc</label>
+                      <input
                         id="credential-ended-at"
-                        label=""
+                        className="form-input"
+                        inputMode="numeric"
+                        placeholder={`${DATE_PLACEHOLDER} (Ví dụ: 30/06/2026)`}
                         value={credentialForm.endedAt}
-                        minValue={credentialForm.startedAt}
-                        maxValue={getCurrentMonthValue()}
-                        openPicker={openCredentialMonthPicker}
-                        setOpenPicker={setOpenCredentialMonthPicker}
-                        helperText="Không trước tháng bắt đầu."
-                        onChange={(value) => setCredentialForm(f => ({ ...f, endedAt: value }))}
+                        onChange={e => setCredentialForm(f => ({ ...f, endedAt: maskDateInput(e.target.value) }))}
                       />
+                      <small style={{ fontSize: '0.74rem', color: 'var(--muted)', marginTop: '4px', display: 'block' }}>
+                        Không trước ngày bắt đầu.
+                      </small>
                     </div>
                     <div className="form-full">
                       <label className="form-label">Link minh chứng (Google Drive, fanpage sự kiện, bài đăng...)</label>
@@ -4350,7 +4265,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     <button type="submit" className="button primary-button" disabled={credentialFormLoading} style={{ fontSize: '0.86rem' }}>
                       {credentialFormLoading ? 'Đang gửi...' : 'Nộp minh chứng'}
                     </button>
-                    <button type="button" className="button secondary-button" onClick={() => { setShowCredentialForm(false); setOpenCredentialMonthPicker(null); }} style={{ fontSize: '0.86rem' }}>Hủy</button>
+                    <button type="button" className="button secondary-button" onClick={() => { setShowCredentialForm(false); }} style={{ fontSize: '0.86rem' }}>Hủy</button>
                   </div>
                 </form>
               )}
@@ -4823,7 +4738,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     {portfolio?.isExported ? (
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.86rem' }}>
                         <span style={{ color: 'var(--c-muted)' }}>Số dư ví hiện tại:</span>
-                        <strong style={{ color: (isAmbassador || (wallet?.npBalance ?? 0) >= 1000) ? '#10b981' : '#ef4444' }}>
+                        <strong style={{ color: ((wallet?.npBalance ?? 0) >= exportFeeNp) ? '#10b981' : '#ef4444' }}>
                           {(wallet?.npBalance ?? 0).toLocaleString('vi-VN')} Điểm
                         </strong>
                       </div>
@@ -4840,7 +4755,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    {portfolio?.isExported && (wallet?.npBalance ?? 0) < 1000 ? (
+                    {portfolio?.isExported && (wallet?.npBalance ?? 0) < exportFeeNp ? (
                       <button
                         type="button"
                         className="button primary-button"
@@ -4897,21 +4812,21 @@ export function CandidateDashboardPage({ initialPortfolio }) {
               boxShadow: '0 25px 60px rgba(0,0,0,0.85)',
             }}
           >
-            {/* Modal Header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '14px 22px',
+            {/* Modal Header. Máy tính: một hàng (tiêu đề · Xuất website · Đóng).
+                Điện thoại: tiêu đề + nút ✕ ở hàng trên, nút Xuất website cả hàng
+                dưới — nếu không, nút "Đóng" bị đẩy ra ngoài mép màn hình.
+                Thứ tự đổi bằng CSS (.preview-modal-* trong index.css). */}
+            <div className="preview-modal-head" style={{
+              padding: '12px 18px',
               borderBottom: '1px solid rgba(255,255,255,0.1)',
               background: 'rgba(255,255,255,0.03)',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div className="preview-modal-title">
                 <Eye size={18} color="#34d399" />
-                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#fff' }}>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#fff', whiteSpace: 'nowrap' }}>
                   Bản xem trước Portfolio
                 </h3>
-                <span style={{
+                <span className="preview-modal-badge" style={{
                   fontSize: '0.72rem',
                   padding: '2px 9px',
                   borderRadius: '999px',
@@ -4923,34 +4838,39 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   Xem trước bản nháp
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <button
-                  type="button"
-                  className="button primary-button"
-                  style={{ padding: '6px 14px', fontSize: '0.82rem', gap: '6px' }}
-                  onClick={() => {
-                    setShowPreviewModal(false);
-                    setExportError('');
-                    setExportResult(null);
-                    setShowExportModal(true);
-                  }}
-                >
-                  <Globe size={14} /> {portfolio?.isExported ? `Cập nhật website (${exportFeeText})` : 'Xuất website (Miễn phí lần đầu)'}
-                </button>
-                <button
-                  type="button"
-                  className="button secondary-button"
-                  style={{ padding: '6px 12px', fontSize: '0.82rem' }}
-                  onClick={() => setShowPreviewModal(false)}
-                >
-                  <X size={16} /> Đóng
-                </button>
-              </div>
+              <button
+                type="button"
+                className="button primary-button preview-modal-export"
+                style={{ padding: '6px 14px', fontSize: '0.82rem', gap: '6px', whiteSpace: 'nowrap' }}
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  setExportError('');
+                  setExportResult(null);
+                  setShowExportModal(true);
+                }}
+              >
+                <Globe size={14} /> {portfolio?.isExported ? `Cập nhật website (${exportFeeText})` : 'Xuất website (Miễn phí lần đầu)'}
+              </button>
+              <button
+                type="button"
+                className="button secondary-button preview-modal-close"
+                style={{ padding: '6px 12px', fontSize: '0.82rem', whiteSpace: 'nowrap' }}
+                onClick={() => setShowPreviewModal(false)}
+                aria-label="Đóng bản xem trước"
+              >
+                <X size={16} /> <span className="preview-modal-close-label">Đóng</span>
+              </button>
             </div>
 
-            {/* Modal Body: render VerifiedPassport */}
-            <div style={{ flex: 1, overflowY: 'auto' }}>
-              <VerifiedPassport profile={portfolio} isDraft />
+            {/* Trang portfolio đặt trong iframe, như ở trang sửa. Đặt thẳng vào
+                đây thì thanh menu `position: fixed` của theme bám vào mép màn
+                hình, đè lên đầu cửa sổ này — nút "Tuyển tôi" che mất nút
+                "Đóng" — và bấm các mục menu cũng không cuộn được vì trang cuộn
+                trong khung này chứ không phải cửa sổ. */}
+            <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+              <PreviewFrame style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0, display: 'block', background: '#000000' }}>
+                <VerifiedPassport profile={portfolio} isDraft />
+              </PreviewFrame>
             </div>
           </div>
         </div>
