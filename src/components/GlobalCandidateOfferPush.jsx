@@ -106,11 +106,30 @@ export function GlobalCandidateOfferPush() {
     }
   }
 
+  /* Tiết kiệm egress: /me/applications kèm logo công ty (base64) nên mỗi lần
+     poll khá nặng. Chỉ poll khi tab đang hiển thị, mỗi 60 giây, và khi đổi
+     trang thì chỉ kiểm tra lại nếu lần trước đã cách ít nhất 15 giây.
+     Trang quản trị không cần popup lời mời của ứng viên. */
+  const lastCheckRef = useRef(0);
+  const pathRef = useRef(location.pathname);
+
+  function checkIfDue(minGapMs) {
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    if ((pathRef.current || '').startsWith('/nextplease-admin-portal')) return;
+    const now = Date.now();
+    if (now - lastCheckRef.current < minGapMs) return;
+    lastCheckRef.current = now;
+    checkOffersAndInvites();
+  }
+
+  // Đổi trang (vd. vừa đăng nhập xong) → kiểm tra ngay nếu đã đủ lâu.
   useEffect(() => {
-    // Initial check
-    const initialTimer = setTimeout(() => {
-      checkOffersAndInvites();
-    }, 0);
+    pathRef.current = location.pathname;
+    checkIfDue(15000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  useEffect(() => {
 
     // Request desktop notification permission gently
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -119,13 +138,16 @@ export function GlobalCandidateOfferPush() {
       }
     }
 
-    // Poll every 15 seconds
-    const interval = setInterval(checkOffersAndInvites, 15000);
+    // Poll mỗi 60 giây khi tab đang mở; quay lại tab thì kiểm tra ngay.
+    const interval = setInterval(() => checkIfDue(55000), 60000);
+    const onVisible = () => checkIfDue(15000);
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
-      clearTimeout(initialTimer);
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [location.pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const activeOffers = offers.filter((o) => !dismissedOfferIds.includes(`job_${o.id}`));
   const activeInvites = orgInvites.filter((inv) => !dismissedOfferIds.includes(`inv_${inv.id}`));

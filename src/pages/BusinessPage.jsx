@@ -66,6 +66,7 @@ import { NotificationBell } from '../components/NotificationBell.jsx';
 import { getOrganizerQuests, getOrganizerQuestById, closeQuest, deleteQuest, getQuestApplicants, updateQuestApplicationStatus } from '../api/questApi.js';
 import { getRating, createRating, updateRating } from '../api/ratingApi.js';
 import { Crown, ArrowLeft, Check, Calendar, Award, ChevronRight, ExternalLink as ExtLink, Loader2, AlertCircle } from 'lucide-react';
+import { fileToCompressedDataUrl } from '../lib/imageCompress.js';
 
 
 const DASHBOARD_BASE_PATH = '/businesses/dashboard';
@@ -2941,15 +2942,14 @@ function AccountDetailView({ account, company, onRefresh }) {
       setActionStatus({ type: 'error', message: `Ảnh logo ${kb}KB, vượt giới hạn 512KB. Hãy nén hoặc thu nhỏ ảnh trước.` });
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setFormData((prev) => ({ ...prev, logoUrl: reader.result }));
-      setActionStatus({ type: 'idle', message: '' });
-    };
-    reader.onerror = () => {
-      setActionStatus({ type: 'error', message: 'Không đọc được tệp ảnh này.' });
-    };
-    reader.readAsDataURL(file);
+    fileToCompressedDataUrl(file, { maxDim: 400, quality: 0.85 })
+      .then((dataUrl) => {
+        setFormData((prev) => ({ ...prev, logoUrl: dataUrl }));
+        setActionStatus({ type: 'idle', message: '' });
+      })
+      .catch(() => {
+        setActionStatus({ type: 'error', message: 'Không đọc được tệp ảnh này.' });
+      });
     // Cho phép chọn lại đúng tệp vừa chọn (onChange không bắn nếu value không đổi).
     e.target.value = '';
   }

@@ -32,6 +32,15 @@ export async function getAllVerificationSubmissions() {
   return response.data.data;
 }
 
+/** Ảnh minh chứng của MỘT mục — danh sách hàng chờ không còn kèm ảnh base64. */
+export async function getCredentialProofImages(id) {
+  const response = await httpClient.get(`/admin/dashboard/verification-queue/${id}/proof-images`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải ảnh minh chứng.');
+  }
+  return response.data.data || [];
+}
+
 export async function approveCredential(id, note) {
   const params = note ? { note } : {};
   const response = await httpClient.post(`/admin/dashboard/verification-queue/${id}/approve`, null, { params });

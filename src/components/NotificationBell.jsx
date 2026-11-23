@@ -42,8 +42,19 @@ export function NotificationBell({ accent = '#e5533f', style, buttonStyle, onNav
     // load() is async — state updates happen after the await, not synchronously.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
-    const t = setInterval(load, 12000);
-    return () => clearInterval(t);
+    // 30s thay vì 12s, và bỏ qua khi tab bị ẩn — giảm số request/egress.
+    const t = setInterval(() => {
+      if (document.visibilityState !== 'hidden') load();
+    }, 30000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') load();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Close on outside click

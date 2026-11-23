@@ -4,6 +4,7 @@ import { createQuest, updateQuest, getQuestExpConfig } from '../api/questApi.js'
 import { getMyCompany } from '../api/b2bApi.js';
 import { PremiumDateTimePicker } from './PremiumDateTimePicker.jsx';
 import { QUEST_CATEGORIES, toLocalISOString, parseBanner, serializeBanner } from './postingConstants.js';
+import { fileToCompressedDataUrl } from '../lib/imageCompress.js';
 
 const FIELD_STYLE = {
   padding: '12px 16px', borderRadius: '12px',
@@ -78,9 +79,9 @@ export function QuestPostForm({ onSuccess, onCancel, initialData = null }) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) { setStatus({ type: 'error', message: 'Ảnh banner phải dưới 2MB.' }); return; }
-    const reader = new FileReader();
-    reader.onload = () => setForm((c) => ({ ...c, bannerUrl: reader.result }));
-    reader.readAsDataURL(file);
+    fileToCompressedDataUrl(file, { maxDim: 1600 })
+      .then((dataUrl) => setForm((c) => ({ ...c, bannerUrl: dataUrl })))
+      .catch(() => setStatus({ type: 'error', message: 'Không đọc được ảnh banner này.' }));
   }
 
   // Banner editor: drag to pan (both axes), wheel / buttons to zoom. Encoded
