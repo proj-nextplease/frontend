@@ -43,6 +43,7 @@ import { FilePreviewModal } from '../components/FilePreviewModal.jsx';
 import { CoverBannerEditor } from '../components/CoverBannerEditor.jsx';
 import { EXPERIENCE_CATEGORY_OPTIONS, EXPERIENCE_ROLE_LEVEL_OPTIONS } from '../constants/experience.js';
 import { DATE_PLACEHOLDER, maskDateInput, validateDateRange } from '../lib/experienceDates.js';
+import { fileToCompressedDataUrl } from '../lib/imageCompress.js';
 
 
 /** Return a shallow copy of `obj` without the given keys (used to drop heavy
@@ -573,9 +574,9 @@ export function CandidatePortfolioPage({ isEditing = false }) {
       return;
     }
     setErrorMsg('');
-    const reader = new FileReader();
-    reader.onload = () => updateAvatar('portraitUrl', reader.result);
-    reader.readAsDataURL(file);
+    fileToCompressedDataUrl(file, { maxDim: 800 })
+      .then((dataUrl) => updateAvatar('portraitUrl', dataUrl))
+      .catch(() => setErrorMsg('Không đọc được tệp ảnh này.'));
   }
 
   function updateAvatar(field, value) {
@@ -657,17 +658,17 @@ export function CandidatePortfolioPage({ isEditing = false }) {
     markDirty();
     files.forEach((file) => {
       if (file.size > 10 * 1024 * 1024) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        setExperiences((current) =>
-          current.map((exp) =>
-            exp.id === id
-              ? { ...exp, proofImages: [...(exp.proofImages || []), reader.result].slice(0, 6) }
-              : exp,
-          ),
-        );
-      };
-      reader.readAsDataURL(file);
+      fileToCompressedDataUrl(file, { maxDim: 1600 })
+        .then((dataUrl) => {
+          setExperiences((current) =>
+            current.map((exp) =>
+              exp.id === id
+                ? { ...exp, proofImages: [...(exp.proofImages || []), dataUrl].slice(0, 6) }
+                : exp,
+            ),
+          );
+        })
+        .catch(() => { /* bỏ qua ảnh không đọc được */ });
     });
     event.target.value = '';
   }

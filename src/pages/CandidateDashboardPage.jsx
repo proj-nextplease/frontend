@@ -67,6 +67,7 @@ import { WalletHistory } from '../components/WalletHistory.jsx';
 import { searchQuests, applyToQuest, getMyQuestApplications, withdrawQuestApplication, getSavedQuestIds, getSavedQuests, saveQuest, unsaveQuest } from '../api/questApi.js';
 import { getGamification, pingGamification, claimQuest, recordGamificationEvent } from '../api/gamificationApi.js';
 import { Flame, Target, Gift, ChevronDown, ChevronLeft, ChevronRight, TrendingUp, Eye } from 'lucide-react';
+import { fileToCompressedDataUrl } from '../lib/imageCompress.js';
 
 const CATEGORY_MAP = {
   TECH: {
@@ -989,9 +990,9 @@ export function CandidateDashboardPage({ initialPortfolio }) {
     const files = Array.from(e.target.files || []);
     files.forEach((file) => {
       if (file.size > 10 * 1024 * 1024) { setCredentialFormError('Mỗi ảnh minh chứng phải dưới 10MB.'); return; }
-      const reader = new FileReader();
-      reader.onload = () => setCredentialForm((f) => ({ ...f, proofImages: [...(f.proofImages || []), reader.result].slice(0, 6) }));
-      reader.readAsDataURL(file);
+      fileToCompressedDataUrl(file, { maxDim: 1600 })
+        .then((dataUrl) => setCredentialForm((f) => ({ ...f, proofImages: [...(f.proofImages || []), dataUrl].slice(0, 6) })))
+        .catch(() => setCredentialFormError('Không đọc được ảnh minh chứng này.'));
     });
     e.target.value = '';
   }

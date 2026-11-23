@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { ImagePlus, Move, Plus, Minus, Trash2 } from 'lucide-react';
 import { parseBanner, serializeBanner } from './postingConstants.js';
+import { fileToCompressedDataUrl } from '../lib/imageCompress.js';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -35,9 +36,9 @@ export function CoverBannerEditor({ url, pos, onChange, height = 180 }) {
       return;
     }
     setError('');
-    const reader = new FileReader();
-    reader.onload = () => onChange({ url: reader.result, pos: pos || '50% 50%' });
-    reader.readAsDataURL(file);
+    fileToCompressedDataUrl(file, { maxDim: 1920 })
+      .then((dataUrl) => onChange({ url: dataUrl, pos: pos || '50% 50%' }))
+      .catch(() => setError('Không đọc được tệp ảnh này.'));
   }
 
   function onPointerDown(e) {

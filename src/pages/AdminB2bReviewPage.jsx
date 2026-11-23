@@ -31,7 +31,7 @@ import {
   updateReviewNotes,
 } from '../api/adminApi.js';
 import { getJobDetail } from '../api/jobApi.js';
-import { getAllVerificationSubmissions, approveCredential, rejectCredential } from '../api/credentialApi.js';
+import { getAllVerificationSubmissions, approveCredential, rejectCredential, getCredentialProofImages } from '../api/credentialApi.js';
 import {
   AlertCircle,
   AlertTriangle,
@@ -1674,6 +1674,32 @@ export function AdminB2bReviewPage() {
   const [verifStatusFilter, setVerifStatusFilter] = useState('ALL');
   const [selectedVerifGroup, setSelectedVerifGroup] = useState(null);
   const [activeCredId, setActiveCredId] = useState(null);
+  /* Ảnh minh chứng tải theo từng mục khi mở chi tiết (danh sách chỉ có proofImageCount). */
+  const [proofImagesById, setProofImagesById] = useState({});
+  const proofImagesRequestedRef = useRef(new Set());
+  useEffect(() => {
+    if (!selectedVerifGroup) return;
+    const groupKey = selectedVerifGroup.key;
+    const liveCreds = (verifQueue || []).filter(item =>
+      (item.candidate_email || item.candidate_id || item.candidate_name || item.id) === groupKey
+    );
+    const creds = liveCreds.length > 0 ? liveCreds : (selectedVerifGroup.credentials || []);
+    const active = creds.find(c => c.id === activeCredId) || creds[0];
+    if (!active?.id) return;
+    // Payload cũ còn kèm proof_images → không cần tải thêm.
+    if (active.proof_images !== undefined) return;
+    if (!active.proofImageCount) return;
+    if (proofImagesRequestedRef.current.has(active.id)) return;
+    proofImagesRequestedRef.current.add(active.id);
+    getCredentialProofImages(active.id)
+      .then((images) => {
+        setProofImagesById((prev) => ({ ...prev, [active.id]: Array.isArray(images) ? images : [] }));
+      })
+      .catch((err) => {
+        proofImagesRequestedRef.current.delete(active.id); // cho phép thử lại lần mở sau
+        console.warn('Không thể tải ảnh minh chứng:', err);
+      });
+  }, [selectedVerifGroup, activeCredId, verifQueue]);
   const [verifLightbox, setVerifLightbox] = useState(null);
   const [verifViewMode, setVerifViewMode] = useState('grid');
   const [verifCurrentPage, setVerifCurrentPage] = useState(1);
@@ -4454,9 +4480,15 @@ export function AdminB2bReviewPage() {
                 const isUnclaimed = !activeCred.claimedByAdminId;
                 const notesValue = notesDrafts[activeCred.id] !== undefined ? notesDrafts[activeCred.id] : (activeCred.internalNotes || '');
                 let imgs = [];
-                try { imgs = JSON.parse(activeCred.proof_images || '[]'); } catch { imgs = []; }
+                if (activeCred.proof_images !== undefined) {
+                  try { imgs = JSON.parse(activeCred.proof_images || '[]'); } catch { imgs = []; }
+                } else {
+                  imgs = proofImagesById[activeCred.id] || [];
+                }
                 if (!Array.isArray(imgs)) imgs = [];
-                const hasProof = imgs.length > 0 || !!activeCred.proof_link;
+                const proofImageCount = activeCred.proof_images !== undefined ? imgs.length : (activeCred.proofImageCount || 0);
+                const proofImagesLoading = proofImageCount > 0 && imgs.length === 0;
+                const hasProof = proofImageCount > 0 || !!activeCred.proof_link;
 
                 return (
                   <div className={`verif-md ${creds.length < 2 ? 'single' : ''}`}>
@@ -4650,13 +4682,18 @@ export function AdminB2bReviewPage() {
 
                       {activeCred.description && <p className="admin-subitem-desc" style={{ marginTop: '14px' }}>{activeCred.description}</p>}
 
+                      {proofImagesLoading && (
+                        <div style={{ marginTop: '16px' }}>
+                          <div className="verif-md-imglabel"><ImageIcon size={13} /> Ảnh minh chứng ({proofImageCount}) — đang tải…</div>
+                        </div>
+                      )}
                       {imgs.length > 0 && (
                         <div style={{ marginTop: '16px' }}>
                           <div className="verif-md-imglabel"><ImageIcon size={13} /> Ảnh minh chứng ({imgs.length})</div>
                           <div className="verif-md-imggrid">
                             {imgs.map((src, i) => (
                               <button key={i} type="button" className="verif-md-img" onClick={() => setVerifLightbox({ images: imgs, index: i })} title="Bấm để phóng to">
-                                <img src={src} alt={`Minh chứng ${i + 1}`} />
+                                <img src={src} alt={`Minh chứng ${i + 1}`} decoding="async" />
                                 <span className="verif-md-img-zoom"><Search size={20} /></span>
                               </button>
                             ))}
