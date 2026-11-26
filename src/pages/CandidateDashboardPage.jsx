@@ -1613,12 +1613,16 @@ export function CandidateDashboardPage({ initialPortfolio }) {
    *
    * Vẫn không cộng NP ở đây: tiền chỉ vào ví khi webhook PayOS xác nhận.
    */
+  /* Lấy từ máy chủ (khoá min_topup_vnd, admin sửa được); 39.000 chỉ là dự phòng
+     khi ví chưa tải xong — trùng với gói nhỏ nhất. */
+  const minTopupVnd = Number(wallet?.minTopupVnd) > 0 ? Number(wallet.minTopupVnd) : 39000;
+
   async function handleTopUp(e) {
     e.preventDefault();
     setTopUpError('');
     const amount = parseInt(topUpAmount, 10);
-    if (!amount || amount < 10000) {
-      setTopUpError('Số tiền tối thiểu là 10.000 VND.');
+    if (!amount || amount < minTopupVnd) {
+      setTopUpError(`Số tiền tối thiểu là ${minTopupVnd.toLocaleString('vi-VN')} VND.`);
       return;
     }
     setTopUpLoading(true);
@@ -4609,7 +4613,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                   <input
                     className="form-input"
                     type="number"
-                    min="10000"
+                    min={minTopupVnd}
                     max="10000000"
                     step="1000"
                     value={topUpAmount}
@@ -4625,7 +4629,7 @@ export function CandidateDashboardPage({ initialPortfolio }) {
                       </button>
                     ))}
                   </div>
-                  {topUpAmount && parseInt(topUpAmount) >= 10000 && (
+                  {topUpAmount && parseInt(topUpAmount) >= minTopupVnd && (
                     <p style={{ margin: '0 0 12px', fontSize: '0.84rem', color: '#16a34a', fontWeight: '700' }}>
                       → Nhận được {parseInt(topUpAmount).toLocaleString('vi-VN')} Điểm FONLIO
                     </p>
