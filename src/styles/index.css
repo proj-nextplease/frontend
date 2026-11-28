@@ -8471,16 +8471,29 @@ img {
   margin-top: 4px;
 }
 
-.admin-log-json {
-  font-family: monospace;
-  font-size: 0.78rem;
-  background: var(--bg);
-  padding: 8px 12px;
-  border-radius: 8px;
-  margin-top: 8px;
+.admin-log-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+}
+
+.admin-log-detail {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-log-detail dt {
+  color: var(--muted);
+}
+
+.admin-log-detail dd {
+  margin: 0;
   color: var(--ink);
-  overflow-x: auto;
-  border: 1px solid var(--line);
+  font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 /* Custom Confirm Modal styling */
@@ -14143,6 +14156,25 @@ button.np-pp-cell:hover { background: rgba(255, 255, 255, 0.05); }
 .adm-card-head h3 { margin:0; font-size:1.02rem; font-weight:800; color:var(--ink); letter-spacing:-.01em; }
 .adm-donut-row { display:flex; gap:24px; align-items:center; justify-content:center; flex-wrap:wrap; padding: 4px 0; }
 .adm-status-strip { display:flex; gap:10px; flex-wrap:wrap; }
+/* Tab Tài chính */
+.adm-fin-note { background:var(--surface-soft); border:1px solid var(--line); border-radius:12px; padding:12px 16px; font-size:.86rem; color:var(--muted); line-height:1.5; }
+.adm-fin-np-foot { display:flex; flex-direction:column; gap:6px; margin-top:16px; padding-top:12px; border-top:1px solid var(--line); font-size:.84rem; color:var(--muted); }
+.adm-fin-np-foot strong { color:var(--ink); }
+.adm-fin-table { width:100%; border-collapse:collapse; font-size:.88rem; }
+.adm-fin-table th { text-align:left; font-weight:600; color:var(--muted); font-size:.78rem; padding:0 10px 10px; border-bottom:1px solid var(--line); }
+.adm-fin-table td { padding:12px 10px; border-bottom:1px solid var(--line); color:var(--ink); vertical-align:top; }
+.adm-fin-table tr:last-child td { border-bottom:none; }
+.adm-fin-table .num { text-align:right; font-variant-numeric:tabular-nums; font-weight:700; }
+.adm-fin-sub { display:block; font-size:.78rem; color:var(--muted); margin-top:2px; }
+.adm-fin-foot { font-size:.78rem; color:var(--muted); margin:4px 0 0; }
+.adm-fin-help { font-size:.84rem; color:var(--muted); margin:0 0 12px; line-height:1.5; }
+.adm-fin-mark { background:transparent; border:1px solid var(--line); border-radius:999px; padding:5px 12px; font-size:.76rem; font-weight:600; color:var(--muted); cursor:pointer; white-space:nowrap; font-family:inherit; }
+.adm-fin-mark:hover:not(:disabled) { color:var(--ink); border-color:var(--ink); }
+.adm-fin-mark:disabled { opacity:.5; cursor:default; }
+.adm-fin-testlist { list-style:none; margin:0 0 14px; padding:0; display:flex; flex-direction:column; gap:8px; }
+.adm-fin-testlist li { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:.88rem; }
+.adm-fin-addform { display:flex; gap:10px; align-items:center; }
+.adm-fin-addform .admin-search-input { flex:1; max-width:360px; padding-left:14px; }
 .adm-status-pill { display:inline-flex; align-items:center; gap:8px; background:var(--surface-soft); border:1px solid var(--line); border-radius:999px; padding:8px 15px; font-size:.84rem; color:var(--ink); font-weight:600; }
 .adm-status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 .adm-actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:16px; }

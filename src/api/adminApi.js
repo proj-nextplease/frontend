@@ -159,3 +159,27 @@ export async function revokeAmbassador(userId, reason) {
   }
   return response.data.data;
 }
+
+export async function getAdminFinance() {
+  const response = await httpClient.get('/admin/dashboard/finance');
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể tải số liệu tài chính.');
+  }
+  return response.data.data;
+}
+
+export async function addFinanceTestAccount({ email, userId }) {
+  const response = await httpClient.post('/admin/dashboard/finance/test-accounts', { email, userId });
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể thêm tài khoản test.');
+  }
+  return response.data.data;
+}
+
+export async function removeFinanceTestAccount(userId) {
+  const response = await httpClient.delete(`/admin/dashboard/finance/test-accounts/${userId}`);
+  if (!response.data?.success) {
+    throw new Error(response.data?.message || 'Không thể bỏ tài khoản test.');
+  }
+  return response.data.data;
+}
