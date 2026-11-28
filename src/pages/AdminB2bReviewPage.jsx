@@ -1404,7 +1404,7 @@ function DonutCard({ data, centerValue, centerLabel, size = 176, thickness = 24 
   );
 }
 
-function BarList({ data, suffix = '' }) {
+function BarList({ data, suffix = '', onSelect, selectedKey }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     const raf = requestAnimationFrame(() => setMounted(true));
@@ -1413,20 +1413,29 @@ function BarList({ data, suffix = '' }) {
   const max = Math.max(1, ...data.map((d) => d.value || 0));
   return (
     <div className="adm-barlist">
-      {data.map((d, i) => (
-        <div key={d.label} className="adm-barlist-row">
-          <div className="adm-barlist-top">
-            <span className="adm-barlist-label">{d.label}</span>
-            <strong className="adm-barlist-val"><CountUp value={d.value} duration={650} suffix={suffix} /></strong>
-          </div>
-          <div className="adm-barlist-track">
-            <div
-              className="adm-barlist-fill"
-              style={{ width: mounted ? `${((d.value || 0) / max) * 100}%` : '0%', background: d.color, transitionDelay: `${i * 70}ms` }}
-            />
-          </div>
-        </div>
-      ))}
+      {data.map((d, i) => {
+        const clickable = Boolean(onSelect && d.key && d.value > 0);
+        const Row = clickable ? 'button' : 'div';
+        return (
+          <Row
+            key={d.label}
+            type={clickable ? 'button' : undefined}
+            className={`adm-barlist-row ${clickable ? 'clickable' : ''} ${selectedKey && selectedKey === d.key ? 'selected' : ''}`}
+            onClick={clickable ? () => onSelect(d.key) : undefined}
+          >
+            <div className="adm-barlist-top">
+              <span className="adm-barlist-label">{d.label}{clickable && <ChevronDown size={13} className="adm-barlist-chev" />}</span>
+              <strong className="adm-barlist-val"><CountUp value={d.value} duration={650} suffix={suffix} /></strong>
+            </div>
+            <div className="adm-barlist-track">
+              <div
+                className="adm-barlist-fill"
+                style={{ width: mounted ? `${((d.value || 0) / max) * 100}%` : '0%', background: d.color, transitionDelay: `${i * 70}ms` }}
+              />
+            </div>
+          </Row>
+        );
+      })}
     </div>
   );
 }
@@ -1625,6 +1634,7 @@ export function AdminB2bReviewPage() {
   const [finance, setFinance] = useState(null);
   const [testEmailDraft, setTestEmailDraft] = useState('');
   const [testAccountBusy, setTestAccountBusy] = useState(false);
+  const [selectedOutcome, setSelectedOutcome] = useState(null);
 
   /* ─── State for Users ─── */
   const [users, setUsers] = useState([]);
@@ -2602,11 +2612,14 @@ export function AdminB2bReviewPage() {
     const providerData = (f.byProvider || []).map((p) => ({ label: `${p.label} · ${p.count} lượt`, value: p.amountVnd, color: p.provider === 'GOOGLE_PLAY' ? '#34c759' : '#0066cc' }));
     const outcomeData = [
       { label: 'Thành công', value: f.paidCount, color: '#16a34a' },
-      { label: 'Đang chờ', value: f.pendingCount, color: '#ff9f0a' },
-      { label: 'Người dùng huỷ', value: f.cancelledCount, color: '#8e8e93' },
-      { label: 'Hết hạn', value: f.expiredCount, color: '#c7c7cc' },
-      { label: 'Thất bại', value: f.failedCount, color: '#ff3b30' },
+      { key: 'PENDING', label: 'Đang chờ', value: f.pendingCount, color: '#ff9f0a' },
+      { key: 'CANCELLED', label: 'Người dùng huỷ', value: f.cancelledCount, color: '#8e8e93' },
+      { key: 'EXPIRED', label: 'Hết hạn', value: f.expiredCount, color: '#c7c7cc' },
+      { key: 'FAILED', label: 'Thất bại', value: f.failedCount, color: '#ff3b30' },
     ];
+    const unpaid = Array.isArray(f.unpaidRequests) ? f.unpaidRequests : [];
+    const selectedRows = selectedOutcome ? unpaid.filter((r) => r.status === selectedOutcome) : [];
+    const selectedLabel = outcomeData.find((o) => o.key === selectedOutcome)?.label;
     const recent = Array.isArray(f.recentPayments) ? f.recentPayments : [];
     const providerLabel = (code) => ({ PAYOS: 'PayOS (VietQR)', GOOGLE_PLAY: 'Google Play', VIETQR: 'Chuyển khoản VietQR' }[code] || code);
 
@@ -2662,7 +2675,42 @@ export function AdminB2bReviewPage() {
         <p className="adm-section-label">Lượt nạp</p>
         <div className="adm-card adm-fade-item">
           <div className="adm-card-head"><h3>Kết quả các lượt tạo mã nạp</h3></div>
-          <BarList data={outcomeData} />
+          <p className="adm-fin-help">Bấm vào một dòng để xem ai nằm trong đó.</p>
+          <BarList
+            data={outcomeData}
+            selectedKey={selectedOutcome}
+            onSelect={(key) => setSelectedOutcome((prev) => (prev === key ? null : key))}
+          />
+          {selectedOutcome && (
+            <div className="adm-fin-drill">
+              <div className="adm-fin-drill-head">
+                <strong>{selectedLabel} · {selectedRows.length} lượt</strong>
+                <button type="button" className="adm-fin-mark" onClick={() => setSelectedOutcome(null)}>Đóng</button>
+              </div>
+              {selectedRows.length === 0 ? (
+                <p className="adm-fin-help" style={{ margin: 0 }}>Không có lượt nào.</p>
+              ) : (
+                <table className="adm-fin-table">
+                  <thead>
+                    <tr><th>Thời gian tạo</th><th>Người nạp</th><th>Cổng</th><th className="num">Số tiền</th></tr>
+                  </thead>
+                  <tbody>
+                    {selectedRows.map((r) => (
+                      <tr key={r.id}>
+                        <td>{r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : '—'}</td>
+                        <td>
+                          <strong>{r.userName}</strong>
+                          {r.userEmail && <span className="adm-fin-sub">{r.userEmail}</span>}
+                        </td>
+                        <td>{providerLabel(r.provider)}</td>
+                        <td className="num">{formatVnd(r.amountVnd)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
         </div>
 
         <p className="adm-section-label">Giao dịch gần nhất</p>
