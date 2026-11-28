@@ -35,7 +35,7 @@ import {
 } from '../api/adminApi.js';
 import { getJobDetail } from '../api/jobApi.js';
 import { describeAuditLog, auditLogSearchText } from '../utils/auditLogText.js';
-import { formatVnd, formatNp } from '../utils/financeFormat.js';
+import { formatVnd } from '../utils/financeFormat.js';
 import { getAllVerificationSubmissions, approveCredential, rejectCredential, getCredentialProofImages } from '../api/credentialApi.js';
 import {
   AlertCircle,
@@ -2585,7 +2585,6 @@ export function AdminB2bReviewPage() {
   function renderFinance() {
     if (!finance) return <p style={{ color: 'var(--muted)' }}>Chưa có số liệu tài chính.</p>;
     const f = finance;
-    const np = f.np || {};
     const monthLabel = (m) => {
       const [y, mm] = String(m).split('-');
       return `Tháng ${Number(mm)}/${y}`;
@@ -2607,12 +2606,6 @@ export function AdminB2bReviewPage() {
       { label: 'Người dùng huỷ', value: f.cancelledCount, color: '#8e8e93' },
       { label: 'Hết hạn', value: f.expiredCount, color: '#c7c7cc' },
       { label: 'Thất bại', value: f.failedCount, color: '#ff3b30' },
-    ];
-    const npData = [
-      { label: 'Phí nhận việc có lương', value: np.jobAcceptanceFeesNp, color: '#ff9f0a' },
-      { label: 'Phí xuất portfolio', value: np.portfolioExportFeesNp, color: '#5e5ce6' },
-      { label: 'Gói Premium (mô hình cũ)', value: np.premiumNp, color: '#aeaeb2' },
-      { label: 'Chi tiêu khác', value: np.otherSpendNp, color: '#32ade6' },
     ];
     const recent = Array.isArray(f.recentPayments) ? f.recentPayments : [];
     const providerLabel = (code) => ({ PAYOS: 'PayOS (VietQR)', GOOGLE_PLAY: 'Google Play', VIETQR: 'Chuyển khoản VietQR' }[code] || code);
@@ -2666,20 +2659,10 @@ export function AdminB2bReviewPage() {
           </div>
         </div>
 
-        <p className="adm-section-label">Lượt nạp và NP</p>
-        <div className="adm-grid-2">
-          <div className="adm-card adm-fade-item">
-            <div className="adm-card-head"><h3>Kết quả các lượt tạo mã nạp</h3></div>
-            <BarList data={outcomeData} />
-          </div>
-          <div className="adm-card adm-fade-item">
-            <div className="adm-card-head"><h3>NP người dùng đã chi</h3></div>
-            <BarList data={npData} suffix=" NP" />
-            <div className="adm-fin-np-foot">
-              <span>NP đã thưởng cho người dùng: <strong>{formatNp(np.rewardsIssuedNp)}</strong></span>
-              <span>NP đang nằm trong ví người dùng: <strong>{formatNp(np.outstandingNp)}</strong></span>
-            </div>
-          </div>
+        <p className="adm-section-label">Lượt nạp</p>
+        <div className="adm-card adm-fade-item">
+          <div className="adm-card-head"><h3>Kết quả các lượt tạo mã nạp</h3></div>
+          <BarList data={outcomeData} />
         </div>
 
         <p className="adm-section-label">Giao dịch gần nhất</p>
@@ -2689,7 +2672,7 @@ export function AdminB2bReviewPage() {
           ) : (
             <table className="adm-fin-table">
               <thead>
-                <tr><th>Thời gian</th><th>Người nạp</th><th>Cổng</th><th className="num">Số tiền</th><th /></tr>
+                <tr><th>Thời gian</th><th>Người nạp</th><th>Cổng</th><th className="num">Số tiền</th></tr>
               </thead>
               <tbody>
                 {recent.map((r) => (
@@ -2701,18 +2684,6 @@ export function AdminB2bReviewPage() {
                     </td>
                     <td>{providerLabel(r.provider)}</td>
                     <td className="num">{formatVnd(r.amountVnd)}</td>
-                    <td className="num">
-                      {r.userId && (
-                        <button
-                          type="button"
-                          className="adm-fin-mark"
-                          disabled={testAccountBusy}
-                          onClick={() => handleAddTestAccount({ userId: r.userId }, r.userName || r.userEmail)}
-                        >
-                          Là tài khoản test
-                        </button>
-                      )}
-                    </td>
                   </tr>
                 ))}
               </tbody>

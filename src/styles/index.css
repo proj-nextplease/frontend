@@ -14158,8 +14158,6 @@ button.np-pp-cell:hover { background: rgba(255, 255, 255, 0.05); }
 .adm-status-strip { display:flex; gap:10px; flex-wrap:wrap; }
 /* Tab Tài chính */
 .adm-fin-note { background:var(--surface-soft); border:1px solid var(--line); border-radius:12px; padding:12px 16px; font-size:.86rem; color:var(--muted); line-height:1.5; }
-.adm-fin-np-foot { display:flex; flex-direction:column; gap:6px; margin-top:16px; padding-top:12px; border-top:1px solid var(--line); font-size:.84rem; color:var(--muted); }
-.adm-fin-np-foot strong { color:var(--ink); }
 .adm-fin-table { width:100%; border-collapse:collapse; font-size:.88rem; }
 .adm-fin-table th { text-align:left; font-weight:600; color:var(--muted); font-size:.78rem; padding:0 10px 10px; border-bottom:1px solid var(--line); }
 .adm-fin-table td { padding:12px 10px; border-bottom:1px solid var(--line); color:var(--ink); vertical-align:top; }
