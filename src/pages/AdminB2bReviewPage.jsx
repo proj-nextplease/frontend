@@ -18,6 +18,9 @@ import {
   getAdminUsers,
   getAdminJobs,
   getAdminAuditLogs,
+  getAdminFinance,
+  addFinanceTestAccount,
+  removeFinanceTestAccount,
   approveJob,
   rejectJob,
   updateUserStatus,
@@ -31,6 +34,8 @@ import {
   updateReviewNotes,
 } from '../api/adminApi.js';
 import { getJobDetail } from '../api/jobApi.js';
+import { describeAuditLog, auditLogSearchText } from '../utils/auditLogText.js';
+import { formatVnd, formatNp } from '../utils/financeFormat.js';
 import { getAllVerificationSubmissions, approveCredential, rejectCredential, getCredentialProofImages } from '../api/credentialApi.js';
 import {
   AlertCircle,
@@ -100,6 +105,7 @@ const ADMIN_BASE_PATH = '/nextplease-admin-portal/b2b-reviews';
 
 const SIDEBAR_TABS = [
   { key: 'OVERVIEW', route: 'overview', label: 'Tổng quan hệ thống', icon: BarChart2 },
+  { key: 'FINANCE', route: 'finance', label: 'Tài chính', icon: Wallet },
   { key: 'USERS', route: 'users', label: 'Quản lý người dùng', icon: Users },
   {
     key: 'B2B_REVIEWS', route: 'b2b-partners', label: 'Duyệt đối tác B2B', icon: Building, badgeCount: true,
@@ -1295,7 +1301,7 @@ function ProvisionPanel() {
     </div>
   );
 }/* ── Lightweight inline SVG charts (no external lib) ── */
-function CountUp({ value, duration = 900 }) {
+function CountUp({ value, duration = 900, suffix = '' }) {
   const [display, setDisplay] = useState(0);
   useEffect(() => {
     let raf;
@@ -1310,7 +1316,7 @@ function CountUp({ value, duration = 900 }) {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [value, duration]);
-  return display.toLocaleString('vi-VN');
+  return `${display.toLocaleString('vi-VN')}${suffix}`;
 }
 
 function useElementWidth(fallback = 600) {
@@ -1398,7 +1404,7 @@ function DonutCard({ data, centerValue, centerLabel, size = 176, thickness = 24 
   );
 }
 
-function BarList({ data }) {
+function BarList({ data, suffix = '' }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     const raf = requestAnimationFrame(() => setMounted(true));
@@ -1411,7 +1417,7 @@ function BarList({ data }) {
         <div key={d.label} className="adm-barlist-row">
           <div className="adm-barlist-top">
             <span className="adm-barlist-label">{d.label}</span>
-            <strong className="adm-barlist-val"><CountUp value={d.value} duration={650} /></strong>
+            <strong className="adm-barlist-val"><CountUp value={d.value} duration={650} suffix={suffix} /></strong>
           </div>
           <div className="adm-barlist-track">
             <div
@@ -1425,7 +1431,7 @@ function BarList({ data }) {
   );
 }
 
-function TrendChart({ points, height = 210, color = '#0066cc', deltaPct }) {
+function TrendChart({ points, height = 210, color = '#0066cc', deltaPct, unit = 'người dùng mới', formatValue = (v) => v, labelEvery = 1 }) {
   const [wrapRef, width] = useElementWidth(640);
   const [mounted, setMounted] = useState(false);
   const [hoverIdx, setHoverIdx] = useState(null);
@@ -1496,13 +1502,13 @@ function TrendChart({ points, height = 210, color = '#0066cc', deltaPct }) {
             onMouseEnter={() => setHoverIdx(i)}
           />
         ))}
-        {points.map((p, i) => (
+        {points.map((p, i) => ((i % labelEvery === 0 || i === points.length - 1) ? (
           <text key={i} x={coords[i][0]} y={height - 7} textAnchor="middle" className="adm-trend-axis">{p.date.slice(5)}</text>
-        ))}
+        ) : null))}
       </svg>
       {hoverIdx !== null && (
         <div className="adm-trend-tooltip" style={{ left: `${(coords[hoverIdx][0] / width) * 100}%`, top: `${(coords[hoverIdx][1] / height) * 100}%` }}>
-          <strong>{points[hoverIdx].count}</strong> người dùng mới
+          <strong>{formatValue(points[hoverIdx].count)}</strong> {unit}
           <span>{points[hoverIdx].date}</span>
         </div>
       )}
@@ -1616,6 +1622,9 @@ export function AdminB2bReviewPage() {
   /* ─── State for Overview ─── */
   const [stats, setStats] = useState(null);
   const [health, setHealth] = useState(null);
+  const [finance, setFinance] = useState(null);
+  const [testEmailDraft, setTestEmailDraft] = useState('');
+  const [testAccountBusy, setTestAccountBusy] = useState(false);
 
   /* ─── State for Users ─── */
   const [users, setUsers] = useState([]);
@@ -1657,7 +1666,6 @@ export function AdminB2bReviewPage() {
   const [logs, setLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [searchLogQuery, setSearchLogQuery] = useState('');
-  const [expandedLogId, setExpandedLogId] = useState(null);
 
   /* ─── State for Custom Validations ─── */
   const [rejectReasonError, setRejectReasonError] = useState('');
@@ -1907,6 +1915,12 @@ export function AdminB2bReviewPage() {
         setStats(data);
         // Trạng thái vận hành thời gian thực (fail-soft: không chặn dashboard nếu lỗi)
         getAdminHealth().then(setHealth).catch(() => setHealth(null));
+        // Số liệu tài chính cho khối "Tài chính" ở Tổng quan (fail-soft như trên)
+        getAdminFinance().then(setFinance).catch(() => setFinance(null));
+      } else if (tabKey === 'FINANCE') {
+        const data = await getAdminFinance();
+        if (isStale()) return;
+        setFinance(data);
       } else if (tabKey === 'USERS') {
         const data = await getAdminUsers();
         if (isStale()) return;
@@ -2047,13 +2061,7 @@ export function AdminB2bReviewPage() {
 
     if (searchLogQuery.trim()) {
       const q = searchLogQuery.toLowerCase();
-      result = result.filter(
-        (log) =>
-          log.action?.toLowerCase().includes(q) ||
-          log.actorEmail?.toLowerCase().includes(q) ||
-          log.actorName?.toLowerCase().includes(q) ||
-          log.entityType?.toLowerCase().includes(q),
-      );
+      result = result.filter((log) => auditLogSearchText(log).includes(q));
     }
     setFilteredLogs(result);
   }, [logs, auditLogTab, searchLogQuery]);
@@ -2390,6 +2398,40 @@ export function AdminB2bReviewPage() {
           </>
         )}
 
+        {finance && (
+          <>
+            <p className="adm-section-label">Tài chính</p>
+            <div className="adm-kpi-grid">
+              {[
+                { label: 'Tiền thật đã nhận', value: finance.realRevenueVnd, suffix: 'đ', icon: Wallet, color: '#16a34a', hint: `${finance.paidCount} lượt nạp thành công` },
+                { label: 'Tiền nạp tháng này', value: finance.revenueThisMonthVnd, suffix: 'đ', icon: TrendingUp, color: '#0066cc', hint: `Tháng trước: ${formatVnd(finance.revenuePrevMonthVnd)}`, delta: finance.monthDeltaPct },
+                { label: 'Người đã nạp tiền', value: finance.payingUsers, icon: Users, color: '#5e5ce6', hint: 'Tài khoản đã nạp ít nhất 1 lần' },
+                { label: 'Phí NP đã thu', value: finance.np?.totalFeesNp, suffix: ' NP', icon: Award, color: '#ff9f0a', hint: 'Phí nhận việc, xuất portfolio, Premium cũ' },
+              ].map((c, i) => {
+                const Icon = c.icon;
+                return (
+                  <div key={c.label} className="adm-kpi-card" style={{ '--kpi': c.color, animationDelay: `${i * 55}ms` }}>
+                    <span className="adm-kpi-ico"><Icon size={17} /></span>
+                    <div className="adm-kpi-body">
+                      <span className="adm-kpi-label">{c.label}</span>
+                      <div className="adm-kpi-valrow">
+                        <div className="adm-kpi-value"><CountUp value={c.value ?? 0} suffix={c.suffix || ''} /></div>
+                        {typeof c.delta === 'number' && c.delta !== 0 && (
+                          <span className={`adm-kpi-delta ${c.delta > 0 ? 'up' : 'down'}`}>
+                            {c.delta > 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                            {c.delta > 0 ? '+' : ''}{c.delta}%
+                          </span>
+                        )}
+                      </div>
+                      <span className="adm-kpi-hint">{c.hint}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
         <p className="adm-section-label">Vận hành</p>
         <div className="adm-card adm-fade-item" style={{ animationDelay: '330ms' }}>
           <div className="adm-card-head"><h3>Trạng thái hệ thống</h3></div>
@@ -2427,6 +2469,14 @@ export function AdminB2bReviewPage() {
             <div className="adm-action-body">
               <h4>Duyệt hồ sơ đối tác B2B</h4>
               <p>Có <strong>{stats.totalPendingB2b}</strong> hồ sơ đang chờ xét duyệt.</p>
+            </div>
+            <ArrowRight size={18} className="adm-action-arrow" />
+          </button>
+          <button type="button" className="adm-action adm-fade-item" style={{ animationDelay: '400ms' }} onClick={() => navigate(getAdminTabPath('FINANCE'))}>
+            <span className="adm-action-ico"><Wallet size={20} /></span>
+            <div className="adm-action-body">
+              <h4>Tài chính</h4>
+              <p>Xem chi tiết tiền nạp, cổng thanh toán và phí NP đã thu.</p>
             </div>
             <ArrowRight size={18} className="adm-action-arrow" />
           </button>
@@ -2495,6 +2545,231 @@ export function AdminB2bReviewPage() {
         }
       },
     });
+  }
+
+  async function refreshFinance() {
+    try {
+      setFinance(await getAdminFinance());
+    } catch (err) {
+      setActionStatus({ type: 'error', message: err.message });
+    }
+  }
+
+  async function handleAddTestAccount(payload, label) {
+    setTestAccountBusy(true);
+    try {
+      await addFinanceTestAccount(payload);
+      setTestEmailDraft('');
+      await refreshFinance();
+      setActionStatus({ type: 'success', message: `Đã đánh dấu ${label} là tài khoản test. Giao dịch của tài khoản này không còn được tính.` });
+    } catch (err) {
+      setActionStatus({ type: 'error', message: err.message });
+    } finally {
+      setTestAccountBusy(false);
+    }
+  }
+
+  async function handleRemoveTestAccount(userId, label) {
+    setTestAccountBusy(true);
+    try {
+      await removeFinanceTestAccount(userId);
+      await refreshFinance();
+      setActionStatus({ type: 'success', message: `Đã bỏ đánh dấu ${label}. Giao dịch của tài khoản này được tính lại.` });
+    } catch (err) {
+      setActionStatus({ type: 'error', message: err.message });
+    } finally {
+      setTestAccountBusy(false);
+    }
+  }
+
+  function renderFinance() {
+    if (!finance) return <p style={{ color: 'var(--muted)' }}>Chưa có số liệu tài chính.</p>;
+    const f = finance;
+    const np = f.np || {};
+    const monthLabel = (m) => {
+      const [y, mm] = String(m).split('-');
+      return `Tháng ${Number(mm)}/${y}`;
+    };
+    const kpis = [
+      { label: 'Tiền thật đã nhận', value: f.realRevenueVnd, suffix: 'đ', icon: Wallet, color: '#16a34a', hint: `${f.paidCount} lượt nạp thành công`, accent: true },
+      { label: 'Tiền nạp tháng này', value: f.revenueThisMonthVnd, suffix: 'đ', icon: TrendingUp, color: '#0066cc', hint: `Tháng trước: ${formatVnd(f.revenuePrevMonthVnd)}`, delta: f.monthDeltaPct },
+      { label: 'Người đã nạp tiền', value: f.payingUsers, icon: Users, color: '#5e5ce6', hint: 'Tài khoản đã nạp ít nhất 1 lần' },
+      { label: 'Trung bình mỗi lần nạp', value: f.avgTopupVnd, suffix: 'đ', icon: BarChart2, color: '#32ade6', hint: 'Tổng tiền chia số lượt nạp' },
+      { label: 'Tỉ lệ thanh toán thành công', value: Math.round(f.successRatePct || 0), suffix: '%', icon: CheckCircle, color: '#34c759', hint: `${f.paidCount}/${f.requestCount} lượt tạo mã nạp` },
+      { label: 'Đang chờ thanh toán', value: f.pendingCount, icon: Clock, color: '#ff9500', hint: `${formatVnd(f.pendingAmountVnd)} chưa chuyển khoản` },
+    ];
+    const dailyPoints = (f.daily || []).map((d) => ({ date: d.date, count: d.amountVnd }));
+    const monthlyData = (f.monthly || []).map((m) => ({ label: monthLabel(m.month), value: m.amountVnd, color: '#16a34a' }));
+    const providerData = (f.byProvider || []).map((p) => ({ label: `${p.label} · ${p.count} lượt`, value: p.amountVnd, color: p.provider === 'GOOGLE_PLAY' ? '#34c759' : '#0066cc' }));
+    const outcomeData = [
+      { label: 'Thành công', value: f.paidCount, color: '#16a34a' },
+      { label: 'Đang chờ', value: f.pendingCount, color: '#ff9f0a' },
+      { label: 'Người dùng huỷ', value: f.cancelledCount, color: '#8e8e93' },
+      { label: 'Hết hạn', value: f.expiredCount, color: '#c7c7cc' },
+      { label: 'Thất bại', value: f.failedCount, color: '#ff3b30' },
+    ];
+    const npData = [
+      { label: 'Phí nhận việc có lương', value: np.jobAcceptanceFeesNp, color: '#ff9f0a' },
+      { label: 'Phí xuất portfolio', value: np.portfolioExportFeesNp, color: '#5e5ce6' },
+      { label: 'Gói Premium (mô hình cũ)', value: np.premiumNp, color: '#aeaeb2' },
+      { label: 'Chi tiêu khác', value: np.otherSpendNp, color: '#32ade6' },
+    ];
+    const recent = Array.isArray(f.recentPayments) ? f.recentPayments : [];
+    const providerLabel = (code) => ({ PAYOS: 'PayOS (VietQR)', GOOGLE_PLAY: 'Google Play', VIETQR: 'Chuyển khoản VietQR' }[code] || code);
+
+    return (
+      <div className="adm-ov adm-fade-in-slide">
+        <div className="adm-fin-note">
+          Chỉ tính tiền nạp qua cổng thanh toán thật (PayOS, Google Play, VietQR). Không tính: nạp thử MOCK
+          ({f.mockCount} lượt, {formatVnd(f.mockAmountVnd)}) và giao dịch của {f.testAccountCount || 0} tài khoản test
+          ({f.testPaidCount || 0} lượt, {formatVnd(f.testAmountVnd)}). 1 NP = 1 đồng.
+        </div>
+
+        <p className="adm-section-label">Tiền vào</p>
+        <div className="adm-kpi-grid">
+          {kpis.map((c, i) => {
+            const Icon = c.icon;
+            return (
+              <div key={c.label} className={`adm-kpi-card ${c.accent ? 'accent' : ''}`} style={{ '--kpi': c.color, animationDelay: `${i * 55}ms` }}>
+                <span className="adm-kpi-ico"><Icon size={17} /></span>
+                <div className="adm-kpi-body">
+                  <span className="adm-kpi-label">{c.label}</span>
+                  <div className="adm-kpi-valrow">
+                    <div className="adm-kpi-value"><CountUp value={c.value ?? 0} suffix={c.suffix || ''} /></div>
+                    {typeof c.delta === 'number' && c.delta !== 0 && (
+                      <span className={`adm-kpi-delta ${c.delta > 0 ? 'up' : 'down'}`}>
+                        {c.delta > 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                        {c.delta > 0 ? '+' : ''}{c.delta}%
+                      </span>
+                    )}
+                  </div>
+                  <span className="adm-kpi-hint">{c.hint}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <p className="adm-section-label">Xu hướng</p>
+        <div className="adm-card adm-fade-item">
+          <div className="adm-card-head"><h3>Tiền nạp 30 ngày gần nhất</h3></div>
+          <TrendChart points={dailyPoints} color="#16a34a" unit="tiền nạp" formatValue={formatVnd} labelEvery={5} />
+        </div>
+        <div className="adm-grid-2">
+          <div className="adm-card adm-fade-item">
+            <div className="adm-card-head"><h3>Tiền nạp theo tháng</h3></div>
+            <BarList data={monthlyData} suffix="đ" />
+          </div>
+          <div className="adm-card adm-fade-item">
+            <div className="adm-card-head"><h3>Theo cổng thanh toán</h3></div>
+            <BarList data={providerData} suffix="đ" />
+          </div>
+        </div>
+
+        <p className="adm-section-label">Lượt nạp và NP</p>
+        <div className="adm-grid-2">
+          <div className="adm-card adm-fade-item">
+            <div className="adm-card-head"><h3>Kết quả các lượt tạo mã nạp</h3></div>
+            <BarList data={outcomeData} />
+          </div>
+          <div className="adm-card adm-fade-item">
+            <div className="adm-card-head"><h3>NP người dùng đã chi</h3></div>
+            <BarList data={npData} suffix=" NP" />
+            <div className="adm-fin-np-foot">
+              <span>NP đã thưởng cho người dùng: <strong>{formatNp(np.rewardsIssuedNp)}</strong></span>
+              <span>NP đang nằm trong ví người dùng: <strong>{formatNp(np.outstandingNp)}</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <p className="adm-section-label">Giao dịch gần nhất</p>
+        <div className="adm-card adm-fade-item">
+          {recent.length === 0 ? (
+            <p style={{ color: 'var(--muted)', margin: 0 }}>Chưa có lượt nạp tiền thật nào.</p>
+          ) : (
+            <table className="adm-fin-table">
+              <thead>
+                <tr><th>Thời gian</th><th>Người nạp</th><th>Cổng</th><th className="num">Số tiền</th><th /></tr>
+              </thead>
+              <tbody>
+                {recent.map((r) => (
+                  <tr key={r.id}>
+                    <td>{r.paidAt ? new Date(r.paidAt).toLocaleString('vi-VN') : '—'}</td>
+                    <td>
+                      <strong>{r.userName}</strong>
+                      {r.userEmail && <span className="adm-fin-sub">{r.userEmail}</span>}
+                    </td>
+                    <td>{providerLabel(r.provider)}</td>
+                    <td className="num">{formatVnd(r.amountVnd)}</td>
+                    <td className="num">
+                      {r.userId && (
+                        <button
+                          type="button"
+                          className="adm-fin-mark"
+                          disabled={testAccountBusy}
+                          onClick={() => handleAddTestAccount({ userId: r.userId }, r.userName || r.userEmail)}
+                        >
+                          Là tài khoản test
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+        <p className="adm-section-label">Tài khoản test</p>
+        <div className="adm-card adm-fade-item">
+          <div className="adm-card-head"><h3>Tài khoản không tính vào tài chính</h3></div>
+          <p className="adm-fin-help">
+            Tài khoản nhóm dùng để nạp thử qua cổng thật. Mọi lượt nạp và phí NP của các tài khoản này bị loại khỏi số liệu ở trên.
+          </p>
+          {(f.testAccounts || []).length === 0 ? (
+            <p className="adm-fin-help">Chưa có tài khoản test nào.</p>
+          ) : (
+            <ul className="adm-fin-testlist">
+              {f.testAccounts.map((a) => (
+                <li key={a.userId}>
+                  <span><strong>{a.name}</strong> <span className="adm-fin-sub">{a.email}</span></span>
+                  <button
+                    type="button"
+                    className="adm-fin-mark"
+                    disabled={testAccountBusy}
+                    onClick={() => handleRemoveTestAccount(a.userId, a.name || a.email)}
+                  >
+                    Bỏ đánh dấu
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <form
+            className="adm-fin-addform"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const email = testEmailDraft.trim();
+              if (email) handleAddTestAccount({ email }, email);
+            }}
+          >
+            <input
+              type="email"
+              className="admin-search-input"
+              placeholder="Email tài khoản test"
+              value={testEmailDraft}
+              onChange={(e) => setTestEmailDraft(e.target.value)}
+            />
+            <button type="submit" className="button secondary-button" disabled={testAccountBusy || !testEmailDraft.trim()}>
+              Thêm
+            </button>
+          </form>
+        </div>
+
+        <p className="adm-fin-foot">
+          Cập nhật lúc {f.generatedAt ? new Date(f.generatedAt).toLocaleString('vi-VN') : '—'}.
+        </p>
+      </div>
+    );
   }
 
   function renderFraudFlags() {
@@ -2617,8 +2892,6 @@ export function AdminB2bReviewPage() {
     const candidateCount = liveUsers.filter(u => (u.roles || '').toLowerCase().includes('candidate')).length;
     const partnerCount = liveUsers.filter(u => (u.roles || '').toLowerCase().includes('employer') || (u.roles || '').toLowerCase().includes('organizer')).length;
 
-    const premiumCount = liveUsers.filter(u => u.premiumUntil && new Date(u.premiumUntil) > new Date()).length;
-    const verifiedStudentCount = liveUsers.filter(u => u.studentEmailVerified).length;
     const activeStatusCount = liveUsers.filter(u => {
       const rolesStr = (u.roles || '').toLowerCase();
       const isPartner = rolesStr.includes('employer') || rolesStr.includes('organizer');
@@ -2665,28 +2938,6 @@ export function AdminB2bReviewPage() {
               <span>Ứng viên: <strong>{candidateCount}</strong></span>
               <span>Đối tác: <strong>{partnerCount}</strong></span>
               <span>Quản trị viên: <strong>{adminCount}</strong></span>
-            </div>
-          </div>
-
-          {/* Card 2: Premium Members */}
-          <div className="adm-card" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Hội viên Premium</span>
-                <h3 style={{ margin: '8px 0 0', fontSize: '32px', fontWeight: '600', color: '#ff7a1a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {premiumCount}
-                </h3>
-              </div>
-              <div style={{
-                width: '46px', height: '46px', borderRadius: '50%',
-                background: 'rgba(255, 122, 26, 0.08)', color: '#ff7a1a',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
-                <Award size={20} />
-              </div>
-            </div>
-            <div style={{ marginTop: '16px', fontSize: '12px', color: 'var(--muted)', borderTop: '1px solid var(--line)', paddingTop: '12px' }}>
-              <span>Sinh viên đã xác thực: <strong>{verifiedStudentCount}</strong></span>
             </div>
           </div>
 
@@ -4922,7 +5173,7 @@ export function AdminB2bReviewPage() {
             <Search size={16} className="admin-search-icon" />
             <input
               className="admin-search-input"
-              placeholder="Tìm hành động (b2b.approved), email, đối tượng..."
+              placeholder="Tìm theo hoạt động (đăng nhập, duyệt hồ sơ...), tên hoặc email..."
               value={searchLogQuery}
               onChange={(e) => setSearchLogQuery(e.target.value)}
             />
@@ -5085,7 +5336,7 @@ export function AdminB2bReviewPage() {
                           <>
                             <span>•</span>
                             <span style={{ fontStyle: 'italic' }}>
-                              Lần cuối: {latestLog.action} ({latestDateStr})
+                              Lần cuối: {describeAuditLog(latestLog).title} ({latestDateStr})
                             </span>
                           </>
                         )}
@@ -5126,14 +5377,9 @@ export function AdminB2bReviewPage() {
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {group.logs.map((log) => {
-                          const isApproved =
-                            log.action === 'b2b.approved' ||
-                            log.action === 'job.approved' ||
-                            log.action === 'quest.approved';
-                          const isRejected =
-                            log.action === 'b2b.rejected' ||
-                            log.action === 'job.rejected' ||
-                            log.action === 'quest.rejected';
+                          const described = describeAuditLog(log);
+                          const isApproved = described.tone === 'success';
+                          const isRejected = described.tone === 'danger';
                           const subColor = isApproved
                             ? '#16a34a'
                             : isRejected
@@ -5147,7 +5393,6 @@ export function AdminB2bReviewPage() {
                           const logDate = log.createdAt
                             ? new Date(log.createdAt).toLocaleString('vi-VN')
                             : '—';
-                          const isLogMetaExpanded = expandedLogId === log.id;
 
                           return (
                             <div
@@ -5197,49 +5442,22 @@ export function AdminB2bReviewPage() {
                                   }}
                                 >
                                   <strong style={{ fontSize: '0.92rem', color: 'var(--ink)' }}>
-                                    {log.action}
+                                    {described.title}
                                   </strong>
                                   <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
                                     {logDate}
                                   </span>
                                 </div>
 
-                                <div
-                                  style={{
-                                    fontSize: '0.8rem',
-                                    color: 'var(--muted)',
-                                    marginTop: '4px',
-                                  }}
-                                >
-                                  Đối tượng: <strong>{log.entityType || 'N/A'}</strong> (ID:{' '}
-                                  {log.entityId || 'N/A'})
-                                </div>
-
-                                {log.metadata && (
-                                  <div style={{ marginTop: '8px' }}>
-                                    <button
-                                      type="button"
-                                      className="button secondary-button"
-                                      style={{
-                                        padding: '4px 10px',
-                                        fontSize: '0.72rem',
-                                        gap: '4px',
-                                        height: 'auto',
-                                        minHeight: '0',
-                                      }}
-                                      onClick={() =>
-                                        setExpandedLogId(isLogMetaExpanded ? null : log.id)
-                                      }
-                                    >
-                                      {isLogMetaExpanded ? 'Ẩn chi tiết' : 'Xem dữ liệu chi tiết'}
-                                    </button>
-
-                                    {isLogMetaExpanded && (
-                                      <pre className="admin-log-json">
-                                        {JSON.stringify(log.metadata, null, 2)}
-                                      </pre>
-                                    )}
-                                  </div>
+                                {described.details.length > 0 && (
+                                  <dl className="admin-log-details">
+                                    {described.details.map((d) => (
+                                      <div key={d.label} className="admin-log-detail">
+                                        <dt>{d.label}</dt>
+                                        <dd>{d.value}</dd>
+                                      </div>
+                                    ))}
+                                  </dl>
                                 )}
                               </div>
                             </div>
@@ -6849,6 +7067,7 @@ export function AdminB2bReviewPage() {
               className="admin-view-anim"
             >
               {activeTab === 'OVERVIEW' && renderOverview()}
+              {activeTab === 'FINANCE' && renderFinance()}
               {activeTab === 'USERS' && renderUsers()}
               {activeTab === 'B2B_REVIEWS' && renderB2bReviews()}
               {activeTab === 'PROVISION' && <ProvisionPanel />}
